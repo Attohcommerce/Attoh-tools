@@ -1311,6 +1311,362 @@ select:focus {
   }
 }
 
+/* ---------- JARVIS stage ---------- */
+.stage {
+  position: relative;
+  height: 810px;
+  margin: -6px 0 -8px;
+}
+.stage-greet {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 5;
+  /* geen transform-animatie hier — die zou de centrering overschrijven */
+  animation: fadeIn 0.8s var(--ease) 0.05s both;
+}
+.stage-greet .greet {
+  justify-content: center;
+}
+
+/* Spaken */
+.spokes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+.spoke {
+  stroke: rgba(201, 162, 39, 0.22);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 3 6;
+  animation: spokeFlow 1.6s linear infinite;
+  transition: stroke 0.3s var(--ease);
+}
+.spoke.lit {
+  stroke: rgba(230, 192, 77, 0.75);
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+@keyframes spokeFlow {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+/* Reactor */
+.reactor {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  transform: translate(-50%, -50%);
+  width: 460px;
+  height: 460px;
+  z-index: 2;
+  pointer-events: none;
+  animation: fadeIn 1s var(--ease) both;
+}
+.reactor > svg {
+  width: 100%;
+  height: 100%;
+  color: var(--accent);
+  filter: drop-shadow(0 0 34px rgba(201, 162, 39, 0.35));
+}
+.rr {
+  fill: none;
+  stroke: currentColor;
+  transform-origin: 200px 200px;
+}
+.rr-1 {
+  stroke-width: 0.8;
+  stroke-opacity: 0.35;
+  stroke-dasharray: 2 7;
+  animation: spinCw 40s linear infinite;
+}
+.rr-2 {
+  stroke-width: 1.6;
+  stroke-opacity: 0.55;
+  stroke-dasharray: 70 24 18 24;
+  animation: spinCcw 22s linear infinite;
+}
+.rr-3 {
+  stroke-width: 0.9;
+  stroke-opacity: 0.4;
+  stroke-dasharray: 4 9;
+  animation: spinCw 13s linear infinite;
+}
+.rr-4 {
+  stroke-width: 2.2;
+  stroke-opacity: 0.6;
+  stroke-dasharray: 120 40 26 40;
+  animation: spinCw 30s linear infinite;
+}
+.rr-5 {
+  stroke-width: 0.7;
+  stroke-opacity: 0.3;
+  animation: breathe 4.2s ease-in-out infinite;
+}
+.r-ticks line {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-opacity: 0.4;
+}
+.r-ticks {
+  transform-origin: 200px 200px;
+  animation: spinCw 90s linear infinite;
+}
+.r-sweep {
+  transform-origin: 200px 200px;
+  animation: spinCw 5.5s linear infinite;
+}
+.r-sat {
+  transform-origin: 200px 200px;
+}
+.r-sat circle {
+  fill: var(--accent-hi);
+  filter: drop-shadow(0 0 5px var(--accent-glow));
+}
+.r-sat-1 {
+  animation: spinCw 11s linear infinite;
+}
+.r-sat-2 {
+  animation: spinCcw 17s linear infinite;
+}
+.r-sat-3 {
+  animation: spinCw 7s linear infinite;
+}
+.r-core {
+  fill: rgba(201, 162, 39, 0.07);
+  stroke: currentColor;
+  stroke-width: 1.1;
+  stroke-opacity: 0.7;
+  transform-origin: 200px 200px;
+  animation: breathe 3.4s ease-in-out infinite;
+}
+.r-core-in {
+  fill: rgba(201, 162, 39, 0.1);
+  stroke: var(--accent-hi);
+  stroke-width: 0.7;
+  stroke-opacity: 0.5;
+  stroke-dasharray: 10 6;
+  transform-origin: 200px 200px;
+  animation: spinCcw 9s linear infinite;
+}
+
+/* Readout in de kern */
+.readout {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: 190px;
+  pointer-events: none;
+}
+.ro-name {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-shadow: 0 0 18px rgba(201, 162, 39, 0.55);
+  animation: fadeIn 0.25s var(--ease) both;
+}
+.ro-tag {
+  margin-top: 5px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-hi);
+  opacity: 0.85;
+  animation: fadeIn 0.3s var(--ease) both;
+}
+
+/* Module-nodes */
+.mod-node {
+  position: absolute;
+  z-index: 4;
+  width: 196px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  color: var(--ink);
+  animation: fadeUp 0.6s var(--ease) both;
+}
+.mod-node.pos-0 {
+  left: 15%;
+  top: 52%;
+  animation-delay: 0.15s;
+}
+.mod-node.pos-1 {
+  left: 85%;
+  top: 52%;
+  animation-delay: 0.22s;
+}
+.mod-node.pos-2 {
+  left: 50%;
+  top: 85%;
+  animation-delay: 0.29s;
+}
+.mn-ring {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 1px dashed rgba(201, 162, 39, 0.35);
+  transition: all 0.35s var(--ease);
+}
+.mod-node.lit .mn-ring,
+.mod-node:hover .mn-ring {
+  border-color: rgba(230, 192, 77, 0.8);
+  box-shadow: 0 0 30px -6px var(--accent-glow),
+    inset 0 0 22px -10px var(--accent-glow);
+  animation: spinCw 9s linear infinite;
+}
+.mn-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-hi);
+  background: rgba(10, 10, 12, 0.75);
+  backdrop-filter: blur(10px);
+  color: var(--accent-hi);
+  transition: all 0.3s var(--ease);
+}
+.mod-node.lit .mn-icon,
+.mod-node:hover .mn-icon {
+  border-color: rgba(230, 192, 77, 0.75);
+  background: rgba(201, 162, 39, 0.12);
+  box-shadow: 0 0 34px -8px var(--accent-glow);
+  transform: scale(1.07);
+}
+.mn-code {
+  margin-top: 12px;
+  font-size: 9.5px;
+  letter-spacing: 0.28em;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.mn-name {
+  margin-top: 3px;
+  font-size: 15.5px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  transition: color 0.3s var(--ease), text-shadow 0.3s var(--ease);
+}
+.mod-node.lit .mn-name,
+.mod-node:hover .mn-name {
+  color: var(--accent-hi);
+  text-shadow: 0 0 16px var(--accent-glow);
+}
+.mn-tag {
+  margin-top: 4px;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Stage responsief */
+@media (max-width: 1080px) {
+  .reactor {
+    width: 380px;
+    height: 380px;
+  }
+  .mod-node.pos-0 {
+    left: 12%;
+  }
+  .mod-node.pos-1 {
+    left: 88%;
+  }
+}
+@media (max-width: 900px) {
+  .stage {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding-top: 6px;
+  }
+  .stage-greet,
+  .reactor,
+  .mod-node {
+    position: static;
+    transform: none;
+  }
+  .spokes {
+    display: none;
+  }
+  .reactor {
+    width: 260px;
+    height: 260px;
+  }
+  .mod-node {
+    flex-direction: row;
+    width: 100%;
+    max-width: 420px;
+    text-align: left;
+    gap: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    padding: 13px 16px;
+  }
+  .mn-ring {
+    display: none;
+  }
+  .mn-icon {
+    width: 46px;
+    height: 46px;
+    flex: none;
+  }
+  .mn-code {
+    display: none;
+  }
+  .mn-name {
+    margin: 0;
+  }
+  .mn-tag {
+    margin: 0 0 0 auto;
+  }
+}
+
+/* Geluidsknop in de header */
+.soundbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+.soundbtn:hover {
+  color: var(--ink);
+  border-color: var(--line-hi);
+}
+.soundbtn.on {
+  color: var(--accent-hi);
+  border-color: rgba(201, 162, 39, 0.4);
+}
+
 /* ---------- Status tiles ---------- */
 .tiles {
   display: grid;

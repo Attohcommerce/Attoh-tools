@@ -114,8 +114,19 @@ export default function HomePage() {
   const [typed, setTyped] = useState("");
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(null);
+  const [hovMod, setHovMod] = useState(null); // module onder de cursor → readout in de kern
   const timer = useRef(null);
   const lastFetch = useRef(0);
+
+  // Opstartgeluid — één keer per sessie, bij de eerste interactie mogelijk gemaakt
+  useEffect(() => {
+    try {
+      if (!sessionStorage.getItem("attoh_booted")) {
+        sessionStorage.setItem("attoh_booted", "1");
+        window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "boot" }));
+      }
+    } catch {}
+  }, []);
 
   const REFRESH_MS = 10 * 60 * 1000; // elke 10 minuten verversen
   const MIN_GAP_MS = 90 * 1000; // niet vaker dan dit bij terugkeren op het tabblad
@@ -261,19 +272,9 @@ export default function HomePage() {
           <span className="hud-clock">{timeLine}</span>
         </div>
 
-        {/* ---------- Hero ---------- */}
-        <section className="hero">
-          <div className="hero-rings" aria-hidden="true">
-            <svg viewBox="0 0 200 200" width="176" height="176">
-              <circle className="ring ring-1" cx="100" cy="100" r="86" />
-              <circle className="ring ring-2" cx="100" cy="100" r="66" />
-              <circle className="ring ring-3" cx="100" cy="100" r="46" />
-              <circle className="core" cx="100" cy="100" r="15" />
-              <circle className="core-dot" cx="100" cy="100" r="5" />
-            </svg>
-          </div>
-
-          <div className="hero-text">
+        {/* ---------- JARVIS-stage: reactor in het midden, modules eromheen ---------- */}
+        <section className="stage">
+          <div className="stage-greet">
             <h1 className="greet">
               {typed}
               <span className="caret" />
@@ -283,6 +284,103 @@ export default function HomePage() {
               {loc && loc.city ? ` · ${loc.city}` : ""}
             </div>
           </div>
+
+          {/* Spaken van kern naar modules */}
+          <svg className="spokes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line className={"spoke" + (hovMod === 0 ? " lit" : "")} x1="50" y1="52" x2="15" y2="52" />
+            <line className={"spoke" + (hovMod === 1 ? " lit" : "")} x1="50" y1="52" x2="85" y2="52" />
+            <line className={"spoke" + (hovMod === 2 ? " lit" : "")} x1="50" y1="52" x2="50" y2="85" />
+          </svg>
+
+          {/* De reactor */}
+          <div className="reactor" aria-hidden="true">
+            <svg viewBox="0 0 400 400">
+              <defs>
+                <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#e6c04d" stopOpacity="0.9" />
+                  <stop offset="45%" stopColor="#c9a227" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="#c9a227" stopOpacity="0" />
+                </radialGradient>
+                <linearGradient id="sweepGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#e6c04d" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#e6c04d" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              <circle cx="200" cy="200" r="150" fill="url(#coreGlow)" opacity="0.5" />
+
+              {/* radar-sweep */}
+              <g className="r-sweep">
+                <path d="M200 200 L200 30 A170 170 0 0 1 320 78 Z" fill="url(#sweepGrad)" />
+              </g>
+
+              {/* ringen */}
+              <circle className="rr rr-1" cx="200" cy="200" r="186" />
+              <circle className="rr rr-2" cx="200" cy="200" r="164" />
+              <circle className="rr rr-3" cx="200" cy="200" r="138" />
+              <circle className="rr rr-4" cx="200" cy="200" r="112" />
+              <circle className="rr rr-5" cx="200" cy="200" r="86" />
+
+              {/* gradenboog-streepjes */}
+              <g className="r-ticks">
+                {Array.from({ length: 36 }, (_, i) => (
+                  <line
+                    key={i}
+                    x1="200"
+                    y1="18"
+                    x2="200"
+                    y2={i % 9 === 0 ? "30" : "24"}
+                    transform={`rotate(${i * 10} 200 200)`}
+                  />
+                ))}
+              </g>
+
+              {/* satellieten */}
+              <g className="r-sat r-sat-1"><circle cx="200" cy="36" r="3.2" /></g>
+              <g className="r-sat r-sat-2"><circle cx="200" cy="62" r="2.4" /></g>
+              <g className="r-sat r-sat-3"><circle cx="200" cy="88" r="2" /></g>
+
+              {/* kern */}
+              <circle className="r-core" cx="200" cy="200" r="56" />
+              <circle className="r-core-in" cx="200" cy="200" r="44" />
+            </svg>
+
+            {/* Readout ín de kern */}
+            <div className="readout">
+              {hovMod !== null ? (
+                <>
+                  <div className="ro-name">{MODULES[hovMod].name}</div>
+                  <div className="ro-tag">{MODULES[hovMod].tagline}</div>
+                </>
+              ) : (
+                <>
+                  <div className="ro-name">ATTOH CORE</div>
+                  <div className="ro-tag">
+                    {syncing ? "Syncing…" : "All systems nominal"}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Module-nodes rondom de kern */}
+          {MODULES.map((m, i) => (
+            <Link
+              key={m.href}
+              href={m.href}
+              className={`mod-node pos-${i}` + (hovMod === i ? " lit" : "")}
+              onMouseEnter={() => setHovMod(i)}
+              onMouseLeave={() => setHovMod(null)}
+              onFocus={() => setHovMod(i)}
+              onBlur={() => setHovMod(null)}
+            >
+              <span className="mn-ring" aria-hidden="true" />
+              <span className="mn-icon">{m.icon}</span>
+              <span className="mn-code">{m.code}</span>
+              <span className="mn-name">{m.name}</span>
+              <span className="mn-tag">{m.tagline}</span>
+            </Link>
+          ))}
         </section>
 
         {/* ---------- Tiles ---------- */}
@@ -327,31 +425,6 @@ export default function HomePage() {
             </div>
             <div className="tile-sub">{me ? me.email : "Sessie laden…"}</div>
             <div className="tile-foot">Sa Collective LLC</div>
-          </div>
-        </section>
-
-        {/* ---------- Modules ---------- */}
-        <section>
-          <div className="section-title">
-            <span>Select a module</span>
-            <span className="rule" />
-          </div>
-          <div className="modules">
-            {MODULES.map((m) => (
-              <Link key={m.href} href={m.href} className="mod">
-                <span className="mod-code">{m.code}</span>
-                <span className="mod-icon">{m.icon}</span>
-                <span className="mod-name">{m.name}</span>
-                <span className="mod-tag">{m.tagline}</span>
-                <span className="mod-body">{m.body}</span>
-                <span className="mod-go">
-                  Openen
-                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h13M13 6.5 18.5 12 13 17.5" />
-                  </svg>
-                </span>
-              </Link>
-            ))}
           </div>
         </section>
 

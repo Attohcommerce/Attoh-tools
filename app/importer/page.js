@@ -303,12 +303,15 @@ export default function ImporterPage() {
         okCount++;
         const linked = iData.linkedImages ? ` · ${iData.linkedImages} kleurfoto's gekoppeld` : "";
         pushLog({ ok: true, text: iData.product.title + linked, href: iData.product.adminUrl });
+        window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "ok" }));
       } catch (e) {
         pushLog({ ok: false, text: `${url} — ${e.message}` });
+        window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
       }
       setProgress({ done: i + 1, total: urls.length });
     }
     pushLog({ info: true, text: `Klaar: ${okCount}/${urls.length} producten geïmporteerd als ${status === "active" ? "Active" : "Draft"}.` });
+    if (okCount > 0) window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     setStep("");
     setRunning(false);
   }

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { isSoundOn, setSoundOn, sfx } from "./sfx";
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -12,6 +14,18 @@ const NAV = [
 
 export default function Header({ icon, title, subtitle }) {
   const pathname = usePathname();
+  const [sound, setSound] = useState(true);
+
+  useEffect(() => {
+    setSound(isSoundOn());
+  }, []);
+
+  function toggleSound() {
+    const next = !sound;
+    setSound(next);
+    setSoundOn(next);
+    if (next) sfx("toggle");
+  }
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -35,6 +49,24 @@ export default function Header({ icon, title, subtitle }) {
           </Link>
         ))}
       </nav>
+      <button
+        className={"soundbtn" + (sound ? " on" : "")}
+        onClick={toggleSound}
+        title={sound ? "Geluid uit" : "Geluid aan"}
+        aria-label={sound ? "Geluid uit" : "Geluid aan"}
+      >
+        {sound ? (
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 9.5v5h3.6L12 18.6V5.4L7.6 9.5H4Z" />
+            <path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 6.7a7.4 7.4 0 0 1 0 10.6" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 9.5v5h3.6L12 18.6V5.4L7.6 9.5H4Z" />
+            <path d="m16 9.5 5 5M21 9.5l-5 5" />
+          </svg>
+        )}
+      </button>
       <button className="logout" onClick={logout} title="Uitloggen">
         Uitloggen
       </button>

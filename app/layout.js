@@ -1,4 +1,5 @@
 import "./globals.css";
+import SoundFX from "./components/sfx";
 
 export const metadata = {
   title: "Attoh Tools",
@@ -24,7 +25,10 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <SoundFX />
+        {children}
+      </body>
     </html>
   );
 }
