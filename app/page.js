@@ -36,7 +36,14 @@ export default function ImporterPage() {
   const [stores, setStores] = useState([]);
   const [selected, setSelected] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [newStore, setNewStore] = useState({ name: "", domain: "", token: "" });
+  const [newStore, setNewStore] = useState({
+    name: "",
+    domain: "",
+    clientId: "",
+    clientSecret: "",
+    token: "",
+  });
+  const [authMode, setAuthMode] = useState("client"); // client | token
   const [testing, setTesting] = useState(false);
   const [addErr, setAddErr] = useState("");
 
@@ -97,16 +104,33 @@ export default function ImporterPage() {
   // ---------- Stores ----------
   async function addStore() {
     setAddErr("");
-    if (!newStore.domain || !newStore.token) {
-      setAddErr("Domein en Admin API token zijn verplicht");
+    const domain = newStore.domain.trim();
+    const clientId = newStore.clientId.trim();
+    const clientSecret = newStore.clientSecret.trim();
+    const token = newStore.token.trim();
+
+    if (!domain) {
+      setAddErr("Domein is verplicht");
       return;
     }
+    if (authMode === "client" && !(clientId && clientSecret)) {
+      setAddErr("Client ID en client secret zijn verplicht");
+      return;
+    }
+    if (authMode === "token" && !token) {
+      setAddErr("Admin API token is verplicht");
+      return;
+    }
+
+    const creds =
+      authMode === "client" ? { clientId, clientSecret } : { token };
+
     setTesting(true);
     try {
       const res = await fetch("/api/shopify-test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain: newStore.domain.trim(), token: newStore.token.trim() }),
+        body: JSON.stringify({ domain, ...creds }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -116,8 +140,8 @@ export default function ImporterPage() {
       }
       const store = {
         name: newStore.name.trim() || data.shop.name,
-        domain: newStore.domain.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, ""),
-        token: newStore.token.trim(),
+        domain: domain.replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase(),
+        ...creds,
         currency: data.shop.currency,
       };
       const next = [...stores.filter((s) => s.domain !== store.domain), store];
@@ -125,7 +149,7 @@ export default function ImporterPage() {
       save(LS.stores, next);
       setSelected(store.domain);
       save(LS.selected, store.domain);
-      setNewStore({ name: "", domain: "", token: "" });
+      setNewStore({ name: "", domain: "", clientId: "", clientSecret: "", token: "" });
       setShowAdd(false);
     } catch (e) {
       setAddErr("Er ging iets mis: " + e.message);
@@ -248,7 +272,12 @@ export default function ImporterPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            store: { domain: selectedStore.domain, token: selectedStore.token },
+            store: {
+              domain: selectedStore.domain,
+              token: selectedStore.token,
+              clientId: selectedStore.clientId,
+              clientSecret: selectedStore.clientSecret,
+            },
             product,
             listing: gData.listing,
             fx: { rate },
@@ -350,21 +379,65 @@ export default function ImporterPage() {
                     value={newStore.domain}
                     onChange={(e) => setNewStore({ ...newStore, domain: e.target.value })}
                   />
-                  <div className="field-label">Admin API token</div>
-                  <input
-                    type="password"
-                    placeholder="shpat_…"
-                    value={newStore.token}
-                    onChange={(e) => setNewStore({ ...newStore, token: e.target.value })}
-                  />
-                  <div style={{ marginTop: 10 }}>
+
+                  <div className="field-label">Type koppeling</div>
+                  <div className="seg">
+                    <button
+                      className={authMode === "client" ? "on" : ""}
+                      onClick={() => setAuthMode("client")}
+                    >
+                      Dev Dashboard
+                    </button>
+                    <button
+                      className={authMode === "token" ? "on" : ""}
+                      onClick={() => setAuthMode("token")}
+                    >
+                      Oude app
+                    </button>
+                  </div>
+
+                  {authMode === "client" ? (
+                    <>
+                      <div className="field-label">Client ID</div>
+                      <input
+                        type="text"
+                        placeholder="bijv. 1a2b3c4d5e6f…"
+                        value={newStore.clientId}
+                        onChange={(e) => setNewStore({ ...newStore, clientId: e.target.value })}
+                      />
+                      <div className="field-label">Client secret</div>
+                      <input
+                        type="password"
+                        placeholder="••••••••••••"
+                        value={newStore.clientSecret}
+                        onChange={(e) =>
+                          setNewStore({ ...newStore, clientSecret: e.target.value })
+                        }
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="field-label">Admin API token</div>
+                      <input
+                        type="password"
+                        placeholder="shpat_…"
+                        value={newStore.token}
+                        onChange={(e) => setNewStore({ ...newStore, token: e.target.value })}
+                      />
+                    </>
+                  )}
+
+                  <div style={{ marginTop: 12 }}>
                     <button className="btn-ghost" onClick={addStore} disabled={testing}>
                       {testing ? "Verbinden…" : "Opslaan & testen"}
                     </button>
                   </div>
                   {addErr && <div className="hint" style={{ color: "var(--err)" }}>{addErr}</div>}
                   <div className="hint">
-                    Token blijft in deze browser bewaard en gaat alleen via onze eigen server naar Shopify.
+                    {authMode === "client"
+                      ? "Voor apps uit het Shopify Dev Dashboard. De tool haalt zelf elke keer een vers token op — die verloopt na 24 uur."
+                      : "Alleen voor custom apps die vóór 1 januari 2026 in de Shopify-admin zijn gemaakt."}{" "}
+                    Gegevens blijven in deze browser en gaan alleen via onze eigen server naar Shopify.
                   </div>
                 </div>
               )}

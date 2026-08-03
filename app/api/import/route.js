@@ -14,8 +14,14 @@ export async function POST(req) {
   // settings: {discountPct, status, tags, colorLabel, sizeLabel, themeTemplate, manualRate}
   // fx: {rate} — bron-valuta → store-valuta (1 als gelijk/onbekend)
 
-  if (!store || !store.domain || !store.token) {
+  if (!store || !store.domain) {
     return NextResponse.json({ error: "Geen store geselecteerd" }, { status: 400 });
+  }
+  if (!store.token && !(store.clientId && store.clientSecret)) {
+    return NextResponse.json(
+      { error: "Store mist een geldige koppeling — voeg hem opnieuw toe" },
+      { status: 400 }
+    );
   }
   if (!product || !listing) {
     return NextResponse.json({ error: "product/listing ontbreekt" }, { status: 400 });
@@ -71,7 +77,7 @@ export async function POST(req) {
     template_suffix: s.themeTemplate === "men" ? "men" : null,
   };
 
-  const r = await createProduct(store.domain, store.token, payload);
+  const r = await createProduct(store, payload);
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
   return NextResponse.json({ ok: true, product: r.product });
 }
