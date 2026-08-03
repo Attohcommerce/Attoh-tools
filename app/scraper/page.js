@@ -353,13 +353,9 @@ export default function ScraperPage() {
   return (
     <>
       <Header
-        icon="S"
-        title="Product Scraper"
+        icon="A"
+        title="Attoh Tools"
         subtitle="Competitor → Google Sheet"
-        links={[
-          { href: "/gmc-checklist", label: "GMC Checklist" },
-          { href: "/", label: "← Terug naar Importer" },
-        ]}
       />
       <div className="page">
         <div className="layout-scraper">

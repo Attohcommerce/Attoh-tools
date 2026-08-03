@@ -317,13 +317,9 @@ export default function ImporterPage() {
   return (
     <>
       <Header
-        icon="I"
-        title="Shopify Product Importer"
+        icon="A"
+        title="Attoh Tools"
         subtitle="Scrape · AI Generate · Upload"
-        links={[
-          { href: "/scraper", label: "Product Scraper →" },
-          { href: "/gmc-checklist", label: "GMC Checklist →" },
-        ]}
       />
       <div className="page">
         <div className="layout-2col">

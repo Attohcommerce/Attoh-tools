@@ -35,33 +35,50 @@ export default function LoginPage() {
     <div className="login-wrap">
       <form className="login-card" onSubmit={submit}>
         <h1>
-          <span className="logo" style={{ width: 26, height: 26, borderRadius: 8, background: "#111", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>⌂</span>
-          Shopify Product Importer
+          <span className="logo">A</span>
+          Attoh Tools
         </h1>
-        <div className="sub">Inloggen vereist</div>
-        <label>E-mail</label>
+        <div className="sub">Scrape · AI Generate · Upload</div>
+
+        <label htmlFor="email">E-mail</label>
         <input
+          id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="jij@voorbeeld.com"
+          autoComplete="username"
           autoFocus
           required
         />
-        <label>Wachtwoord</label>
+
+        <label htmlFor="password">Wachtwoord</label>
         <input
+          id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
+          autoComplete="current-password"
           required
         />
-        <div style={{ marginTop: 18 }}>
+
+        <div style={{ marginTop: 24 }}>
           <button className="btn" disabled={busy}>
-            {busy ? "Bezig…" : "Inloggen"}
+            {busy ? (
+              <>
+                <span className="spin" aria-hidden="true" />
+                Bezig…
+              </>
+            ) : (
+              "Inloggen"
+            )}
           </button>
         </div>
+
         {err && <div className="login-err">{err}</div>}
+
+        <div className="login-foot">Sa Collective LLC — interne tools</div>
       </form>
     </div>
   );

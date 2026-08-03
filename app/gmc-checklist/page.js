@@ -35,13 +35,9 @@ export default function GmcChecklistPage() {
   return (
     <>
       <Header
-        icon="C"
-        title="GMC Checklist"
+        icon="A"
+        title="Attoh Tools"
         subtitle="Automatische Merchant Center audit"
-        links={[
-          { href: "/scraper", label: "Product Scraper" },
-          { href: "/", label: "← Terug naar Importer" },
-        ]}
       />
       <div className="page">
         <div className="layout-scraper">
