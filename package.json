@@ -1,12 +1,19 @@
-import { NextResponse } from "next/server";
-import { scrapeProduct } from "@/lib/scrape";
-
-export const maxDuration = 30;
-
-export async function POST(req) {
-  const { url } = await req.json().catch(() => ({}));
-  if (!url) return NextResponse.json({ error: "url ontbreekt" }, { status: 400 });
-  const result = await scrapeProduct(url);
-  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 422 });
-  return NextResponse.json(result);
+{
+  "name": "sa-tools",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.57.0",
+    "google-auth-library": "^9.15.0",
+    "iron-session": "^8.0.4",
+    "next": "^14.2.35",
+    "playwright-core": "^1.62.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
 }
