@@ -1,805 +1,389 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import Header from "./components/Header";
 
-const LS = {
-  stores: "sa_stores",
-  selected: "sa_selected_store",
-  queue: "sa_url_queue",
-};
+/* ---------------- Iconen ---------------- */
 
-function load(key, fallback) {
-  try {
-    const v = JSON.parse(localStorage.getItem(key));
-    return v ?? fallback;
-  } catch {
-    return fallback;
+function WeatherIcon({ kind }) {
+  const s = { fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" };
+  switch (kind) {
+    case "sun":
+      return (
+        <svg viewBox="0 0 24 24" width="26" height="26" {...s}>
+          <circle cx="12" cy="12" r="4.2" />
+          <path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7" />
+        </svg>
+      );
+    case "cloud-sun":
+      return (
+        <svg viewBox="0 0 24 24" width="26" height="26" {...s}>
+          <circle cx="8" cy="7.5" r="3" />
+          <path d="M8 1.8v1.4M2.3 7.5h1.4M4 3.5l1 1M12 3.5l-1 1" />
+          <path d="M8.5 19h9a3.2 3.2 0 0 0 .3-6.4 4.6 4.6 0 0 0-8.8-1A3.7 3.7 0 0 0 8.5 19Z" />
+        </svg>
+      );
+    case "rain":
+      return (
+        <svg viewBox="0 0 24 24" width="26" height="26" {...s}>
+          <path d="M7.5 15h9a3.4 3.4 0 0 0 .3-6.8 4.8 4.8 0 0 0-9.2-1A3.9 3.9 0 0 0 7.5 15Z" />
+          <path d="M9 18.4l-.8 2.2M13 18.4l-.8 2.2M17 18.4l-.8 2.2" />
+        </svg>
+      );
+    case "snow":
+      return (
+        <svg viewBox="0 0 24 24" width="26" height="26" {...s}>
+          <path d="M7.5 14h9a3.4 3.4 0 0 0 .3-6.8 4.8 4.8 0 0 0-9.2-1A3.9 3.9 0 0 0 7.5 14Z" />
+          <path d="M9 18h.01M13 20h.01M17 18h.01M11 21h.01M15 17h.01" />
+        </svg>
+      );
+    case "storm":
+      return (
+        <svg viewBox="0 0 24 24" width="26" height="26" {...s}>
+          <path d="M7.5 14h9a3.4 3.4 0 0 0 .3-6.8 4.8 4.8 0 0 0-9.2-1A3.9 3.9 0 0 0 7.5 14Z" />
+          <path d="M13 16l-2.5 4h3.4L11.6 23" />
+        </svg>
+      );
+    case "fog":
+      return (
+        <svg viewBox="0 0 24 24" width="26" height="26" {...s}>
+          <path d="M7.5 12h9a3.4 3.4 0 0 0 .3-6.8 4.8 4.8 0 0 0-9.2-1A3.9 3.9 0 0 0 7.5 12Z" />
+          <path d="M4 16h16M6 19.5h12" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 24 24" width="26" height="26" {...s}>
+          <path d="M7.5 17h9a3.6 3.6 0 0 0 .3-7.2 5 5 0 0 0-9.6-1A4 4 0 0 0 7.5 17Z" />
+        </svg>
+      );
   }
 }
-function save(key, val) {
-  try {
-    localStorage.setItem(key, JSON.stringify(val));
-  } catch {}
-}
 
-function parseUrls(text) {
-  return String(text || "")
-    .split(/[\n,]+/)
-    .map((s) => s.trim())
-    .filter((s) => /https?:\/\/[^\s]+\/products\/[^\s]+/i.test(s) || /^[^\s]+\.[a-z]{2,}\/products\/[^\s]+/i.test(s))
-    .map((s) => (s.startsWith("http") ? s : "https://" + s));
-}
+const MODULES = [
+  {
+    href: "/importer",
+    code: "01",
+    name: "Importer",
+    tagline: "Scrape · AI Generate · Upload",
+    body: "Haalt een product van een bron-URL, laat de AI een GMC-proof titel en beschrijving schrijven en zet het klaar in je Shopify-store.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 3v11" />
+        <path d="m7.5 9.5 4.5 4.5 4.5-4.5" />
+        <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+      </svg>
+    ),
+  },
+  {
+    href: "/scraper",
+    code: "02",
+    name: "Product Scraper",
+    tagline: "Competitor → Google Sheet",
+    body: "Zoekt op keyword door je concurrent-stores, van best sellers naar beneden, en schrijft alles netjes weg in een sheet.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="10.5" cy="10.5" r="6.5" />
+        <path d="m20 20-4.6-4.6" />
+        <path d="M8 10.5h5M10.5 8v5" />
+      </svg>
+    ),
+  },
+  {
+    href: "/gmc-checklist",
+    code: "03",
+    name: "GMC Checklist",
+    tagline: "Merchant Center audit",
+    body: "Crawlt een winkel en controleert alles waar Google op afkeurt: policies, contactgegevens, betaalmethodes en productdata.",
+    icon: (
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2.8 4.5 6v6c0 4.4 3.2 7.9 7.5 9.2 4.3-1.3 7.5-4.8 7.5-9.2V6Z" />
+        <path d="m8.8 11.8 2.3 2.3 4.1-4.4" />
+      </svg>
+    ),
+  },
+];
 
-export default function ImporterPage() {
-  // Stores
-  const [stores, setStores] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newStore, setNewStore] = useState({
-    name: "",
-    domain: "",
-    clientId: "",
-    clientSecret: "",
-    token: "",
-  });
-  const [authMode, setAuthMode] = useState("client"); // client | token
-  const [testing, setTesting] = useState(false);
-  const [addErr, setAddErr] = useState("");
+/* ---------------- Pagina ---------------- */
 
-  // Input
-  const [tab, setTab] = useState("urls"); // urls | sheet
-  const [urlsText, setUrlsText] = useState("");
-  const [sheetId, setSheetId] = useState("");
-  const [sheetKeywordFilter, setSheetKeywordFilter] = useState("");
-  const [skipTagged, setSkipTagged] = useState(true);
-  const [sheetLinks, setSheetLinks] = useState(null);
-  const [sheetBusy, setSheetBusy] = useState(false);
-  const [sheetMsg, setSheetMsg] = useState("");
+export default function HomePage() {
+  const [me, setMe] = useState(null);
+  const [ctx, setCtx] = useState(null);
+  const [now, setNow] = useState(null);
+  const [typed, setTyped] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState(null);
+  const timer = useRef(null);
+  const lastFetch = useRef(0);
 
-  // Batch-instellingen
-  const [requiredKeyword, setRequiredKeyword] = useState("");
-  const [tags, setTags] = useState("");
-  const [discount, setDiscount] = useState(50);
-  const [customDiscount, setCustomDiscount] = useState("");
-  const [status, setStatus] = useState("draft");
-  const [listingStyle, setListingStyle] = useState("stacking");
-  const [genderPrefix, setGenderPrefix] = useState(false);
-  const [forceMens, setForceMens] = useState(false);
-  const [currencyOverride, setCurrencyOverride] = useState(false);
-  const [manualRate, setManualRate] = useState("");
-  const [colorLabel, setColorLabel] = useState("Color");
-  const [sizeLabel, setSizeLabel] = useState("Size");
-  const [themeTemplate, setThemeTemplate] = useState("standard");
+  const REFRESH_MS = 10 * 60 * 1000; // elke 10 minuten verversen
+  const MIN_GAP_MS = 90 * 1000; // niet vaker dan dit bij terugkeren op het tabblad
 
-  // Import-run
-  const [running, setRunning] = useState(false);
-  const [progress, setProgress] = useState({ done: 0, total: 0 });
-  const [logs, setLogs] = useState([]);
-
-  // Queue
-  const [queue, setQueue] = useState([]);
-  const [queueText, setQueueText] = useState("");
-  const [queueTag, setQueueTag] = useState("");
-  const [queueKeyword, setQueueKeyword] = useState("");
-
+  // Live klok — start pas client-side zodat server en client niet botsen
   useEffect(() => {
-    setStores(load(LS.stores, []));
-    setSelected(load(LS.selected, null));
-    setQueue(load(LS.queue, []));
+    setNow(new Date());
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
   }, []);
 
-  const urls = useMemo(() => {
-    if (tab === "sheet") return sheetLinks || [];
-    return parseUrls(urlsText);
-  }, [tab, urlsText, sheetLinks]);
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setMe)
+      .catch(() => {});
+  }, []);
 
-  const selectedStore = stores.find((s) => s.domain === selected) || null;
-  const discountPct = discount === "custom" ? Number(customDiscount) || 0 : discount;
-
-  function pushLog(line) {
-    setLogs((l) => [...l, line]);
-  }
-
-  // ---------- Stores ----------
-  async function addStore() {
-    setAddErr("");
-    const domain = newStore.domain.trim();
-    const clientId = newStore.clientId.trim();
-    const clientSecret = newStore.clientSecret.trim();
-    const token = newStore.token.trim();
-
-    if (!domain) {
-      setAddErr("Domein is verplicht");
-      return;
-    }
-    if (authMode === "client" && !(clientId && clientSecret)) {
-      setAddErr("Client ID en client secret zijn verplicht");
-      return;
-    }
-    if (authMode === "token" && !token) {
-      setAddErr("Admin API token is verplicht");
-      return;
-    }
-
-    const creds =
-      authMode === "client" ? { clientId, clientSecret } : { token };
-
-    setTesting(true);
+  // Weer + nieuws: bij openen, daarna elke 10 minuten, en zodra je
+  // terugkomt op het tabblad of je verbinding herstelt.
+  const loadContext = useCallback(async (force = false) => {
+    const since = Date.now() - lastFetch.current;
+    if (!force && since < MIN_GAP_MS) return;
+    lastFetch.current = Date.now();
+    setSyncing(true);
     try {
-      const res = await fetch("/api/shopify-test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain, ...creds }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAddErr("Verbinding mislukt: " + (data.error || res.status));
-        setTesting(false);
-        return;
+      const res = await fetch("/api/context", { cache: "no-store" });
+      if (res.ok) {
+        setCtx(await res.json());
+        setLastSync(new Date());
       }
-      const store = {
-        name: newStore.name.trim() || data.shop.name,
-        domain: domain.replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase(),
-        ...creds,
-        currency: data.shop.currency,
-      };
-      const next = [...stores.filter((s) => s.domain !== store.domain), store];
-      setStores(next);
-      save(LS.stores, next);
-      setSelected(store.domain);
-      save(LS.selected, store.domain);
-      setNewStore({ name: "", domain: "", clientId: "", clientSecret: "", token: "" });
-      setShowAdd(false);
-    } catch (e) {
-      setAddErr("Er ging iets mis: " + e.message);
+    } catch {
+      /* stil falen — de vorige gegevens blijven staan */
     } finally {
-      setTesting(false);
+      setSyncing(false);
     }
-  }
+  }, []);
 
-  function removeStore(domain) {
-    const next = stores.filter((s) => s.domain !== domain);
-    setStores(next);
-    save(LS.stores, next);
-    if (selected === domain) {
-      setSelected(null);
-      save(LS.selected, null);
-    }
-  }
-
-  function selectStore(domain) {
-    setSelected(domain);
-    save(LS.selected, domain);
-  }
-
-  // ---------- Sheet laden ----------
-  async function loadSheet() {
-    setSheetBusy(true);
-    setSheetMsg("");
-    setSheetLinks(null);
-    try {
-      const res = await fetch("/api/sheets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "read", sheetId, range: "A:H" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || res.status);
-      const rows = (data.values || []).slice(1); // header overslaan
-      let links = [];
-      for (const r of rows) {
-        const link = r[0];
-        const kw = (r[2] || "").toLowerCase();
-        const dup = r[6];
-        const doubt = r[7];
-        if (!link || !/products\//i.test(link)) continue;
-        if (skipTagged && (dup || doubt)) continue;
-        if (sheetKeywordFilter && !kw.includes(sheetKeywordFilter.toLowerCase())) continue;
-        links.push(link);
-      }
-      setSheetLinks(links);
-      setSheetMsg(`${links.length} links geladen uit de sheet`);
-    } catch (e) {
-      setSheetMsg("Fout: " + e.message);
-    } finally {
-      setSheetBusy(false);
-    }
-  }
-
-  // ---------- Import ----------
-  async function runImport() {
-    if (!selectedStore || urls.length === 0 || running) return;
-    setRunning(true);
-    setLogs([]);
-    setProgress({ done: 0, total: urls.length });
-
-    // Wisselkoersen één keer ophalen
-    let rates = null;
-    if (!currencyOverride) {
-      try {
-        const res = await fetch("/api/currency");
-        const data = await res.json();
-        if (data.ok) rates = data.rates;
-      } catch {}
-    }
-
-    let okCount = 0;
-    for (let i = 0; i < urls.length; i++) {
-      const url = urls[i];
-      try {
-        // 1. Scrape
-        const sRes = await fetch("/api/scrape", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url }),
-        });
-        const sData = await sRes.json();
-        if (!sRes.ok) throw new Error(sData.error || "scrape mislukt");
-        const product = sData.product;
-
-        // 2. AI Generate
-        const gRes = await fetch("/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            product,
-            settings: {
-              listingStyle,
-              requiredKeyword,
-              genderPrefix,
-              forceMensKeywords: forceMens,
-              colorLabel,
-              sizeLabel,
-            },
-          }),
-        });
-        const gData = await gRes.json();
-        if (!gRes.ok) throw new Error(gData.error || "AI-generatie mislukt");
-
-        // 3. FX-rate bepalen
-        let rate = 1;
-        if (currencyOverride && manualRate) {
-          rate = Number(manualRate) || 1;
-        } else if (rates && product.sourceCurrency && selectedStore.currency) {
-          const from = rates[product.sourceCurrency];
-          const to = rates[selectedStore.currency];
-          if (from && to) rate = to / from;
-        }
-
-        // 4. Upload
-        const iRes = await fetch("/api/import", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            store: {
-              domain: selectedStore.domain,
-              token: selectedStore.token,
-              clientId: selectedStore.clientId,
-              clientSecret: selectedStore.clientSecret,
-            },
-            product,
-            listing: gData.listing,
-            fx: { rate },
-            settings: {
-              discountPct,
-              status,
-              tags,
-              colorLabel,
-              sizeLabel,
-              themeTemplate,
-              manualRate: currencyOverride ? manualRate : null,
-              vendor: selectedStore.name,
-            },
-          }),
-        });
-        const iData = await iRes.json();
-        if (!iRes.ok) throw new Error(iData.error || "upload mislukt");
-        okCount++;
-        pushLog({ ok: true, text: iData.product.title, href: iData.product.adminUrl });
-      } catch (e) {
-        pushLog({ ok: false, text: `${url} — ${e.message}` });
-      }
-      setProgress({ done: i + 1, total: urls.length });
-    }
-    pushLog({ info: true, text: `Klaar: ${okCount}/${urls.length} producten geïmporteerd als ${status === "active" ? "Active" : "Draft"}.` });
-    setRunning(false);
-  }
-
-  // ---------- Queue ----------
-  function saveToQueue() {
-    const items = String(queueText || "")
-      .split(/[\n,]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (!items.length) return;
-    const entry = {
-      id: Date.now(),
-      urls: items,
-      tag: queueTag.trim(),
-      keyword: queueKeyword.trim(),
+  useEffect(() => {
+    loadContext(true);
+    const id = setInterval(() => loadContext(true), REFRESH_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") loadContext(false);
     };
-    const next = [entry, ...queue];
-    setQueue(next);
-    save(LS.queue, next);
-    setQueueText("");
-    setQueueTag("");
-    setQueueKeyword("");
-  }
+    const onOnline = () => loadContext(false);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onOnline);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [loadContext]);
 
-  function loadQueueEntry(entry) {
-    setTab("urls");
-    setUrlsText(entry.urls.join("\n"));
-    if (entry.keyword) setRequiredKeyword(entry.keyword);
-    if (entry.tag) setTags(entry.tag);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  const greeting = useMemo(() => {
+    const h = now ? now.getHours() : null;
+    if (h === null) return "";
+    if (h < 6) return "Good night";
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
+  }, [now]);
 
-  function removeQueueEntry(id) {
-    const next = queue.filter((q) => q.id !== id);
-    setQueue(next);
-    save(LS.queue, next);
-  }
+  const fullLine = useMemo(() => {
+    if (!greeting) return "";
+    const name = me && me.name ? me.name : "";
+    return name ? `${greeting}, ${name}` : greeting;
+  }, [greeting, me]);
 
-  const canImport = selectedStore && urls.length > 0 && !running;
+  // Typemachine-effect
+  useEffect(() => {
+    if (!fullLine) return;
+    clearInterval(timer.current);
+    let i = 0;
+    setTyped("");
+    timer.current = setInterval(() => {
+      i += 1;
+      setTyped(fullLine.slice(0, i));
+      if (i >= fullLine.length) clearInterval(timer.current);
+    }, 38);
+    return () => clearInterval(timer.current);
+  }, [fullLine]);
+
+  const dateLine = useMemo(() => {
+    if (!now) return "";
+    const s = now.toLocaleDateString(undefined, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }, [now]);
+  const timeLine = now
+    ? now.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      })
+    : "--:--:--";
+
+  // "Synced 3m ago" — herberekent mee met de klok
+  const syncLabel = useMemo(() => {
+    if (syncing) return "Syncing…";
+    if (!lastSync || !now) return "";
+    const mins = Math.floor((now - lastSync) / 60000);
+    if (mins < 1) return "Synced just now";
+    return `Synced ${mins}m ago`;
+  }, [syncing, lastSync, now]);
+
+  const loc = ctx && ctx.location;
+  const w = ctx && ctx.weather;
+  const news = (ctx && ctx.news) || [];
 
   return (
     <>
-      <Header
-        icon="A"
-        title="Attoh Tools"
-        subtitle="Scrape · AI Generate · Upload"
-      />
-      <div className="page">
-        <div className="layout-2col">
-          {/* -------- Sidebar: Stores -------- */}
-          <div>
-            <div className="card">
-              <h2>
-                ⌂ Stores
-                <span style={{ marginLeft: "auto" }}>
-                  <button className="btn-ghost btn-small" onClick={() => setShowAdd(!showAdd)}>
-                    + Add
-                  </button>
-                </span>
-              </h2>
-              {showAdd && (
-                <div style={{ marginBottom: 10 }}>
-                  <div className="field-label">Naam</div>
-                  <input
-                    type="text"
-                    placeholder="Julia Raven"
-                    value={newStore.name}
-                    onChange={(e) => setNewStore({ ...newStore, name: e.target.value })}
-                  />
-                  <div className="field-label">Domein (myshopify)</div>
-                  <input
-                    type="text"
-                    placeholder="jouwstore.myshopify.com"
-                    value={newStore.domain}
-                    onChange={(e) => setNewStore({ ...newStore, domain: e.target.value })}
-                  />
+      <Header icon="A" title="Attoh Tools" subtitle="Command deck" />
 
-                  <div className="field-label">Type koppeling</div>
-                  <div className="seg">
-                    <button
-                      className={authMode === "client" ? "on" : ""}
-                      onClick={() => setAuthMode("client")}
-                    >
-                      Dev Dashboard
-                    </button>
-                    <button
-                      className={authMode === "token" ? "on" : ""}
-                      onClick={() => setAuthMode("token")}
-                    >
-                      Oude app
-                    </button>
-                  </div>
-
-                  {authMode === "client" ? (
-                    <>
-                      <div className="field-label">Client ID</div>
-                      <input
-                        type="text"
-                        placeholder="bijv. 1a2b3c4d5e6f…"
-                        value={newStore.clientId}
-                        onChange={(e) => setNewStore({ ...newStore, clientId: e.target.value })}
-                      />
-                      <div className="field-label">Client secret</div>
-                      <input
-                        type="password"
-                        placeholder="••••••••••••"
-                        value={newStore.clientSecret}
-                        onChange={(e) =>
-                          setNewStore({ ...newStore, clientSecret: e.target.value })
-                        }
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <div className="field-label">Admin API token</div>
-                      <input
-                        type="password"
-                        placeholder="shpat_…"
-                        value={newStore.token}
-                        onChange={(e) => setNewStore({ ...newStore, token: e.target.value })}
-                      />
-                    </>
-                  )}
-
-                  <div style={{ marginTop: 12 }}>
-                    <button className="btn-ghost" onClick={addStore} disabled={testing}>
-                      {testing ? "Verbinden…" : "Opslaan & testen"}
-                    </button>
-                  </div>
-                  {addErr && <div className="hint" style={{ color: "var(--err)" }}>{addErr}</div>}
-                  <div className="hint">
-                    {authMode === "client"
-                      ? "Voor apps uit het Shopify Dev Dashboard. De tool haalt zelf elke keer een vers token op — die verloopt na 24 uur."
-                      : "Alleen voor custom apps die vóór 1 januari 2026 in de Shopify-admin zijn gemaakt."}{" "}
-                    Gegevens blijven in deze browser en gaan alleen via onze eigen server naar Shopify.
-                  </div>
-                </div>
-              )}
-              {stores.length === 0 && !showAdd && <div className="center-note">No stores added yet.</div>}
-              {stores.map((s) => (
-                <div
-                  key={s.domain}
-                  className={"store-item" + (selected === s.domain ? " selected" : "")}
-                  onClick={() => selectStore(s.domain)}
-                >
-                  <div>
-                    <strong>{s.name}</strong>{" "}
-                    <span className="muted small">({s.currency})</span>
-                  </div>
-                  <div className="dom">{s.domain}</div>
-                  <div className="row-actions">
-                    <button
-                      className="linklike"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeStore(s.domain);
-                      }}
-                    >
-                      verwijderen
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* -------- Hoofdkolom -------- */}
-          <div>
-            <div className="card">
-              <h2>
-                ⇪ Product URLs
-                <span style={{ marginLeft: "auto" }}>
-                  {selectedStore ? (
-                    <span className="badge badge-green">✓ {selectedStore.name}</span>
-                  ) : (
-                    <span className="badge badge-amber">! No store selected</span>
-                  )}
-                </span>
-              </h2>
-
-              <div className="seg" style={{ marginBottom: 10 }}>
-                <button className={tab === "urls" ? "on" : ""} onClick={() => setTab("urls")}>
-                  URL's plakken
-                </button>
-                <button className={tab === "sheet" ? "on" : ""} onClick={() => setTab("sheet")}>
-                  Sheet plakken
-                </button>
-              </div>
-
-              {tab === "urls" && (
-                <>
-                  <div className="field-label">Paste product URLs — one per line</div>
-                  <textarea
-                    placeholder={"https://yourcompetitor.com/products/example-product\nhttps://yourcompetitor.com/products/another-product"}
-                    value={urlsText}
-                    onChange={(e) => setUrlsText(e.target.value)}
-                    rows={5}
-                  />
-                  <div className="hint">
-                    {urls.length > 0 ? `${urls.length} geldige URLs gedetecteerd` : "No valid URLs detected"}
-                  </div>
-                </>
-              )}
-
-              {tab === "sheet" && (
-                <>
-                  <div className="field-label">Werk-sheet (van de Product Scraper)</div>
-                  <input
-                    type="text"
-                    placeholder="Sheet ID of volledige URL"
-                    value={sheetId}
-                    onChange={(e) => setSheetId(e.target.value)}
-                  />
-                  <div className="kw-row" style={{ gridTemplateColumns: "1fr auto" }}>
-                    <input
-                      type="text"
-                      placeholder="Filter op keyword (optioneel)"
-                      value={sheetKeywordFilter}
-                      onChange={(e) => setSheetKeywordFilter(e.target.value)}
-                    />
-                    <button className="btn-ghost btn-small" onClick={loadSheet} disabled={sheetBusy || !sheetId}>
-                      {sheetBusy ? "Laden…" : "Sheet laden"}
-                    </button>
-                  </div>
-                  <div className="toggle-row">
-                    <button
-                      className={"switch" + (skipTagged ? " on" : "")}
-                      onClick={() => setSkipTagged(!skipTagged)}
-                      type="button"
-                    />
-                    Rijen met Dubbel/Twijfel-tags (kolom G/H) overslaan
-                  </div>
-                  {sheetMsg && <div className="hint">{sheetMsg}</div>}
-                </>
-              )}
-
-              <div className="field-label">
-                Required keyword <span className="opt">(optional)</span>
-              </div>
-              <input
-                type="text"
-                placeholder="e.g. orthopedic sandals"
-                value={requiredKeyword}
-                onChange={(e) => setRequiredKeyword(e.target.value)}
-              />
-              <div className="hint">Forces this keyword into the title for all URLs in this batch.</div>
-
-              <div className="field-label">
-                Tags <span className="opt">(optional)</span>
-              </div>
-              <input
-                type="text"
-                placeholder="e.g. summer-sale, new-arrivals"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-              />
-              <div className="hint">Comma-separated tags applied to every product in this batch.</div>
-
-              <div className="field-label">Discount on compare-at price</div>
-              <div className="seg">
-                {["None", 10, 20, 30, 40, 50].map((d) => {
-                  const val = d === "None" ? 0 : d;
-                  return (
-                    <button
-                      key={d}
-                      className={discount === val ? "on" : ""}
-                      onClick={() => setDiscount(val)}
-                    >
-                      {d === "None" ? "None" : d + "%"}
-                    </button>
-                  );
-                })}
-                <button className={discount === "custom" ? "on" : ""} onClick={() => setDiscount("custom")}>
-                  Custom %
-                </button>
-                {discount === "custom" && (
-                  <input
-                    type="number"
-                    style={{ width: 80 }}
-                    placeholder="35"
-                    value={customDiscount}
-                    onChange={(e) => setCustomDiscount(e.target.value)}
-                  />
-                )}
-              </div>
-              <div className="hint">
-                {discountPct > 0
-                  ? `Compare-at price will be set to show ${discountPct}% off.`
-                  : "Geen doorgestreepte prijs."}
-              </div>
-
-              <div className="field-label">Product status</div>
-              <div className="seg">
-                <button className={status === "draft" ? "on" : ""} onClick={() => setStatus("draft")}>
-                  Draft
-                </button>
-                <button className={status === "active" ? "on" : ""} onClick={() => setStatus("active")}>
-                  Active
-                </button>
-              </div>
-
-              <div className="field-label">Listing stijl</div>
-              <div className="seg">
-                <button
-                  className={listingStyle === "stacking" ? "on" : ""}
-                  onClick={() => setListingStyle("stacking")}
-                >
-                  Keyword stacking
-                </button>
-                <button
-                  className={listingStyle === "attribute" ? "on" : ""}
-                  onClick={() => setListingStyle("attribute")}
-                >
-                  Attribuut stijl
-                </button>
-              </div>
-
-              <div className="toggle-row">
-                <button
-                  className={"switch" + (genderPrefix ? " on" : "")}
-                  onClick={() => setGenderPrefix(!genderPrefix)}
-                  type="button"
-                />
-                Gender prefix in title (Women's …)
-              </div>
-              <div className="toggle-row">
-                <button
-                  className={"switch" + (forceMens ? " on" : "")}
-                  onClick={() => setForceMens(!forceMens)}
-                  type="button"
-                />
-                Force men's keywords (voor stores zonder apart men-template)
-              </div>
-              <div className="toggle-row">
-                <button
-                  className={"switch" + (currencyOverride ? " on" : "")}
-                  onClick={() => setCurrencyOverride(!currencyOverride)}
-                  type="button"
-                />
-                Manual currency override
-              </div>
-              {currencyOverride ? (
-                <div className="kw-row" style={{ gridTemplateColumns: "220px 1fr" }}>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    placeholder="Koers bron → store (bv. 0.62)"
-                    value={manualRate}
-                    onChange={(e) => setManualRate(e.target.value)}
-                  />
-                  <span className="hint">Bronprijs × deze koers = storeprijs</span>
-                </div>
-              ) : (
-                <div className="hint">
-                  Currency is auto-detected per store and converted automatically — only turn this on to force a
-                  specific from/to rate if that ever goes wrong.
-                </div>
-              )}
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginTop: 6 }}>
-                <div>
-                  <div className="field-label">Color label</div>
-                  <div className="seg">
-                    <button className={colorLabel === "Color" ? "on" : ""} onClick={() => setColorLabel("Color")}>
-                      Color
-                    </button>
-                    <button className={colorLabel === "Colour" ? "on" : ""} onClick={() => setColorLabel("Colour")}>
-                      Colour
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <div className="field-label">Size label</div>
-                  <input type="text" value={sizeLabel} onChange={(e) => setSizeLabel(e.target.value)} />
-                </div>
-                <div>
-                  <div className="field-label">Theme template</div>
-                  <div className="seg">
-                    <button
-                      className={themeTemplate === "standard" ? "on" : ""}
-                      onClick={() => setThemeTemplate("standard")}
-                    >
-                      Standard
-                    </button>
-                    <button className={themeTemplate === "men" ? "on" : ""} onClick={() => setThemeTemplate("men")}>
-                      Men
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 16 }}>
-                <button className="btn" disabled={!canImport} onClick={runImport}>
-                  {running ? `Bezig… ${progress.done}/${progress.total}` : "⇪ Import products"}
-                </button>
-                {!selectedStore && (
-                  <div className="hint" style={{ textAlign: "center" }}>
-                    Select a store from the sidebar to enable importing.
-                  </div>
-                )}
-              </div>
-
-              {(running || logs.length > 0) && (
-                <div style={{ marginTop: 14 }}>
-                  <div className="progressbar">
-                    <div
-                      style={{
-                        width: progress.total ? (progress.done / progress.total) * 100 + "%" : "0%",
-                      }}
-                    />
-                  </div>
-                  <div>
-                    {logs.map((l, i) => (
-                      <div className="log" key={i}>
-                        {l.info ? (
-                          <span className="muted">{l.text}</span>
-                        ) : l.ok ? (
-                          <>
-                            <span className="ok">✓</span>
-                            <span style={{ flex: 1 }}>{l.text}</span>
-                            <a className="linklike" href={l.href} target="_blank" rel="noreferrer">
-                              open in Shopify
-                            </a>
-                          </>
-                        ) : (
-                          <>
-                            <span className="err">✗</span>
-                            <span className="err" style={{ flex: 1 }}>
-                              {l.text}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* -------- URL Queue -------- */}
-            <div className="card">
-              <h2>≣ URL Queue</h2>
-              <textarea
-                placeholder="Paste URLs or collection links to save for later…"
-                value={queueText}
-                onChange={(e) => setQueueText(e.target.value)}
-                rows={3}
-              />
-              <div className="kw-row" style={{ gridTemplateColumns: "1fr 1fr" }}>
-                <input
-                  type="text"
-                  placeholder="Tag (optioneel, bv. jackets&coats)"
-                  value={queueTag}
-                  onChange={(e) => setQueueTag(e.target.value)}
-                />
-                <input
-                  type="text"
-                  placeholder="Keyword (optioneel)"
-                  value={queueKeyword}
-                  onChange={(e) => setQueueKeyword(e.target.value)}
-                />
-              </div>
-              <div style={{ marginTop: 10 }}>
-                <button className="btn-ghost" onClick={saveToQueue} disabled={!queueText.trim()}>
-                  Save to queue
-                </button>
-              </div>
-              {queue.length === 0 ? (
-                <div className="hint" style={{ textAlign: "center", marginTop: 10 }}>
-                  No saved URLs yet.
-                </div>
-              ) : (
-                <table className="mini-table" style={{ marginTop: 10 }}>
-                  <tbody>
-                    {queue.map((q) => (
-                      <tr key={q.id}>
-                        <td>
-                          <strong>{q.urls.length} URLs</strong>
-                          {q.tag ? ` · tag: ${q.tag}` : ""}
-                          {q.keyword ? ` · keyword: ${q.keyword}` : ""}
-                        </td>
-                        <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                          <button className="linklike" onClick={() => loadQueueEntry(q)}>
-                            laden
-                          </button>{" "}
-                          <button className="linklike" onClick={() => removeQueueEntry(q.id)}>
-                            verwijderen
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
+      <div className="page home">
+        {/* ---------- HUD strip ---------- */}
+        <div className="hud">
+          <span className="hud-dot" />
+          <span className="hud-label">System online</span>
+          <span className="hud-sep" />
+          <span className="hud-label">
+            {loc ? `${loc.city}${loc.country ? " · " + loc.country : ""}` : "Locating…"}
+          </span>
+          <span className="hud-sep" />
+          <span className="hud-label">All modules ready</span>
+          <span className="hud-grow" />
+          {syncLabel ? (
+            <button
+              type="button"
+              className={"hud-sync" + (syncing ? " on" : "")}
+              onClick={() => loadContext(true)}
+              title="Nu verversen"
+            >
+              <span className="hud-sync-dot" />
+              {syncLabel}
+            </button>
+          ) : null}
+          <span className="hud-clock">{timeLine}</span>
         </div>
+
+        {/* ---------- Hero ---------- */}
+        <section className="hero">
+          <div className="hero-rings" aria-hidden="true">
+            <svg viewBox="0 0 200 200" width="176" height="176">
+              <circle className="ring ring-1" cx="100" cy="100" r="86" />
+              <circle className="ring ring-2" cx="100" cy="100" r="66" />
+              <circle className="ring ring-3" cx="100" cy="100" r="46" />
+              <circle className="core" cx="100" cy="100" r="15" />
+              <circle className="core-dot" cx="100" cy="100" r="5" />
+            </svg>
+          </div>
+
+          <div className="hero-text">
+            <h1 className="greet">
+              {typed}
+              <span className="caret" />
+            </h1>
+            <div className="greet-sub">
+              {dateLine}
+              {loc && loc.city ? ` · ${loc.city}` : ""}
+            </div>
+          </div>
+        </section>
+
+        {/* ---------- Tiles ---------- */}
+        <section className="tiles">
+          <div className="tile">
+            <div className="tile-head">Weather</div>
+            {w ? (
+              <>
+                <div className="tile-main">
+                  <span className="tile-icon">
+                    <WeatherIcon kind={w.icon} />
+                  </span>
+                  <span className="tile-big">{w.temp}°</span>
+                </div>
+                <div className="tile-sub">
+                  {w.label} · feels {w.feels}°
+                </div>
+                <div className="tile-foot">
+                  {w.high !== null ? `H ${w.high}° · L ${w.low}° · ` : ""}wind {w.wind} km/h
+                </div>
+              </>
+            ) : (
+              <div className="tile-loading">{ctx ? "Niet beschikbaar" : "Ophalen…"}</div>
+            )}
+          </div>
+
+          <div className="tile">
+            <div className="tile-head">Local time</div>
+            <div className="tile-main">
+              <span className="tile-big mono">{timeLine}</span>
+            </div>
+            <div className="tile-sub">{dateLine || "—"}</div>
+            <div className="tile-foot">
+              {loc && loc.timezone ? loc.timezone : "Tijdzone onbekend"}
+            </div>
+          </div>
+
+          <div className="tile">
+            <div className="tile-head">Operator</div>
+            <div className="tile-main">
+              <span className="tile-big">{me && me.name ? me.name : "—"}</span>
+            </div>
+            <div className="tile-sub">{me ? me.email : "Sessie laden…"}</div>
+            <div className="tile-foot">Sa Collective LLC</div>
+          </div>
+        </section>
+
+        {/* ---------- Modules ---------- */}
+        <section>
+          <div className="section-title">
+            <span>Select a module</span>
+            <span className="rule" />
+          </div>
+          <div className="modules">
+            {MODULES.map((m) => (
+              <Link key={m.href} href={m.href} className="mod">
+                <span className="mod-code">{m.code}</span>
+                <span className="mod-icon">{m.icon}</span>
+                <span className="mod-name">{m.name}</span>
+                <span className="mod-tag">{m.tagline}</span>
+                <span className="mod-body">{m.body}</span>
+                <span className="mod-go">
+                  Openen
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h13M13 6.5 18.5 12 13 17.5" />
+                  </svg>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* ---------- Briefing ---------- */}
+        <section>
+          <div className="section-title">
+            <span>Briefing{loc && loc.country ? ` — ${loc.country}` : ""}</span>
+            <span className="rule" />
+          </div>
+          <div className="card">
+            {news.length === 0 ? (
+              <div className="center-note">
+                {ctx ? "Geen nieuws opgehaald" : "Nieuws ophalen…"}
+              </div>
+            ) : (
+              news.map((n, i) => (
+                <a
+                  key={i}
+                  className="news"
+                  href={n.link}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <span className="news-idx">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="news-title">{n.title}</span>
+                  {n.source ? <span className="news-src">{n.source}</span> : null}
+                </a>
+              ))
+            )}
+          </div>
+        </section>
       </div>
     </>
   );

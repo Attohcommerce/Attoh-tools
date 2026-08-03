@@ -20,7 +20,7 @@ export async function POST(req) {
     return NextResponse.json({ error: "Onjuiste inloggegevens" }, { status: 401 });
   }
   const session = await getSession();
-  session.user = { email: match.email };
+  session.user = { email: match.email, name: match.name || "" };
   await session.save();
   return NextResponse.json({ ok: true });
 }
