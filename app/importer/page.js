@@ -75,6 +75,7 @@ export default function ImporterPage() {
   // Import-run
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [step, setStep] = useState(""); // live stap binnen het huidige product
   const [logs, setLogs] = useState([]);
 
   // Queue
@@ -227,8 +228,10 @@ export default function ImporterPage() {
     let okCount = 0;
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
+      const nr = `${i + 1}/${urls.length}`;
       try {
         // 1. Scrape
+        setStep(`${nr} · Product scrapen…`);
         const sRes = await fetch("/api/scrape", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -239,6 +242,7 @@ export default function ImporterPage() {
         const product = sData.product;
 
         // 2. AI Generate
+        setStep(`${nr} · AI schrijft titel + omschrijving… (±20 sec)`);
         const gRes = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -268,6 +272,7 @@ export default function ImporterPage() {
         }
 
         // 4. Upload
+        setStep(`${nr} · Uploaden naar ${selectedStore.name} + foto's koppelen…`);
         const iRes = await fetch("/api/import", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -296,13 +301,15 @@ export default function ImporterPage() {
         const iData = await iRes.json();
         if (!iRes.ok) throw new Error(iData.error || "upload mislukt");
         okCount++;
-        pushLog({ ok: true, text: iData.product.title, href: iData.product.adminUrl });
+        const linked = iData.linkedImages ? ` · ${iData.linkedImages} kleurfoto's gekoppeld` : "";
+        pushLog({ ok: true, text: iData.product.title + linked, href: iData.product.adminUrl });
       } catch (e) {
         pushLog({ ok: false, text: `${url} — ${e.message}` });
       }
       setProgress({ done: i + 1, total: urls.length });
     }
     pushLog({ info: true, text: `Klaar: ${okCount}/${urls.length} producten geïmporteerd als ${status === "active" ? "Active" : "Draft"}.` });
+    setStep("");
     setRunning(false);
   }
 
@@ -696,7 +703,7 @@ export default function ImporterPage() {
 
               <div style={{ marginTop: 16 }}>
                 <button className="btn" disabled={!canImport} onClick={runImport}>
-                  {running ? `Bezig… ${progress.done}/${progress.total}` : "⇪ Import products"}
+                  {running ? step || `Bezig… ${progress.done}/${progress.total}` : "⇪ Import products"}
                 </button>
                 {!selectedStore && (
                   <div className="hint" style={{ textAlign: "center" }}>
