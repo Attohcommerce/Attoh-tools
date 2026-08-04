@@ -52,6 +52,7 @@ export async function POST(req) {
     scored.push({
       idx: i,
       tier: m.tier,
+      lit: m.literal ? 1 : 0,
       link: p.url,
       title: p.title,
       source: m.source, // Titel | Omschrijving | Foto's
@@ -59,10 +60,14 @@ export async function POST(req) {
     });
   }
 
-  // Titel vóór omschrijving vóór foto's; binnen een tier: best selling eerst
-  scored.sort((a, b) => a.tier - b.tier || a.idx - b.idx);
+  // Rangorde: 1) titel vóór omschrijving vóór foto's
+  //           2) binnen een tier: Literal vóór Ruim
+  //           3) daarbinnen: best selling eerst
+  scored.sort((a, b) => a.tier - b.tier || b.lit - a.lit || a.idx - b.idx);
 
-  const matches = scored.slice(0, Number(need) || 10).map(({ idx, tier, ...rest }) => rest);
+  const matches = scored
+    .slice(0, Number(need) || 10)
+    .map(({ idx, tier, lit, ...rest }) => rest);
 
   return NextResponse.json({
     ok: true,
