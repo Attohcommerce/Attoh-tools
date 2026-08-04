@@ -1,5 +1,15 @@
 import { NextResponse } from "next/server";
-import { addTab, appendRows, formatKeywordTab, parseSheetId } from "@/lib/sheets";
+import {
+  addTab,
+  appendRows,
+  formatKeywordTab,
+  parseSheetId,
+  readRange,
+  getTabIdByTitle,
+  deleteRows,
+} from "@/lib/sheets";
+import { isJunkKeyword } from "@/lib/brands";
+import { classifyJunkKeywordsBatch } from "@/lib/ai";
 
 export const maxDuration = 60;
 
@@ -42,6 +52,53 @@ export async function POST(req) {
       return NextResponse.json({
         ok: true,
         url: `https://docs.google.com/spreadsheets/d/${id}/edit#gid=${tabId}`,
+      });
+    }
+
+    // Merken/rommel-check over de bovenste N rijen van een bestaand tabblad
+    if (action === "clean") {
+      const title = String(tabName || "").trim();
+      if (!title) return NextResponse.json({ error: "Tabbladnaam ontbreekt" }, { status: 400 });
+
+      const numericTabId = await getTabIdByTitle(sheetId, title);
+      if (numericTabId === null) {
+        return NextResponse.json({ error: `Tabblad "${title}" niet gevonden` }, { status: 422 });
+      }
+
+      const topN = Math.min(Math.max(Number(body.topN) || 500, 10), 800);
+      const values = await readRange(sheetId, `'${title}'!A2:A${topN + 1}`);
+      const kws = values.map((r) => String(r[0] || "").trim());
+
+      // 1. Statische zeef (merkenlijst, gratis)
+      const flagged = new Map(); // rij-index (0-based data) → reden
+      kws.forEach((kw, i) => {
+        if (kw && isJunkKeyword(kw)) flagged.set(i, "merkenlijst");
+      });
+
+      // 2. AI-zeef over de rest
+      const rest = kws
+        .map((kw, i) => ({ index: i, kw }))
+        .filter((r) => r.kw && !flagged.has(r.index));
+      const BATCH = 160;
+      for (let i = 0; i < rest.length; i += BATCH) {
+        const part = rest.slice(i, i + BATCH);
+        const removals = await classifyJunkKeywordsBatch(part);
+        for (const r of removals) {
+          if (part.some((p) => p.index === r.index)) flagged.set(r.index, r.reason || "ai");
+        }
+      }
+
+      // 3. Rijen verwijderen (data-rij i → sheet-rij i+1, 0-based met header op 0)
+      const removed = [...flagged.entries()]
+        .map(([i, reason]) => ({ kw: kws[i], reason, row: i + 1 }))
+        .sort((a, b) => a.row - b.row);
+      await deleteRows(sheetId, numericTabId, removed.map((r) => r.row));
+
+      return NextResponse.json({
+        ok: true,
+        checked: kws.length,
+        removedCount: removed.length,
+        removed: removed.map(({ kw, reason }) => ({ kw, reason })),
       });
     }
 

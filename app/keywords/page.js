@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Header from "../components/Header";
 
 const LS_SHEET = "attoh_kw_sheet";
+const LS_LASTTAB = "attoh_kw_lasttab";
 
 /* ---------- Keyword Planner CSV parsen (UTF-16, tab-gescheiden) ---------- */
 
@@ -64,12 +65,18 @@ export default function KeywordsPage() {
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState([]);
   const [doneUrl, setDoneUrl] = useState("");
+  // Stap 2 — merken-check
+  const [cleanTab, setCleanTab] = useState("");
+  const [topN, setTopN] = useState("500");
+  const [cleaning, setCleaning] = useState(false);
   const fileInput = useRef(null);
 
   useState(() => {
     try {
       const s = localStorage.getItem(LS_SHEET);
       if (s) setSheetLink(s);
+      const t = localStorage.getItem(LS_LASTTAB);
+      if (t) setCleanTab(t);
     } catch {}
   });
 
@@ -170,13 +177,51 @@ export default function KeywordsPage() {
       });
       pushLog({ ok: true, text: "Opmaak klaar — geel, filters, grijze keyword-kolom" });
       setDoneUrl(fmt.url);
-      pushLog({ info: true, text: `Klaar! ${rows.length} keywords in "${created.title}".` });
+      setCleanTab(created.title);
+      try {
+        localStorage.setItem(LS_LASTTAB, created.title);
+      } catch {}
+      pushLog({ info: true, text: `Klaar! ${rows.length} keywords in "${created.title}". Stap 2 (merken-check) staat nu open.` });
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     } catch (e) {
       pushLog({ err: true, text: String(e.message || e) });
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
     } finally {
       setRunning(false);
+    }
+  }
+
+  const canClean = !cleaning && !running && sheetLink.trim() && cleanTab.trim();
+
+  async function runClean() {
+    if (!canClean) return;
+    setCleaning(true);
+    try {
+      pushLog({ strong: true, text: `— Merken-check: bovenste ${topN} van "${cleanTab}"` });
+      pushLog({ text: "Merkenlijst + AI beoordelen de keywords — dit kan een minuutje duren…" });
+      const r = await api({
+        action: "clean",
+        sheetId: sheetLink.trim(),
+        tabName: cleanTab.trim(),
+        topN: Number(topN) || 500,
+      });
+      const names = r.removed.map((x) => x.kw);
+      const shown = names.slice(0, 40).join(", ");
+      pushLog({
+        ok: true,
+        text: `${r.removedCount} van ${r.checked} rijen verwijderd (merken/platforms/rommel).`,
+      });
+      if (names.length) {
+        pushLog({
+          text: `Weg: ${shown}${names.length > 40 ? ` … en ${names.length - 40} meer` : ""}`,
+        });
+      }
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+    } catch (e) {
+      pushLog({ err: true, text: String(e.message || e) });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+    } finally {
+      setCleaning(false);
     }
   }
 
@@ -245,6 +290,35 @@ export default function KeywordsPage() {
               <button className="btn" onClick={start} disabled={!canStart}>
                 {running ? "Bezig…" : "⌕ Samenvoegen & opmaken"}
               </button>
+            </div>
+
+            {/* -------- Stap 2: merken-check (pas actief na een run) -------- */}
+            <div className="card" style={{ marginTop: 18, opacity: canClean || cleaning ? 1 : 0.55 }}>
+              <h2>Stap 2 — merken-check <span className="opt">(AI + merkenlijst)</span></h2>
+              <div className="field-label">Tabblad</div>
+              <input
+                type="text"
+                placeholder="wordt gevuld na stap 1"
+                value={cleanTab}
+                onChange={(e) => setCleanTab(e.target.value)}
+              />
+              <div className="field-label">Aantal bovenste rijen checken</div>
+              <input
+                type="number"
+                min="10"
+                max="800"
+                value={topN}
+                onChange={(e) => setTopN(e.target.value)}
+              />
+              <div className="hint">
+                Verwijdert merken, winkels, platforms en niet-keywords uit de bovenste rijen
+                van het tabblad. De rest blijft staan — de sortering verschuift gewoon omhoog.
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <button className="btn-ghost" onClick={runClean} disabled={!canClean}>
+                  {cleaning ? "AI checkt…" : "Check & verwijder merken"}
+                </button>
+              </div>
             </div>
           </div>
 
