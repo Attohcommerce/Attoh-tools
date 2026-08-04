@@ -1,17 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
 
 const LS_SHEET = "attoh_kw_sheet";
-const LS_LASTTAB = "attoh_kw_lasttab";
+const LS_SESSIONS = "attoh_kw_sessions"; // max 2, nieuwste eerst
 
 /* ---------- Keyword Planner CSV parsen (UTF-16, tab-gescheiden) ---------- */
 
 async function parseKeywordCsv(file) {
   const buf = await file.arrayBuffer();
   let text = new TextDecoder("utf-16le").decode(buf);
-  // Fallback voor het geval iemand een UTF-8 export aanlevert
   if (!text.includes("\t") || text.charCodeAt(0) > 60000) {
     const alt = new TextDecoder("utf-8").decode(buf);
     if (alt.includes("\t")) text = alt;
@@ -28,7 +27,7 @@ async function parseKeywordCsv(file) {
     const m = h.match(/^Searches:\s*(.+)$/);
     if (m) {
       monthIdx.push(i);
-      monthNames.push(m[1].trim()); // "jul 2025"
+      monthNames.push(m[1].trim());
     }
   });
   if (avgIdx === -1 || monthIdx.length === 0) {
@@ -47,42 +46,103 @@ async function parseKeywordCsv(file) {
     const p = l.split("\t");
     const kw = clean(p[0]);
     if (!kw) continue;
-    out.push({
-      kw,
-      avg: num(p[avgIdx]),
-      months: monthIdx.map((i) => num(p[i])),
-    });
+    out.push({ kw, avg: num(p[avgIdx]), months: monthIdx.map((i) => num(p[i])) });
   }
   return { rows: out, monthNames };
+}
+
+/* ---------- Sessies (max 2 in localStorage) ---------- */
+
+function loadSessions() {
+  try {
+    const raw = localStorage.getItem(LS_SESSIONS);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.slice(0, 2) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistSessions(list) {
+  try {
+    localStorage.setItem(LS_SESSIONS, JSON.stringify(list.slice(0, 2)));
+  } catch {}
 }
 
 /* ---------- Pagina ---------- */
 
 export default function KeywordsPage() {
-  const [files, setFiles] = useState([]); // {name, rows, monthNames}
+  const [files, setFiles] = useState([]);
   const [sheetLink, setSheetLink] = useState("");
   const [tabName, setTabName] = useState("");
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState([]);
   const [doneUrl, setDoneUrl] = useState("");
-  // Stap 2 — merken-check
   const [cleanTab, setCleanTab] = useState("");
   const [topN, setTopN] = useState("500");
   const [cleaning, setCleaning] = useState(false);
+  // Sessies + chat
+  const [sessions, setSessions] = useState([]);
+  const [activeId, setActiveId] = useState(null); // null = nieuwe run
+  const [chatMsgs, setChatMsgs] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatBusy, setChatBusy] = useState(false);
   const fileInput = useRef(null);
+  const chatEnd = useRef(null);
 
-  useState(() => {
+  useEffect(() => {
     try {
       const s = localStorage.getItem(LS_SHEET);
       if (s) setSheetLink(s);
-      const t = localStorage.getItem(LS_LASTTAB);
-      if (t) setCleanTab(t);
     } catch {}
-  });
+    setSessions(loadSessions());
+  }, []);
+
+  useEffect(() => {
+    if (chatEnd.current) chatEnd.current.scrollIntoView({ behavior: "smooth" });
+  }, [chatMsgs, chatBusy]);
 
   function pushLog(entry) {
     setLogs((l) => [...l, entry]);
   }
+
+  /* ----- sessies beheren ----- */
+
+  function upsertSession(patch) {
+    setSessions((prev) => {
+      let list = [...prev];
+      const i = list.findIndex((s) => s.id === patch.id);
+      if (i >= 0) list[i] = { ...list[i], ...patch };
+      else list = [patch, ...list].slice(0, 2); // max 2 — oudste valt eraf
+      persistSessions(list);
+      return list;
+    });
+  }
+
+  function openSession(s) {
+    setActiveId(s.id);
+    setSheetLink(s.sheetLink || sheetLink);
+    setTabName(s.tabName);
+    setCleanTab(s.tabName);
+    setDoneUrl(s.doneUrl || "");
+    setLogs(s.logs || []);
+    setChatMsgs(s.chat || []);
+    setFiles([]);
+  }
+
+  function newSession() {
+    setActiveId(null);
+    setTabName("");
+    setCleanTab("");
+    setDoneUrl("");
+    setLogs([]);
+    setChatMsgs([]);
+    setFiles([]);
+  }
+
+  const activeSession = sessions.find((s) => s.id === activeId) || null;
+
+  /* ----- bestanden ----- */
 
   async function onFiles(e) {
     const list = Array.from(e.target.files || []).slice(0, 10);
@@ -100,11 +160,10 @@ export default function KeywordsPage() {
   }
 
   const totalRows = files.reduce((s, f) => s + (f.rows ? f.rows.length : 0), 0);
-  const canStart =
-    !running && files.some((f) => f.rows) && sheetLink.trim() && tabName.trim();
+  const canStart = !running && files.some((f) => f.rows) && sheetLink.trim() && tabName.trim();
 
-  async function api(body) {
-    const res = await fetch("/api/keywords-sheet", {
+  async function api(url, body) {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -113,6 +172,8 @@ export default function KeywordsPage() {
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     return data;
   }
+
+  /* ----- stap 1: samenvoegen & opmaken ----- */
 
   async function start() {
     if (!canStart) return;
@@ -123,9 +184,14 @@ export default function KeywordsPage() {
       localStorage.setItem(LS_SHEET, sheetLink.trim());
     } catch {}
 
+    const runLogs = [];
+    const log = (entry) => {
+      runLogs.push(entry);
+      pushLog(entry);
+    };
+
     try {
-      // 1. Samenvoegen + ontdubbelen (hoogste volume wint)
-      pushLog({ strong: true, text: "— Stap 1: CSV's samenvoegen" });
+      log({ strong: true, text: "— Stap 1: CSV's samenvoegen" });
       const merged = new Map();
       let monthNames = null;
       for (const f of files) {
@@ -138,50 +204,58 @@ export default function KeywordsPage() {
         }
       }
       const rows = [...merged.values()].sort((a, b) => b.avg - a.avg);
-      pushLog({ ok: true, text: `${totalRows} rijen gelezen → ${rows.length} unieke keywords` });
+      log({ ok: true, text: `${totalRows} rijen gelezen → ${rows.length} unieke keywords` });
 
-      // 2. Tabblad aanmaken met nette headers
-      pushLog({ strong: true, text: "— Stap 2: nieuw tabblad aanmaken" });
+      log({ strong: true, text: "— Stap 2: nieuw tabblad aanmaken" });
       const header = ["Keyword", "Avg. monthly search", ...monthNames];
-      const created = await api({
+      const created = await api("/api/keywords-sheet", {
         action: "create",
         sheetId: sheetLink.trim(),
         tabName: tabName.trim(),
         header,
       });
-      pushLog({ ok: true, text: `Tabblad "${created.title}" aangemaakt` });
+      log({ ok: true, text: `Tabblad "${created.title}" aangemaakt` });
 
-      // 3. Rijen uploaden in blokken (binnen de serverless bodylimiet blijven)
-      pushLog({ strong: true, text: "— Stap 3: keywords uploaden" });
+      log({ strong: true, text: "— Stap 3: keywords uploaden" });
       const CHUNK = 4000;
       const values = rows.map((r) => [r.kw, r.avg, ...r.months]);
       for (let i = 0; i < values.length; i += CHUNK) {
-        const part = values.slice(i, i + CHUNK);
-        await api({
+        await api("/api/keywords-sheet", {
           action: "append",
           sheetId: sheetLink.trim(),
           tabName: created.title,
-          rows: part,
+          rows: values.slice(i, i + CHUNK),
         });
-        pushLog({ text: `${Math.min(i + CHUNK, values.length)} / ${values.length} rijen` });
+        log({ text: `${Math.min(i + CHUNK, values.length)} / ${values.length} rijen` });
       }
 
-      // 4. Opmaak: geel + vet + filters, kolom A grijs, rij 1 vast
-      pushLog({ strong: true, text: "— Stap 4: opmaken" });
-      const fmt = await api({
+      log({ strong: true, text: "— Stap 4: opmaken" });
+      const fmt = await api("/api/keywords-sheet", {
         action: "format",
         sheetId: sheetLink.trim(),
         tabId: created.tabId,
         rowCount: values.length + 1,
         colCount: header.length,
       });
-      pushLog({ ok: true, text: "Opmaak klaar — geel, filters, grijze keyword-kolom" });
+      log({ ok: true, text: "Opmaak klaar — geel, filters, grijze keyword-kolom" });
       setDoneUrl(fmt.url);
       setCleanTab(created.title);
-      try {
-        localStorage.setItem(LS_LASTTAB, created.title);
-      } catch {}
-      pushLog({ info: true, text: `Klaar! ${rows.length} keywords in "${created.title}". Stap 2 (merken-check) staat nu open.` });
+      log({ info: true, text: `Klaar! ${rows.length} keywords in "${created.title}".` });
+
+      // Sessie opslaan (max 2)
+      const id = `${created.tabId}-${created.title}`;
+      setActiveId(id);
+      upsertSession({
+        id,
+        tabName: created.title,
+        sheetLink: sheetLink.trim(),
+        doneUrl: fmt.url,
+        rowCount: rows.length,
+        logs: runLogs.slice(-30),
+        chat: [],
+        ts: Date.now(),
+      });
+
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     } catch (e) {
       pushLog({ err: true, text: String(e.message || e) });
@@ -191,6 +265,8 @@ export default function KeywordsPage() {
     }
   }
 
+  /* ----- stap 2: merken-check ----- */
+
   const canClean = !cleaning && !running && sheetLink.trim() && cleanTab.trim();
 
   async function runClean() {
@@ -199,22 +275,21 @@ export default function KeywordsPage() {
     try {
       pushLog({ strong: true, text: `— Merken-check: bovenste ${topN} van "${cleanTab}"` });
       pushLog({ text: "Merkenlijst + AI beoordelen de keywords — dit kan een minuutje duren…" });
-      const r = await api({
+      const r = await api("/api/keywords-sheet", {
         action: "clean",
         sheetId: sheetLink.trim(),
         tabName: cleanTab.trim(),
         topN: Number(topN) || 500,
       });
       const names = r.removed.map((x) => x.kw);
-      const shown = names.slice(0, 40).join(", ");
-      pushLog({
-        ok: true,
-        text: `${r.removedCount} van ${r.checked} rijen verwijderd (merken/platforms/rommel).`,
-      });
+      pushLog({ ok: true, text: `${r.removedCount} van ${r.checked} rijen verwijderd.` });
       if (names.length) {
         pushLog({
-          text: `Weg: ${shown}${names.length > 40 ? ` … en ${names.length - 40} meer` : ""}`,
+          text: `Weg: ${names.slice(0, 40).join(", ")}${names.length > 40 ? ` … en ${names.length - 40} meer` : ""}`,
         });
+      }
+      if (activeSession) {
+        upsertSession({ id: activeSession.id, cleanedCount: (activeSession.cleanedCount || 0) + r.removedCount });
       }
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     } catch (e) {
@@ -225,83 +300,154 @@ export default function KeywordsPage() {
     }
   }
 
+  /* ----- sessie-chat ----- */
+
+  async function sendChat() {
+    const text = chatInput.trim();
+    if (!text || chatBusy || !activeSession) return;
+    setChatInput("");
+    const nextMsgs = [...chatMsgs, { role: "user", content: text }];
+    setChatMsgs(nextMsgs);
+    setChatBusy(true);
+    try {
+      const r = await api("/api/keywords-chat", {
+        sheetId: activeSession.sheetLink,
+        tabName: activeSession.tabName,
+        history: chatMsgs.map(({ role, content }) => ({ role, content })),
+        message: text,
+      });
+      const withReply = [
+        ...nextMsgs,
+        { role: "assistant", content: r.reply, actions: r.actions || [] },
+      ];
+      setChatMsgs(withReply);
+      // Tabblad hernoemd via chat? Sessie mee laten bewegen.
+      const patch = {
+        id: activeSession.id,
+        chat: withReply.slice(-20),
+      };
+      if (r.tabName && r.tabName !== activeSession.tabName) {
+        patch.tabName = r.tabName;
+        setCleanTab(r.tabName);
+      }
+      upsertSession(patch);
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "ok" }));
+    } catch (e) {
+      setChatMsgs((m) => [...m, { role: "assistant", content: `Er ging iets mis: ${e.message}`, error: true }]);
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+    } finally {
+      setChatBusy(false);
+    }
+  }
+
+  /* ---------- render ---------- */
+
   return (
     <>
       <Header icon="A" title="Attoh Tools" subtitle="Keyword Planner → nette sheet" />
       <div className="page">
+        {/* -------- Sessies -------- */}
+        <div className="sess-bar">
+          <button
+            className={"sess-tab" + (activeId === null ? " on" : "")}
+            onClick={newSession}
+          >
+            + Nieuwe run
+          </button>
+          {sessions.map((s) => (
+            <button
+              key={s.id}
+              className={"sess-tab" + (activeId === s.id ? " on" : "")}
+              onClick={() => openSession(s)}
+              title={s.tabName}
+            >
+              {s.tabName}
+              <span className="sess-meta">{s.rowCount ? `${s.rowCount} kw` : ""}</span>
+            </button>
+          ))}
+          <span className="sess-note">max 2 sessies bewaard</span>
+        </div>
+
         <div className="layout-scraper">
           {/* -------- Links: invoer -------- */}
           <div>
-            <div className="card">
-              <h2>CSV-bestanden <span className="opt">(1–10, uit Keyword Planner)</span></h2>
-              <input
-                ref={fileInput}
-                type="file"
-                accept=".csv"
-                multiple
-                onChange={onFiles}
-                style={{ padding: 9 }}
-              />
-              {files.length > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  {files.map((f, i) => (
-                    <div className="log" key={i}>
-                      {f.error ? (
-                        <span className="err">✗ {f.name} — {f.error}</span>
-                      ) : (
-                        <>
-                          <span className="ok">✓</span>
-                          <span style={{ flex: 1 }}>{f.name}</span>
-                          <span className="muted small">{f.rows.length} rijen</span>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                  <div className="hint">Samen {totalRows} rijen — dubbelingen worden samengevoegd.</div>
-                </div>
-              )}
-            </div>
+            {activeId === null && (
+              <div className="card">
+                <h2>CSV-bestanden <span className="opt">(1–10, uit Keyword Planner)</span></h2>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept=".csv"
+                  multiple
+                  onChange={onFiles}
+                  style={{ padding: 9 }}
+                />
+                {files.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    {files.map((f, i) => (
+                      <div className="log" key={i}>
+                        {f.error ? (
+                          <span className="err">✗ {f.name} — {f.error}</span>
+                        ) : (
+                          <>
+                            <span className="ok">✓</span>
+                            <span style={{ flex: 1 }}>{f.name}</span>
+                            <span className="muted small">{f.rows.length} rijen</span>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                    <div className="hint">Samen {totalRows} rijen — dubbelingen worden samengevoegd.</div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="card">
-              <h2>Doel-sheet</h2>
+              <h2>{activeId === null ? "Doel-sheet" : "Sessie"}</h2>
               <div className="field-label">Google Sheet-link</div>
               <input
                 type="text"
                 placeholder="https://docs.google.com/spreadsheets/d/…"
                 value={sheetLink}
                 onChange={(e) => setSheetLink(e.target.value)}
+                disabled={activeId !== null}
               />
-              <div className="hint">
-                Deel de sheet één keer met het service-account (Bewerker). De link wordt onthouden.
-              </div>
-              <div className="field-label">Naam nieuw tabblad</div>
+              <div className="field-label">{activeId === null ? "Naam nieuw tabblad" : "Tabblad"}</div>
               <input
                 type="text"
                 placeholder="bv. UK 4 augustus"
                 value={tabName}
-                onChange={(e) => setTabName(e.target.value)}
+                onChange={(e) => {
+                  setTabName(e.target.value);
+                  if (activeId === null) setCleanTab(e.target.value);
+                }}
+                disabled={activeId !== null}
               />
-              <div className="hint">
-                Elke run maakt een nieuw tabblad in dezelfde sheet — niets wordt overschreven.
+              {activeId === null ? (
+                <div className="hint">Elke run maakt een nieuw tabblad — niets wordt overschreven.</div>
+              ) : (
+                doneUrl && (
+                  <div style={{ marginTop: 12 }}>
+                    <a className="linklike" href={doneUrl} target="_blank" rel="noreferrer noopener">
+                      Tabblad openen ↗
+                    </a>
+                  </div>
+                )
+              )}
+            </div>
+
+            {activeId === null && (
+              <div style={{ marginTop: 16 }}>
+                <button className="btn" onClick={start} disabled={!canStart}>
+                  {running ? "Bezig…" : "⌕ Samenvoegen & opmaken"}
+                </button>
               </div>
-            </div>
+            )}
 
-            <div style={{ marginTop: 16 }}>
-              <button className="btn" onClick={start} disabled={!canStart}>
-                {running ? "Bezig…" : "⌕ Samenvoegen & opmaken"}
-              </button>
-            </div>
-
-            {/* -------- Stap 2: merken-check (pas actief na een run) -------- */}
+            {/* -------- Stap 2: merken-check -------- */}
             <div className="card" style={{ marginTop: 18, opacity: canClean || cleaning ? 1 : 0.55 }}>
-              <h2>Stap 2 — merken-check <span className="opt">(AI + merkenlijst)</span></h2>
-              <div className="field-label">Tabblad</div>
-              <input
-                type="text"
-                placeholder="wordt gevuld na stap 1"
-                value={cleanTab}
-                onChange={(e) => setCleanTab(e.target.value)}
-              />
+              <h2>Merken-check <span className="opt">(AI + merkenlijst)</span></h2>
               <div className="field-label">Aantal bovenste rijen checken</div>
               <input
                 type="number"
@@ -311,8 +457,7 @@ export default function KeywordsPage() {
                 onChange={(e) => setTopN(e.target.value)}
               />
               <div className="hint">
-                Verwijdert merken, winkels, platforms en niet-keywords uit de bovenste rijen
-                van het tabblad. De rest blijft staan — de sortering verschuift gewoon omhoog.
+                Verwijdert merken, winkels en platforms uit de bovenste rijen van "{cleanTab || "…"}".
               </div>
               <div style={{ marginTop: 12 }}>
                 <button className="btn-ghost" onClick={runClean} disabled={!canClean}>
@@ -327,13 +472,9 @@ export default function KeywordsPage() {
             <div className="card" style={{ minHeight: 320 }}>
               {logs.length === 0 && (
                 <div className="center-note">
-                  Kies links je CSV-exports, plak de sheet-link, geef het tabblad een naam
-                  en klik op Samenvoegen & opmaken.
-                  <br />
-                  <br />
-                  De tool maakt er één schone lijst van: titelrijen en overbodige kolommen
-                  verdwijnen, "Searches:" gaat uit de maandkoppen, de header wordt geel met
-                  filters en de keyword-kolom grijs — klaar om te checken.
+                  {activeId === null
+                    ? "Kies links je CSV-exports, plak de sheet-link, geef het tabblad een naam en start."
+                    : "Sessie geladen — gebruik de chat hieronder om aanpassingen te doen."}
                 </div>
               )}
               {logs.map((l, i) => (
@@ -342,7 +483,7 @@ export default function KeywordsPage() {
                   <span style={{ flex: 1, fontWeight: l.strong ? 600 : 400 }}>{l.text}</span>
                 </div>
               ))}
-              {doneUrl && (
+              {doneUrl && activeId === null && (
                 <div style={{ marginTop: 14 }}>
                   <a className="btn-ghost" href={doneUrl} target="_blank" rel="noreferrer noopener" style={{ display: "inline-flex", width: "auto" }}>
                     Tabblad openen ↗
@@ -352,6 +493,52 @@ export default function KeywordsPage() {
             </div>
           </div>
         </div>
+
+        {/* -------- Sessie-chat -------- */}
+        {activeSession && (
+          <div className="card chat">
+            <h2>Sessie-chat <span className="opt">— vraag aanpassingen op "{activeSession.tabName}"</span></h2>
+            <div className="chat-msgs">
+              {chatMsgs.length === 0 && (
+                <div className="center-note" style={{ padding: "22px 10px" }}>
+                  Typ wat er anders moet — bijvoorbeeld "verwijder alle keywords met 'wedding'",
+                  "sorteer op Nov 2025" of "draai de merken-check nog eens over de top 300".
+                </div>
+              )}
+              {chatMsgs.map((m, i) => (
+                <div key={i} className={"chat-msg " + (m.role === "user" ? "user" : "ai")}>
+                  <div className="chat-bubble">{m.content}</div>
+                  {m.actions && m.actions.length > 0 && (
+                    <div className="chat-actions">
+                      {m.actions.map((a, j) => (
+                        <span className="chat-action" key={j}>⚙ {a.summary}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {chatBusy && (
+                <div className="chat-msg ai">
+                  <div className="chat-bubble muted">Bezig met je sheet…</div>
+                </div>
+              )}
+              <div ref={chatEnd} />
+            </div>
+            <div className="chat-inputrow">
+              <input
+                type="text"
+                placeholder="Wat moet er veranderd worden?"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendChat()}
+                disabled={chatBusy}
+              />
+              <button className="btn chat-send" onClick={sendChat} disabled={chatBusy || !chatInput.trim()}>
+                {chatBusy ? "…" : "Stuur"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
