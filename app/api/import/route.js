@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createProduct, setImageVariants, updateProduct } from "@/lib/shopify";
+import { createProduct, setImageVariants, updateProduct, getPreviewUrl } from "@/lib/shopify";
 
 export const maxDuration = 60;
 
@@ -170,6 +170,12 @@ export async function POST(req) {
     /* idem — geen showstopper */
   }
 
+  // Preview-link (werkt ook voor drafts) — handig voor de import-log & QA
+  let previewUrl = null;
+  try {
+    previewUrl = await getPreviewUrl(store, created.id);
+  } catch {}
+
   return NextResponse.json({
     ok: true,
     product: {
@@ -178,6 +184,7 @@ export async function POST(req) {
       handle: created.handle,
       status: created.status,
       adminUrl: created.adminUrl,
+      previewUrl,
     },
     linkedImages,
   });

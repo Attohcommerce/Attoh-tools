@@ -7,6 +7,7 @@ const LS = {
   stores: "sa_stores",
   selected: "sa_selected_store",
   queue: "sa_url_queue",
+  logSheet: "sa_importlog_sheet",
 };
 
 function load(key, fallback) {
@@ -51,6 +52,7 @@ export default function ImporterPage() {
   const [tab, setTab] = useState("urls"); // urls | sheet
   const [urlsText, setUrlsText] = useState("");
   const [sheetId, setSheetId] = useState("");
+  const [sheetTab, setSheetTab] = useState("");
   const [sheetKeywordFilter, setSheetKeywordFilter] = useState("");
   const [skipTagged, setSkipTagged] = useState(true);
   const [sheetLinks, setSheetLinks] = useState(null);
@@ -72,6 +74,9 @@ export default function ImporterPage() {
   const [sizeLabel, setSizeLabel] = useState("Size");
   const [themeTemplate, setThemeTemplate] = useState("standard");
 
+  // Import-log (werkboek-sheet, tabblad "Import-log")
+  const [logSheet, setLogSheet] = useState("");
+
   // Import-run
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
@@ -88,6 +93,10 @@ export default function ImporterPage() {
     setStores(load(LS.stores, []));
     setSelected(load(LS.selected, null));
     setQueue(load(LS.queue, []));
+    // Log-sheet: eigen instelling, anders de werk-sheet van de scraper overnemen
+    const ls = load(LS.logSheet, "") || load("sa_sheet_work", "");
+    setLogSheet(ls);
+    setSheetTab(load("sa_run_tab", ""));
   }, []);
 
   const urls = useMemo(() => {
@@ -183,7 +192,7 @@ export default function ImporterPage() {
       const res = await fetch("/api/sheets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "read", sheetId, range: "A:H" }),
+        body: JSON.stringify({ action: "read", sheetId, range: sheetTab.trim() ? `'${sheetTab.trim()}'!A:H` : "A:H" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || res.status);
@@ -208,12 +217,42 @@ export default function ImporterPage() {
     }
   }
 
+  // ---------- Import-log ----------
+  const LOG_HEADER = ["Datum", "Store", "Titel", "Keyword", "Status", "Admin-link", "Preview-link", "Opmerkingen"];
+
+  async function sheetsCall(body) {
+    const res = await fetch("/api/sheets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.status);
+    return data;
+  }
+
   // ---------- Import ----------
   async function runImport() {
     if (!selectedStore || urls.length === 0 || running) return;
     setRunning(true);
     setLogs([]);
     setProgress({ done: 0, total: urls.length });
+
+    // Import-log-tabblad klaarzetten (één keer per run)
+    let logReady = false;
+    if (logSheet.trim()) {
+      try {
+        await sheetsCall({
+          action: "createTab",
+          sheetId: logSheet.trim(),
+          title: "Import-log",
+          header: LOG_HEADER,
+        });
+        logReady = true;
+      } catch (e) {
+        pushLog({ ok: false, text: `Import-log niet bereikbaar: ${e.message} — import gaat gewoon door.` });
+      }
+    }
 
     // Wisselkoersen één keer ophalen
     let rates = null;
@@ -303,6 +342,29 @@ export default function ImporterPage() {
         okCount++;
         const linked = iData.linkedImages ? ` · ${iData.linkedImages} kleurfoto's gekoppeld` : "";
         pushLog({ ok: true, text: iData.product.title + linked, href: iData.product.adminUrl });
+        if (logReady) {
+          try {
+            const now = new Date();
+            const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+            await sheetsCall({
+              action: "append",
+              sheetId: logSheet.trim(),
+              range: "'Import-log'!A:H",
+              rows: [[
+                stamp,
+                selectedStore.name || selectedStore.domain,
+                iData.product.title,
+                requiredKeyword || "",
+                iData.product.status,
+                iData.product.adminUrl,
+                iData.product.previewUrl || "",
+                "",
+              ]],
+            });
+          } catch {
+            /* log is nice-to-have */
+          }
+        }
         window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "ok" }));
       } catch (e) {
         pushLog({ ok: false, text: `${url} — ${e.message}` });
@@ -526,6 +588,13 @@ export default function ImporterPage() {
                     value={sheetId}
                     onChange={(e) => setSheetId(e.target.value)}
                   />
+                  <input
+                    type="text"
+                    placeholder="Tabblad (bv. het run-tabblad — leeg = eerste blad)"
+                    value={sheetTab}
+                    onChange={(e) => setSheetTab(e.target.value)}
+                    style={{ marginTop: 8 }}
+                  />
                   <div className="kw-row" style={{ gridTemplateColumns: "1fr auto" }}>
                     <input
                       type="text"
@@ -702,6 +771,23 @@ export default function ImporterPage() {
                     </button>
                   </div>
                 </div>
+              </div>
+
+              <div className="field-label" style={{ marginTop: 18 }}>
+                Import-log sheet <span className="opt">(werkboek — tabblad "Import-log")</span>
+              </div>
+              <input
+                type="text"
+                placeholder="Sheet ID of volledige URL — leeg = geen log"
+                value={logSheet}
+                onChange={(e) => {
+                  setLogSheet(e.target.value);
+                  save(LS.logSheet, e.target.value);
+                }}
+              />
+              <div className="hint">
+                Na elke import schrijft de tool hier een regel bij: datum, store, titel, status en de
+                admin- én preview-link (preview werkt ook voor drafts).
               </div>
 
               <div style={{ marginTop: 16 }}>

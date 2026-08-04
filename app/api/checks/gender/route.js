@@ -7,11 +7,12 @@ export const maxDuration = 60;
 // Verwerkt max `batchSize` rijen per call; client herhaalt tot done.
 // Sheet-indeling: A link, B titel, C keyword, D matchbron, E matchtype, F geslacht-label.
 export async function POST(req) {
-  const { sheetId, cursor = 2, batchSize = 40 } = await req.json().catch(() => ({}));
+  const { sheetId, tab, cursor = 2, batchSize = 40 } = await req.json().catch(() => ({}));
+  const P = tab ? `'${String(tab).replace(/'/g, "")}'!` : "";
   if (!sheetId) return NextResponse.json({ error: "sheetId ontbreekt" }, { status: 400 });
 
   try {
-    const values = await readRange(sheetId, `A${cursor}:F${cursor + batchSize - 1}`);
+    const values = await readRange(sheetId, `${P}A${cursor}:F${cursor + batchSize - 1}`);
     if (!values.length) {
       return NextResponse.json({ ok: true, done: true, processed: 0 });
     }
@@ -36,7 +37,7 @@ export async function POST(req) {
       for (const r of rows) {
         const label = map[r.index];
         if (label) {
-          updates.push({ range: `F${r.index}`, values: [[label]] });
+          updates.push({ range: `${P}F${r.index}`, values: [[label]] });
           labeled++;
         }
       }

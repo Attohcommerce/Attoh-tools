@@ -22,13 +22,14 @@ async function getImageSignatures(link) {
 // Fase 1 (scan): client roept herhaald aan met cursor; wij halen per rij de foto-signatures op
 // en geven ze terug. Fase 2 (tag): client stuurt de rijen die dubbel bleken; wij taggen kolom G.
 export async function POST(req) {
-  const { sheetId, action, cursor = 2, batchSize = 12, tags } = await req.json().catch(() => ({}));
+  const { sheetId, tab, action, cursor = 2, batchSize = 12, tags } = await req.json().catch(() => ({}));
+  const P = tab ? `'${String(tab).replace(/'/g, "")}'!` : "";
   if (!sheetId) return NextResponse.json({ error: "sheetId ontbreekt" }, { status: 400 });
 
   try {
     if (action === "tag") {
       const updates = (tags || []).map((t) => ({
-        range: `G${t.row}`,
+        range: `${P}G${t.row}`,
         values: [[t.label || "Dubbel"]],
       }));
       if (updates.length) await batchUpdate(sheetId, updates);
@@ -36,7 +37,7 @@ export async function POST(req) {
     }
 
     // action: "scan"
-    const values = await readRange(sheetId, `A${cursor}:A${cursor + batchSize - 1}`);
+    const values = await readRange(sheetId, `${P}A${cursor}:A${cursor + batchSize - 1}`);
     if (!values.length) return NextResponse.json({ ok: true, done: true, items: [] });
 
     const items = await Promise.all(

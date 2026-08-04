@@ -7,11 +7,12 @@ export const maxDuration = 30;
 // Controleert of elke "Literal"-match het keyword echt letterlijk bevat (in de titel)
 // en tagt twijfelgevallen in kolom H.
 export async function POST(req) {
-  const { sheetId, cursor = 2, batchSize = 200 } = await req.json().catch(() => ({}));
+  const { sheetId, tab, cursor = 2, batchSize = 200 } = await req.json().catch(() => ({}));
+  const P = tab ? `'${String(tab).replace(/'/g, "")}'!` : "";
   if (!sheetId) return NextResponse.json({ error: "sheetId ontbreekt" }, { status: 400 });
 
   try {
-    const values = await readRange(sheetId, `A${cursor}:H${cursor + batchSize - 1}`);
+    const values = await readRange(sheetId, `${P}A${cursor}:H${cursor + batchSize - 1}`);
     if (!values.length) return NextResponse.json({ ok: true, done: true, tagged: 0 });
 
     const updates = [];
@@ -25,7 +26,7 @@ export async function POST(req) {
       if (!link || !keyword || already) return;
       if (matchType.toLowerCase() !== "literal") return;
       if (!title.includes(keyword)) {
-        updates.push({ range: `H${rowNum}`, values: [["Twijfel"]] });
+        updates.push({ range: `${P}H${rowNum}`, values: [["Twijfel"]] });
       }
     });
 

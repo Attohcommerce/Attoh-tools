@@ -8,6 +8,7 @@ const LS = {
   keywords: "sa_scraper_keywords",
   workSheet: "sa_sheet_work",
   memSheet: "sa_sheet_memory",
+  runTab: "sa_run_tab",
 };
 
 function load(key, fallback) {
@@ -40,6 +41,7 @@ export default function ScraperPage() {
   const [kw, setKw] = useState({ vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] });
   const [workSheet, setWorkSheet] = useState("");
   const [memSheet, setMemSheet] = useState("");
+  const [runTab, setRunTab] = useState("");
   const [saEmail, setSaEmail] = useState(null);
 
   const [running, setRunning] = useState(false);
@@ -51,6 +53,7 @@ export default function ScraperPage() {
     setKw(load(LS.keywords, { vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] }));
     setWorkSheet(load(LS.workSheet, ""));
     setMemSheet(load(LS.memSheet, ""));
+    setRunTab(load(LS.runTab, ""));
     fetch("/api/sheets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -154,21 +157,27 @@ export default function ScraperPage() {
     setRunning(true);
     setLogs([]);
     try {
-      // Bestaande links verzamelen (werk-sheet + geheugen-sheet)
-      pushLog({ muted: true, text: "Bestaande links inlezen…" });
+      // Elke run een eigen, schoon tabblad in het werkboek
+      const d = new Date();
+      const runTitle = `Run ${d.getDate()}-${d.getMonth() + 1} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      const tabRes = await sheetsCall({
+        action: "createTab",
+        sheetId: workSheet,
+        title: runTitle,
+        header: HEADER_ROW,
+      });
+      setRunTab(tabRes.title);
+      save(LS.runTab, tabRes.title);
+      pushLog({ ok: true, text: `Tabblad "${tabRes.title}" aangemaakt`, href: tabRes.url });
+
+      // Exclusie: het permanente geheugen (dé bron tegen dubbel scrapen)
       const exclude = new Set();
-      const work = await sheetsCall({ action: "read", sheetId: workSheet, range: "A:A" });
-      const workRows = work.values || [];
-      for (const r of workRows) if (r[0] && r[0].startsWith("http")) exclude.add(r[0].toLowerCase().replace(/\/$/, ""));
-      if (workRows.length === 0) {
-        await sheetsCall({ action: "append", sheetId: workSheet, rows: [HEADER_ROW] });
-      }
       if (memSheet.trim()) {
         const mem = await sheetsCall({ action: "read", sheetId: memSheet, range: "A:A" });
         for (const r of mem.values || [])
           if (r[0] && r[0].startsWith("http")) exclude.add(r[0].toLowerCase().replace(/\/$/, ""));
       }
-      pushLog({ muted: true, text: `${exclude.size} bekende links worden overgeslagen (werk + geheugen).` });
+      pushLog({ muted: true, text: `${exclude.size} bekende links worden overgeslagen (geheugen).` });
 
       let grandTotal = 0;
       for (const [gender, rows] of groups) {
@@ -195,7 +204,7 @@ export default function ScraperPage() {
               const found = data.matches || [];
               if (found.length) {
                 const newRows = found.map((m) => [m.link, m.title, k, m.source, m.literal, "", "", ""]);
-                await sheetsCall({ action: "append", sheetId: workSheet, rows: newRows });
+                await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:H`, rows: newRows });
                 if (memSheet.trim()) {
                   await sheetsCall({
                     action: "append",
@@ -222,7 +231,7 @@ export default function ScraperPage() {
           }
         }
       }
-      pushLog({ strong: true, text: `Klaar — ${grandTotal} producten toegevoegd aan de werk-sheet.` });
+      pushLog({ strong: true, text: `Klaar — ${grandTotal} producten in tabblad "${runTitle}".`, href: tabRes.url });
     } catch (e) {
       pushLog({ err: true, text: "Fout: " + e.message });
     } finally {
@@ -247,7 +256,7 @@ export default function ScraperPage() {
         const res = await fetch("/api/checks/gender", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sheetId: workSheet, cursor }),
+          body: JSON.stringify({ sheetId: workSheet, tab: runTab.trim() || undefined, cursor }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || res.status);
@@ -275,7 +284,7 @@ export default function ScraperPage() {
         const res = await fetch("/api/checks/duplicates", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sheetId: workSheet, action: "scan", cursor }),
+          body: JSON.stringify({ sheetId: workSheet, tab: runTab.trim() || undefined, action: "scan", cursor }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || res.status);
@@ -308,7 +317,7 @@ export default function ScraperPage() {
         const res = await fetch("/api/checks/duplicates", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sheetId: workSheet, action: "tag", tags }),
+          body: JSON.stringify({ sheetId: workSheet, tab: runTab.trim() || undefined, action: "tag", tags }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || res.status);
@@ -332,7 +341,7 @@ export default function ScraperPage() {
         const res = await fetch("/api/checks/literal", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sheetId: workSheet, cursor }),
+          body: JSON.stringify({ sheetId: workSheet, tab: runTab.trim() || undefined, cursor }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || res.status);
@@ -472,6 +481,21 @@ export default function ScraperPage() {
                 Optioneel — voorkomt dat dezelfde producten terugkomen nadat je de werk-sheet hierboven hebt
                 leeggemaakt of vervangen. Zelfde service account delen.
               </div>
+              <div className="field-label" style={{ fontWeight: 400, fontSize: 13 }}>
+                Run-tabblad (voor de checks)
+              </div>
+              <input
+                type="text"
+                placeholder="wordt automatisch gevuld per run"
+                value={runTab}
+                onChange={(e) => {
+                  setRunTab(e.target.value);
+                  save(LS.runTab, e.target.value);
+                }}
+              />
+              <div className="hint">
+                Elke run krijgt een eigen tabblad; de drie checks werken op dit tabblad.
+              </div>
             </div>
 
             <div className="card">
@@ -525,9 +549,23 @@ export default function ScraperPage() {
                     ) : l.warn ? (
                       <span className="warn">⚠ {l.text}</span>
                     ) : l.ok ? (
-                      <span className="ok">✓ {l.text}</span>
+                      <span className="ok">
+                        ✓ {l.text}
+                        {l.href ? (
+                          <a className="linklike" style={{ marginLeft: 8 }} href={l.href} target="_blank" rel="noreferrer noopener">
+                            openen ↗
+                          </a>
+                        ) : null}
+                      </span>
                     ) : l.strong ? (
-                      <strong>{l.text}</strong>
+                      <strong>
+                        {l.text}
+                        {l.href ? (
+                          <a className="linklike" style={{ marginLeft: 8 }} href={l.href} target="_blank" rel="noreferrer noopener">
+                            openen ↗
+                          </a>
+                        ) : null}
+                      </strong>
                     ) : (
                       <span className="muted">{l.text}</span>
                     )}
