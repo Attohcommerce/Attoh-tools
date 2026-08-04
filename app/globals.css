@@ -2069,8 +2069,12 @@ select:focus {
   top: 50%;
 }
 .onode.pos-2 {
-  left: 50%;
-  top: 87%;
+  left: 33%;
+  top: 88%;
+}
+.onode.pos-3 {
+  left: 67%;
+  top: 88%;
 }
 .on-icon {
   width: 58px;

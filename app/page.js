@@ -29,6 +29,17 @@ const MODULES = [
     ),
   },
   {
+    href: "/keywords",
+    name: "Keywords",
+    tagline: "Planner → sheet",
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 5h16M4 12h10M4 19h13" />
+        <circle cx="18.5" cy="12" r="2.2" />
+      </svg>
+    ),
+  },
+  {
     href: "/gmc-checklist",
     name: "GMC Checklist",
     tagline: "Merchant audit",

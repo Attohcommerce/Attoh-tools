@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions } from "./lib/session";
 
-const PUBLIC_PATHS = ["/login", "/api/auth/login"];
+// /kw = statische keyword-CSV's die Google Sheets via IMPORTDATA mag ophalen
+const PUBLIC_PATHS = ["/login", "/api/auth/login", "/kw"];
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;

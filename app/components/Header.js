@@ -9,6 +9,7 @@ const NAV = [
   { href: "/", label: "Home" },
   { href: "/importer", label: "Importer" },
   { href: "/scraper", label: "Product Scraper" },
+  { href: "/keywords", label: "Keywords" },
   { href: "/gmc-checklist", label: "GMC Checklist" },
 ];
 
