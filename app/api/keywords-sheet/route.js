@@ -21,7 +21,8 @@ export async function POST(req) {
       const r = await addTab(sheetId, String(tabName).trim());
       if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
       if (Array.isArray(header) && header.length) {
-        await appendRows(sheetId, `'${r.title}'!A1`, [header]);
+        // RAW: "jul 2025" blijft letterlijke tekst, wordt nooit een datum
+        await appendRows(sheetId, `'${r.title}'!A1`, [header], "RAW");
       }
       return NextResponse.json({ ok: true, tabId: r.tabId, title: r.title, gid: r.tabId });
     }
@@ -30,7 +31,8 @@ export async function POST(req) {
       if (!Array.isArray(rows) || rows.length === 0) {
         return NextResponse.json({ error: "Geen rijen" }, { status: 400 });
       }
-      await appendRows(sheetId, `'${tabName}'!A1`, rows);
+      // RAW: getallen blijven getallen — geen dag-nummer-interpretatie
+      await appendRows(sheetId, `'${tabName}'!A1`, rows, "RAW");
       return NextResponse.json({ ok: true, appended: rows.length });
     }
 
