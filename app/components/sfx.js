@@ -113,7 +113,7 @@ export default function SoundFX() {
     };
 
     const onOver = (e) => {
-      const t = e.target.closest(".mod-node, .mod, .navlink");
+      const t = e.target.closest(".mod-node, .mod, .onode, .navlink");
       if (t && t !== lastHover) {
         lastHover = t;
         sfx("hover");
