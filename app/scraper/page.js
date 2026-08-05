@@ -9,6 +9,8 @@ const LS = {
   workSheet: "sa_sheet_work",
   memSheet: "sa_sheet_memory",
   runTab: "sa_run_tab",
+  orgSheet: "sa_org_sheet",
+  orgTab: "sa_org_tab",
 };
 
 function load(key, fallback) {
@@ -43,6 +45,11 @@ export default function ScraperPage() {
   const [memSheet, setMemSheet] = useState("");
   const [runTab, setRunTab] = useState("");
   const [saEmail, setSaEmail] = useState(null);
+  // Verdeling (Collection & Product organization) inladen
+  const [orgSheet, setOrgSheet] = useState("");
+  const [orgTab, setOrgTab] = useState("Collection & Product organization");
+  const [orgBusy, setOrgBusy] = useState(false);
+  const [orgInfo, setOrgInfo] = useState(null);
 
   const [running, setRunning] = useState(false);
   const [checkBusy, setCheckBusy] = useState("");
@@ -54,6 +61,8 @@ export default function ScraperPage() {
     setWorkSheet(load(LS.workSheet, ""));
     setMemSheet(load(LS.memSheet, ""));
     setRunTab(load(LS.runTab, ""));
+    setOrgSheet(load(LS.orgSheet, ""));
+    setOrgTab(load(LS.orgTab, "Collection & Product organization"));
     fetch("/api/sheets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -128,6 +137,66 @@ export default function ScraperPage() {
     setMemSheet(m);
     save(LS.workSheet, w);
     save(LS.memSheet, m);
+  }
+
+  // ---------- Verdeling inladen (Collection & Product organization) ----------
+  async function loadVerdeling() {
+    if (orgBusy || running) return;
+    const sheet = orgSheet.trim();
+    const tab = orgTab.trim();
+    if (!sheet) return alert2("Plak eerst de link van de organization-sheet.");
+    if (!tab) return alert2("Vul de exacte bladnaam in.");
+    setOrgBusy(true);
+    setOrgInfo(null);
+    try {
+      save(LS.orgSheet, sheet);
+      save(LS.orgTab, tab);
+      pushLog({ strong: true, text: `— Verdeling inladen uit "${tab}"` });
+      const data = await sheetsCall({ action: "read", sheetId: sheet, range: `'${tab}'!A1:H` });
+      const values = data.values || [];
+      if (!values.length) throw new Error(`Tabblad "${tab}" is leeg of bestaat niet`);
+
+      // Header exact herkennen zoals de Keywords-tool hem wegschrijft:
+      // A Rank · B Keyword · C Collectie · D Groep · … · H Aantal producten
+      const h = (values[0] || []).map((x) => String(x || "").toLowerCase());
+      if (!String(h[1] || "").startsWith("keyword") || !String(h[3] || "").startsWith("groep") || !String(h[7] || "").startsWith("aantal")) {
+        throw new Error(
+          `Dit blad heeft niet het verdeling-formaat (verwacht: Rank · Keyword · Collectie · Groep · … · Aantal producten). Controleer de bladnaam.`
+        );
+      }
+
+      const parsed = [];
+      for (const r of values.slice(1)) {
+        const k = String(r[1] || "").trim();
+        if (!k) continue;
+        const n = Math.max(1, Number(r[7]) || 0);
+        const g = String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw";
+        parsed.push({ k, n, g });
+      }
+      if (!parsed.length) throw new Error("Geen keywords gevonden in dit blad");
+
+      const vrouw = parsed.filter((p) => p.g === "vrouw").map(({ k, n }) => ({ k, n }));
+      const man = parsed.filter((p) => p.g === "man").map(({ k, n }) => ({ k, n }));
+      const next = {
+        vrouw: vrouw.length ? vrouw : [{ k: "", n: 10 }],
+        man: man.length ? man : [{ k: "", n: 10 }],
+      };
+      setKw(next);
+      save(LS.keywords, next);
+
+      const sum = (rows) => rows.reduce((s, r) => s + (Number(r.n) || 0), 0);
+      setOrgInfo({ vrouwKw: vrouw.length, vrouwN: sum(vrouw), manKw: man.length, manN: sum(man) });
+      pushLog({
+        ok: true,
+        text: `Verdeling geladen — Vrouw: ${vrouw.length} keywords (${sum(vrouw)} producten) · Man: ${man.length} keywords (${sum(man)} producten). De lijst staat nu in het Keywords-blok.`,
+      });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+    } catch (e) {
+      pushLog({ err: true, text: "Verdeling laden mislukt: " + e.message });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+    } finally {
+      setOrgBusy(false);
+    }
   }
 
   // ---------- Scrape-run ----------
@@ -411,38 +480,88 @@ export default function ScraperPage() {
             </div>
 
             <div className="card">
-              <h2>Keywords</h2>
-              {["vrouw", "man"].map((group) => (
-                <div key={group}>
-                  <div className="group-label">{group === "vrouw" ? "Vrouw" : "Man"}</div>
-                  {kw[group].map((row, idx) => (
-                    <div className="kw-row" key={idx}>
-                      <input
-                        type="text"
-                        placeholder="Occasion Dress"
-                        value={row.k}
-                        onChange={(e) => updateKwRow(group, idx, "k", e.target.value)}
-                        onPaste={(e) => handleKwPaste(group, idx, e)}
-                      />
-                      <input
-                        type="number"
-                        min="1"
-                        value={row.n}
-                        onChange={(e) => updateKwRow(group, idx, "n", e.target.value)}
-                      />
-                      <button
-                        className="kw-x"
-                        onClick={() => setGroup(group, kw[group].filter((_, i) => i !== idx))}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  <button className="add-kw" onClick={() => setGroup(group, [...kw[group], { k: "", n: 10 }])}>
-                    + Keyword toevoegen
-                  </button>
+              <h2>
+                Verdeling inladen <span className="opt">(Collection & Product organization)</span>
+              </h2>
+              <div className="field-label">Organization-sheet link</div>
+              <input
+                type="text"
+                placeholder="https://docs.google.com/spreadsheets/d/…"
+                value={orgSheet}
+                onChange={(e) => setOrgSheet(e.target.value)}
+              />
+              <div className="field-label">Exacte bladnaam</div>
+              <input
+                type="text"
+                placeholder="Collection & Product organization"
+                value={orgTab}
+                onChange={(e) => setOrgTab(e.target.value)}
+              />
+              <div className="hint">
+                Leest het blad uit de Keywords-tool en vult hieronder automatisch alle keywords, aantallen en
+                groepen (man/vrouw) in — niets meer zelf overtypen.
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <button
+                  className="btn-ghost"
+                  onClick={loadVerdeling}
+                  disabled={orgBusy || running || !orgSheet.trim() || !orgTab.trim()}
+                >
+                  {orgBusy ? "Laden…" : "⇣ Laad verdeling"}
+                </button>
+              </div>
+              {orgInfo && (
+                <div className="hint" style={{ color: "var(--ink-2)" }}>
+                  Geladen: Vrouw {orgInfo.vrouwKw} keywords · {orgInfo.vrouwN} producten — Man {orgInfo.manKw}{" "}
+                  keywords · {orgInfo.manN} producten
                 </div>
-              ))}
+              )}
+            </div>
+
+            <div className="card">
+              <h2>Keywords</h2>
+              {["vrouw", "man"].map((group) => {
+                const rows = kw[group].map((row, idx) => (
+                  <div className="kw-row" key={idx}>
+                    <input
+                      type="text"
+                      placeholder="Occasion Dress"
+                      value={row.k}
+                      onChange={(e) => updateKwRow(group, idx, "k", e.target.value)}
+                      onPaste={(e) => handleKwPaste(group, idx, e)}
+                    />
+                    <input
+                      type="number"
+                      min="1"
+                      value={row.n}
+                      onChange={(e) => updateKwRow(group, idx, "n", e.target.value)}
+                    />
+                    <button
+                      className="kw-x"
+                      onClick={() => setGroup(group, kw[group].filter((_, i) => i !== idx))}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ));
+                return (
+                  <div key={group}>
+                    <div className="group-label">
+                      {group === "vrouw" ? "Vrouw" : "Man"}
+                      {kw[group].filter((r) => r.k.trim()).length > 0 && (
+                        <span className="opt" style={{ marginLeft: 8 }}>
+                          {kw[group].filter((r) => r.k.trim()).length} keywords ·{" "}
+                          {kw[group].reduce((s, r) => s + (r.k.trim() ? Number(r.n) || 0 : 0), 0)} producten
+                        </span>
+                      )}
+                    </div>
+                    {kw[group].length > 8 ? <div className="kw-scroll">{rows}</div> : rows}
+                    <button className="add-kw" onClick={() => setGroup(group, [...kw[group], { k: "", n: 10 }])}>
+                      + Keyword toevoegen
+                    </button>
+                  </div>
+                );
+              })}
               <div className="hint">
                 Keyword · Aantal producten — plak ook meerdere keywords tegelijk (één per regel, of keyword+aantal als
                 twee kolommen uit een sheet)
