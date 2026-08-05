@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
+import { analyzeKeyword } from "@/lib/fashion";
 
 const LS = {
   stores: "sa_competitor_stores",
@@ -34,10 +35,41 @@ const HEADER_ROW = ["Link", "Titel", "Keyword", "Matchbron", "Matchtype", "Gesla
 const STORE_TTL_DAYS = 14;
 const LS_LAST_ACTIVE = "sa_last_active";
 
-// Underdog-keywords: na dit aantal stores zonder resultaat verschijnt het
-// instructie-paneel; geen antwoord → automatisch over op de AI-aanpak.
+// Slim zoeken (underdog-keywords) — de trap-ladder per keyword:
+//   store 1-2   → alleen het originele keyword (+ eerder bewezen winnaar)
+//   store 3+    → ook de AI-alternatieven (vóór de run al klaargezet)
+//   store 8+    → ook het brede vangnet (kale producttype, bv. "dress")
+//   store 6     → instructie-paneel (overslaan / doorgaan) — loopt gewoon door
+//   store 20    → nog steeds 0? automatisch door naar het volgende keyword
+const ALTS_AT = 3;
+const BROAD_AT = 8;
 const STALL_PROMPT_AT = 6;
 const STALL_AUTO_AT = 20;
+
+// Geleerde kennis blijft bewaard tussen runs:
+const LS_ALTS = "sa_kw_alts"; // kw → AI-alternatieven (cache, geen dubbele AI-calls)
+const LS_ALT_HITS = "sa_kw_alt_hits"; // kw → alternatief dat eerder écht producten vond
+
+// Breed vangnet: het kale producttype uit het keyword ("black knee high boots"
+// → "boots"). Lukt dat niet, dan het laatste woord van het beste AI-alternatief.
+function broadTermFor(keyword, alts) {
+  try {
+    const a = analyzeKeyword(String(keyword).toLowerCase());
+    if (a && a.typeTerms && a.typeTerms.length > 1) {
+      return a.typeTerms[0].join(" ");
+    }
+  } catch {}
+  if (alts && alts.length) {
+    const w = alts[alts.length - 1].split(/\s+/);
+    return w[w.length - 1];
+  }
+  return null;
+}
+
+// Vaste geheugen-sheet — staat altijd automatisch ingevuld, ook na
+// Reset session, nieuwe logins of een andere browser.
+const DEFAULT_MEM_SHEET =
+  "https://docs.google.com/spreadsheets/d/1gbu2XAZMPBIbyr47B_rBvoHDcWoVaTNUuBNwmp9ucJg/edit";
 
 /**
  * Geplakte keyword-lijsten parsen — snapt alles:
@@ -101,6 +133,8 @@ export default function ScraperPage() {
   // Pauzeren / stoppen tijdens de run
   const [paused, setPaused] = useState(false);
   const controlRef = useRef("run"); // "run" | "pause" | "stop-save" | "stop-delete"
+  // Voortgangsbalk
+  const [prog, setProg] = useState(null); // {target, found, kwDone, kwTotal, currentKw, currentGender, kwTarget, kwFound}
 
   useEffect(() => {
     // Stores automatisch wissen als de tool 14+ dagen niet gebruikt is
@@ -115,7 +149,7 @@ export default function ScraperPage() {
     save(LS_LAST_ACTIVE, Date.now());
     setKw(load(LS.keywords, { vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] }));
     setWorkSheet(load(LS.workSheet, ""));
-    setMemSheet(load(LS.memSheet, ""));
+    setMemSheet(load(LS.memSheet, "") || DEFAULT_MEM_SHEET);
     setRunTab(load(LS.runTab, ""));
     setNewTabName(load(LS.newTab, ""));
     setOrgSheet(load(LS.orgSheet, ""));
@@ -344,6 +378,38 @@ export default function ScraperPage() {
       }
       pushLog({ muted: true, text: `${exclude.size} bekende links worden overgeslagen (geheugen).` });
 
+      /* ---- Slim zoeken voorbereiden: AI-alternatieven voor ALLE keywords
+              in één batch, vóór de run — geen wachttijd meer onderweg ---- */
+      const altCache = load(LS_ALTS, {});
+      const altHits = load(LS_ALT_HITS, {});
+      const allKwItems = [];
+      for (const [g2, rows2] of groups) for (const { k } of rows2) allKwItems.push({ kw: k.toLowerCase(), gender: g2 });
+      const missingAlts = allKwItems.filter((x) => !altCache[x.kw]);
+      if (missingAlts.length) {
+        try {
+          pushLog({ muted: true, text: `Slim zoeken voorbereiden — AI bedenkt alternatieven voor ${missingAlts.length} keywords…` });
+          const res = await fetch("/api/keyword-fallback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ keywords: missingAlts }),
+          });
+          const data = await res.json();
+          if (res.ok && data.map) {
+            Object.assign(altCache, data.map);
+            save(LS_ALTS, altCache);
+            pushLog({ ok: true, text: `Alternatieven klaar — slim zoeken start al na ${ALTS_AT} lege stores, zonder wachttijd.` });
+          }
+        } catch (e) {
+          pushLog({ warn: true, text: `Alternatieven vooraf laden mislukt (${e.message}) — geen probleem, de run draait gewoon.` });
+        }
+      }
+
+      // Voortgang voor de balk: totaal-doel en teller
+      const totalTarget = groups.reduce((a, [, rows2]) => a + rows2.reduce((s, r) => s + (Number(r.n) || 10), 0), 0);
+      const kwTotal = groups.reduce((a, [, rows2]) => a + rows2.length, 0);
+      let kwDone = 0;
+      setProg({ target: totalTarget, found: 0, kwDone: 0, kwTotal, currentKw: "", currentGender: "", kwTarget: 0, kwFound: 0 });
+
       let grandTotal = 0;
       const hardKeywords = []; // bleef op 0 ondanks alles
       for (const [gender, rows] of groups) {
@@ -351,35 +417,35 @@ export default function ScraperPage() {
           let needed = Number(n) || 10;
           const target = needed;
           pushLog({ strong: true, text: `— ${gender} · "${k}" · ${target} producten` });
+          setProg((p) => ({ ...p, currentKw: k, currentGender: gender, kwTarget: target, kwFound: 0 }));
 
-          // Per keyword: schone staat voor het instructie-paneel + AI-aanpak
+          // Per keyword: schone staat + de zoek-ladder
           stallDecision.current = null;
           setStall(null);
-          let aiTried = false;
-          let terms = [k]; // waarop gezocht wordt (AI kan dit vervangen)
+          const kwLower = k.toLowerCase();
+          const alts = altCache[kwLower] || [];
+          const provenHit = altHits[kwLower]; // alternatief dat vorige keer scoorde
+          let terms = provenHit && provenHit !== kwLower ? [k, provenHit] : [k];
+          let altsFull = false;
+          let broadActive = false;
           let storesTried = 0;
 
-          const activateAi = async () => {
-            if (aiTried) return;
-            aiTried = true;
-            try {
-              pushLog({ strong: true, text: `AI-aanpak voor "${k}" — alternatieven bedenken…` });
-              const res = await fetch("/api/keyword-fallback", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ keyword: k, gender }),
-              });
-              const data = await res.json();
-              if (!res.ok) throw new Error(data.error || res.status);
-              const alts = data.alternatives || [];
-              if (alts.length) {
-                terms = alts;
-                pushLog({ ok: true, text: `AI zoekt nu op: ${alts.join(" · ")} — resultaten tellen mee voor "${k}".` });
-              } else {
-                pushLog({ warn: true, text: `AI vond geen bruikbare alternatieven voor "${k}".` });
-              }
-            } catch (e) {
-              pushLog({ err: true, text: `AI-aanpak mislukt: ${e.message}` });
+          const expandAlts = (reason) => {
+            if (altsFull) return;
+            altsFull = true;
+            const merged = [...new Set([...terms, ...alts])];
+            if (merged.length > terms.length) {
+              terms = merged;
+              pushLog({ ok: true, text: `${reason} — zoekt nu ook op: ${alts.join(" · ")} (telt mee voor "${k}").` });
+            }
+          };
+          const expandBroad = () => {
+            if (broadActive) return;
+            broadActive = true;
+            const b = broadTermFor(k, alts);
+            if (b && !terms.some((t) => t.toLowerCase() === b)) {
+              terms = [...terms, b];
+              pushLog({ ok: true, text: `Breed vangnet actief — ook op "${b}" (strenge match + geslacht blijven gelden).` });
             }
           };
 
@@ -388,10 +454,12 @@ export default function ScraperPage() {
             for (const store of stores) {
               await checkControl();
               if (needed <= 0) return;
-              if (stallDecision.current === "skip") return;
-              if (stallDecision.current === "ai" && !aiTried) {
+              if (stallDecision.current === "skip" || stallDecision.current === "skip-auto") return;
+              if (stallDecision.current === "ai") {
                 setStall(null);
-                await activateAi();
+                stallDecision.current = "continue";
+                expandAlts("Op jouw verzoek");
+                expandBroad();
               }
               let foundThisStore = 0;
               let scanned = 0;
@@ -426,6 +494,12 @@ export default function ScraperPage() {
                     needed -= found.length;
                     grandTotal += found.length;
                     foundThisStore += found.length;
+                    setProg((p) => ({ ...p, found: grandTotal, kwFound: target - needed }));
+                    // Leren: dit alternatief werkt voor dit keyword → volgende run meteen eerst
+                    if (term.toLowerCase() !== kwLower) {
+                      altHits[kwLower] = term.toLowerCase();
+                      save(LS_ALT_HITS, altHits);
+                    }
                   }
                 } catch (e) {
                   pushLog({ err: true, text: `${store}: ${e.message}` });
@@ -438,19 +512,25 @@ export default function ScraperPage() {
               });
               storesTried++;
 
-              // Vastloop-logica: alleen zolang er nog NIETS gevonden is
+              // Vastloop-ladder: alleen zolang er nog NIETS gevonden is
               if (withStallLogic && needed === target) {
+                if (storesTried >= ALTS_AT && alts.length) expandAlts(`Na ${storesTried} stores nog 0`);
+                if (storesTried >= BROAD_AT) expandBroad();
                 if (storesTried === STALL_PROMPT_AT && !stallDecision.current) {
                   setStall({ kw: k, gender });
                   pushLog({
                     warn: true,
-                    text: `"${k}" na ${STALL_PROMPT_AT} stores nog 0 — kies rechtsboven een aanpak, of ik schakel na ${STALL_AUTO_AT} stores zelf over op AI.`,
+                    text: `"${k}" na ${STALL_PROMPT_AT} stores nog 0 — slim zoeken is al actief; na ${STALL_AUTO_AT} stores ga ik automatisch door naar het volgende keyword.`,
                   });
                 }
-                if (storesTried >= STALL_AUTO_AT && !stallDecision.current && !aiTried) {
+                if (storesTried >= STALL_AUTO_AT && stallDecision.current !== "continue") {
                   setStall(null);
-                  pushLog({ strong: true, text: `Geen antwoord — automatisch over op de AI-aanpak voor "${k}".` });
-                  await activateAi();
+                  stallDecision.current = "skip-auto";
+                  pushLog({
+                    warn: true,
+                    text: `"${k}" na ${STALL_AUTO_AT} stores nog 0 (ook met AI + breed vangnet) — automatisch door naar het volgende keyword.`,
+                  });
+                  return;
                 }
               }
             }
@@ -458,24 +538,31 @@ export default function ScraperPage() {
 
           await scanStores(true);
 
-          // Nog steeds helemaal niets? Dan alsnog één AI-ronde (tenzij overgeslagen).
-          if (needed === target && stallDecision.current !== "skip" && !aiTried) {
-            await activateAi();
-            if (terms.length && terms[0] !== k) await scanStores(false);
+          // Bij weinig stores kan de ladder nooit geactiveerd zijn — dan alsnog
+          // één slimme ronde (tenzij het keyword is overgeslagen).
+          const skipped = stallDecision.current === "skip" || stallDecision.current === "skip-auto";
+          if (needed === target && !skipped && !altsFull && alts.length) {
+            expandAlts("Laatste poging");
+            expandBroad();
+            await scanStores(false);
           }
           setStall(null);
 
           if (stallDecision.current === "skip") {
             pushLog({ warn: true, text: `"${k}" overgeslagen op jouw verzoek.` });
             hardKeywords.push(k);
+          } else if (stallDecision.current === "skip-auto") {
+            hardKeywords.push(k);
           } else if (needed === target) {
-            pushLog({ warn: true, text: `"${k}": 0/${target} — ook met AI-aanpak niets gevonden.` });
+            pushLog({ warn: true, text: `"${k}": 0/${target} — ook met slim zoeken niets gevonden.` });
             hardKeywords.push(k);
           } else if (needed > 0) {
             pushLog({ warn: true, text: `"${k}": ${target - needed}/${target} gevonden — stores zijn op.` });
           } else {
             pushLog({ ok: true, text: `"${k}": ${target}/${target} compleet.` });
           }
+          kwDone++;
+          setProg((p) => ({ ...p, kwDone, found: grandTotal }));
         }
       }
       pushLog({ strong: true, text: `Klaar — ${grandTotal} producten in tabblad "${runTitle}".`, href: tabRes.url });
@@ -869,8 +956,8 @@ export default function ScraperPage() {
                 onChange={(e) => saveSheets(workSheet, e.target.value)}
               />
               <div className="hint">
-                Optioneel — voorkomt dat dezelfde producten terugkomen nadat je de werk-sheet hierboven hebt
-                leeggemaakt of vervangen. Zelfde service account delen.
+                Staat altijd automatisch goed ingevuld — ook na Reset session of een nieuwe login. Voorkomt dat
+                dezelfde producten terugkomen. Alleen aanpassen als je bewust een andere geheugen-sheet wilt.
               </div>
               <div className="field-label" style={{ fontWeight: 400, fontSize: 13 }}>
                 Run-tabblad voor de checks <span className="opt">(optioneel)</span>
@@ -946,9 +1033,9 @@ export default function ScraperPage() {
               <div className="card stall-card">
                 <h2>⚠ "{stall.kw}" loopt vast</h2>
                 <div className="hint" style={{ marginTop: 4 }}>
-                  Na {STALL_PROMPT_AT} stores nog niets gevonden. Kies een aanpak — het scrapen loopt
-                  gewoon door. Geen antwoord? Dan schakel ik na {STALL_AUTO_AT} stores automatisch over
-                  op de AI-aanpak.
+                  Na {STALL_PROMPT_AT} stores nog niets gevonden — slim zoeken (AI-alternatieven + breed
+                  vangnet) is al actief en het scrapen loopt gewoon door. Geen antwoord? Na {STALL_AUTO_AT}{" "}
+                  stores ga ik automatisch door naar het volgende keyword.
                 </div>
                 <div className="stall-btns">
                   <button
@@ -981,11 +1068,42 @@ export default function ScraperPage() {
                 </div>
               </div>
             )}
-            <div className="card" style={{ minHeight: 300 }}>
+            {prog && (
+              <div className="card prog-card">
+                <div className="prog-top">
+                  <span className="prog-title">
+                    {running ? (paused ? "Gepauzeerd" : "Bezig met scrapen") : "Run-overzicht"}
+                  </span>
+                  <span className="prog-count">
+                    {prog.found} <span className="prog-sep">/</span> {prog.target} producten
+                  </span>
+                </div>
+                <div className="pbar">
+                  <div
+                    className={"pbar-fill" + (running && !paused ? " live" : "")}
+                    style={{ width: `${Math.min(100, Math.round((prog.found / Math.max(prog.target, 1)) * 100))}%` }}
+                  />
+                </div>
+                <div className="prog-meta">
+                  {running && prog.currentKw ? (
+                    <>
+                      <span className="prog-kwname">
+                        {prog.currentGender} · "{prog.currentKw}" — {prog.kwFound}/{prog.kwTarget}
+                      </span>
+                      <span>keyword {Math.min(prog.kwDone + 1, prog.kwTotal)} van {prog.kwTotal}</span>
+                    </>
+                  ) : (
+                    <span>{prog.kwDone} van {prog.kwTotal} keywords afgerond</span>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="card logpanel">
+              {logs.length > 0 && <div className="logpanel-head">Live log · nieuwste bovenaan</div>}
               {logs.length === 0 ? (
                 <div className="center-note">Vul links de gegevens in en klik op Starten</div>
               ) : (
-                logs.map((l, i) => (
+                [...logs].reverse().map((l, i) => (
                   <div className="log" key={i}>
                     {l.err ? (
                       <span className="err">✗ {l.text}</span>
