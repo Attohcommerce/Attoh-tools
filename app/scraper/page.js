@@ -338,6 +338,11 @@ export default function ScraperPage() {
     setLogs([]);
     controlRef.current = "run";
     setPaused(false);
+    // Voortgangsbalk meteen tonen — mét de besturingsknoppen erin
+    const totalTarget = groups.reduce((a, [, rows2]) => a + rows2.reduce((s, r) => s + (Number(r.n) || 10), 0), 0);
+    const kwTotal = groups.reduce((a, [, rows2]) => a + rows2.length, 0);
+    let kwDone = 0;
+    setProg({ target: totalTarget, found: 0, kwDone: 0, kwTotal, currentKw: "", currentGender: "", kwTarget: 0, kwFound: 0 });
     // Voor Stop & verwijderen: wat er deze run is aangemaakt/toegevoegd
     let runTabId = null;
     let runTabTitle = "";
@@ -411,12 +416,6 @@ export default function ScraperPage() {
           pushLog({ warn: true, text: `Alternatieven vooraf laden mislukt (${e.message}) — geen probleem, de run draait gewoon.` });
         }
       }
-
-      // Voortgang voor de balk: totaal-doel en teller
-      const totalTarget = groups.reduce((a, [, rows2]) => a + rows2.reduce((s, r) => s + (Number(r.n) || 10), 0), 0);
-      const kwTotal = groups.reduce((a, [, rows2]) => a + rows2.length, 0);
-      let kwDone = 0;
-      setProg({ target: totalTarget, found: 0, kwDone: 0, kwTotal, currentKw: "", currentGender: "", kwTarget: 0, kwFound: 0 });
 
       let grandTotal = 0;
       const hardKeywords = []; // bleef op 0 ondanks alles
@@ -1017,21 +1016,9 @@ export default function ScraperPage() {
             </div>
 
             <div style={{ marginTop: 16 }}>
-              {!running ? (
-                <button className="btn" onClick={start} disabled={!!busy}>
-                  ⌕ Starten
-                </button>
-              ) : (
-                <div className="runctl">
-                  {paused ? (
-                    <button className="btn-ghost" onClick={resumeRun}>▶ Hervat</button>
-                  ) : (
-                    <button className="btn-ghost" onClick={pauseRun}>⏸ Pauzeer</button>
-                  )}
-                  <button className="btn-ghost" onClick={stopSave}>⏹ Stop & opslaan</button>
-                  <button className="btn-ghost runctl-del" onClick={stopDelete}>🗑 Stop & verwijderen</button>
-                </div>
-              )}
+              <button className="btn" onClick={start} disabled={!!busy}>
+                {running ? "Bezig met scrapen…" : "⌕ Starten"}
+              </button>
             </div>
           </div>
 
@@ -1104,6 +1091,17 @@ export default function ScraperPage() {
                     <span>{prog.kwDone} van {prog.kwTotal} keywords afgerond</span>
                   )}
                 </div>
+                {running && (
+                  <div className="runctl" style={{ marginTop: 13 }}>
+                    {paused ? (
+                      <button className="btn-ghost" onClick={resumeRun}>▶ Hervat</button>
+                    ) : (
+                      <button className="btn-ghost" onClick={pauseRun}>⏸ Pauzeer</button>
+                    )}
+                    <button className="btn-ghost" onClick={stopSave}>⏹ Stop & opslaan</button>
+                    <button className="btn-ghost runctl-del" onClick={stopDelete}>🗑 Stop & verwijderen</button>
+                  </div>
+                )}
               </div>
             )}
             <div className="card logpanel">
