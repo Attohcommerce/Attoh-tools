@@ -29,7 +29,7 @@ function save(key, val) {
   } catch {}
 }
 
-const HEADER_ROW = ["Link", "Titel", "Keyword", "Matchbron", "Matchtype", "Geslacht", "Dubbel", "Literal-twijfel"];
+const HEADER_ROW = ["LINK", "TITEL", "KEYWORD", "GEVONDEN VIA", "MATCH", "GESLACHT", "DUBBELE FOTO", "LITERAL-TWIJFEL"];
 
 // Stores verlopen automatisch na 14 dagen zonder gebruik van de tool
 const STORE_TTL_DAYS = 14;
@@ -368,6 +368,14 @@ export default function ScraperPage() {
       runTabId = tabRes.tabId;
       runTabTitle = tabRes.title;
       pushLog({ ok: true, text: `Tabblad "${tabRes.title}" aangemaakt`, href: tabRes.url });
+      if (!tabRes.existed) {
+        try {
+          await sheetsCall({ action: "formatRun", sheetId: workSheet, tabId: tabRes.tabId });
+          pushLog({ muted: true, text: "Import-lijst netjes opgemaakt — kleurcodes, filter en banding staan aan." });
+        } catch {
+          /* opmaak is nice-to-have */
+        }
+      }
 
       // Exclusie: het permanente geheugen (dé bron tegen dubbel scrapen)
       const exclude = new Set();

@@ -10,6 +10,7 @@ import {
   deleteTab,
   deleteRows,
   getFirstTabId,
+  formatRunTab,
 } from "@/lib/sheets";
 
 export const maxDuration = 30;
@@ -62,6 +63,14 @@ export async function POST(req) {
         existed,
         url: `https://docs.google.com/spreadsheets/d/${id}/edit#gid=${tabId}`,
       });
+    }
+    // Fancy opmaak voor een scraper-run-tabblad (import-lijst)
+    if (action === "formatRun") {
+      if (tabId === undefined || tabId === null) {
+        return NextResponse.json({ error: "tabId ontbreekt" }, { status: 400 });
+      }
+      await formatRunTab(sheetId, Number(tabId));
+      return NextResponse.json({ ok: true });
     }
     // Heel tabblad verwijderen (Stop & verwijderen in de scraper)
     if (action === "deleteTab") {
