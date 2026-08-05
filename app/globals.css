@@ -639,6 +639,28 @@ select:focus {
 }
 
 /* ============================================================
+   Run-besturing: pauzeren / stoppen tijdens het scrapen
+   ============================================================ */
+.runctl {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.runctl .btn-ghost {
+  width: auto;
+  display: inline-flex;
+}
+.runctl .runctl-del {
+  color: #ff8585;
+  border-color: rgba(255, 107, 107, 0.35);
+}
+.runctl .runctl-del:hover {
+  background: rgba(255, 82, 82, 0.15);
+  border-color: rgba(255, 107, 107, 0.6);
+  color: #ffb3b3;
+}
+
+/* ============================================================
    Instructie-paneel voor vastgelopen keywords (scraper)
    ============================================================ */
 .stall-card {

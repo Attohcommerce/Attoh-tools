@@ -98,6 +98,9 @@ export default function ScraperPage() {
   // Instructie-paneel voor vastgelopen keywords
   const [stall, setStall] = useState(null); // {kw, gender} zolang het paneel zichtbaar is
   const stallDecision = useRef(null); // "skip" | "ai" | "continue"
+  // Pauzeren / stoppen tijdens de run
+  const [paused, setPaused] = useState(false);
+  const controlRef = useRef("run"); // "run" | "pause" | "stop-save" | "stop-delete"
 
   useEffect(() => {
     // Stores automatisch wissen als de tool 14+ dagen niet gebruikt is
@@ -299,6 +302,21 @@ export default function ScraperPage() {
 
     setRunning(true);
     setLogs([]);
+    controlRef.current = "run";
+    setPaused(false);
+    // Voor Stop & verwijderen: wat er deze run is aangemaakt/toegevoegd
+    let runTabId = null;
+    let runTabTitle = "";
+    let memAdded = 0;
+
+    // Pauze = wachten tot Hervat; Stop = netjes uit alle loops breken
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const checkControl = async () => {
+      while (controlRef.current === "pause") await sleep(400);
+      if (controlRef.current === "stop-save") throw { stop: "save" };
+      if (controlRef.current === "stop-delete") throw { stop: "delete" };
+    };
+
     try {
       // Elke run een eigen, schoon tabblad in het werkboek.
       // Eigen bladnaam ingevuld? Die gebruiken — anders automatisch "Run d-m uu:mm".
@@ -313,6 +331,8 @@ export default function ScraperPage() {
       });
       setRunTab(tabRes.title);
       save(LS.runTab, tabRes.title);
+      runTabId = tabRes.tabId;
+      runTabTitle = tabRes.title;
       pushLog({ ok: true, text: `Tabblad "${tabRes.title}" aangemaakt`, href: tabRes.url });
 
       // Exclusie: het permanente geheugen (dé bron tegen dubbel scrapen)
@@ -366,6 +386,7 @@ export default function ScraperPage() {
           // Eén ronde langs alle stores met de huidige zoektermen
           const scanStores = async (withStallLogic) => {
             for (const store of stores) {
+              await checkControl();
               if (needed <= 0) return;
               if (stallDecision.current === "skip") return;
               if (stallDecision.current === "ai" && !aiTried) {
@@ -399,6 +420,7 @@ export default function ScraperPage() {
                         sheetId: memSheet,
                         rows: found.map((m) => [m.link, k, new Date().toISOString().slice(0, 10)]),
                       });
+                      memAdded += found.length;
                     }
                     for (const m of found) exclude.add(m.link.toLowerCase().replace(/\/$/, ""));
                     needed -= found.length;
@@ -461,11 +483,56 @@ export default function ScraperPage() {
         pushLog({ warn: true, text: `Moeilijke keywords (0 resultaat of overgeslagen): ${hardKeywords.join(", ")}` });
       }
     } catch (e) {
-      pushLog({ err: true, text: "Fout: " + e.message });
+      if (e && e.stop === "save") {
+        pushLog({
+          strong: true,
+          text: `Gestopt — alles wat gescrapet is staat veilig in tabblad "${runTabTitle}".`,
+        });
+      } else if (e && e.stop === "delete") {
+        pushLog({ muted: true, text: "Gestopt — alles van deze run wordt verwijderd…" });
+        try {
+          if (runTabId !== null) {
+            await sheetsCall({ action: "deleteTab", sheetId: workSheet, tabId: runTabId });
+            setRunTab("");
+            save(LS.runTab, "");
+          }
+          if (memSheet.trim() && memAdded > 0) {
+            await sheetsCall({ action: "deleteTailRows", sheetId: memSheet, count: memAdded });
+          }
+          pushLog({ ok: true, text: `Verwijderd: tabblad "${runTabTitle}" + ${memAdded} geheugen-regels. Alsof de run nooit gebeurd is.` });
+        } catch (e2) {
+          pushLog({ err: true, text: "Opruimen deels mislukt: " + e2.message });
+        }
+      } else {
+        pushLog({ err: true, text: "Fout: " + e.message });
+      }
     } finally {
       setStall(null);
+      setPaused(false);
+      controlRef.current = "run";
       setRunning(false);
     }
+  }
+
+  // ---------- Run-besturing ----------
+  function pauseRun() {
+    controlRef.current = "pause";
+    setPaused(true);
+    pushLog({ muted: true, text: "Gepauzeerd — klik Hervat om verder te gaan." });
+  }
+  function resumeRun() {
+    controlRef.current = "run";
+    setPaused(false);
+    pushLog({ muted: true, text: "Hervat." });
+  }
+  function stopSave() {
+    controlRef.current = "stop-save";
+    setPaused(false);
+  }
+  function stopDelete() {
+    if (!window.confirm("Stop & verwijderen? Het run-tabblad en de geheugen-regels van deze run worden gewist.")) return;
+    controlRef.current = "stop-delete";
+    setPaused(false);
   }
 
   function alert2(msg) {
@@ -855,9 +922,21 @@ export default function ScraperPage() {
             </div>
 
             <div style={{ marginTop: 16 }}>
-              <button className="btn" onClick={start} disabled={!!busy}>
-                {running ? "Bezig met scrapen…" : "⌕ Starten"}
-              </button>
+              {!running ? (
+                <button className="btn" onClick={start} disabled={!!busy}>
+                  ⌕ Starten
+                </button>
+              ) : (
+                <div className="runctl">
+                  {paused ? (
+                    <button className="btn-ghost" onClick={resumeRun}>▶ Hervat</button>
+                  ) : (
+                    <button className="btn-ghost" onClick={pauseRun}>⏸ Pauzeer</button>
+                  )}
+                  <button className="btn-ghost" onClick={stopSave}>⏹ Stop & opslaan</button>
+                  <button className="btn-ghost runctl-del" onClick={stopDelete}>🗑 Stop & verwijderen</button>
+                </div>
+              )}
             </div>
           </div>
 
