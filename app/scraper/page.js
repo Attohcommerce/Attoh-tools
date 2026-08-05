@@ -9,6 +9,7 @@ const LS = {
   workSheet: "sa_sheet_work",
   memSheet: "sa_sheet_memory",
   runTab: "sa_run_tab",
+  newTab: "sa_new_tab",
   orgSheet: "sa_org_sheet",
   orgTab: "sa_org_tab",
 };
@@ -78,6 +79,7 @@ export default function ScraperPage() {
   const [workSheet, setWorkSheet] = useState("");
   const [memSheet, setMemSheet] = useState("");
   const [runTab, setRunTab] = useState("");
+  const [newTabName, setNewTabName] = useState("");
   const [saEmail, setSaEmail] = useState(null);
   // Verdeling (Collection & Product organization) inladen
   const [orgSheet, setOrgSheet] = useState("");
@@ -104,6 +106,7 @@ export default function ScraperPage() {
     setWorkSheet(load(LS.workSheet, ""));
     setMemSheet(load(LS.memSheet, ""));
     setRunTab(load(LS.runTab, ""));
+    setNewTabName(load(LS.newTab, ""));
     setOrgSheet(load(LS.orgSheet, ""));
     setOrgTab(load(LS.orgTab, "Collection & Product organization"));
     fetch("/api/sheets", {
@@ -281,9 +284,11 @@ export default function ScraperPage() {
     setRunning(true);
     setLogs([]);
     try {
-      // Elke run een eigen, schoon tabblad in het werkboek
+      // Elke run een eigen, schoon tabblad in het werkboek.
+      // Eigen bladnaam ingevuld? Die gebruiken — anders automatisch "Run d-m uu:mm".
       const d = new Date();
-      const runTitle = `Run ${d.getDate()}-${d.getMonth() + 1} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      const autoTitle = `Run ${d.getDate()}-${d.getMonth() + 1} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      const runTitle = newTabName.trim() || autoTitle;
       const tabRes = await sheetsCall({
         action: "createTab",
         sheetId: workSheet,
@@ -644,16 +649,17 @@ export default function ScraperPage() {
             <div className="card">
               <h2>Google Sheet</h2>
               <div className="field-label" style={{ marginTop: 0 }}>
-                Uitkomst import-lijst <span className="opt">(hier komen de gescrapete producten in)</span>
+                Import-lijst sheet
               </div>
               <input
                 type="text"
-                placeholder="Sheet ID of volledige URL"
+                placeholder="https://docs.google.com/spreadsheets/d/…"
                 value={workSheet}
                 onChange={(e) => saveSheets(e.target.value, memSheet)}
               />
               <div className="hint">
-                Deel de sheet met het service account e-mailadres
+                <strong>Deel hier de link naar de import-lijst sheet</strong> — hier komen alle gescrapete
+                producten in. Deel de sheet met het service account
                 {saEmail ? (
                   <>
                     {": "}
@@ -662,6 +668,22 @@ export default function ScraperPage() {
                 ) : (
                   <span style={{ color: "var(--warn)" }}> (nog niet ingesteld in env vars)</span>
                 )}
+              </div>
+              <div className="field-label" style={{ fontWeight: 400, fontSize: 13 }}>
+                Naam nieuw blad <span className="opt">(voor deze run)</span>
+              </div>
+              <input
+                type="text"
+                placeholder="bv. Clara James aug-nov — leeg = automatisch Run-naam"
+                value={newTabName}
+                onChange={(e) => {
+                  setNewTabName(e.target.value);
+                  save(LS.newTab, e.target.value);
+                }}
+              />
+              <div className="hint">
+                De scraper maakt in de import-lijst een nieuw blad met deze naam. Laat je dit leeg, dan wordt het
+                automatisch "Run dag-maand uu:mm".
               </div>
               <div className="field-label" style={{ fontWeight: 400, fontSize: 13 }}>
                 Geheugen-sheet (permanent, nooit leegmaken)
@@ -677,11 +699,11 @@ export default function ScraperPage() {
                 leeggemaakt of vervangen. Zelfde service account delen.
               </div>
               <div className="field-label" style={{ fontWeight: 400, fontSize: 13 }}>
-                Run-tabblad (voor de checks)
+                Run-tabblad voor de checks <span className="opt">(optioneel)</span>
               </div>
               <input
                 type="text"
-                placeholder="wordt automatisch gevuld per run"
+                placeholder="wordt automatisch gevuld — alleen invullen om een ouder blad te checken"
                 value={runTab}
                 onChange={(e) => {
                   setRunTab(e.target.value);
@@ -689,7 +711,8 @@ export default function ScraperPage() {
                 }}
               />
               <div className="hint">
-                Elke run krijgt een eigen tabblad; de drie checks werken op dit tabblad.
+                Wordt na elke run automatisch gevuld met het bladenaam van die run; de drie checks werken hierop.
+                Alleen zelf aanpassen als je een ouder blad wilt nachecken.
               </div>
             </div>
 
