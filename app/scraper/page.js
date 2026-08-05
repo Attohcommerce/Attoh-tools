@@ -29,6 +29,40 @@ function save(key, val) {
 
 const HEADER_ROW = ["Link", "Titel", "Keyword", "Matchbron", "Matchtype", "Geslacht", "Dubbel", "Literal-twijfel"];
 
+// Stores verlopen automatisch na 14 dagen zonder gebruik van de tool
+const STORE_TTL_DAYS = 14;
+const LS_LAST_ACTIVE = "sa_last_active";
+
+/**
+ * Geplakte keyword-lijsten parsen — snapt alles:
+ *  - één keyword per regel ("occasion dress")
+ *  - keyword + aantal als twee kolommen ("occasion dress<tab>10")
+ *  - een hele rij náást elkaar uit een sheet ("kw1<tab>kw2<tab>kw3…")
+ *  - komma- of puntkomma-gescheiden lijsten
+ */
+function parseKwPaste(text) {
+  const out = [];
+  for (const line of String(text || "").split(/\n+/)) {
+    if (!line.trim()) continue;
+    const cells = line.split(/\t|;|,/).map((c) => c.trim()).filter(Boolean);
+    if (!cells.length) continue;
+    if (cells.length === 2 && /^\d+$/.test(cells[1])) {
+      // klassiek: keyword + aantal
+      out.push({ k: cells[0], n: Number(cells[1]) });
+    } else if (cells.every((c, i) => i % 2 === 1 ? /^\d+$/.test(c) : !/^\d+$/.test(c)) && cells.length % 2 === 0 && cells.length > 2) {
+      // afwisselend keyword, aantal, keyword, aantal…
+      for (let i = 0; i < cells.length; i += 2) out.push({ k: cells[i], n: Number(cells[i + 1]) });
+    } else {
+      // elke cel is een eigen keyword (hele rij gekopieerd)
+      for (const c of cells) {
+        if (/^\d+$/.test(c)) continue; // losse getallen overslaan
+        out.push({ k: c, n: 10 });
+      }
+    }
+  }
+  return out;
+}
+
 function storeOf(link) {
   try {
     return new URL(link).host.replace(/^www\./, "");
@@ -56,7 +90,16 @@ export default function ScraperPage() {
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    setStoreList(load(LS.stores, []));
+    // Stores automatisch wissen als de tool 14+ dagen niet gebruikt is
+    const lastActive = Number(load(LS_LAST_ACTIVE, 0)) || 0;
+    const expired = lastActive && Date.now() - lastActive > STORE_TTL_DAYS * 24 * 60 * 60 * 1000;
+    if (expired) {
+      save(LS.stores, []);
+      setStoreList([]);
+    } else {
+      setStoreList(load(LS.stores, []));
+    }
+    save(LS_LAST_ACTIVE, Date.now());
     setKw(load(LS.keywords, { vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] }));
     setWorkSheet(load(LS.workSheet, ""));
     setMemSheet(load(LS.memSheet, ""));
@@ -102,6 +145,12 @@ export default function ScraperPage() {
     save(LS.stores, next);
   }
 
+  function clearAllStores() {
+    setStoreList([]);
+    save(LS.stores, []);
+    pushLog({ muted: true, text: "Alle competitor stores gewist." });
+  }
+
   // ---------- Keywords ----------
   function setGroup(group, rows) {
     const next = { ...kw, [group]: rows };
@@ -118,18 +167,24 @@ export default function ScraperPage() {
     const text = e.clipboardData?.getData("text") || "";
     if (!text.includes("\n") && !text.includes("\t")) return;
     e.preventDefault();
-    const parsed = text
-      .split(/\n+/)
-      .map((line) => {
-        const parts = line.split(/\t|,|;/).map((p) => p.trim());
-        if (!parts[0]) return null;
-        return { k: parts[0], n: Number(parts[1]) || 10 };
-      })
-      .filter(Boolean);
+    const parsed = parseKwPaste(text);
     if (!parsed.length) return;
     const rows = [...kw[group]];
     rows.splice(idx, 1, ...parsed);
     setGroup(group, rows);
+  }
+
+  // Bulk-plakveld: hele lijst (ook 100+) in één keer, lege rijen verdwijnen
+  function handleBulkPaste(group, e) {
+    const text = e.clipboardData?.getData("text") || "";
+    if (!text.trim()) return;
+    e.preventDefault();
+    const parsed = parseKwPaste(text);
+    if (!parsed.length) return;
+    const existing = kw[group].filter((r) => r.k.trim());
+    setGroup(group, [...existing, ...parsed]);
+    pushLog({ ok: true, text: `${parsed.length} keywords geplakt bij ${group === "vrouw" ? "Vrouw" : "Man"}.` });
+    window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "ok" }));
   }
 
   function saveSheets(w, m) {
@@ -475,7 +530,17 @@ export default function ScraperPage() {
                 </div>
               ))}
               {storeList.length > 0 && (
-                <div className="hint">{storeList.length} stores — volgorde = zoekvolgorde (beste eerst)</div>
+                <>
+                  <div className="hint">{storeList.length} stores — volgorde = zoekvolgorde (beste eerst)</div>
+                  <div style={{ marginTop: 10 }}>
+                    <button className="btn-ghost btn-small" onClick={clearAllStores}>
+                      ✕ Alles wissen
+                    </button>
+                  </div>
+                  <div className="hint">
+                    Stores verdwijnen ook vanzelf na {STORE_TTL_DAYS} dagen zonder gebruik van de tool.
+                  </div>
+                </>
               )}
             </div>
 
@@ -555,6 +620,14 @@ export default function ScraperPage() {
                         </span>
                       )}
                     </div>
+                    <input
+                      type="text"
+                      className="kw-bulk"
+                      placeholder="⧉ Plak hier je hele lijst in één keer (ook 100+)"
+                      value=""
+                      onChange={() => {}}
+                      onPaste={(e) => handleBulkPaste(group, e)}
+                    />
                     {kw[group].length > 8 ? <div className="kw-scroll">{rows}</div> : rows}
                     <button className="add-kw" onClick={() => setGroup(group, [...kw[group], { k: "", n: 10 }])}>
                       + Keyword toevoegen
@@ -570,6 +643,9 @@ export default function ScraperPage() {
 
             <div className="card">
               <h2>Google Sheet</h2>
+              <div className="field-label" style={{ marginTop: 0 }}>
+                Uitkomst import-lijst <span className="opt">(hier komen de gescrapete producten in)</span>
+              </div>
               <input
                 type="text"
                 placeholder="Sheet ID of volledige URL"

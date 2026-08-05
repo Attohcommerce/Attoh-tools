@@ -617,6 +617,25 @@ select:focus {
 }
 
 /* ============================================================
+   Bulk-plakveld voor keywords
+   ============================================================ */
+.kw-bulk {
+  width: 100%;
+  margin: 6px 0 4px;
+  border: 1px dashed var(--line-hi) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-align: center;
+  cursor: copy;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.kw-bulk:focus {
+  border-color: rgba(201, 162, 39, 0.55) !important;
+  background: var(--accent-dim) !important;
+}
+
+/* ============================================================
    Lange keyword-lijsten (ingeladen verdeling) — scrollbaar blok
    ============================================================ */
 .kw-scroll {
