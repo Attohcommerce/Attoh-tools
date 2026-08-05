@@ -4,7 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
 
 const LS_SHEET = "attoh_kw_sheet";
+const LS_VSHEET = "attoh_kw_vsheet"; // doel-sheet van de verdeling
 const LS_SESSIONS = "attoh_kw_sessions"; // max 2, nieuwste eerst
+
+const MONTHS = [
+  { key: "jan", label: "Jan" }, { key: "feb", label: "Feb" }, { key: "mrt", label: "Mrt" },
+  { key: "apr", label: "Apr" }, { key: "mei", label: "Mei" }, { key: "jun", label: "Jun" },
+  { key: "jul", label: "Jul" }, { key: "aug", label: "Aug" }, { key: "sep", label: "Sep" },
+  { key: "okt", label: "Okt" }, { key: "nov", label: "Nov" }, { key: "dec", label: "Dec" },
+];
+
+// Standaard: de komende 4 maanden vanaf nu
+function defaultMonths() {
+  const m = new Date().getMonth();
+  return [0, 1, 2, 3].map((i) => MONTHS[(m + i) % 12].key);
+}
 
 /* ---------- Keyword Planner CSV parsen (UTF-16, tab-gescheiden) ---------- */
 
@@ -81,6 +95,13 @@ export default function KeywordsPage() {
   const [cleanTab, setCleanTab] = useState("");
   const [topN, setTopN] = useState("500");
   const [cleaning, setCleaning] = useState(false);
+  // Stap 3: Collection & Product organization
+  const [vSheetLink, setVSheetLink] = useState("");
+  const [vTabName, setVTabName] = useState("Collection & Product organization");
+  const [vGenders, setVGenders] = useState("MV"); // MV | V | M
+  const [vMonths, setVMonths] = useState(defaultMonths);
+  const [vRunning, setVRunning] = useState(false);
+  const [vDoneUrl, setVDoneUrl] = useState("");
   // Sessies + chat
   const [sessions, setSessions] = useState([]);
   const [activeId, setActiveId] = useState(null); // null = nieuwe run
@@ -94,6 +115,8 @@ export default function KeywordsPage() {
     try {
       const s = localStorage.getItem(LS_SHEET);
       if (s) setSheetLink(s);
+      const v = localStorage.getItem(LS_VSHEET);
+      if (v) setVSheetLink(v);
     } catch {}
     setSessions(loadSessions());
   }, []);
@@ -125,6 +148,7 @@ export default function KeywordsPage() {
     setTabName(s.tabName);
     setCleanTab(s.tabName);
     setDoneUrl(s.doneUrl || "");
+    setVDoneUrl(s.verdelingUrl || "");
     setLogs(s.logs || []);
     setChatMsgs(s.chat || []);
     setFiles([]);
@@ -135,6 +159,7 @@ export default function KeywordsPage() {
     setTabName("");
     setCleanTab("");
     setDoneUrl("");
+    setVDoneUrl("");
     setLogs([]);
     setChatMsgs([]);
     setFiles([]);
@@ -297,6 +322,64 @@ export default function KeywordsPage() {
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
     } finally {
       setCleaning(false);
+    }
+  }
+
+  /* ----- stap 3: Collection & Product organization ----- */
+
+  const step1Done = Boolean(doneUrl) || activeId !== null;
+
+  function toggleMonth(key) {
+    setVMonths((prev) => {
+      if (prev.includes(key)) return prev.filter((k) => k !== key);
+      if (prev.length >= 4) return prev; // max 4 — eerst eentje uitzetten
+      return [...prev, key];
+    });
+  }
+
+  // Gekozen maanden in kalendervolgorde tonen/versturen
+  const orderedMonths = MONTHS.filter((m) => vMonths.includes(m.key)).map((m) => m.key);
+
+  const canVerdeling =
+    !vRunning && !running && step1Done &&
+    vSheetLink.trim() && vTabName.trim() && orderedMonths.length === 4 &&
+    sheetLink.trim() && cleanTab.trim();
+
+  async function runVerdeling() {
+    if (!canVerdeling) return;
+    setVRunning(true);
+    setVDoneUrl("");
+    try {
+      localStorage.setItem(LS_VSHEET, vSheetLink.trim());
+    } catch {}
+    try {
+      const gLabel = vGenders === "MV" ? "man + vrouw" : vGenders === "V" ? "vrouw" : "man";
+      pushLog({ strong: true, text: `— Verdeling: ${orderedMonths.join(", ")} · ${gLabel}` });
+      pushLog({ text: "AI en verdeel-engine bepalen de collecties en productaantallen — momentje…" });
+      const r = await api("/api/keywords-verdeling", {
+        sourceSheetId: sheetLink.trim(),
+        sourceTab: cleanTab.trim(),
+        targetSheetId: vSheetLink.trim(),
+        targetTab: vTabName.trim(),
+        months: orderedMonths,
+        genders: vGenders,
+      });
+      pushLog({ ok: true, text: `${r.keywordCount} keywords → ${r.totalProducts} producten in "${r.title}"` });
+      const top = (r.collections || []).slice(0, 5).map((c) => `${c.col} ${c.products}`).join(" · ");
+      if (top) pushLog({ text: `Grootste collecties: ${top}` });
+      if (r.aiRemoved && r.aiRemoved.length) {
+        pushLog({ text: `AI-nacontrole verwijderde: ${r.aiRemoved.join(", ")}` });
+      }
+      setVDoneUrl(r.url);
+      if (activeSession) {
+        upsertSession({ id: activeSession.id, verdelingUrl: r.url, verdelingTab: r.title });
+      }
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+    } catch (e) {
+      pushLog({ err: true, text: String(e.message || e) });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+    } finally {
+      setVRunning(false);
     }
   }
 
@@ -465,6 +548,81 @@ export default function KeywordsPage() {
                 </button>
               </div>
             </div>
+
+            {/* -------- Stap 3: Collection & Product organization -------- */}
+            {step1Done && (
+              <div className="card" style={{ marginTop: 18 }}>
+                <h2>
+                  Collection & Product organization <span className="opt">(AI-verdeling)</span>
+                </h2>
+                <div className="field-label">Google Sheet-link (doel)</div>
+                <input
+                  type="text"
+                  placeholder="https://docs.google.com/spreadsheets/d/…"
+                  value={vSheetLink}
+                  onChange={(e) => setVSheetLink(e.target.value)}
+                />
+                <div className="field-label">Naam nieuw tabblad</div>
+                <input
+                  type="text"
+                  placeholder="Collection & Product organization"
+                  value={vTabName}
+                  onChange={(e) => setVTabName(e.target.value)}
+                />
+                <div className="field-label">Markt</div>
+                <div className="seg">
+                  {[
+                    ["MV", "Man + Vrouw"],
+                    ["V", "Vrouw"],
+                    ["M", "Man"],
+                  ].map(([val, label]) => (
+                    <button
+                      key={val}
+                      className={vGenders === val ? "on" : ""}
+                      onClick={() => setVGenders(val)}
+                      type="button"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="field-label">
+                  Maanden <span className="opt">(kies er 4 — {orderedMonths.length}/4)</span>
+                </div>
+                <div className="mcal">
+                  {MONTHS.map((m) => {
+                    const on = vMonths.includes(m.key);
+                    const full = !on && vMonths.length >= 4;
+                    return (
+                      <button
+                        key={m.key}
+                        type="button"
+                        className={"mcal-m" + (on ? " on" : "") + (full ? " dim" : "")}
+                        onClick={() => toggleMonth(m.key)}
+                      >
+                        {m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="hint">
+                  Verdeelt tot 1000 producten over keywords en collecties uit "{cleanTab || "…"}" —
+                  sterke trends krijgen meer producten, alles wat goed is komt erin.
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn" onClick={runVerdeling} disabled={!canVerdeling}>
+                    {vRunning ? "AI verdeelt…" : "⚖ Maak verdeling"}
+                  </button>
+                </div>
+                {vDoneUrl && (
+                  <div style={{ marginTop: 12 }}>
+                    <a className="linklike" href={vDoneUrl} target="_blank" rel="noreferrer noopener">
+                      Tabblad openen ↗
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* -------- Rechts: voortgang -------- */}

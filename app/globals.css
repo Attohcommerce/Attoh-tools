@@ -617,6 +617,52 @@ select:focus {
 }
 
 /* ============================================================
+   Maand-kalender (verdeling — kies 4 maanden)
+   ============================================================ */
+.mcal {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  margin-top: 2px;
+}
+.mcal-m {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  border-radius: 9px;
+  padding: 9px 0;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+}
+.mcal-m:hover {
+  color: var(--ink-2);
+  border-color: var(--line-hi);
+  background: rgba(255, 255, 255, 0.06);
+}
+.mcal-m.on {
+  background: var(--accent-dim);
+  border-color: rgba(201, 162, 39, 0.55);
+  color: var(--accent-hi);
+  box-shadow: 0 0 16px -6px var(--accent-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.mcal-m.dim {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (max-width: 560px) {
+  .mcal {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ============================================================
    Segmented controls
    ============================================================ */
 .seg {
