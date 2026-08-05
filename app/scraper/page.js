@@ -481,13 +481,54 @@ export default function ScraperPage() {
                   });
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.error || res.status);
-                  const found = data.matches || [];
+                  let found = data.matches || [];
                   scanned = Math.max(scanned, data.total || 0);
                   bestSelling = bestSelling || !!data.usedBestSelling;
+
+                  // Via een alternatief woord gevonden? Dan eerst de AI-vision
+                  // dubbelcheck: Claude kijkt naar de FOTO — is dit écht een
+                  // "<origineel keyword>"? Alleen goedgekeurde producten door.
+                  if (found.length && term !== k) {
+                    try {
+                      const vres = await fetch("/api/verify-products", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          keyword: k,
+                          gender,
+                          items: found.map((m, fi) => ({ index: fi, title: m.title, image: m.image || null })),
+                        }),
+                      });
+                      const vdata = await vres.json();
+                      if (vres.ok && Array.isArray(vdata.reject) && vdata.reject.length) {
+                        const bad = new Set(vdata.reject.map((r) => r.index));
+                        const kept = found.filter((_, fi) => !bad.has(fi));
+                        pushLog({
+                          muted: true,
+                          text: `AI-vision: ${found.length - kept.length} van ${found.length} afgekeurd voor "${k}" (foto past niet).`,
+                        });
+                        found = kept;
+                      }
+                    } catch {
+                      /* vision-check niet beschikbaar → producten gewoon meenemen */
+                    }
+                  }
+
                   if (found.length) {
-                    // Origineel keyword in de sheet; via-term zichtbaar in Matchbron
+                    // Origineel keyword in de sheet; via-term zichtbaar in Matchbron.
+                    // Matchtype is bij via-vondsten NOOIT "Literal" — dat zou over
+                    // het hulp-woord gaan, niet over jouw echte keyword.
                     const via = term === k ? "" : ` · via "${term}"`;
-                    const newRows = found.map((m) => [m.link, m.title, k, m.source + via, m.literal, "", "", ""]);
+                    const newRows = found.map((m) => [
+                      m.link,
+                      m.title,
+                      k,
+                      m.source + via,
+                      term === k ? m.literal : "Ruim",
+                      "",
+                      "",
+                      "",
+                    ]);
                     await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:H`, rows: newRows });
                     if (memSheet.trim()) {
                       await sheetsCall({

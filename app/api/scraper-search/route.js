@@ -57,6 +57,7 @@ export async function POST(req) {
       title: p.title,
       source: m.source, // Titel | Omschrijving | Foto's
       literal: m.literal ? "Literal" : "Ruim",
+      image: p.images && p.images[0] ? p.images[0].src : null, // voor AI-vision dubbelcheck
     });
   }
 
