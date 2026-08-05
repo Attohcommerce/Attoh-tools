@@ -231,7 +231,7 @@ export default function HomePage() {
           <div className="stat">
             <span className="stat-k">Operator</span>
             <span className="stat-v">{name || "—"}</span>
-            <span className="stat-s">Sa Collective LLC</span>
+            <span className="stat-s">{(me && me.company) || " "}</span>
           </div>
         </section>
 

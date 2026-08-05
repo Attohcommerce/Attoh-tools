@@ -78,7 +78,7 @@ export default function LoginPage() {
 
         {err && <div className="login-err">{err}</div>}
 
-        <div className="login-foot">Sa Collective LLC — interne tools</div>
+        <div className="login-foot">Attoh Tools — interne tools</div>
       </form>
     </div>
   );
