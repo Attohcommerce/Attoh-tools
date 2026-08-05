@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
 
 const LS = {
@@ -33,6 +33,11 @@ const HEADER_ROW = ["Link", "Titel", "Keyword", "Matchbron", "Matchtype", "Gesla
 // Stores verlopen automatisch na 14 dagen zonder gebruik van de tool
 const STORE_TTL_DAYS = 14;
 const LS_LAST_ACTIVE = "sa_last_active";
+
+// Underdog-keywords: na dit aantal stores zonder resultaat verschijnt het
+// instructie-paneel; geen antwoord → automatisch over op de AI-aanpak.
+const STALL_PROMPT_AT = 6;
+const STALL_AUTO_AT = 20;
 
 /**
  * Geplakte keyword-lijsten parsen — snapt alles:
@@ -90,6 +95,9 @@ export default function ScraperPage() {
   const [running, setRunning] = useState(false);
   const [checkBusy, setCheckBusy] = useState("");
   const [logs, setLogs] = useState([]);
+  // Instructie-paneel voor vastgelopen keywords
+  const [stall, setStall] = useState(null); // {kw, gender} zolang het paneel zichtbaar is
+  const stallDecision = useRef(null); // "skip" | "ai" | "continue"
 
   useEffect(() => {
     // Stores automatisch wissen als de tool 14+ dagen niet gebruikt is
@@ -317,51 +325,131 @@ export default function ScraperPage() {
       pushLog({ muted: true, text: `${exclude.size} bekende links worden overgeslagen (geheugen).` });
 
       let grandTotal = 0;
+      const hardKeywords = []; // bleef op 0 ondanks alles
       for (const [gender, rows] of groups) {
         for (const { k, n } of rows) {
           let needed = Number(n) || 10;
           const target = needed;
           pushLog({ strong: true, text: `— ${gender} · "${k}" · ${target} producten` });
-          for (const store of stores) {
-            if (needed <= 0) break;
+
+          // Per keyword: schone staat voor het instructie-paneel + AI-aanpak
+          stallDecision.current = null;
+          setStall(null);
+          let aiTried = false;
+          let terms = [k]; // waarop gezocht wordt (AI kan dit vervangen)
+          let storesTried = 0;
+
+          const activateAi = async () => {
+            if (aiTried) return;
+            aiTried = true;
             try {
-              const res = await fetch("/api/scraper-search", {
+              pushLog({ strong: true, text: `AI-aanpak voor "${k}" — alternatieven bedenken…` });
+              const res = await fetch("/api/keyword-fallback", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  store,
-                  keyword: k,
-                  gender,
-                  need: needed,
-                  excludeLinks: [...exclude],
-                }),
+                body: JSON.stringify({ keyword: k, gender }),
               });
               const data = await res.json();
               if (!res.ok) throw new Error(data.error || res.status);
-              const found = data.matches || [];
-              if (found.length) {
-                const newRows = found.map((m) => [m.link, m.title, k, m.source, m.literal, "", "", ""]);
-                await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:H`, rows: newRows });
-                if (memSheet.trim()) {
-                  await sheetsCall({
-                    action: "append",
-                    sheetId: memSheet,
-                    rows: found.map((m) => [m.link, k, new Date().toISOString().slice(0, 10)]),
+              const alts = data.alternatives || [];
+              if (alts.length) {
+                terms = alts;
+                pushLog({ ok: true, text: `AI zoekt nu op: ${alts.join(" · ")} — resultaten tellen mee voor "${k}".` });
+              } else {
+                pushLog({ warn: true, text: `AI vond geen bruikbare alternatieven voor "${k}".` });
+              }
+            } catch (e) {
+              pushLog({ err: true, text: `AI-aanpak mislukt: ${e.message}` });
+            }
+          };
+
+          // Eén ronde langs alle stores met de huidige zoektermen
+          const scanStores = async (withStallLogic) => {
+            for (const store of stores) {
+              if (needed <= 0) return;
+              if (stallDecision.current === "skip") return;
+              if (stallDecision.current === "ai" && !aiTried) {
+                setStall(null);
+                await activateAi();
+              }
+              let foundThisStore = 0;
+              let scanned = 0;
+              let bestSelling = false;
+              for (const term of terms) {
+                if (needed <= 0) break;
+                try {
+                  const res = await fetch("/api/scraper-search", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ store, keyword: term, gender, need: needed, excludeLinks: [...exclude] }),
                   });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error || res.status);
+                  const found = data.matches || [];
+                  scanned = Math.max(scanned, data.total || 0);
+                  bestSelling = bestSelling || !!data.usedBestSelling;
+                  if (found.length) {
+                    // Origineel keyword in de sheet; via-term zichtbaar in Matchbron
+                    const via = term === k ? "" : ` · via "${term}"`;
+                    const newRows = found.map((m) => [m.link, m.title, k, m.source + via, m.literal, "", "", ""]);
+                    await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:H`, rows: newRows });
+                    if (memSheet.trim()) {
+                      await sheetsCall({
+                        action: "append",
+                        sheetId: memSheet,
+                        rows: found.map((m) => [m.link, k, new Date().toISOString().slice(0, 10)]),
+                      });
+                    }
+                    for (const m of found) exclude.add(m.link.toLowerCase().replace(/\/$/, ""));
+                    needed -= found.length;
+                    grandTotal += found.length;
+                    foundThisStore += found.length;
+                  }
+                } catch (e) {
+                  pushLog({ err: true, text: `${store}: ${e.message}` });
+                  break;
                 }
-                for (const m of found) exclude.add(m.link.toLowerCase().replace(/\/$/, ""));
-                needed -= found.length;
-                grandTotal += found.length;
               }
               pushLog({
                 ok: true,
-                text: `${store}: ${found.length} gevonden (${data.total} producten gescand${data.usedBestSelling ? ", best-selling volgorde" : ""}) — nog ${Math.max(needed, 0)} nodig`,
+                text: `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bestSelling ? ", best-selling volgorde" : ""}) — nog ${Math.max(needed, 0)} nodig`,
               });
-            } catch (e) {
-              pushLog({ err: true, text: `${store}: ${e.message}` });
+              storesTried++;
+
+              // Vastloop-logica: alleen zolang er nog NIETS gevonden is
+              if (withStallLogic && needed === target) {
+                if (storesTried === STALL_PROMPT_AT && !stallDecision.current) {
+                  setStall({ kw: k, gender });
+                  pushLog({
+                    warn: true,
+                    text: `"${k}" na ${STALL_PROMPT_AT} stores nog 0 — kies rechtsboven een aanpak, of ik schakel na ${STALL_AUTO_AT} stores zelf over op AI.`,
+                  });
+                }
+                if (storesTried >= STALL_AUTO_AT && !stallDecision.current && !aiTried) {
+                  setStall(null);
+                  pushLog({ strong: true, text: `Geen antwoord — automatisch over op de AI-aanpak voor "${k}".` });
+                  await activateAi();
+                }
+              }
             }
+          };
+
+          await scanStores(true);
+
+          // Nog steeds helemaal niets? Dan alsnog één AI-ronde (tenzij overgeslagen).
+          if (needed === target && stallDecision.current !== "skip" && !aiTried) {
+            await activateAi();
+            if (terms.length && terms[0] !== k) await scanStores(false);
           }
-          if (needed > 0) {
+          setStall(null);
+
+          if (stallDecision.current === "skip") {
+            pushLog({ warn: true, text: `"${k}" overgeslagen op jouw verzoek.` });
+            hardKeywords.push(k);
+          } else if (needed === target) {
+            pushLog({ warn: true, text: `"${k}": 0/${target} — ook met AI-aanpak niets gevonden.` });
+            hardKeywords.push(k);
+          } else if (needed > 0) {
             pushLog({ warn: true, text: `"${k}": ${target - needed}/${target} gevonden — stores zijn op.` });
           } else {
             pushLog({ ok: true, text: `"${k}": ${target}/${target} compleet.` });
@@ -369,9 +457,13 @@ export default function ScraperPage() {
         }
       }
       pushLog({ strong: true, text: `Klaar — ${grandTotal} producten in tabblad "${runTitle}".`, href: tabRes.url });
+      if (hardKeywords.length) {
+        pushLog({ warn: true, text: `Moeilijke keywords (0 resultaat of overgeslagen): ${hardKeywords.join(", ")}` });
+      }
     } catch (e) {
       pushLog({ err: true, text: "Fout: " + e.message });
     } finally {
+      setStall(null);
       setRunning(false);
     }
   }
@@ -771,6 +863,45 @@ export default function ScraperPage() {
 
           {/* -------- Rechter kolom: voortgang -------- */}
           <div>
+            {stall && (
+              <div className="card stall-card">
+                <h2>⚠ "{stall.kw}" loopt vast</h2>
+                <div className="hint" style={{ marginTop: 4 }}>
+                  Na {STALL_PROMPT_AT} stores nog niets gevonden. Kies een aanpak — het scrapen loopt
+                  gewoon door. Geen antwoord? Dan schakel ik na {STALL_AUTO_AT} stores automatisch over
+                  op de AI-aanpak.
+                </div>
+                <div className="stall-btns">
+                  <button
+                    className="btn-ghost"
+                    onClick={() => {
+                      stallDecision.current = "ai";
+                      setStall(null);
+                    }}
+                  >
+                    🧠 AI-aanpak nu
+                  </button>
+                  <button
+                    className="btn-ghost"
+                    onClick={() => {
+                      stallDecision.current = "continue";
+                      setStall(null);
+                    }}
+                  >
+                    ▶ Gewoon doorgaan
+                  </button>
+                  <button
+                    className="btn-ghost stall-skip"
+                    onClick={() => {
+                      stallDecision.current = "skip";
+                      setStall(null);
+                    }}
+                  >
+                    ⏭ Keyword overslaan
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="card" style={{ minHeight: 300 }}>
               {logs.length === 0 ? (
                 <div className="center-note">Vul links de gegevens in en klik op Starten</div>

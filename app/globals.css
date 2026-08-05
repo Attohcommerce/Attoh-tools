@@ -639,6 +639,40 @@ select:focus {
 }
 
 /* ============================================================
+   Instructie-paneel voor vastgelopen keywords (scraper)
+   ============================================================ */
+.stall-card {
+  border-color: rgba(201, 162, 39, 0.55) !important;
+  animation: stallPulse 2.2s ease-in-out infinite;
+}
+@keyframes stallPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(201, 162, 39, 0);
+  }
+  50% {
+    box-shadow: 0 0 26px -6px var(--accent-glow);
+  }
+}
+.stall-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.stall-btns .btn-ghost {
+  width: auto;
+  display: inline-flex;
+}
+.stall-btns .stall-skip {
+  color: #ff8585;
+  border-color: rgba(255, 107, 107, 0.35);
+}
+.stall-btns .stall-skip:hover {
+  background: rgba(255, 82, 82, 0.15);
+  border-color: rgba(255, 107, 107, 0.6);
+}
+
+/* ============================================================
    Bulk-plakveld voor keywords
    ============================================================ */
 .kw-bulk {
