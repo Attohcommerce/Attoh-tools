@@ -154,6 +154,14 @@ export default function ScraperPage() {
     pushLog({ muted: true, text: "Alle competitor stores gewist." });
   }
 
+  function clearAllKeywords() {
+    const empty = { vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] };
+    setKw(empty);
+    save(LS.keywords, empty);
+    setOrgInfo(null);
+    pushLog({ muted: true, text: "Alle keywords gewist." });
+  }
+
   // ---------- Keywords ----------
   function setGroup(group, rows) {
     const next = { ...kw, [group]: rows };
@@ -644,6 +652,13 @@ export default function ScraperPage() {
                 Keyword · Aantal producten — plak ook meerdere keywords tegelijk (één per regel, of keyword+aantal als
                 twee kolommen uit een sheet)
               </div>
+              {(kw.vrouw.some((r) => r.k.trim()) || kw.man.some((r) => r.k.trim())) && (
+                <div style={{ marginTop: 10 }}>
+                  <button className="btn-ghost btn-small" onClick={clearAllKeywords}>
+                    ✕ Verwijder alle keywords
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="card">

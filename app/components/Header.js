@@ -33,6 +33,25 @@ export default function Header({ icon, title, subtitle }) {
     window.location.href = "/login";
   }
 
+  // Alles wat op de pagina's is ingevuld in één keer wissen.
+  // Shopify-koppelingen (sa_stores) en geluidsvoorkeur blijven staan.
+  function resetSession() {
+    if (!window.confirm("Reset session? Alle ingevulde velden, lijsten en sessies worden gewist. Shopify-koppelingen blijven bewaard.")) return;
+    const KEYS = [
+      // Scraper
+      "sa_competitor_stores", "sa_scraper_keywords", "sa_sheet_work", "sa_sheet_memory",
+      "sa_run_tab", "sa_new_tab", "sa_org_sheet", "sa_org_tab", "sa_last_active",
+      // Importer
+      "sa_url_queue", "sa_importlog_sheet", "sa_selected_store",
+      // Keywords
+      "attoh_kw_sheet", "attoh_kw_vsheet", "attoh_kw_sessions",
+    ];
+    try {
+      for (const k of KEYS) localStorage.removeItem(k);
+    } catch {}
+    window.location.reload();
+  }
+
   return (
     <div className="topbar">
       <span className="logo">{icon || "A"}</span>
@@ -67,6 +86,9 @@ export default function Header({ icon, title, subtitle }) {
             <path d="m16 9.5 5 5M21 9.5l-5 5" />
           </svg>
         )}
+      </button>
+      <button className="resetbtn" onClick={resetSession} title="Alles wissen wat is ingevuld">
+        Reset session
       </button>
       <button className="logout" onClick={logout} title="Uitloggen">
         Uitloggen
