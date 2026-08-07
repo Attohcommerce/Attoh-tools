@@ -19,15 +19,15 @@ export async function POST(req) {
   const session = await getSession();
   if (!session.user) return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
-  const { text, bucket, date } = body || {};
-  if (!text || !String(text).trim()) {
-    return NextResponse.json({ error: "Tekst mag niet leeg zijn" }, { status: 400 });
+  const { title, desc, images, bucket, date } = body || {};
+  if (!title || !String(title).trim()) {
+    return NextResponse.json({ error: "Titel mag niet leeg zijn" }, { status: 400 });
   }
   if (!["today", "tomorrow", "thisweek", "later"].includes(bucket)) {
     return NextResponse.json({ error: "Ongeldige lijst" }, { status: 400 });
   }
   try {
-    const result = await addTodo(session.user.email, { text, bucket, date });
+    const result = await addTodo(session.user.email, { title, desc, images, bucket, date });
     return NextResponse.json(result);
   } catch (e) {
     return NextResponse.json({ error: String(e.message || e) }, { status: 500 });
