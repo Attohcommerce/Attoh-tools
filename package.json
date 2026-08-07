@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.57.0",
+    "@vercel/kv": "^2.0.0",
     "google-auth-library": "^9.15.0",
     "iron-session": "^8.0.4",
     "next": "^14.2.35",

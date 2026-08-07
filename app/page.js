@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Header from "./components/Header";
+import TodoBoard from "./components/TodoBoard";
 
 const MODULES = [
   {
@@ -234,6 +235,9 @@ export default function HomePage() {
             <span className="stat-s">{(me && me.company) || " "}</span>
           </div>
         </section>
+
+        {/* ---------- To Do ---------- */}
+        <TodoBoard />
 
         {/* ---------- Briefing ---------- */}
         <section className="brief">

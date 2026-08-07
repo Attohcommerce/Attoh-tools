@@ -2522,6 +2522,176 @@ select:focus {
 }
 
 /* ============================================================
+   To Do board (homepage)
+   ============================================================ */
+.todo-board {
+  margin-top: 28px;
+  animation: fadeUp 0.55s var(--ease) both;
+}
+.todo-board-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+.todo-board-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.todo-board-title::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 12px;
+  margin-right: 9px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent));
+  box-shadow: 0 0 10px var(--accent-glow);
+  vertical-align: -1px;
+}
+.todo-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+.todo-col {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  min-height: 120px;
+}
+.todo-col.tone-overdue {
+  background: var(--err-dim);
+  border: 1px solid rgba(255, 107, 107, 0.45);
+  opacity: 0.88;
+}
+.todo-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.todo-col.tone-overdue .todo-col-head {
+  color: var(--err);
+  border-bottom-color: rgba(255, 107, 107, 0.3);
+}
+.todo-count {
+  color: var(--faint);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 11px;
+}
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.todo-empty {
+  color: var(--faint);
+  font-size: 12px;
+  padding: 10px 2px;
+}
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.todo-row:last-child {
+  border-bottom: none;
+}
+.todo-check {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid var(--line-hi);
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #14100a;
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+}
+.todo-row.done .todo-check {
+  background: linear-gradient(140deg, var(--accent-hi), var(--accent));
+  border-color: transparent;
+}
+.todo-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--ink);
+  word-break: break-word;
+}
+.todo-row.done .todo-text {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+.todo-col.tone-overdue .todo-text {
+  color: var(--ink-2);
+}
+.todo-del {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: not-allowed;
+  opacity: 0.35;
+  transition: all 0.18s var(--ease);
+}
+.todo-del:not(:disabled) {
+  cursor: pointer;
+  opacity: 1;
+  color: var(--err);
+}
+.todo-del:not(:disabled):hover {
+  background: var(--err-dim);
+}
+.todo-add {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.todo-add input {
+  padding: 8px 10px;
+  font-size: 12.5px;
+}
+.todo-add-btn {
+  flex: none;
+  width: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(201, 162, 39, 0.5);
+  background: linear-gradient(140deg, var(--accent-hi) 0%, #a8821a 100%);
+  color: #14100a;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ============================================================
    Sessies + sessie-chat (Keywords/Importer)
    ============================================================ */
 .sess-bar {
