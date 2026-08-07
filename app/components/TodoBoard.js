@@ -145,6 +145,17 @@ export default function TodoBoard() {
     return g;
   }, [todos, todayStr, tomorrowStr]);
 
+  const [err, setErr] = useState("");
+
+  const reportError = useCallback(async (res, fallback) => {
+    try {
+      const data = await res.json();
+      setErr((data && data.error) || fallback);
+    } catch {
+      setErr(fallback);
+    }
+  }, []);
+
   const addTodo = useCallback(
     async (bucket, text) => {
       const date = bucket === "today" ? todayStr : bucket === "tomorrow" ? tomorrowStr : undefined;
@@ -153,32 +164,41 @@ export default function TodoBoard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, bucket, date }),
       });
-      if (res.ok) load();
+      if (res.ok) {
+        setErr("");
+        load();
+      } else {
+        reportError(res, "Toevoegen mislukt");
+      }
     },
-    [load, todayStr, tomorrowStr]
+    [load, todayStr, tomorrowStr, reportError]
   );
 
   const toggleTodo = useCallback(
     async (item) => {
       setTodos((prev) => prev.map((t) => (t.id === item.id ? { ...t, done: !t.done } : t)));
-      await fetch(`/api/todos/${item.id}`, {
+      const res = await fetch(`/api/todos/${item.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ done: !item.done }),
       });
+      if (!res.ok) reportError(res, "Bijwerken mislukt");
+      else setErr("");
       load();
     },
-    [load]
+    [load, reportError]
   );
 
   const deleteTodo = useCallback(
     async (item) => {
       if (!item.done) return;
       setTodos((prev) => prev.filter((t) => t.id !== item.id));
-      await fetch(`/api/todos/${item.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/todos/${item.id}`, { method: "DELETE" });
+      if (!res.ok) reportError(res, "Verwijderen mislukt");
+      else setErr("");
       load();
     },
-    [load]
+    [load, reportError]
   );
 
   if (loading) return null;
@@ -187,6 +207,7 @@ export default function TodoBoard() {
     <section className="todo-board">
       <div className="todo-board-head">
         <span className="todo-board-title">To Do</span>
+        {err ? <span className="todo-err">{err}</span> : null}
       </div>
       <div className="todo-cols">
         <Column
