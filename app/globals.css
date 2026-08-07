@@ -2935,6 +2935,24 @@ select:focus {
 .todo-modal-foot .btn-ghost {
   width: auto;
 }
+.todo-edit {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+}
+.todo-edit:hover {
+  color: var(--accent-hi);
+  background: var(--accent-dim);
+}
 .todo-lightbox {
   max-width: 92vw;
   max-height: 88vh;

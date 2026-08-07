@@ -55,10 +55,12 @@ const BUCKET_LABEL = {
   later: "Later",
 };
 
-function AddModal({ bucket, onClose, onSave }) {
-  const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
-  const [images, setImages] = useState([]);
+// Zelfde modal voor nieuw én bewerken: geef `item` mee om te bewerken.
+function TaskModal({ bucket, item, onClose, onSave }) {
+  const editing = Boolean(item);
+  const [title, setTitle] = useState(item ? item.title || item.text || "" : "");
+  const [desc, setDesc] = useState(item ? item.desc || "" : "");
+  const [images, setImages] = useState(item ? item.images || [] : []);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -102,7 +104,7 @@ function AddModal({ bucket, onClose, onSave }) {
     <div className="todo-overlay" onClick={onClose}>
       <div className="todo-modal" onClick={(e) => e.stopPropagation()} onPaste={onPaste}>
         <div className="todo-modal-head">
-          <span>Nieuwe taak — {BUCKET_LABEL[bucket]}</span>
+          <span>{editing ? "Taak bewerken" : `Nieuwe taak — ${BUCKET_LABEL[bucket]}`}</span>
           <button type="button" className="todo-modal-x" onClick={onClose} aria-label="Sluiten">
             ✕
           </button>
@@ -165,7 +167,7 @@ function AddModal({ bucket, onClose, onSave }) {
             Annuleren
           </button>
           <button type="button" className="btn btn-small" disabled={!title.trim() || busy} onClick={submit}>
-            {busy ? "Bezig…" : "Toevoegen"}
+            {busy ? "Bezig…" : editing ? "Opslaan" : "Toevoegen"}
           </button>
         </div>
       </div>
@@ -173,7 +175,7 @@ function AddModal({ bucket, onClose, onSave }) {
   );
 }
 
-function Row({ item, open, onToggleOpen, onToggle, onDelete, onImage }) {
+function Row({ item, open, onToggleOpen, onToggle, onDelete, onImage, onEdit }) {
   const title = item.title || item.text || "";
   const hasDetails = Boolean((item.desc || "").trim() || (item.images || []).length);
 
@@ -203,6 +205,20 @@ function Row({ item, open, onToggleOpen, onToggle, onDelete, onImage }) {
             </svg>
           </span>
         ) : null}
+        <button
+          type="button"
+          className="todo-edit"
+          title="Bewerken"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(item);
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+        </button>
         <button
           type="button"
           className="todo-del"
@@ -244,7 +260,11 @@ function Column({ bucket, title, items, tone, onOpenAdd, rowProps }) {
         <span className="todo-count">{items.length}</span>
       </div>
       <div className="todo-list">
-        {items.length === 0 ? <div className="todo-empty">Niks hier</div> : items.map((it) => <Row key={it.id} item={it} {...rowProps} />)}
+        {items.length === 0 ? (
+          <div className="todo-empty">Niks hier</div>
+        ) : (
+          items.map((it) => <Row key={it.id} item={it} open={rowProps.openIds ? rowProps.openIds.has(it.id) : false} {...rowProps} />)
+        )}
       </div>
       {onOpenAdd ? (
         <button type="button" className="todo-add-open" onClick={() => onOpenAdd(bucket)}>
@@ -259,7 +279,8 @@ export default function TodoBoard() {
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const [modalBucket, setModalBucket] = useState(null);
+  // modal: {bucket} = nieuwe taak, {item} = bestaande taak bewerken
+  const [modal, setModal] = useState(null);
   const [openIds, setOpenIds] = useState(() => new Set());
   const [lightbox, setLightbox] = useState(null);
 
@@ -318,22 +339,32 @@ export default function TodoBoard() {
 
   const saveTodo = useCallback(
     async ({ title, desc, images }) => {
-      const bucket = modalBucket;
-      const date = bucket === "today" ? todayStr : bucket === "tomorrow" ? tomorrowStr : undefined;
-      const res = await fetch("/api/todos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, desc, images, bucket, date }),
-      });
+      let res;
+      if (modal && modal.item) {
+        // bestaande taak bijwerken
+        res = await fetch(`/api/todos/${modal.item.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, desc, images }),
+        });
+      } else {
+        const bucket = modal ? modal.bucket : "later";
+        const date = bucket === "today" ? todayStr : bucket === "tomorrow" ? tomorrowStr : undefined;
+        res = await fetch("/api/todos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, desc, images, bucket, date }),
+        });
+      }
       if (res.ok) {
         setErr("");
-        setModalBucket(null);
+        setModal(null);
         load();
       } else {
-        reportError(res, "Toevoegen mislukt");
+        reportError(res, "Opslaan mislukt");
       }
     },
-    [modalBucket, load, todayStr, tomorrowStr, reportError]
+    [modal, load, todayStr, tomorrowStr, reportError]
   );
 
   const toggleTodo = useCallback(
@@ -374,11 +405,14 @@ export default function TodoBoard() {
 
   if (loading) return null;
 
+  const openAdd = (bucket) => setModal({ bucket });
   const rowProps = {
+    openIds,
     onToggle: toggleTodo,
     onDelete: deleteTodo,
     onToggleOpen: toggleOpen,
     onImage: setLightbox,
+    onEdit: (item) => setModal({ item }),
   };
   const withOpen = (items) => items.map((it) => ({ ...it }));
 
@@ -393,18 +427,18 @@ export default function TodoBoard() {
           bucket="today"
           title="Today"
           items={withOpen(grouped.today)}
-          onOpenAdd={setModalBucket}
+          onOpenAdd={openAdd}
           rowProps={{ ...rowProps }}
         />
         {grouped.overdue.length > 0 ? (
           <Column bucket="overdue" title="Yesterday · unfinished" items={withOpen(grouped.overdue)} tone="overdue" rowProps={{ ...rowProps }} />
         ) : null}
-        <Column bucket="tomorrow" title="Tomorrow" items={withOpen(grouped.tomorrow)} onOpenAdd={setModalBucket} rowProps={{ ...rowProps }} />
-        <Column bucket="thisweek" title="This Week" items={withOpen(grouped.thisweek)} onOpenAdd={setModalBucket} rowProps={{ ...rowProps }} />
-        <Column bucket="later" title="Later" items={withOpen(grouped.later)} onOpenAdd={setModalBucket} rowProps={{ ...rowProps }} />
+        <Column bucket="tomorrow" title="Tomorrow" items={withOpen(grouped.tomorrow)} onOpenAdd={openAdd} rowProps={{ ...rowProps }} />
+        <Column bucket="thisweek" title="This Week" items={withOpen(grouped.thisweek)} onOpenAdd={openAdd} rowProps={{ ...rowProps }} />
+        <Column bucket="later" title="Later" items={withOpen(grouped.later)} onOpenAdd={openAdd} rowProps={{ ...rowProps }} />
       </div>
 
-      {modalBucket ? <AddModal bucket={modalBucket} onClose={() => setModalBucket(null)} onSave={saveTodo} /> : null}
+      {modal ? <TaskModal bucket={modal.bucket} item={modal.item} onClose={() => setModal(null)} onSave={saveTodo} /> : null}
 
       {lightbox ? (
         <div className="todo-overlay" onClick={() => setLightbox(null)}>
