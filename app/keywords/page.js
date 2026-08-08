@@ -107,6 +107,8 @@ export default function KeywordsPage() {
   const [vMonths, setVMonths] = useState(defaultMonths);
   const [vRunning, setVRunning] = useState(false);
   const [vDoneUrl, setVDoneUrl] = useState("");
+  const [vTotal, setVTotal] = useState("1000"); // 1–2000 producten
+  const [vChoice, setVChoice] = useState(false); // keuze-paneel bij lage aantallen
   // Sessies + chat
   const [sessions, setSessions] = useState([]);
   const [activeId, setActiveId] = useState(null); // null = nieuwe run
@@ -350,8 +352,22 @@ export default function KeywordsPage() {
     vSheetLink.trim() && vTabName.trim() && orderedMonths.length === 4 &&
     sheetLink.trim() && cleanTab.trim();
 
-  async function runVerdeling() {
+  const clampTotal = () => Math.max(1, Math.min(2000, Number(vTotal) || 1000));
+
+  // Bij een klein aantal producten eerst de keuze voorleggen (annuleren /
+  // AI-focus / eerlijke spreiding); daarboven direct starten met spreiding.
+  function startVerdeling() {
     if (!canVerdeling) return;
+    if (clampTotal() <= 300) {
+      setVChoice(true);
+      return;
+    }
+    runVerdeling("spread");
+  }
+
+  async function runVerdeling(mode) {
+    if (!canVerdeling) return;
+    setVChoice(false);
     setVRunning(true);
     setVDoneUrl("");
     try {
@@ -359,7 +375,8 @@ export default function KeywordsPage() {
     } catch {}
     try {
       const gLabel = vGenders === "MV" ? "man + vrouw" : vGenders === "V" ? "vrouw" : "man";
-      pushLog({ strong: true, text: `— Verdeling: ${orderedMonths.join(", ")} · ${gLabel}` });
+      const mLabel = mode === "focus" ? "AI-focus (zwakke soorten vallen weg)" : "eerlijke spreiding";
+      pushLog({ strong: true, text: `— Verdeling: ${orderedMonths.join(", ")} · ${gLabel} · ${clampTotal()} producten · ${mLabel}` });
       pushLog({ text: "AI en verdeel-engine bepalen de collecties en productaantallen — momentje…" });
       const r = await api("/api/keywords-verdeling", {
         sourceSheetId: sheetLink.trim(),
@@ -368,10 +385,15 @@ export default function KeywordsPage() {
         targetTab: vTabName.trim(),
         months: orderedMonths,
         genders: vGenders,
+        total: clampTotal(),
+        mode,
       });
       pushLog({ ok: true, text: `${r.keywordCount} keywords → ${r.totalProducts} producten in "${r.title}"` });
       const top = (r.collections || []).slice(0, 5).map((c) => `${c.col} ${c.products}`).join(" · ");
       if (top) pushLog({ text: `Grootste collecties: ${top}` });
+      if (r.droppedCollections && r.droppedCollections.length) {
+        pushLog({ text: `Bewust weggelaten (focus): ${r.droppedCollections.join(", ")}` });
+      }
       if (r.aiRemoved && r.aiRemoved.length) {
         pushLog({ text: `AI-nacontrole verwijderde: ${r.aiRemoved.join(", ")}` });
       }
@@ -610,15 +632,57 @@ export default function KeywordsPage() {
                     );
                   })}
                 </div>
+                <div className="field-label">
+                  Aantal producten <span className="opt">(1–2000)</span>
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  max="2000"
+                  value={vTotal}
+                  onChange={(e) => setVTotal(e.target.value)}
+                  onBlur={() => setVTotal(String(Math.max(1, Math.min(2000, Number(vTotal) || 1000))))}
+                />
                 <div className="hint">
-                  Verdeelt tot 1000 producten over keywords en collecties uit "{cleanTab || "…"}" —
-                  sterke trends krijgen meer producten, alles wat goed is komt erin.
+                  Verdeelt dit aantal producten over keywords en collecties uit "{cleanTab || "…"}" —
+                  sterke trends krijgen meer producten. Bij ≤300 producten krijg je eerst een keuze
+                  hoe streng de verdeling mag zijn.
                 </div>
                 <div style={{ marginTop: 12 }}>
-                  <button className="btn" onClick={runVerdeling} disabled={!canVerdeling}>
+                  <button className="btn" onClick={startVerdeling} disabled={!canVerdeling}>
                     {vRunning ? "AI verdeelt…" : "⚖ Maak verdeling"}
                   </button>
                 </div>
+                {vChoice && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: 14,
+                      border: "1px solid var(--warn)",
+                      borderRadius: 10,
+                      background: "var(--warn-dim)",
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, marginBottom: 6 }}>
+                      Let op: {clampTotal()} producten is weinig voor een volle store
+                    </div>
+                    <div className="hint" style={{ marginTop: 0, marginBottom: 10 }}>
+                      Met zo weinig producten kan niet elke collectie gevuld worden. Kies hoe de
+                      verdeling daarmee omgaat:
+                    </div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button className="btn btn-small" onClick={() => runVerdeling("focus")}>
+                        AI-focus (aanrader) — zwakke productsoorten vallen weg, budget naar kansrijke
+                      </button>
+                      <button className="btn-ghost btn-small" onClick={() => runVerdeling("spread")}>
+                        Eerlijke spreiding — alles wat goed is komt erin, kleinere aantallen per keyword
+                      </button>
+                      <button className="btn-ghost btn-small" onClick={() => setVChoice(false)}>
+                        Annuleren
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {vDoneUrl && (
                   <div style={{ marginTop: 12 }}>
                     <a className="linklike" href={vDoneUrl} target="_blank" rel="noreferrer noopener">

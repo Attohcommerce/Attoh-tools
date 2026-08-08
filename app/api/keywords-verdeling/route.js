@@ -24,7 +24,7 @@ function colLetter(i) {
 
 export async function POST(req) {
   const body = await req.json().catch(() => ({}));
-  const { sourceSheetId, sourceTab, targetSheetId, targetTab, months, genders, total } = body;
+  const { sourceSheetId, sourceTab, targetSheetId, targetTab, months, genders, total, mode } = body;
 
   if (!sourceSheetId || !String(sourceTab || "").trim()) {
     return NextResponse.json({ error: "Bron-sheet of bron-tabblad ontbreekt" }, { status: 400 });
@@ -82,7 +82,8 @@ export async function POST(req) {
     const opts = {
       monthNames: months,
       genders: genders === "M" || genders === "V" ? genders : "MV",
-      total: Number(total) || 1000,
+      total: Math.max(1, Math.min(2000, Number(total) || 1000)),
+      mode: mode === "focus" ? "focus" : "spread",
     };
     let result = buildVerdeling(rows, opts);
 
@@ -143,6 +144,8 @@ export async function POST(req) {
       keywordCount: result.rows.length,
       totalProducts: result.totalProducts,
       collections: result.collections.map(({ col, kws, products }) => ({ col, kws, products })),
+      droppedCollections: result.droppedCollections || [],
+      mode: result.mode,
       aiRemoved,
       stats: result.stats,
     });
