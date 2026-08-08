@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 
 const LS_SHEET = "attoh_kw_sheet";
@@ -90,6 +90,11 @@ function persistSessions(list) {
 const DEFAULT_RESEARCH_SHEET =
   "https://docs.google.com/spreadsheets/d/1nsUSUjWAWqLZOIkzNEipRPnWbVKryC29iSy9fByhcGw/edit";
 
+// Vaste "Collection & Product organization"-doelsheet (stap 2) — automatisch
+// ingevuld; de naam van het nieuwe tabblad kies je zelf per run.
+const DEFAULT_ORG_SHEET =
+  "https://docs.google.com/spreadsheets/d/1MaVHQ76s54lrZkNPfr-J32y7GvjJpLfV2j-m0MvXO3g/edit";
+
 export default function KeywordsPage() {
   const [files, setFiles] = useState([]);
   const [sheetLink, setSheetLink] = useState(DEFAULT_RESEARCH_SHEET);
@@ -101,7 +106,7 @@ export default function KeywordsPage() {
   const [topN, setTopN] = useState("500");
   const [cleaning, setCleaning] = useState(false);
   // Stap 3: Collection & Product organization
-  const [vSheetLink, setVSheetLink] = useState("");
+  const [vSheetLink, setVSheetLink] = useState(DEFAULT_ORG_SHEET);
   const [vTabName, setVTabName] = useState("Collection & Product organization");
   const [vGenders, setVGenders] = useState("MV"); // MV | V | M
   const [vMonths, setVMonths] = useState(defaultMonths);
@@ -133,8 +138,29 @@ export default function KeywordsPage() {
   }, [chatMsgs, chatBusy]);
 
   function pushLog(entry) {
-    setLogs((l) => [...l, entry]);
+    setLogs((l) => {
+      // Entries met dezelfde key vervangen elkaar (live voortgang op één regel
+      // i.p.v. een stapel losse regels).
+      if (entry.key) {
+        const i = l.findIndex((x) => x.key === entry.key);
+        if (i >= 0) {
+          const next = [...l];
+          next[i] = entry;
+          return next;
+        }
+      }
+      return [...l, entry];
+    });
   }
+
+  // Wat is de tool NU aan het doen / wat was de laatste afgeronde stap?
+  const lastPhase = useMemo(() => {
+    for (let i = logs.length - 1; i >= 0; i--) {
+      if (logs[i].strong) return String(logs[i].text || "").replace(/^—\s*/, "");
+    }
+    return "";
+  }, [logs]);
+  const anyBusy = running || vRunning || cleaning;
 
   /* ----- sessies beheren ----- */
 
@@ -258,7 +284,7 @@ export default function KeywordsPage() {
           tabName: created.title,
           rows: values.slice(i, i + CHUNK),
         });
-        log({ text: `${Math.min(i + CHUNK, values.length)} / ${values.length} rijen` });
+        log({ key: "upload-prog", text: `Uploaden… ${Math.min(i + CHUNK, values.length)} / ${values.length} rijen` });
       }
 
       log({ strong: true, text: "— Stap 4: opmaken" });
@@ -696,7 +722,16 @@ export default function KeywordsPage() {
 
           {/* -------- Rechts: voortgang -------- */}
           <div>
-            <div className="card" style={{ minHeight: 320 }}>
+            <div className="card prog-card" style={{ minHeight: 320 }}>
+              {logs.length > 0 && (
+                <div className="prog-top">
+                  <span className="prog-title">{anyBusy ? "Nu bezig" : "Laatste stap"}</span>
+                  <span className="prog-count" style={{ fontSize: 13 }}>
+                    {lastPhase || "—"}
+                    {anyBusy ? <span className="prog-sep"> · draait…</span> : <span className="ok"> · ✓ afgerond</span>}
+                  </span>
+                </div>
+              )}
               {logs.length === 0 && (
                 <div className="center-note">
                   {activeId === null
@@ -704,12 +739,14 @@ export default function KeywordsPage() {
                     : "Sessie geladen — gebruik de chat hieronder om aanpassingen te doen."}
                 </div>
               )}
+              <div className="logpanel">
               {logs.map((l, i) => (
                 <div className="log" key={i}>
                   {l.ok ? <span className="ok">✓</span> : l.err ? <span className="err">✗</span> : null}
                   <span style={{ flex: 1, fontWeight: l.strong ? 600 : 400 }}>{l.text}</span>
                 </div>
               ))}
+              </div>
               {doneUrl && activeId === null && (
                 <div style={{ marginTop: 14 }}>
                   <a className="btn-ghost" href={doneUrl} target="_blank" rel="noreferrer noopener" style={{ display: "inline-flex", width: "auto" }}>
