@@ -167,13 +167,28 @@ export async function POST(req) {
       ["Collectie", "Aantal keywords", "Aantal producten", "Top keywords"],
       ...result.collections.map((c) => [c.col, c.kws, c.products, c.top.join(", ")]),
     ];
-    const nOut = Math.max(left.length, right.length);
+    // Diagnose-blok: waarom een collectie uit de blauwdruk ontbreekt of dun
+    // is, blijft anders alleen in de vluchtige run-log staan — hier blijft
+    // het bij de sheet zelf staan, ook als iemand 'm later terugkijkt.
+    const diag = [
+      ["Diagnose", ""],
+      ["Uitgevallen collecties (te weinig volume)", (result.droppedCollections || []).join(", ") || "—"],
+      ["Dekking-waarschuwingen", warnings.join(" | ") || "—"],
+      ["AI verwijderd (merken/artefacten/eind-QA)", aiRemoved.join(", ") || "—"],
+    ];
+    const nOut = Math.max(left.length, right.length, diag.length);
     const values = [];
     for (let i = 0; i < nOut; i++) {
-      values.push([...(left[i] || ["", "", "", "", "", "", "", ""]), "", ...(right[i] || [])]);
+      values.push([
+        ...(left[i] || ["", "", "", "", "", "", "", ""]),
+        "",
+        ...(right[i] || ["", "", "", ""]),
+        "",
+        ...(diag[i] || ["", ""]),
+      ]);
     }
     await appendRows(targetSheetId, `'${t.title}'!A1`, values, "RAW");
-    await formatVerdelingTab(targetSheetId, t.tabId, left.length, 8, 13);
+    await formatVerdelingTab(targetSheetId, t.tabId, left.length, 8, 16);
 
     const id = parseSheetId(targetSheetId);
     return NextResponse.json({
