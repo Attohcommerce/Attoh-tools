@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 
 const LS = {
@@ -79,6 +79,9 @@ export default function ImporterPage() {
 
   // Import-run
   const [running, setRunning] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const pauseRef = useRef(false);
+  const stopRef = useRef(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [step, setStep] = useState(""); // live stap binnen het huidige product
   const [logs, setLogs] = useState([]);
@@ -234,6 +237,9 @@ export default function ImporterPage() {
   // ---------- Import ----------
   async function runImport() {
     if (!selectedStore || urls.length === 0 || running) return;
+    stopRef.current = false;
+    pauseRef.current = false;
+    setPaused(false);
     setRunning(true);
     setLogs([]);
     setProgress({ done: 0, total: urls.length });
@@ -266,6 +272,20 @@ export default function ImporterPage() {
 
     let okCount = 0;
     for (let i = 0; i < urls.length; i++) {
+      // Stop: direct afbreken vóór het volgende product (lopend product maakt af).
+      if (stopRef.current) {
+        pushLog({ info: true, text: `Gestopt door gebruiker na ${i} van ${urls.length} producten.` });
+        break;
+      }
+      // Pauze: wachten tot hervat (of stop).
+      while (pauseRef.current && !stopRef.current) {
+        setStep(`Gepauzeerd — ${i}/${urls.length} gedaan. Klik Hervat om door te gaan.`);
+        await new Promise((r) => setTimeout(r, 400));
+      }
+      if (stopRef.current) {
+        pushLog({ info: true, text: `Gestopt door gebruiker na ${i} van ${urls.length} producten.` });
+        break;
+      }
       const url = urls[i];
       const nr = `${i + 1}/${urls.length}`;
       try {
@@ -387,6 +407,21 @@ export default function ImporterPage() {
     if (okCount > 0) window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     setStep("");
     setRunning(false);
+    setPaused(false);
+    pauseRef.current = false;
+    stopRef.current = false;
+  }
+
+  function togglePause() {
+    const next = !pauseRef.current;
+    pauseRef.current = next;
+    setPaused(next);
+  }
+
+  function stopImport() {
+    stopRef.current = true;
+    pauseRef.current = false;
+    setPaused(false);
   }
 
   // ---------- Queue ----------
@@ -805,6 +840,16 @@ export default function ImporterPage() {
                 <button className="btn" disabled={!canImport} onClick={runImport}>
                   {running ? step || `Bezig… ${progress.done}/${progress.total}` : "⇪ Import products"}
                 </button>
+                {running && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button type="button" className="btn-ghost btn-small" onClick={togglePause}>
+                      {paused ? "▶ Hervat" : "⏸ Pauzeer"}
+                    </button>
+                    <button type="button" className="btn-ghost btn-small" onClick={stopImport}>
+                      ■ Stop
+                    </button>
+                  </div>
+                )}
                 {!selectedStore && (
                   <div className="hint" style={{ textAlign: "center" }}>
                     Select a store from the sidebar to enable importing.
