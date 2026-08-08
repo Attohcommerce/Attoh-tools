@@ -103,8 +103,18 @@ export default function ImporterPage() {
   }, []);
 
   const urls = useMemo(() => {
-    if (tab === "sheet") return sheetLinks || [];
-    return parseUrls(urlsText);
+    // Dubbele URL's binnen één batch overslaan — zelfde product 2× importeren
+    // geeft 2 identieke producten op de store (GMC duplicate-risico).
+    const seen = new Set();
+    const dedupe = (list) =>
+      list.filter((it) => {
+        const u = String(typeof it === "string" ? it : it.url).toLowerCase().replace(/\/+$/, "");
+        if (seen.has(u)) return false;
+        seen.add(u);
+        return true;
+      });
+    if (tab === "sheet") return dedupe(sheetLinks || []);
+    return dedupe(parseUrls(urlsText));
   }, [tab, urlsText, sheetLinks]);
 
   const selectedStore = stores.find((s) => s.domain === selected) || null;
@@ -231,7 +241,7 @@ export default function ImporterPage() {
   }
 
   // ---------- Import-log ----------
-  const LOG_HEADER = ["Datum", "Store", "Titel", "Keyword", "Status", "Admin-link", "Preview-link", "Opmerkingen"];
+  const LOG_HEADER = ["Datum", "Store", "Titel", "Keyword", "Status", "Admin-link", "Preview-link", "Cijfer"];
 
   async function sheetsCall(body) {
     const res = await fetch("/api/sheets", {

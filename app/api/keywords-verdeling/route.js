@@ -119,7 +119,8 @@ export async function POST(req) {
       for (let round = 0; round < 2; round++) {
         const flagged = await reviewVerdelingFinal(
           result.rows.map((r) => ({ kw: r.kw, col: r.col, n: r.n })),
-          market
+          market,
+          storeUrl
         );
         const fresh = flagged.filter((f) => result.rows.some((r) => r.kw === f.kw));
         if (!fresh.length) break;
@@ -135,6 +136,22 @@ export async function POST(req) {
 
     if (!result.rows.length) {
       throw new Error("Geen keywords over na filteren — controleer bron-tabblad en maanden");
+    }
+
+    /* ---- Dekking-waarschuwingen: een groep met maar 1-2 keywords betekent
+            meestal dat de bron-CSV's die doelgroep amper dekken ---- */
+    const warnings = [];
+    if (opts.genders === "MV") {
+      const mKws = result.rows.filter((r) => r.g === "M").length;
+      const vKws = result.rows.filter((r) => r.g === "V").length;
+      if (mKws > 0 && mKws < 3) {
+        warnings.push(
+          `Herenkant rust op maar ${mKws} keyword(s) — je CSV's bevatten weinig heren-zoektermen. Draai een aparte heren-batch in Keyword Planner, of zet de doelgroep op Vrouw.`
+        );
+      }
+      if (vKws > 0 && vKws < 3) {
+        warnings.push(`Damenkant rust op maar ${vKws} keyword(s) — bron-data dekt vrouwen amper.`);
+      }
     }
 
     /* ---- 5. wegschrijven: tabel (A-H) + collectie-overzicht (J-M) ---- */
@@ -170,6 +187,7 @@ export async function POST(req) {
       droppedCollections: result.droppedCollections || [],
       mode: result.mode,
       aiRemoved,
+      warnings,
       stats: result.stats,
     });
   } catch (e) {

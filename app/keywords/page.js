@@ -306,7 +306,11 @@ export default function KeywordsPage() {
       setCleanTab(created.title);
       log({ info: true, text: `Klaar! ${rows.length} keywords in "${created.title}".` });
 
-      // Sessie opslaan (max 2)
+      // Sessie opslaan (max 2) — voortgangs-spam (zelfde key) eruit,
+      // alleen de laatste stand bewaren
+      const compactLogs = runLogs.filter(
+        (l, i) => !l.key || runLogs.findLastIndex((x) => x.key === l.key) === i
+      );
       const id = `${created.tabId}-${created.title}`;
       setActiveId(id);
       upsertSession({
@@ -315,7 +319,7 @@ export default function KeywordsPage() {
         sheetLink: sheetLink.trim(),
         doneUrl: fmt.url,
         rowCount: rows.length,
-        logs: runLogs.slice(-30),
+        logs: compactLogs.slice(-30),
         chat: [],
         ts: Date.now(),
       });
@@ -437,6 +441,9 @@ export default function KeywordsPage() {
       }
       if (r.aiRemoved && r.aiRemoved.length) {
         pushLog({ text: `AI-nacontrole verwijderde: ${r.aiRemoved.join(", ")}` });
+      }
+      if (r.warnings && r.warnings.length) {
+        for (const w of r.warnings) pushLog({ err: true, text: `Let op: ${w}` });
       }
       setVDoneUrl(r.url);
       if (activeSession) {
