@@ -71,6 +71,16 @@ function broadTermFor(keyword, alts) {
 const DEFAULT_MEM_SHEET =
   "https://docs.google.com/spreadsheets/d/1gbu2XAZMPBIbyr47B_rBvoHDcWoVaTNUuBNwmp9ucJg/edit";
 
+// Vaste import-werksheet (de import-lijst) — automatisch ingevuld;
+// alleen de bladnaam per run kies je zelf.
+const DEFAULT_WORK_SHEET =
+  "https://docs.google.com/spreadsheets/d/1Y3wg8X5ivuwaUTfUapzgUOIMzVqr0KRs6g2FR1COuKE/edit";
+
+// Vaste "Collection & Product organization"-sheet — automatisch ingevuld;
+// de exacte bladnaam geef je zelf door (niet automatisch).
+const DEFAULT_ORG_SHEET =
+  "https://docs.google.com/spreadsheets/d/1MaVHQ76s54lrZkNPfr-J32y7GvjJpLfV2j-m0MvXO3g/edit";
+
 /**
  * Geplakte keyword-lijsten parsen — snapt alles:
  *  - één keyword per regel ("occasion dress")
@@ -148,11 +158,11 @@ export default function ScraperPage() {
     }
     save(LS_LAST_ACTIVE, Date.now());
     setKw(load(LS.keywords, { vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] }));
-    setWorkSheet(load(LS.workSheet, ""));
+    setWorkSheet(load(LS.workSheet, "") || DEFAULT_WORK_SHEET);
     setMemSheet(load(LS.memSheet, "") || DEFAULT_MEM_SHEET);
     setRunTab(load(LS.runTab, ""));
     setNewTabName(load(LS.newTab, ""));
-    setOrgSheet(load(LS.orgSheet, ""));
+    setOrgSheet(load(LS.orgSheet, "") || DEFAULT_ORG_SHEET);
     setOrgTab(load(LS.orgTab, "Collection & Product organization"));
     fetch("/api/sheets", {
       method: "POST",

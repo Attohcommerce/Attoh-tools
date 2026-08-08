@@ -85,9 +85,14 @@ function persistSessions(list) {
 
 /* ---------- Pagina ---------- */
 
+// Vaste keyword-research-sheet — staat altijd automatisch ingevuld;
+// alleen de bladnaam kies je nog zelf per run.
+const DEFAULT_RESEARCH_SHEET =
+  "https://docs.google.com/spreadsheets/d/1nsUSUjWAWqLZOIkzNEipRPnWbVKryC29iSy9fByhcGw/edit";
+
 export default function KeywordsPage() {
   const [files, setFiles] = useState([]);
-  const [sheetLink, setSheetLink] = useState("");
+  const [sheetLink, setSheetLink] = useState(DEFAULT_RESEARCH_SHEET);
   const [tabName, setTabName] = useState("");
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState([]);
