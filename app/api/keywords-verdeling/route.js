@@ -24,7 +24,7 @@ function colLetter(i) {
 
 export async function POST(req) {
   const body = await req.json().catch(() => ({}));
-  const { sourceSheetId, sourceTab, targetSheetId, targetTab, months, genders, total, mode } = body;
+  const { sourceSheetId, sourceTab, targetSheetId, targetTab, months, genders, total, mode, market, storeUrl } = body;
 
   if (!sourceSheetId || !String(sourceTab || "").trim()) {
     return NextResponse.json({ error: "Bron-sheet of bron-tabblad ontbreekt" }, { status: 400 });
@@ -96,7 +96,7 @@ export async function POST(req) {
       const BATCH = 160;
       for (let i = 0; i < items.length; i += BATCH) {
         const part = items.slice(i, i + BATCH);
-        const removals = await classifyJunkKeywordsBatch(part);
+        const removals = await classifyJunkKeywordsBatch(part, { market });
         for (const rem of removals) {
           const hit = items[rem.index];
           if (hit && part.some((p) => p.index === rem.index)) exclude.add(hit.kw);

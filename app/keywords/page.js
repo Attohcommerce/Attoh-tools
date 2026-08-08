@@ -114,6 +114,8 @@ export default function KeywordsPage() {
   const [vDoneUrl, setVDoneUrl] = useState("");
   const [vTotal, setVTotal] = useState("1000"); // 1–2000 producten
   const [vChoice, setVChoice] = useState(false); // keuze-paneel bij lage aantallen
+  const [vStore, setVStore] = useState(""); // store-URL/naam — context voor AI + log
+  const [vMarket, setVMarket] = useState("USA"); // USA | UK | AUS | CAN
   // Sessies + chat
   const [sessions, setSessions] = useState([]);
   const [activeId, setActiveId] = useState(null); // null = nieuwe run
@@ -129,6 +131,10 @@ export default function KeywordsPage() {
       if (s) setSheetLink(s);
       const v = localStorage.getItem(LS_VSHEET);
       if (v) setVSheetLink(v);
+      const st = localStorage.getItem("kw_store");
+      if (st) setVStore(st);
+      const mk = localStorage.getItem("kw_market");
+      if (mk) setVMarket(mk);
     } catch {}
     setSessions(loadSessions());
   }, []);
@@ -400,9 +406,13 @@ export default function KeywordsPage() {
       localStorage.setItem(LS_VSHEET, vSheetLink.trim());
     } catch {}
     try {
+      try {
+        localStorage.setItem("kw_store", vStore.trim());
+        localStorage.setItem("kw_market", vMarket);
+      } catch {}
       const gLabel = vGenders === "MV" ? "man + vrouw" : vGenders === "V" ? "vrouw" : "man";
       const mLabel = mode === "focus" ? "AI-focus (zwakke soorten vallen weg)" : "eerlijke spreiding";
-      pushLog({ strong: true, text: `— Verdeling: ${orderedMonths.join(", ")} · ${gLabel} · ${clampTotal()} producten · ${mLabel}` });
+      pushLog({ strong: true, text: `— Verdeling: ${vStore.trim() || "store ?"} · markt ${vMarket} · ${orderedMonths.join(", ")} · ${gLabel} · ${clampTotal()} producten · ${mLabel}` });
       pushLog({ text: "AI en verdeel-engine bepalen de collecties en productaantallen — momentje…" });
       const r = await api("/api/keywords-verdeling", {
         sourceSheetId: sheetLink.trim(),
@@ -413,6 +423,8 @@ export default function KeywordsPage() {
         genders: vGenders,
         total: clampTotal(),
         mode,
+        market: vMarket,
+        storeUrl: vStore.trim(),
       });
       pushLog({ ok: true, text: `${r.keywordCount} keywords → ${r.totalProducts} producten in "${r.title}"` });
       const top = (r.collections || []).slice(0, 5).map((c) => `${c.col} ${c.products}`).join(" · ");
@@ -625,7 +637,26 @@ export default function KeywordsPage() {
                   value={vTabName}
                   onChange={(e) => setVTabName(e.target.value)}
                 />
+                <div className="field-label">Store</div>
+                <input
+                  type="text"
+                  placeholder="bv. soulsocietyboutique.com"
+                  value={vStore}
+                  onChange={(e) => setVStore(e.target.value)}
+                />
                 <div className="field-label">Markt</div>
+                <div className="seg">
+                  {["USA", "UK", "AUS", "CAN"].map((m) => (
+                    <button key={m} className={vMarket === m ? "on" : ""} onClick={() => setVMarket(m)} type="button">
+                      {m}
+                    </button>
+                  ))}
+                </div>
+                <div className="hint">
+                  De AI-nacontrole gebruikt de markt om verkeerde-markt-woorden te schrappen
+                  (bv. Brits "jumpers"/"trainers" op een USA-store).
+                </div>
+                <div className="field-label">Doelgroep</div>
                 <div className="seg">
                   {[
                     ["MV", "Man + Vrouw"],
