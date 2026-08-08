@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
-import { createProduct, setImageVariants, updateProduct, getPreviewUrl } from "@/lib/shopify";
+import {
+  createProduct,
+  setImageVariants,
+  updateProduct,
+  getPreviewUrl,
+  ensureSmartCollection,
+} from "@/lib/shopify";
+import { collectionFor } from "@/lib/verdeling";
 
 export const maxDuration = 60;
 
@@ -78,13 +85,51 @@ export async function POST(req) {
     position: i + 1,
   }));
 
+  /* ----------------------------------------------------------------
+     Collectie bepalen: expliciet meegegeven (s.collection) of afgeleid
+     uit het keyword via dezelfde blauwdruk als de verdeel-engine.
+     De collectie-titel wordt als tag toegevoegd; ensureSmartCollection
+     maakt (eenmalig) de smart collection met tag-regel aan, waardoor
+     het product er automatisch in valt.
+  ---------------------------------------------------------------- */
+  let collectionTitle = String(s.collection || "").trim();
+  if (!collectionTitle && s.keyword) {
+    const kw = String(s.keyword).toLowerCase().trim();
+    const probe = s.forceMens ? `mens ${kw}` : kw;
+    const hit = collectionFor(probe);
+    if (hit && hit.col) collectionTitle = hit.col;
+  }
+
+  const tagList = String(s.tags || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+  if (
+    collectionTitle &&
+    !tagList.some((t) => t.toLowerCase() === collectionTitle.toLowerCase())
+  ) {
+    tagList.push(collectionTitle);
+  }
+
+  let collectionInfo = null;
+  if (collectionTitle) {
+    try {
+      const c = await ensureSmartCollection(store, collectionTitle);
+      if (c.ok) {
+        collectionInfo = { title: collectionTitle, created: !c.existed };
+      }
+    } catch {
+      /* collectie is nice-to-have; de tag staat er sowieso op */
+    }
+  }
+
   const payload = {
     title: listing.title,
     body_html: listing.descriptionHtml,
     vendor: s.vendor || "",
     product_type: product.productType || "",
     status: s.status === "active" ? "active" : "draft",
-    tags: s.tags || "",
+    tags: tagList.join(", "),
     options: options.length ? options : undefined,
     variants: variants.length ? variants : undefined,
     images: images.length ? images : undefined,
@@ -187,5 +232,7 @@ export async function POST(req) {
       previewUrl,
     },
     linkedImages,
+    collection: collectionInfo ? collectionInfo.title : null,
+    collectionCreated: collectionInfo ? collectionInfo.created : false,
   });
 }

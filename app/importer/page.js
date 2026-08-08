@@ -299,6 +299,12 @@ export default function ImporterPage() {
         });
         const gData = await gRes.json();
         if (!gRes.ok) throw new Error(gData.error || "AI-generatie mislukt");
+        if (gData.listing && gData.listing.warnings && gData.listing.warnings.length) {
+          pushLog({
+            ok: false,
+            text: `${nr} · LET OP: listing wijkt na 3 pogingen nog af van de formule — handmatig checken: ${gData.listing.warnings.join("; ")}`,
+          });
+        }
 
         // 3. FX-rate bepalen
         let rate = 1;
@@ -334,6 +340,8 @@ export default function ImporterPage() {
               themeTemplate,
               manualRate: currencyOverride ? manualRate : null,
               vendor: selectedStore.name,
+              keyword: requiredKeyword,
+              forceMens,
             },
           }),
         });
@@ -341,7 +349,10 @@ export default function ImporterPage() {
         if (!iRes.ok) throw new Error(iData.error || "upload mislukt");
         okCount++;
         const linked = iData.linkedImages ? ` · ${iData.linkedImages} kleurfoto's gekoppeld` : "";
-        pushLog({ ok: true, text: iData.product.title + linked, href: iData.product.adminUrl });
+        const colTxt = iData.collection
+          ? ` · collectie: ${iData.collection}${iData.collectionCreated ? " (nieuw aangemaakt)" : ""}`
+          : "";
+        pushLog({ ok: true, text: iData.product.title + linked + colTxt, href: iData.product.adminUrl });
         if (logReady) {
           try {
             const now = new Date();
