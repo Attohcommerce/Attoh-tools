@@ -372,7 +372,13 @@ export default function ImporterPage() {
         const colTxt = iData.collection
           ? ` · collectie: ${iData.collection}${iData.collectionCreated ? " (nieuw aangemaakt)" : ""}`
           : "";
-        pushLog({ ok: true, text: iData.product.title + linked + colTxt, href: iData.product.adminUrl });
+        pushLog({
+          ok: true,
+          text: iData.product.title + linked + colTxt,
+          href: iData.product.adminUrl,
+          score: gData.listing.score,
+          scoreNotes: gData.listing.scoreNotes,
+        });
         if (logReady) {
           try {
             const now = new Date();
@@ -389,7 +395,7 @@ export default function ImporterPage() {
                 iData.product.status,
                 iData.product.adminUrl,
                 iData.product.previewUrl || "",
-                "",
+                gData.listing.score != null ? String(gData.listing.score) : "",
               ]],
             });
           } catch {
@@ -858,23 +864,48 @@ export default function ImporterPage() {
               </div>
 
               {(running || logs.length > 0) && (
-                <div style={{ marginTop: 14 }}>
-                  <div className="progressbar">
+                <div className="prog-card" style={{ marginTop: 14 }}>
+                  <div className="prog-top">
+                    <span className="prog-title">Import</span>
+                    <span className="prog-count">
+                      {logs.filter((l) => l.ok).length}
+                      <span className="prog-sep"> ✓ · </span>
+                      <span className="err">{logs.filter((l) => !l.ok && !l.info).length} ✗</span>
+                      <span className="prog-sep"> · {progress.done}/{progress.total}</span>
+                    </span>
+                  </div>
+                  <div className="pbar">
                     <div
+                      className={"pbar-fill" + (running ? " live" : "")}
                       style={{
                         width: progress.total ? (progress.done / progress.total) * 100 + "%" : "0%",
                       }}
                     />
                   </div>
-                  <div>
-                    {logs.map((l, i) => (
-                      <div className="log" key={i}>
+                  {running && step ? <div className="prog-meta"><span className="prog-kwname">{step}</span></div> : null}
+                  <div className="logpanel" style={{ marginTop: 10 }}>
+                    {[...logs].reverse().map((l, i) => (
+                      <div className="log" key={logs.length - i}>
                         {l.info ? (
                           <span className="muted">{l.text}</span>
                         ) : l.ok ? (
                           <>
                             <span className="ok">✓</span>
-                            <span style={{ flex: 1 }}>{l.text}</span>
+                            <span style={{ flex: 1 }}>
+                              {l.text}
+                              {l.score != null && (
+                                <span
+                                  style={{
+                                    marginLeft: 8,
+                                    fontWeight: 600,
+                                    color: l.score >= 8 ? "var(--ok)" : l.score >= 6.5 ? "var(--warn)" : "var(--err)",
+                                  }}
+                                  title={l.scoreNotes && l.scoreNotes.length ? l.scoreNotes.join(" · ") : "Voldoet volledig aan de keyword-formule"}
+                                >
+                                  {String(l.score).replace(".", ",")}
+                                </span>
+                              )}
+                            </span>
                             <a className="linklike" href={l.href} target="_blank" rel="noreferrer">
                               open in Shopify
                             </a>
