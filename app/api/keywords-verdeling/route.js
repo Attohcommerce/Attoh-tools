@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readRange, addTab, appendRows, formatVerdelingTab, parseSheetId } from "@/lib/sheets";
 import { buildVerdeling } from "@/lib/verdeling";
-import { classifyJunkKeywordsBatch } from "@/lib/ai";
+import { classifyJunkKeywordsBatch, reviewVerdelingFinal } from "@/lib/ai";
 
 export const maxDuration = 60;
 
@@ -90,24 +90,47 @@ export async function POST(req) {
     /* ---- 4. AI-nacontrole op de geselecteerde keywords (vangt merken die
             door de statische lijst glippen) — faalt stil bij API-problemen ---- */
     let aiRemoved = [];
+    const exclude = new Set();
     try {
       const items = result.rows.map((r, i) => ({ index: i, kw: r.kw }));
-      const exclude = new Set();
       const BATCH = 160;
       for (let i = 0; i < items.length; i += BATCH) {
         const part = items.slice(i, i + BATCH);
         const removals = await classifyJunkKeywordsBatch(part, { market });
         for (const rem of removals) {
           const hit = items[rem.index];
-          if (hit && part.some((p) => p.index === rem.index)) exclude.add(hit.kw);
+          if (hit && part.some((p) => p.index === rem.index)) {
+            exclude.add(hit.kw);
+            aiRemoved.push(`${hit.kw} (${rem.reason || "junk"})`);
+          }
         }
       }
       if (exclude.size) {
-        aiRemoved = [...exclude];
         result = buildVerdeling(rows, { ...opts, exclude });
       }
     } catch {
       /* verdeling zonder AI-nacontrole is ook prima */
+    }
+
+    /* ---- 4b. Holistische eind-QA over de complete tabel (max 2 rondes):
+            vangt wat alleen in samenhang opvalt — daarna herberekenen,
+            zodat het budget naar het volgende beste keyword vloeit ---- */
+    try {
+      for (let round = 0; round < 2; round++) {
+        const flagged = await reviewVerdelingFinal(
+          result.rows.map((r) => ({ kw: r.kw, col: r.col, n: r.n })),
+          market
+        );
+        const fresh = flagged.filter((f) => result.rows.some((r) => r.kw === f.kw));
+        if (!fresh.length) break;
+        for (const f of fresh) {
+          exclude.add(f.kw);
+          aiRemoved.push(`${f.kw} (${f.reason})`);
+        }
+        result = buildVerdeling(rows, { ...opts, exclude });
+      }
+    } catch {
+      /* eind-QA is een extra vangnet — zonder ook prima */
     }
 
     if (!result.rows.length) {
