@@ -7,6 +7,7 @@ import {
   ensureSmartCollection,
 } from "@/lib/shopify";
 import { collectionFor } from "@/lib/verdeling";
+import { flagBrandedImages } from "@/lib/ai";
 
 export const maxDuration = 60;
 
@@ -79,7 +80,45 @@ export async function POST(req) {
     };
   });
 
-  const images = (product.images || []).map((im, i) => ({
+  /* ----------------------------------------------------------------
+     Branding-check op ALLE foto's vóór upload (GMC-bescherming):
+     foto's met concurrent-logo's, watermerken, verpakkingen of
+     tekst-overlays gaan er streng uit. Zonder schone foto's wordt
+     het product geweigerd. Faalt de check zelf (API-storing), dan
+     gaat de import door maar met een expliciete waarschuwing.
+  ---------------------------------------------------------------- */
+  const allImages = product.images || [];
+  let keptImages = allImages;
+  let brandingRemoved = [];
+  let imageCheckFailed = false;
+  try {
+    const items = allImages
+      .map((im, i) => ({ index: i, url: im && im.src }))
+      .filter((x) => typeof x.url === "string" && /^https?:\/\//.test(x.url))
+      .slice(0, 20);
+    if (items.length) {
+      const flags = await flagBrandedImages(items);
+      if (flags.length) {
+        const bad = new Set(flags.map((f) => f.index));
+        const kept = allImages.filter((_, i) => !bad.has(i));
+        brandingRemoved = flags.map((f) => f.reason || "branding");
+        if (!kept.length) {
+          return NextResponse.json(
+            {
+              error:
+                "Alle foto's van dit product bevatten concurrent-branding (logo's/watermerk/verpakking) — niet geïmporteerd, GMC-risico.",
+            },
+            { status: 422 }
+          );
+        }
+        keptImages = kept;
+      }
+    }
+  } catch {
+    imageCheckFailed = true;
+  }
+
+  const images = keptImages.map((im, i) => ({
     src: im.src,
     alt: im.alt || listing.title,
     position: i + 1,
@@ -148,7 +187,9 @@ export async function POST(req) {
   ---------------------------------------------------------------- */
   let linkedImages = 0;
   try {
-    const srcImages = product.images || [];
+    // Let op: koppeling loopt over de GEHOUDEN foto's — created.images[i]
+    // correspondeert met keptImages[i] (zelfde volgorde doorgestuurd).
+    const srcImages = keptImages;
     const srcVariants = product.variants || [];
 
     // bron image-id → index in de lijst
@@ -234,5 +275,8 @@ export async function POST(req) {
     linkedImages,
     collection: collectionInfo ? collectionInfo.title : null,
     collectionCreated: collectionInfo ? collectionInfo.created : false,
+    brandingRemoved: brandingRemoved.length,
+    brandingReasons: [...new Set(brandingRemoved)],
+    imageCheckFailed,
   });
 }

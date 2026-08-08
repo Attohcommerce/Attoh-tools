@@ -368,6 +368,18 @@ export default function ImporterPage() {
         const iData = await iRes.json();
         if (!iRes.ok) throw new Error(iData.error || "upload mislukt");
         okCount++;
+        if (iData.brandingRemoved) {
+          pushLog({
+            info: true,
+            text: `${nr} · ${iData.brandingRemoved} foto('s) verwijderd wegens concurrent-branding (${(iData.brandingReasons || []).join(", ")}).`,
+          });
+        }
+        if (iData.imageCheckFailed) {
+          pushLog({
+            ok: false,
+            text: `${nr} · LET OP: branding-check op de foto's kon niet draaien — check de foto's van dit product handmatig op logo's/watermerken.`,
+          });
+        }
         const linked = iData.linkedImages ? ` · ${iData.linkedImages} kleurfoto's gekoppeld` : "";
         const colTxt = iData.collection
           ? ` · collectie: ${iData.collection}${iData.collectionCreated ? " (nieuw aangemaakt)" : ""}`
