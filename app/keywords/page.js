@@ -417,6 +417,9 @@ export default function KeywordsPage() {
       pushLog({ ok: true, text: `${r.keywordCount} keywords → ${r.totalProducts} producten in "${r.title}"` });
       const top = (r.collections || []).slice(0, 5).map((c) => `${c.col} ${c.products}`).join(" · ");
       if (top) pushLog({ text: `Grootste collecties: ${top}` });
+      if (r.stats && r.stats.variantMerged) {
+        pushLog({ text: `${r.stats.variantMerged} close-variants samengevouwen (identiek volume = zelfde zoekvraag, dubbel geteld door Keyword Planner) — budget vrijgekomen voor échte extra keywords.` });
+      }
       if (r.droppedCollections && r.droppedCollections.length) {
         pushLog({ text: `Bewust weggelaten (focus): ${r.droppedCollections.join(", ")}` });
       }
