@@ -195,24 +195,34 @@ export default function ImporterPage() {
       const res = await fetch("/api/sheets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "read", sheetId, range: sheetTab.trim() ? `'${sheetTab.trim()}'!A:H` : "A:H" }),
+        body: JSON.stringify({ action: "read", sheetId, range: sheetTab.trim() ? `'${sheetTab.trim()}'!A:I` : "A:I" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || res.status);
       const rows = (data.values || []).slice(1); // header overslaan
       let links = [];
+      let withCol = 0;
       for (const r of rows) {
         const link = r[0];
         const kw = (r[2] || "").toLowerCase();
         const dup = r[6];
         const doubt = r[7];
+        const collection = String(r[8] || "").trim(); // I = Collectie (uit de organization-sheet)
         if (!link || !/products\//i.test(link)) continue;
         if (skipTagged && (dup || doubt)) continue;
         if (sheetKeywordFilter && !kw.includes(sheetKeywordFilter.toLowerCase())) continue;
-        links.push(link);
+        if (collection) withCol++;
+        links.push({ url: link, keyword: (r[2] || "").trim(), collection });
       }
       setSheetLinks(links);
-      setSheetMsg(`${links.length} links geladen uit de sheet`);
+      setSheetMsg(
+        `${links.length} links geladen uit de sheet` +
+          (links.length
+            ? withCol
+              ? ` — ${withCol} met collectie, keyword per rij wordt automatisch gebruikt`
+              : " — geen COLLECTIE-kolom (I) gevonden; collectie wordt uit het keyword afgeleid"
+            : "")
+      );
     } catch (e) {
       setSheetMsg("Fout: " + e.message);
     } finally {
@@ -286,7 +296,11 @@ export default function ImporterPage() {
         pushLog({ info: true, text: `Gestopt door gebruiker na ${i} van ${urls.length} producten.` });
         break;
       }
-      const url = urls[i];
+      // Sheet-rijen zijn objecten {url, keyword, collection}; geplakte URL's zijn strings.
+      const entry = urls[i];
+      const url = typeof entry === "string" ? entry : entry.url;
+      const rowKeyword = (typeof entry === "object" && entry.keyword) || requiredKeyword;
+      const rowCollection = typeof entry === "object" ? entry.collection || "" : "";
       const nr = `${i + 1}/${urls.length}`;
       try {
         // 1. Scrape
@@ -309,7 +323,7 @@ export default function ImporterPage() {
             product,
             settings: {
               listingStyle,
-              requiredKeyword,
+              requiredKeyword: rowKeyword,
               genderPrefix,
               forceMensKeywords: forceMens,
               colorLabel,
@@ -360,7 +374,8 @@ export default function ImporterPage() {
               themeTemplate,
               manualRate: currencyOverride ? manualRate : null,
               vendor: selectedStore.name,
-              keyword: requiredKeyword,
+              keyword: rowKeyword,
+              collection: rowCollection,
               forceMens,
             },
           }),
@@ -403,7 +418,7 @@ export default function ImporterPage() {
                 stamp,
                 selectedStore.name || selectedStore.domain,
                 iData.product.title,
-                requiredKeyword || "",
+                rowKeyword || "",
                 iData.product.status,
                 iData.product.adminUrl,
                 iData.product.previewUrl || "",

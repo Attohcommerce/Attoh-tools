@@ -29,7 +29,7 @@ function save(key, val) {
   } catch {}
 }
 
-const HEADER_ROW = ["LINK", "TITEL", "KEYWORD", "GEVONDEN VIA", "MATCH", "GESLACHT", "DUBBELE FOTO", "LITERAL-TWIJFEL"];
+const HEADER_ROW = ["LINK", "TITEL", "KEYWORD", "GEVONDEN VIA", "MATCH", "GESLACHT", "DUBBELE FOTO", "LITERAL-TWIJFEL", "COLLECTIE"];
 
 // Stores verlopen automatisch na 14 dagen zonder gebruik van de tool
 const STORE_TTL_DAYS = 14;
@@ -292,12 +292,13 @@ export default function ScraperPage() {
         if (!k) continue;
         const n = Math.max(1, Number(r[7]) || 0);
         const g = String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw";
-        parsed.push({ k, n, g });
+        const col = String(r[2] || "").trim(); // C = Collectie — reist mee naar de importlijst
+        parsed.push({ k, n, g, col });
       }
       if (!parsed.length) throw new Error("Geen keywords gevonden in dit blad");
 
-      const vrouw = parsed.filter((p) => p.g === "vrouw").map(({ k, n }) => ({ k, n }));
-      const man = parsed.filter((p) => p.g === "man").map(({ k, n }) => ({ k, n }));
+      const vrouw = parsed.filter((p) => p.g === "vrouw").map(({ k, n, col }) => ({ k, n, col }));
+      const man = parsed.filter((p) => p.g === "man").map(({ k, n, col }) => ({ k, n, col }));
       const next = {
         vrouw: vrouw.length ? vrouw : [{ k: "", n: 10 }],
         man: man.length ? man : [{ k: "", n: 10 }],
@@ -430,7 +431,7 @@ export default function ScraperPage() {
       let grandTotal = 0;
       const hardKeywords = []; // bleef op 0 ondanks alles
       for (const [gender, rows] of groups) {
-        for (const { k, n } of rows) {
+        for (const { k, n, col } of rows) {
           let needed = Number(n) || 10;
           const target = needed;
           pushLog({ strong: true, text: `— ${gender} · "${k}" · ${target} producten` });
@@ -538,8 +539,9 @@ export default function ScraperPage() {
                       "",
                       "",
                       "",
+                      col || "",
                     ]);
-                    await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:H`, rows: newRows });
+                    await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:I`, rows: newRows });
                     if (memSheet.trim()) {
                       await sheetsCall({
                         action: "append",
