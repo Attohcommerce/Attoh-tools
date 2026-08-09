@@ -139,28 +139,41 @@ export async function POST(req) {
     if (hit && hit.col) collectionTitle = hit.col;
   }
 
+  /* Geslacht bepalen: sheet-kolom → collectienaam → AI-detectie → forceMens.
+     Levert zowel een tweede collectie-tag (Men/Women) als het juiste
+     thema-template op. */
+  const genderRaw = String(s.gender || "").toLowerCase();
+  const isMen =
+    Boolean(s.forceMens) ||
+    genderRaw === "man" ||
+    genderRaw === "men" ||
+    /^men'?s\b/i.test(collectionTitle) ||
+    (!genderRaw && String(s.detectedGender || "").toLowerCase() === "men");
+  const genderTag = isMen ? "Men" : "Women";
+
   const tagList = String(s.tags || "")
     .split(",")
     .map((t) => t.trim())
     .filter(Boolean);
-  if (
-    collectionTitle &&
-    !tagList.some((t) => t.toLowerCase() === collectionTitle.toLowerCase())
-  ) {
-    tagList.push(collectionTitle);
-  }
+  const addTag = (t) => {
+    if (t && !tagList.some((x) => x.toLowerCase() === t.toLowerCase())) tagList.push(t);
+  };
+  // Elke tag = één smart collection. Een product mag in meerdere collecties:
+  // de keyword-collectie (Boots) én de geslachts-collectie (Men/Women).
+  addTag(collectionTitle);
+  if (s.genderCollections !== false) addTag(genderTag);
 
-  let collectionInfo = null;
-  if (collectionTitle) {
+  const collectionInfos = [];
+  const wanted = [collectionTitle, s.genderCollections !== false ? genderTag : ""].filter(Boolean);
+  for (const title of wanted) {
     try {
-      const c = await ensureSmartCollection(store, collectionTitle);
-      if (c.ok) {
-        collectionInfo = { title: collectionTitle, created: !c.existed };
-      }
+      const c = await ensureSmartCollection(store, title);
+      if (c.ok) collectionInfos.push({ title, created: !c.existed });
     } catch {
       /* collectie is nice-to-have; de tag staat er sowieso op */
     }
   }
+  const collectionInfo = collectionInfos[0] || null;
 
   const payload = {
     title: listing.title,
@@ -172,7 +185,10 @@ export async function POST(req) {
     options: options.length ? options : undefined,
     variants: variants.length ? variants : undefined,
     images: images.length ? images : undefined,
-    template_suffix: s.themeTemplate === "men" ? "men" : null,
+    // Shopify koppelt templates NIET automatisch op tag — dat moet per
+    // product. Herenproducten krijgen hier dus zelf het men-template.
+    template_suffix:
+      s.themeTemplate === "men" ? "men" : isMen ? s.menTemplate || "men" : null,
   };
 
   const r = await createProduct(store, payload);
@@ -275,6 +291,10 @@ export async function POST(req) {
     linkedImages,
     collection: collectionInfo ? collectionInfo.title : null,
     collectionCreated: collectionInfo ? collectionInfo.created : false,
+    collections: collectionInfos,
+    tags: tagList,
+    gender: genderTag,
+    templateSuffix: payload.template_suffix || null,
     brandingRemoved: brandingRemoved.length,
     brandingReasons: [...new Set(brandingRemoved)],
     imageCheckFailed,

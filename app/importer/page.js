@@ -80,6 +80,7 @@ export default function ImporterPage() {
   // Import-run
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [genderCols, setGenderCols] = useState(true); // Men/Women-collectie mee aanmaken
   const pauseRef = useRef(false);
   const stopRef = useRef(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
@@ -226,6 +227,7 @@ export default function ImporterPage() {
           url: link,
           keyword: (r[2] || "").trim(),
           collection,
+          gender: String(r[5] || "").trim(), // F = Man/Vrouw (geslacht-check scraper)
           kwType: String(r[9] || "").trim(), // J = Direct/Attribuut/Gelegenheid
           titleForm: String(r[10] || "").trim(), // K = hoe het keyword in de titel hoort
         });
@@ -319,6 +321,7 @@ export default function ImporterPage() {
       const rowCollection = typeof entry === "object" ? entry.collection || "" : "";
       const rowTitleForm = typeof entry === "object" ? entry.titleForm || "" : "";
       const rowKwType = typeof entry === "object" ? entry.kwType || "" : "";
+      const rowGender = typeof entry === "object" ? entry.gender || "" : "";
       const nr = `${i + 1}/${urls.length}`;
       try {
         // 1. Scrape
@@ -396,6 +399,9 @@ export default function ImporterPage() {
               vendor: selectedStore.name,
               keyword: rowKeyword,
               collection: rowCollection,
+              gender: rowGender,
+              detectedGender: gData.listing.detectedGender,
+              genderCollections: genderCols,
               forceMens,
             },
           }),
@@ -416,12 +422,14 @@ export default function ImporterPage() {
           });
         }
         const linked = iData.linkedImages ? ` · ${iData.linkedImages} kleurfoto's gekoppeld` : "";
-        const colTxt = iData.collection
-          ? ` · collectie: ${iData.collection}${iData.collectionCreated ? " (nieuw aangemaakt)" : ""}`
+        const cols = iData.collections && iData.collections.length ? iData.collections : [];
+        const colTxt = cols.length
+          ? ` · collecties: ${cols.map((c) => c.title + (c.created ? " (nieuw)" : "")).join(", ")}`
           : "";
+        const tplTxt = iData.templateSuffix ? ` · template: ${iData.templateSuffix}` : "";
         pushLog({
           ok: true,
-          text: iData.product.title + linked + colTxt,
+          text: iData.product.title + linked + colTxt + tplTxt,
           href: iData.product.adminUrl,
           score: gData.listing.score,
           scoreNotes: gData.listing.scoreNotes,
@@ -737,7 +745,19 @@ export default function ImporterPage() {
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
               />
-              <div className="hint">Comma-separated tags applied to every product in this batch.</div>
+              <div className="hint">
+                Extra tags voor deze batch. Niet nodig voor collecties: bij "Sheet plakken" komt de
+                collectie uit de sheet en de Men/Women-tag uit de geslacht-kolom — die worden
+                automatisch als tag gezet én als smart collection aangemaakt.
+              </div>
+              <div className="toggle-row">
+                <button
+                  className={"switch" + (genderCols ? " on" : "")}
+                  onClick={() => setGenderCols(!genderCols)}
+                  type="button"
+                />
+                Men/Women-collectie automatisch aanmaken en taggen
+              </div>
 
               <div className="field-label">Discount on compare-at price</div>
               <div className="seg">
