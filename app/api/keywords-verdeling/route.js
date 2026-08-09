@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { readRange, addTab, appendRows, formatVerdelingTab, parseSheetId } from "@/lib/sheets";
 import { buildVerdeling } from "@/lib/verdeling";
-import { classifyJunkKeywordsBatch, reviewVerdelingFinal } from "@/lib/ai";
+import { classifyJunkKeywordsBatch, reviewVerdelingFinal, classifyUnknownTokens } from "@/lib/ai";
+import { unknownFashionTokens } from "@/lib/brands";
 
 export const maxDuration = 60;
 
@@ -112,6 +113,38 @@ export async function POST(req) {
       /* verdeling zonder AI-nacontrole is ook prima */
     }
 
+    /* ---- 4a-bis. ONBEKEND-WOORD-ZEEF: elk gekozen keyword dat een woord
+            bevat dat niet in de mode-woordenschat staat, gaat langs een
+            gerichte merk-check. Zo hoeft een merk niet vooraf bekend te
+            zijn ("veja", "frye", "on") — onbekend = bewijslast omdraaien.
+            Herhaalt tot er geen onbekende woorden meer in de selectie zitten. ---- */
+    let unknownWarn = [];
+    try {
+      for (let round = 0; round < 3; round++) {
+        const suspects = result.rows
+          .map((r) => ({ kw: r.kw, unknown: unknownFashionTokens(r.kw) }))
+          .filter((s) => s.unknown.length);
+        if (!suspects.length) break;
+        let verdicts = [];
+        try {
+          verdicts = await classifyUnknownTokens(suspects);
+        } catch {
+          // AI onbereikbaar → niet stilzwijgend doorlaten, maar waarschuwen
+          unknownWarn = suspects.map((s) => `${s.kw} (${s.unknown.join("/")})`);
+          break;
+        }
+        const fresh = verdicts.filter((v) => !exclude.has(v.kw));
+        if (!fresh.length) break;
+        for (const v of fresh) {
+          exclude.add(v.kw);
+          aiRemoved.push(`${v.kw} (${v.reason})`);
+        }
+        result = buildVerdeling(rows, { ...opts, exclude });
+      }
+    } catch {
+      /* zeef is een extra laag — zonder draait de rest gewoon door */
+    }
+
     /* ---- 4b. Holistische eind-QA over de complete tabel (max 2 rondes):
             vangt wat alleen in samenhang opvalt — daarna herberekenen,
             zodat het budget naar het volgende beste keyword vloeit ---- */
@@ -141,6 +174,11 @@ export async function POST(req) {
     /* ---- Dekking-waarschuwingen: een groep met maar 1-2 keywords betekent
             meestal dat de bron-CSV's die doelgroep amper dekken ---- */
     const warnings = [];
+    if (unknownWarn.length) {
+      warnings.push(
+        `Merk-check kon niet draaien voor: ${unknownWarn.join(", ")} — deze bevatten een onbekend woord. Controleer handmatig of het merken zijn.`
+      );
+    }
     if (opts.genders === "MV") {
       const mKws = result.rows.filter((r) => r.g === "M").length;
       const vKws = result.rows.filter((r) => r.g === "V").length;
@@ -167,28 +205,13 @@ export async function POST(req) {
       ["Collectie", "Aantal keywords", "Aantal producten", "Top keywords"],
       ...result.collections.map((c) => [c.col, c.kws, c.products, c.top.join(", ")]),
     ];
-    // Diagnose-blok: waarom een collectie uit de blauwdruk ontbreekt of dun
-    // is, blijft anders alleen in de vluchtige run-log staan — hier blijft
-    // het bij de sheet zelf staan, ook als iemand 'm later terugkijkt.
-    const diag = [
-      ["Diagnose", ""],
-      ["Uitgevallen collecties (te weinig volume)", (result.droppedCollections || []).join(", ") || "—"],
-      ["Dekking-waarschuwingen", warnings.join(" | ") || "—"],
-      ["AI verwijderd (merken/artefacten/eind-QA)", aiRemoved.join(", ") || "—"],
-    ];
-    const nOut = Math.max(left.length, right.length, diag.length);
+    const nOut = Math.max(left.length, right.length);
     const values = [];
     for (let i = 0; i < nOut; i++) {
-      values.push([
-        ...(left[i] || ["", "", "", "", "", "", "", ""]),
-        "",
-        ...(right[i] || ["", "", "", ""]),
-        "",
-        ...(diag[i] || ["", ""]),
-      ]);
+      values.push([...(left[i] || ["", "", "", "", "", "", "", ""]), "", ...(right[i] || [])]);
     }
     await appendRows(targetSheetId, `'${t.title}'!A1`, values, "RAW");
-    await formatVerdelingTab(targetSheetId, t.tabId, left.length, 8, 16);
+    await formatVerdelingTab(targetSheetId, t.tabId, left.length, 8, 13);
 
     const id = parseSheetId(targetSheetId);
     return NextResponse.json({

@@ -49,6 +49,7 @@ const STALL_AUTO_AT = 20;
 // Geleerde kennis blijft bewaard tussen runs:
 const LS_ALTS = "sa_kw_alts"; // kw → AI-alternatieven (cache, geen dubbele AI-calls)
 const LS_ALT_HITS = "sa_kw_alt_hits"; // kw → alternatief dat eerder écht producten vond
+const LS_BRIEFS = "sa_kw_briefs"; // kw → product-briefing (wat IS dit product?)
 
 // Breed vangnet: het kale producttype uit het keyword ("black knee high boots"
 // → "boots"). Lukt dat niet, dan het laatste woord van het beste AI-alternatief.
@@ -408,6 +409,31 @@ export default function ScraperPage() {
       const altHits = load(LS_ALT_HITS, {});
       const allKwItems = [];
       for (const [g2, rows2] of groups) for (const { k } of rows2) allKwItems.push({ kw: k.toLowerCase(), gender: g2 });
+
+      /* ---- Product-briefings: eerst WETEN wat elk keyword werkelijk is,
+              daarna pas zoeken. De briefing (definitie, harde eisen,
+              disqualifiers, klassieke verwarringen) stuurt straks de
+              foto-controle van elk gevonden product. ---- */
+      const briefCache = load(LS_BRIEFS, {});
+      const missingBriefs = allKwItems.filter((x) => !briefCache[x.kw]);
+      if (missingBriefs.length) {
+        try {
+          pushLog({ muted: true, text: `Productkennis opbouwen — AI bepaalt voor ${missingBriefs.length} keywords wat het product precies is…` });
+          const res = await fetch("/api/keyword-brief", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ keywords: missingBriefs }),
+          });
+          const data = await res.json();
+          if (res.ok && data.map) {
+            Object.assign(briefCache, data.map);
+            save(LS_BRIEFS, briefCache);
+            pushLog({ ok: true, text: `Productkennis klaar — elk gevonden product wordt tegen zijn eigen definitie gecontroleerd.` });
+          }
+        } catch (e) {
+          pushLog({ warn: true, text: `Productkennis laden mislukt (${e.message}) — de foto-controle draait dan op algemene kennis.` });
+        }
+      }
       const missingAlts = allKwItems.filter((x) => !altCache[x.kw]);
       if (missingAlts.length) {
         try {
@@ -434,7 +460,14 @@ export default function ScraperPage() {
         for (const { k, n, col } of rows) {
           let needed = Number(n) || 10;
           const target = needed;
+          const kwBrief = briefCache[k.toLowerCase()] || null;
           pushLog({ strong: true, text: `— ${gender} · "${k}" · ${target} producten` });
+          if (kwBrief && kwBrief.definition) {
+            pushLog({ muted: true, text: `Wat is een "${k}"? ${kwBrief.definition}` });
+            if (kwBrief.not && kwBrief.not.length) {
+              pushLog({ muted: true, text: `Afgekeurd wordt: ${kwBrief.not.slice(0, 3).join(" · ")}` });
+            }
+          }
           setProg((p) => ({ ...p, currentKw: k, currentGender: gender, kwTarget: target, kwFound: 0 }));
 
           // Per keyword: schone staat + de zoek-ladder
@@ -496,10 +529,16 @@ export default function ScraperPage() {
                   scanned = Math.max(scanned, data.total || 0);
                   bestSelling = bestSelling || !!data.usedBestSelling;
 
-                  // Via een alternatief woord gevonden? Dan eerst de AI-vision
-                  // dubbelcheck: Claude kijkt naar de FOTO — is dit écht een
-                  // "<origineel keyword>"? Alleen goedgekeurde producten door.
-                  if (found.length && term !== k) {
+                  // FOTO-CONTROLE OP ELK PRODUCT — niet alleen bij
+                  // via-alternatieven. De tekstmatcher kan een keyword te ruim
+                  // uitleggen ("cocktail dress" matchte op elke party/evening
+                  // dress); Claude kijkt daarom naar de FOTO en toetst tegen de
+                  // product-briefing van dit keyword. Alleen bij een kaal
+                  // producttype zonder eisen (bv. "boots") slaan we het over,
+                  // want daar valt weinig te verwarren.
+                  const needsCheck =
+                    !!kwBrief || term !== k || k.trim().split(/\s+/).length > 1;
+                  if (found.length && needsCheck) {
                     try {
                       const vres = await fetch("/api/verify-products", {
                         method: "POST",
@@ -507,16 +546,22 @@ export default function ScraperPage() {
                         body: JSON.stringify({
                           keyword: k,
                           gender,
+                          brief: kwBrief,
                           items: found.map((m, fi) => ({ index: fi, title: m.title, image: m.image || null })),
                         }),
                       });
                       const vdata = await vres.json();
                       if (vres.ok && Array.isArray(vdata.reject) && vdata.reject.length) {
                         const bad = new Set(vdata.reject.map((r) => r.index));
+                        const reasons = [
+                          ...new Set(vdata.reject.map((r) => String(r.reason || "").trim()).filter(Boolean)),
+                        ].slice(0, 2);
                         const kept = found.filter((_, fi) => !bad.has(fi));
                         pushLog({
                           muted: true,
-                          text: `AI-vision: ${found.length - kept.length} van ${found.length} afgekeurd voor "${k}" (foto past niet).`,
+                          text:
+                            `Foto-controle: ${found.length - kept.length} van ${found.length} afgekeurd voor "${k}"` +
+                            (reasons.length ? ` — ${reasons.join(" · ")}` : ""),
                         });
                         found = kept;
                       }
