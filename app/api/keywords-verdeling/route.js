@@ -37,6 +37,13 @@ export async function POST(req) {
     return NextResponse.json({ error: "Kies precies 4 maanden" }, { status: 400 });
   }
 
+  // Vercel kapt de functie na 60s af (→ HTTP 504). We bewaken de tijd zelf:
+  // zware AI-controles worden overgeslagen zodra de klok krap wordt, zodat
+  // je altijd een verdeling terugkrijgt i.p.v. een timeout.
+  const T0 = Date.now();
+  const msLeft = () => 46000 - (Date.now() - T0);
+  const skipped = [];
+
   try {
     const src = String(sourceTab).trim();
 
@@ -56,13 +63,17 @@ export async function POST(req) {
     if (kwIdx === -1) throw new Error(`Kolom "Keyword" niet gevonden in "${src}"`);
 
     /* ---- 2. alleen de nodige kolommen lezen (bron kan tienduizenden rijen zijn) ---- */
-    const wanted = [kwIdx, avgIdx, ...monthIdx].filter((i) => i >= 0);
-    const columns = {};
-    for (const i of wanted) {
-      const L = colLetter(i);
-      const vals = await readRange(sourceSheetId, `'${src}'!${L}2:${L}`);
-      columns[i] = vals.map((r) => r[0]);
-    }
+    // Kolommen PARALLEL ophalen — bij een tabblad van 100k rijen scheelt dat
+    // tientallen seconden t.o.v. één voor één (was de hoofdoorzaak van 504's).
+    const wanted = [...new Set([kwIdx, avgIdx, ...monthIdx].filter((i) => i >= 0))];
+    const fetched = await Promise.all(
+      wanted.map(async (i) => {
+        const L = colLetter(i);
+        const vals = await readRange(sourceSheetId, `'${src}'!${L}2:${L}`);
+        return [i, vals.map((r) => r[0])];
+      })
+    );
+    const columns = Object.fromEntries(fetched);
     const nRows = columns[kwIdx].length;
     const num = (v) => {
       const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));
@@ -95,6 +106,7 @@ export async function POST(req) {
     try {
       const items = result.rows.map((r, i) => ({ index: i, kw: r.kw }));
       const BATCH = 160;
+      if (msLeft() < 12000) throw new Error("skip");
       for (let i = 0; i < items.length; i += BATCH) {
         const part = items.slice(i, i + BATCH);
         const removals = await classifyJunkKeywordsBatch(part, { market });
@@ -110,7 +122,7 @@ export async function POST(req) {
         result = buildVerdeling(rows, { ...opts, exclude });
       }
     } catch {
-      /* verdeling zonder AI-nacontrole is ook prima */
+      skipped.push("merken-nacontrole");
     }
 
     /* ---- 4a-bis. ONBEKEND-WOORD-ZEEF: elk gekozen keyword dat een woord
@@ -125,6 +137,11 @@ export async function POST(req) {
           .map((r) => ({ kw: r.kw, unknown: unknownFashionTokens(r.kw) }))
           .filter((s) => s.unknown.length);
         if (!suspects.length) break;
+        if (msLeft() < 10000) {
+          skipped.push("onbekend-woord-check");
+          unknownWarn = suspects.map((s) => `${s.kw} (${s.unknown.join("/")})`);
+          break;
+        }
         let verdicts = [];
         try {
           verdicts = await classifyUnknownTokens(suspects);
@@ -150,6 +167,10 @@ export async function POST(req) {
             zodat het budget naar het volgende beste keyword vloeit ---- */
     try {
       for (let round = 0; round < 2; round++) {
+        if (msLeft() < 9000) {
+          skipped.push("eind-QA");
+          break;
+        }
         const flagged = await reviewVerdelingFinal(
           result.rows.map((r) => ({ kw: r.kw, col: r.col, n: r.n })),
           market,
@@ -174,6 +195,11 @@ export async function POST(req) {
     /* ---- Dekking-waarschuwingen: een groep met maar 1-2 keywords betekent
             meestal dat de bron-CSV's die doelgroep amper dekken ---- */
     const warnings = [];
+    if (skipped.length) {
+      warnings.push(
+        `Tijdslimiet bereikt — overgeslagen: ${[...new Set(skipped)].join(", ")}. De verdeling klopt, maar draai 'm nog eens (of met een kleiner bron-tabblad) voor de volledige AI-controle.`
+      );
+    }
     if (unknownWarn.length) {
       warnings.push(
         `Merk-check kon niet draaien voor: ${unknownWarn.join(", ")} — deze bevatten een onbekend woord. Controleer handmatig of het merken zijn.`
