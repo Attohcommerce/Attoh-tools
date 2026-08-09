@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
-import { analyzeKeyword } from "@/lib/fashion";
+import { analyzeKeyword, alternativeIsSafe, hardAttributes } from "@/lib/fashion";
 
 const LS = {
   stores: "sa_competitor_stores",
@@ -52,7 +52,17 @@ const STALL_AUTO_AT = 20;
 // Geleerde kennis blijft bewaard tussen runs:
 const LS_ALTS = "sa_kw_alts"; // kw → AI-alternatieven (cache, geen dubbele AI-calls)
 const LS_ALT_HITS = "sa_kw_alt_hits"; // kw → alternatief dat eerder écht producten vond
-const LS_BRIEFS = "sa_kw_briefs"; // kw → product-briefing (wat IS dit product?)
+// kw → product-briefing (wat IS dit product?). Het versienummer hoort bij de
+// VELDEN in de briefing: zodra er een veld bijkomt (zoals titleForm) moeten
+// oude briefings opnieuw gemaakt worden. Zonder dit nummer bleef een briefing
+// van vóór titleForm eeuwig in de cache staan en bleef kolom K leeg.
+const BRIEF_VERSION = 2;
+const LS_BRIEFS = `sa_kw_briefs_v${BRIEF_VERSION}`;
+
+// Maximaal aandeel van één concurrent in de hele import-lijst. Zonder deze
+// grens kwam de helft van de store van één winkel — zelfde leveranciersfoto's,
+// zelfde assortiment, en daarmee een herkenbare kopie.
+const MAX_STORE_SHARE = 0.25;
 
 // Breed vangnet: het kale producttype uit het keyword ("black knee high boots"
 // → "boots"). Lukt dat niet, dan het laatste woord van het beste AI-alternatief.
@@ -414,6 +424,17 @@ export default function ScraperPage() {
       }
       pushLog({ muted: true, text: `${exclude.size} bekende links worden overgeslagen (geheugen).` });
 
+      /* Spreiding over concurrenten + ontdubbeling op producttitel.
+         Bij dropshipping verkopen tien winkels exact hetzelfde artikel; de
+         link is dan uniek maar het product niet. Vorige run stonden er twee
+         identieke producten in de lijst en kwam de helft van één winkel. */
+      const perStore = new Map(); // domein → aantal in deze run
+      const seenTitles = new Set(); // genormaliseerde titel → al opgenomen
+      const normTitle = (t) =>
+        String(t || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+      let storeCapHits = 0;
+      let titleDupHits = 0;
+
       /* ---- Slim zoeken voorbereiden: AI-alternatieven voor ALLE keywords
               in één batch, vóór de run — geen wachttijd meer onderweg ---- */
       const altCache = load(LS_ALTS, {});
@@ -503,11 +524,14 @@ export default function ScraperPage() {
           // (sequin dress, velvet dress, sparkly midi…) gaan meteen mee, en
           // de foto-controle bewaakt daarna of het écht past.
           if (isOccasion && kwBrief && kwBrief.searchTerms && kwBrief.searchTerms.length) {
-            terms = [...new Set([...terms, ...kwBrief.searchTerms])];
-            pushLog({
-              muted: true,
-              text: `Lastig keyword — zoekt meteen ook op: ${kwBrief.searchTerms.join(" · ")}`,
-            });
+            const safe = kwBrief.searchTerms.filter((t) => alternativeIsSafe(k, t));
+            if (safe.length) {
+              terms = [...new Set([...terms, ...safe])];
+              pushLog({
+                muted: true,
+                text: `Lastig keyword — zoekt meteen ook op: ${safe.join(" · ")}`,
+              });
+            }
           }
           let altsFull = false;
           let broadActive = false;
@@ -516,15 +540,30 @@ export default function ScraperPage() {
           const expandAlts = (reason) => {
             if (altsFull) return;
             altsFull = true;
-            const merged = [...new Set([...terms, ...alts])];
+            // Een alternatief mag het producttype verbreden, maar nooit een
+            // kleur, materiaal of patroon laten vallen: "camouflage pants" →
+            // "cargo pants" en "gold heels" → "heels" leverden vorige run
+            // producten op die het keyword totaal niet waren.
+            const safeAlts = alts.filter((a) => alternativeIsSafe(k, a));
+            const dropped = alts.filter((a) => !safeAlts.includes(a));
+            if (dropped.length) {
+              pushLog({ muted: true, text: `Alternatieven geweigerd (verliezen "${hardAttributes(k).join(", ")}"): ${dropped.join(" · ")}` });
+            }
+            const merged = [...new Set([...terms, ...safeAlts])];
             if (merged.length > terms.length) {
               terms = merged;
-              pushLog({ ok: true, text: `${reason} — zoekt nu ook op: ${alts.join(" · ")} (telt mee voor "${k}").` });
+              pushLog({ ok: true, text: `${reason} — zoekt nu ook op: ${safeAlts.join(" · ")} (telt mee voor "${k}").` });
             }
           };
           const expandBroad = () => {
             if (broadActive) return;
             broadActive = true;
+            // Bij een keyword met een harde eigenschap bestaat er geen breed
+            // vangnet: "boots" is geen vervanging voor "waterproof boots".
+            if (hardAttributes(k).length) {
+              pushLog({ muted: true, text: `Geen breed vangnet voor "${k}" — de eigenschap "${hardAttributes(k).join(", ")}" mag niet wegvallen.` });
+              return;
+            }
             const b = broadTermFor(k, alts);
             if (b && !terms.some((t) => t.toLowerCase() === b)) {
               terms = [...terms, b];
@@ -602,6 +641,33 @@ export default function ScraperPage() {
                     }
                   }
 
+                  /* Spreiding: nooit meer dan MAX_STORE_SHARE van de hele
+                     lijst uit één winkel, en nooit twee keer hetzelfde
+                     product (zelfde titel bij een andere dropship-winkel). */
+                  if (found.length) {
+                    const dom = storeOf(found[0].link) || store;
+                    const capTotal = Math.max(20, Number(totalTarget) || 0);
+                    const cap = Math.ceil(capTotal * MAX_STORE_SHARE);
+                    const already = perStore.get(dom) || 0;
+                    const room = Math.max(0, cap - already);
+                    if (found.length > room) {
+                      storeCapHits += found.length - room;
+                      found = found.slice(0, room);
+                    }
+                    const fresh = [];
+                    for (const m of found) {
+                      const nt = normTitle(m.title);
+                      if (nt && seenTitles.has(nt)) {
+                        titleDupHits++;
+                        continue;
+                      }
+                      if (nt) seenTitles.add(nt);
+                      fresh.push(m);
+                    }
+                    found = fresh;
+                    if (found.length) perStore.set(dom, already + found.length);
+                  }
+
                   if (found.length) {
                     // Origineel keyword in de sheet; via-term zichtbaar in Matchbron.
                     // Matchtype is bij via-vondsten NOOIT "Literal" — dat zou over
@@ -613,7 +679,7 @@ export default function ScraperPage() {
                       k,
                       m.source + via,
                       term === k ? m.literal : "Ruim",
-                      "",
+                      gender === "Man" ? "Man" : gender === "Vrouw" ? "Vrouw" : "",
                       "",
                       "",
                       col || "",
@@ -708,6 +774,38 @@ export default function ScraperPage() {
       if (hardKeywords.length) {
         pushLog({ warn: true, text: `Moeilijke keywords (0 resultaat of overgeslagen): ${hardKeywords.join(", ")}` });
       }
+      if (storeCapHits || titleDupHits) {
+        pushLog({
+          muted: true,
+          text:
+            `Spreiding: ${storeCapHits} producten geweigerd omdat een winkel al op ${Math.round(MAX_STORE_SHARE * 100)}% zat` +
+            `, ${titleDupHits} geweigerd omdat hetzelfde product al in de lijst stond.`,
+        });
+      }
+      {
+        const spread = [...perStore.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+        if (spread.length) {
+          pushLog({
+            muted: true,
+            text: `Grootste leveranciers: ${spread.map(([d, n]) => `${d} ${Math.round((100 * n) / Math.max(1, grandTotal))}%`).join(" · ")}`,
+          });
+        }
+      }
+
+      /* De drie controles stonden als losse knoppen en werden daardoor
+         vergeten — kolom F, G en H bleven leeg terwijl er wél mannenproducten
+         en dubbele foto's in de lijst zaten. Ze draaien nu automatisch. */
+      pushLog({ strong: true, text: "— Eindcontroles starten automatisch" });
+      try {
+        await runGenderCheck(runTabTitle);
+      } catch {}
+      try {
+        await runDuplicateCheck(runTabTitle);
+      } catch {}
+      try {
+        await runLiteralCheck(runTabTitle);
+      } catch {}
+      pushLog({ ok: true, text: "Eindcontroles klaar — kolom F (geslacht), G (dubbele foto) en H (literal-twijfel) zijn gevuld." });
     } catch (e) {
       if (e && e.stop === "save") {
         pushLog({
@@ -767,7 +865,7 @@ export default function ScraperPage() {
   }
 
   // ---------- Checks ----------
-  async function runGenderCheck() {
+  async function runGenderCheck(forceTab) {
     if (!workSheet.trim() || checkBusy) return;
     setCheckBusy("gender");
     pushLog({ strong: true, text: "— Geslacht-check gestart (kolom F)" });
@@ -778,7 +876,7 @@ export default function ScraperPage() {
         const res = await fetch("/api/checks/gender", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sheetId: workSheet, tab: runTab.trim() || undefined, cursor }),
+          body: JSON.stringify({ sheetId: workSheet, tab: (forceTab || runTab).trim() || undefined, cursor }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || res.status);
@@ -795,7 +893,7 @@ export default function ScraperPage() {
     }
   }
 
-  async function runDuplicateCheck() {
+  async function runDuplicateCheck(forceTab) {
     if (!workSheet.trim() || checkBusy) return;
     setCheckBusy("dup");
     pushLog({ strong: true, text: "— Dubbele-foto-check gestart (kolom G)" });
@@ -806,7 +904,7 @@ export default function ScraperPage() {
         const res = await fetch("/api/checks/duplicates", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sheetId: workSheet, tab: runTab.trim() || undefined, action: "scan", cursor }),
+          body: JSON.stringify({ sheetId: workSheet, tab: (forceTab || runTab).trim() || undefined, action: "scan", cursor }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || res.status);
@@ -839,7 +937,7 @@ export default function ScraperPage() {
         const res = await fetch("/api/checks/duplicates", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sheetId: workSheet, tab: runTab.trim() || undefined, action: "tag", tags }),
+          body: JSON.stringify({ sheetId: workSheet, tab: (forceTab || runTab).trim() || undefined, action: "tag", tags }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || res.status);
@@ -852,7 +950,7 @@ export default function ScraperPage() {
     }
   }
 
-  async function runLiteralCheck() {
+  async function runLiteralCheck(forceTab) {
     if (!workSheet.trim() || checkBusy) return;
     setCheckBusy("literal");
     pushLog({ strong: true, text: "— Literal-check gestart (kolom H)" });
@@ -863,7 +961,7 @@ export default function ScraperPage() {
         const res = await fetch("/api/checks/literal", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sheetId: workSheet, tab: runTab.trim() || undefined, cursor }),
+          body: JSON.stringify({ sheetId: workSheet, tab: (forceTab || runTab).trim() || undefined, cursor }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || res.status);
