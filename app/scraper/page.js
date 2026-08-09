@@ -586,19 +586,30 @@ export default function ScraperPage() {
               let foundThisStore = 0;
               let scanned = 0;
               let bestSelling = false;
+              const skips = { soldOut: 0, tooFewImages: 0, gender: 0, foreign: 0 };
               for (const term of terms) {
                 if (needed <= 0) break;
                 try {
                   const res = await fetch("/api/scraper-search", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ store, keyword: term, gender, need: needed, excludeLinks: [...exclude] }),
+                    body: JSON.stringify({
+                      store,
+                      keyword: term,
+                      gender,
+                      need: needed,
+                      excludeLinks: [...exclude],
+                      // Nooit het hele quotum uit één winkel: pak van elke
+                      // winkel de bovenkant in plaats van de staart van één.
+                      maxPerStore: Math.max(2, Math.ceil(target / 3)),
+                    }),
                   });
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.error || res.status);
                   let found = data.matches || [];
                   scanned = Math.max(scanned, data.total || 0);
                   bestSelling = bestSelling || !!data.usedBestSelling;
+                  if (data.skipped) for (const key of Object.keys(skips)) skips[key] += data.skipped[key] || 0;
 
                   // FOTO-CONTROLE OP ELK PRODUCT — niet alleen bij
                   // via-alternatieven. De tekstmatcher kan een keyword te ruim
@@ -618,7 +629,13 @@ export default function ScraperPage() {
                           keyword: k,
                           gender,
                           brief: kwBrief,
-                          items: found.map((m, fi) => ({ index: fi, title: m.title, image: m.image || null })),
+                          items: found.map((m, fi) => ({
+                            index: fi,
+                            title: m.title,
+                            image: m.image || null,
+                            images: m.images || null,
+                            needsPhotoProof: !!m.needsPhotoProof,
+                          })),
                         }),
                       });
                       const vdata = await vres.json();
@@ -713,7 +730,16 @@ export default function ScraperPage() {
               }
               pushLog({
                 ok: true,
-                text: `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bestSelling ? ", best-selling volgorde" : ""}) — nog ${Math.max(needed, 0)} nodig`,
+                text:
+                  `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bestSelling ? ", best-selling volgorde" : ""}) — nog ${Math.max(needed, 0)} nodig` +
+                  (skips.soldOut || skips.tooFewImages || skips.gender || skips.foreign
+                    ? ` · overgeslagen: ${[
+                        skips.soldOut ? `${skips.soldOut} uitverkocht` : "",
+                        skips.tooFewImages ? `${skips.tooFewImages} te weinig foto's` : "",
+                        skips.gender ? `${skips.gender} verkeerd geslacht` : "",
+                        skips.foreign ? `${skips.foreign} anderstalig zonder titelbewijs` : "",
+                      ].filter(Boolean).join(" · ")}`
+                    : ""),
               });
               storesTried++;
 
