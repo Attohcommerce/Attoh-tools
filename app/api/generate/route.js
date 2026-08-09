@@ -8,9 +8,14 @@ export async function POST(req) {
   if (!product) return NextResponse.json({ error: "product ontbreekt" }, { status: 400 });
   try {
     const listing = await generateListing({ product, settings });
+    const s = settings || {};
+    // Bij gelegenheids-keywords wordt op de TITELVORM beoordeeld (de exacte
+    // long-tail hoort in de omschrijving, niet in de titel).
+    const gradeKeyword =
+      s.keywordType === "Gelegenheid" && s.titleForm ? s.titleForm : s.requiredKeyword || "";
     const grade = scoreListing(listing, {
-      listingStyle: (settings && settings.listingStyle) || "stacking",
-      requiredKeyword: (settings && settings.requiredKeyword) || "",
+      listingStyle: s.listingStyle || "stacking",
+      requiredKeyword: gradeKeyword,
     });
     listing.score = grade.score;
     listing.scoreNotes = grade.notes;

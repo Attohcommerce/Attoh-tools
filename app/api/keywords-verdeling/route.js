@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readRange, addTab, appendRows, formatVerdelingTab, parseSheetId } from "@/lib/sheets";
-import { buildVerdeling } from "@/lib/verdeling";
+import { buildVerdeling, keywordType } from "@/lib/verdeling";
 import { classifyJunkKeywordsBatch, reviewVerdelingFinal, classifyUnknownTokens } from "@/lib/ai";
 import { unknownFashionTokens } from "@/lib/brands";
 
@@ -197,9 +197,11 @@ export async function POST(req) {
     if (!t.ok) return NextResponse.json({ error: t.error }, { status: 422 });
 
     const label = months.join("-");
+    // Kolom I = Type: stuurt de werkwijze van de scraper én de titelvorm bij
+    // het importeren. A-H blijft ongewijzigd zodat bestaande lezers werken.
     const left = [
-      ["Rank", "Keyword", "Collectie", "Groep", "Avg. volume", `Volume ${label}`, "Piekmaand", "Aantal producten"],
-      ...result.rows.map((r) => [r.rank, r.kw, r.col, r.g, r.avg, r.season, r.peak, r.n]),
+      ["Rank", "Keyword", "Collectie", "Groep", "Avg. volume", `Volume ${label}`, "Piekmaand", "Aantal producten", "Type"],
+      ...result.rows.map((r) => [r.rank, r.kw, r.col, r.g, r.avg, r.season, r.peak, r.n, keywordType(r.kw)]),
     ];
     const right = [
       ["Collectie", "Aantal keywords", "Aantal producten", "Top keywords"],
@@ -208,10 +210,10 @@ export async function POST(req) {
     const nOut = Math.max(left.length, right.length);
     const values = [];
     for (let i = 0; i < nOut; i++) {
-      values.push([...(left[i] || ["", "", "", "", "", "", "", ""]), "", ...(right[i] || [])]);
+      values.push([...(left[i] || ["", "", "", "", "", "", "", "", ""]), "", ...(right[i] || [])]);
     }
     await appendRows(targetSheetId, `'${t.title}'!A1`, values, "RAW");
-    await formatVerdelingTab(targetSheetId, t.tabId, left.length, 8, 13);
+    await formatVerdelingTab(targetSheetId, t.tabId, left.length, 9, 14);
 
     const id = parseSheetId(targetSheetId);
     return NextResponse.json({

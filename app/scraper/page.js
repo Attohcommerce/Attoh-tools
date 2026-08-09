@@ -29,7 +29,10 @@ function save(key, val) {
   } catch {}
 }
 
-const HEADER_ROW = ["LINK", "TITEL", "KEYWORD", "GEVONDEN VIA", "MATCH", "GESLACHT", "DUBBELE FOTO", "LITERAL-TWIJFEL", "COLLECTIE"];
+const HEADER_ROW = [
+  "LINK", "TITEL", "KEYWORD", "GEVONDEN VIA", "MATCH", "GESLACHT",
+  "DUBBELE FOTO", "LITERAL-TWIJFEL", "COLLECTIE", "TYPE", "TITELVORM",
+];
 
 // Stores verlopen automatisch na 14 dagen zonder gebruik van de tool
 const STORE_TTL_DAYS = 14;
@@ -274,7 +277,7 @@ export default function ScraperPage() {
       save(LS.orgSheet, sheet);
       save(LS.orgTab, tab);
       pushLog({ strong: true, text: `— Verdeling inladen uit "${tab}"` });
-      const data = await sheetsCall({ action: "read", sheetId: sheet, range: `'${tab}'!A1:H` });
+      const data = await sheetsCall({ action: "read", sheetId: sheet, range: `'${tab}'!A1:I` });
       const values = data.values || [];
       if (!values.length) throw new Error(`Tabblad "${tab}" is leeg of bestaat niet`);
 
@@ -294,12 +297,20 @@ export default function ScraperPage() {
         const n = Math.max(1, Number(r[7]) || 0);
         const g = String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw";
         const col = String(r[2] || "").trim(); // C = Collectie — reist mee naar de importlijst
-        parsed.push({ k, n, g, col });
+        const type = String(r[8] || "").trim() || "Direct"; // I = Type (Direct/Attribuut/Gelegenheid)
+        parsed.push({ k, n, g, col, type });
       }
       if (!parsed.length) throw new Error("Geen keywords gevonden in dit blad");
 
-      const vrouw = parsed.filter((p) => p.g === "vrouw").map(({ k, n, col }) => ({ k, n, col }));
-      const man = parsed.filter((p) => p.g === "man").map(({ k, n, col }) => ({ k, n, col }));
+      const vrouw = parsed.filter((p) => p.g === "vrouw").map(({ k, n, col, type }) => ({ k, n, col, type }));
+      const man = parsed.filter((p) => p.g === "man").map(({ k, n, col, type }) => ({ k, n, col, type }));
+      const lastig = parsed.filter((p) => p.type === "Gelegenheid").length;
+      if (lastig) {
+        pushLog({
+          muted: true,
+          text: `${lastig} gelegenheids-keywords gevonden (bv. "christmas party dress") — die worden anders gescrapet: zoeken op fysieke proxies + foto-controle.`,
+        });
+      }
       const next = {
         vrouw: vrouw.length ? vrouw : [{ k: "", n: 10 }],
         man: man.length ? man : [{ k: "", n: 10 }],
@@ -457,11 +468,20 @@ export default function ScraperPage() {
       let grandTotal = 0;
       const hardKeywords = []; // bleef op 0 ondanks alles
       for (const [gender, rows] of groups) {
-        for (const { k, n, col } of rows) {
+        for (const { k, n, col, type } of rows) {
           let needed = Number(n) || 10;
           const target = needed;
           const kwBrief = briefCache[k.toLowerCase()] || null;
-          pushLog({ strong: true, text: `— ${gender} · "${k}" · ${target} producten` });
+          // Type uit de organization-sheet, of anders uit de AI-briefing
+          const kwType =
+            type ||
+            (kwBrief && kwBrief.kwType === "occasion"
+              ? "Gelegenheid"
+              : kwBrief && kwBrief.kwType === "attribute"
+              ? "Attribuut"
+              : "Direct");
+          const isOccasion = kwType === "Gelegenheid" || (kwBrief && kwBrief.kwType === "occasion");
+          pushLog({ strong: true, text: `— ${gender} · "${k}" · ${target} producten · ${kwType}` });
           if (kwBrief && kwBrief.definition) {
             pushLog({ muted: true, text: `Wat is een "${k}"? ${kwBrief.definition}` });
             if (kwBrief.not && kwBrief.not.length) {
@@ -477,6 +497,18 @@ export default function ScraperPage() {
           const alts = altCache[kwLower] || [];
           const provenHit = altHits[kwLower]; // alternatief dat vorige keer scoorde
           let terms = provenHit && provenHit !== kwLower ? [k, provenHit] : [k];
+          // GELEGENHEIDS-KEYWORDS: geen enkele shop titelt een product
+          // "christmas party dress". Wachten tot de letterlijke zoekterm
+          // faalt is zonde van de tijd — de fysieke proxies uit de briefing
+          // (sequin dress, velvet dress, sparkly midi…) gaan meteen mee, en
+          // de foto-controle bewaakt daarna of het écht past.
+          if (isOccasion && kwBrief && kwBrief.searchTerms && kwBrief.searchTerms.length) {
+            terms = [...new Set([...terms, ...kwBrief.searchTerms])];
+            pushLog({
+              muted: true,
+              text: `Lastig keyword — zoekt meteen ook op: ${kwBrief.searchTerms.join(" · ")}`,
+            });
+          }
           let altsFull = false;
           let broadActive = false;
           let storesTried = 0;
@@ -585,8 +617,10 @@ export default function ScraperPage() {
                       "",
                       "",
                       col || "",
+                      kwType,
+                      (kwBrief && kwBrief.titleForm) || "",
                     ]);
-                    await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:I`, rows: newRows });
+                    await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:K`, rows: newRows });
                     if (memSheet.trim()) {
                       await sheetsCall({
                         action: "append",

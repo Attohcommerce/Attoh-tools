@@ -205,7 +205,7 @@ export default function ImporterPage() {
       const res = await fetch("/api/sheets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "read", sheetId, range: sheetTab.trim() ? `'${sheetTab.trim()}'!A:I` : "A:I" }),
+        body: JSON.stringify({ action: "read", sheetId, range: sheetTab.trim() ? `'${sheetTab.trim()}'!A:K` : "A:K" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || res.status);
@@ -222,7 +222,13 @@ export default function ImporterPage() {
         if (skipTagged && (dup || doubt)) continue;
         if (sheetKeywordFilter && !kw.includes(sheetKeywordFilter.toLowerCase())) continue;
         if (collection) withCol++;
-        links.push({ url: link, keyword: (r[2] || "").trim(), collection });
+        links.push({
+          url: link,
+          keyword: (r[2] || "").trim(),
+          collection,
+          kwType: String(r[9] || "").trim(), // J = Direct/Attribuut/Gelegenheid
+          titleForm: String(r[10] || "").trim(), // K = hoe het keyword in de titel hoort
+        });
       }
       setSheetLinks(links);
       setSheetMsg(
@@ -311,6 +317,8 @@ export default function ImporterPage() {
       const url = typeof entry === "string" ? entry : entry.url;
       const rowKeyword = (typeof entry === "object" && entry.keyword) || requiredKeyword;
       const rowCollection = typeof entry === "object" ? entry.collection || "" : "";
+      const rowTitleForm = typeof entry === "object" ? entry.titleForm || "" : "";
+      const rowKwType = typeof entry === "object" ? entry.kwType || "" : "";
       const nr = `${i + 1}/${urls.length}`;
       try {
         // 1. Scrape
@@ -334,6 +342,8 @@ export default function ImporterPage() {
             settings: {
               listingStyle,
               requiredKeyword: rowKeyword,
+              titleForm: rowTitleForm,
+              keywordType: rowKwType,
               genderPrefix,
               forceMensKeywords: forceMens,
               colorLabel,
