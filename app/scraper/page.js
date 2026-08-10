@@ -796,7 +796,7 @@ export default function ScraperPage() {
               pushLog({
                 ok: true,
                 text:
-                  `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bestSelling ? ", best-selling volgorde" : ""}) — nog ${Math.max(needed, 0)} nodig` +
+                  `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bestSelling ? ", best-selling volgorde" : ", ⚠ GEEN best-selling volgorde — catalogusvolgorde gebruikt"}) — nog ${Math.max(needed, 0)} nodig` +
                   (skips.soldOut || skips.tooFewImages || skips.gender || skips.foreign
                     ? ` · overgeslagen: ${[
                         skips.soldOut ? `${skips.soldOut} uitverkocht` : "",
