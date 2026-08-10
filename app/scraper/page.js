@@ -483,10 +483,16 @@ export default function ScraperPage() {
           if (res.ok && data.map) {
             Object.assign(briefCache, data.map);
             save(LS_BRIEFS, briefCache);
-            pushLog({ ok: true, text: `Productkennis klaar — elk gevonden product wordt tegen zijn eigen definitie gecontroleerd.` });
+            const got = Object.keys(data.map).length;
+            pushLog({ ok: true, text: `Productkennis klaar voor ${got} keywords — elk gevonden product wordt tegen zijn eigen definitie gecontroleerd.` });
+            if (Array.isArray(data.failed) && data.failed.length) {
+              pushLog({ err: true, text: `LET OP: briefing mislukt voor ${data.failed.length} keywords (${data.failed.slice(0, 5).join(", ")}…) — bij die keywords blijft TITELVORM (kolom K) leeg en is de foto-controle minder streng.` });
+            }
+          } else {
+            throw new Error(data.error || res.status);
           }
         } catch (e) {
-          pushLog({ warn: true, text: `Productkennis laden mislukt (${e.message}) — de foto-controle draait dan op algemene kennis.` });
+          pushLog({ err: true, text: `LET OP: productkennis laden mislukt (${e.message}) — TITELVORM (kolom K) blijft dan LEEG en de foto-controle draait op algemene kennis. Run gaat door, maar de gelegenheids-titels missen hun titelvorm.` });
         }
       }
       const missingAlts = allKwItems.filter((x) => !altCache[x.kw]);
