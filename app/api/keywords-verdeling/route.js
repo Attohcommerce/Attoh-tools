@@ -131,25 +131,28 @@ export async function POST(req) {
             zijn ("veja", "frye", "on") — onbekend = bewijslast omdraaien.
             Herhaalt tot er geen onbekende woorden meer in de selectie zitten. ---- */
     let unknownWarn = [];
+    // Keywords die de AI dáádwerkelijk heeft beoordeeld en goedgekeurd.
+    // Alles wat een onbekend woord bevat en hier NIET in staat, gaat er
+    // sowieso uit — zie de harde poort hieronder.
+    const cleared = new Set();
     try {
       for (let round = 0; round < 3; round++) {
         const suspects = result.rows
           .map((r) => ({ kw: r.kw, unknown: unknownFashionTokens(r.kw) }))
-          .filter((s) => s.unknown.length);
+          .filter((s) => s.unknown.length && !cleared.has(s.kw));
         if (!suspects.length) break;
-        if (msLeft() < 10000) {
+        if (msLeft() < 8000) {
           skipped.push("onbekend-woord-check");
-          unknownWarn = suspects.map((s) => `${s.kw} (${s.unknown.join("/")})`);
           break;
         }
         let verdicts = [];
         try {
           verdicts = await classifyUnknownTokens(suspects);
         } catch {
-          // AI onbereikbaar → niet stilzwijgend doorlaten, maar waarschuwen
-          unknownWarn = suspects.map((s) => `${s.kw} (${s.unknown.join("/")})`);
-          break;
+          break; // niet goedkeuren; de harde poort ruimt ze straks op
         }
+        const rejected = new Set(verdicts.map((v) => v.kw));
+        for (const sp of suspects) if (!rejected.has(sp.kw)) cleared.add(sp.kw);
         const fresh = verdicts.filter((v) => !exclude.has(v.kw));
         if (!fresh.length) break;
         for (const v of fresh) {
@@ -159,7 +162,27 @@ export async function POST(req) {
         result = buildVerdeling(rows, { ...opts, exclude });
       }
     } catch {
-      /* zeef is een extra laag — zonder draait de rest gewoon door */
+      /* zeef is een extra laag — de harde poort hieronder blijft gelden */
+    }
+
+    /* ---- 4a-ter. HARDE POORT: onbekend en niet goedgekeurd = eruit.
+            Hiervoor bleef een onbekend woord staan met alleen een
+            waarschuwing zodra de AI-check werd overgeslagen of faalde — zo
+            kwamen timbs boots, sp5der hoodie, nikelab hoodie en bathing ape
+            hoodie in de sheet. Een merk hoeft niet herkend te worden om
+            geweerd te worden: niet-bewezen-mode is genoeg reden. ---- */
+    {
+      const stillUnknown = result.rows
+        .map((r) => ({ kw: r.kw, unknown: unknownFashionTokens(r.kw) }))
+        .filter((u) => u.unknown.length && !cleared.has(u.kw));
+      if (stillUnknown.length) {
+        for (const u of stillUnknown) {
+          exclude.add(u.kw);
+          aiRemoved.push(`${u.kw} (onbekend woord "${u.unknown.join("/")}" — niet goedgekeurd)`);
+        }
+        result = buildVerdeling(rows, { ...opts, exclude });
+        unknownWarn = stillUnknown.map((u) => `${u.kw} (${u.unknown.join("/")})`);
+      }
     }
 
     /* ---- 4b. Holistische eind-QA over de complete tabel (max 2 rondes):
@@ -202,7 +225,7 @@ export async function POST(req) {
     }
     if (unknownWarn.length) {
       warnings.push(
-        `Merk-check kon niet draaien voor: ${unknownWarn.join(", ")} — deze bevatten een onbekend woord. Controleer handmatig of het merken zijn.`
+        `Uit voorzorg verwijderd (onbekend woord, niet door de merk-check goedgekeurd): ${unknownWarn.join(", ")}. Staat hier een echt mode-keyword tussen, draai de verdeling dan nog eens — dan krijgt de AI-check wél de tijd.`
       );
     }
     if (opts.genders === "MV") {
