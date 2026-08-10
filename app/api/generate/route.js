@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateListing, scoreListing } from "@/lib/ai";
+import { generateListing, scoreListing, fallbackTitleForm } from "@/lib/ai";
 
 export const maxDuration = 60;
 
@@ -7,8 +7,13 @@ export async function POST(req) {
   const { product, settings } = await req.json().catch(() => ({}));
   if (!product) return NextResponse.json({ error: "product ontbreekt" }, { status: 400 });
   try {
-    const listing = await generateListing({ product, settings });
     const s = settings || {};
+    // Vangnet: gelegenheids-keyword zonder titelvorm uit de briefing →
+    // deterministische titelvorm, nooit het rauwe keyword in de titel.
+    if (s.keywordType === "Gelegenheid" && !String(s.titleForm || "").trim() && s.requiredKeyword) {
+      s.titleForm = fallbackTitleForm(s.requiredKeyword);
+    }
+    const listing = await generateListing({ product, settings: s });
     // Bij gelegenheids-keywords wordt op de TITELVORM beoordeeld (de exacte
     // long-tail hoort in de omschrijving, niet in de titel).
     const gradeKeyword =
