@@ -62,10 +62,20 @@ export async function POST(req) {
     });
     if (kwIdx === -1) throw new Error(`Kolom "Keyword" niet gevonden in "${src}"`);
 
+    /* De maand NA het venster meelezen (als die in de sheet staat). Daarmee
+       zien we of de vraag ná het venster doorloopt of instort — het verschil
+       tussen "boots" (loopt door in december) en "homecoming dress" (dood na
+       oktober). Zonder deze kolom kregen stervende zomerkeywords evenveel
+       producten als stijgende winterkeywords. */
+    const KEYS = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+    const afterKey = KEYS[(KEYS.indexOf(months[3]) + 1) % 12];
+    const afterTok = MONTH_TOKEN[afterKey] || afterKey;
+    const nextIdx = header.findIndex((h) => h.replace(/^searches:\s*/, "").startsWith(afterTok));
+
     /* ---- 2. alleen de nodige kolommen lezen (bron kan tienduizenden rijen zijn) ---- */
     // Kolommen PARALLEL ophalen — bij een tabblad van 100k rijen scheelt dat
     // tientallen seconden t.o.v. één voor één (was de hoofdoorzaak van 504's).
-    const wanted = [...new Set([kwIdx, avgIdx, ...monthIdx].filter((i) => i >= 0))];
+    const wanted = [...new Set([kwIdx, avgIdx, ...monthIdx, nextIdx].filter((i) => i >= 0))];
     const fetched = await Promise.all(
       wanted.map(async (i) => {
         const L = colLetter(i);
@@ -87,7 +97,26 @@ export async function POST(req) {
         kw,
         avg: avgIdx >= 0 ? num(columns[avgIdx][r]) : 0,
         months: monthIdx.map((i) => num(columns[i][r])),
+        next: nextIdx >= 0 ? num(columns[nextIdx][r]) : null,
       });
+    }
+
+    /* Venster-signaal: is de maand ná het venster in totaal GROTER dan de
+       eerste venstermaand, dan kijkt het venster achteruit — de piek van het
+       seizoen valt buiten beeld en de verdeling loopt achter de feiten aan. */
+    let windowWarn = "";
+    if (nextIdx >= 0) {
+      let sumFirst = 0;
+      let sumNext = 0;
+      for (const r of rows) {
+        sumFirst += r.months[0];
+        sumNext += r.next || 0;
+      }
+      if (sumNext > sumFirst * 1.1) {
+        windowWarn =
+          `De maand ná je venster (${afterKey}) heeft in totaal MEER zoekvolume dan de eerste venstermaand (${months[0]}). ` +
+          `Je producten gaan pas later live — schuif het venster een maand op (${months.slice(1).join("-")}-${afterKey}) voor een verdeling die op de piek mikt.`;
+      }
     }
 
     /* ---- 3. verdeling berekenen ---- */
@@ -218,6 +247,7 @@ export async function POST(req) {
     /* ---- Dekking-waarschuwingen: een groep met maar 1-2 keywords betekent
             meestal dat de bron-CSV's die doelgroep amper dekken ---- */
     const warnings = [];
+    if (windowWarn) warnings.push(windowWarn);
     if (skipped.length) {
       warnings.push(
         `Tijdslimiet bereikt — overgeslagen: ${[...new Set(skipped)].join(", ")}. De verdeling klopt, maar draai 'm nog eens (of met een kleiner bron-tabblad) voor de volledige AI-controle.`
