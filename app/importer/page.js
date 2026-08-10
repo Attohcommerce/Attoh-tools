@@ -249,7 +249,7 @@ export default function ImporterPage() {
   }
 
   // ---------- Import-log ----------
-  const LOG_HEADER = ["Datum", "Store", "Titel", "Keyword", "Status", "Admin-link", "Preview-link", "Cijfer"];
+  const LOG_HEADER = ["Datum", "Store", "Titel", "Keyword", "Status", "Herkomst", "Bronprijs", "Koers", "Prijs", "Admin-link", "Preview-link", "Cijfer"];
 
   async function sheetsCall(body) {
     const res = await fetch("/api/sheets", {
@@ -441,13 +441,17 @@ export default function ImporterPage() {
             await sheetsCall({
               action: "append",
               sheetId: logSheet.trim(),
-              range: "'Import-log'!A:H",
+              range: "'Import-log'!A:L",
               rows: [[
                 stamp,
                 selectedStore.name || selectedStore.domain,
                 iData.product.title,
                 rowKeyword || "",
                 iData.product.status,
+                iData.pricing ? `${iData.pricing.originCountry} (${iData.pricing.originCurrency})` : "",
+                iData.pricing ? iData.pricing.sourcePrice : "",
+                iData.pricing ? iData.pricing.rate : "",
+                iData.pricing ? `${selectedStore.currency || ""} ${iData.pricing.finalPrice}`.trim() : "",
                 iData.product.adminUrl,
                 iData.product.previewUrl || "",
                 gData.listing.score != null ? String(gData.listing.score) : "",

@@ -16,14 +16,14 @@ function round2(n) {
 }
 
 /**
- * Psychologische prijs: altijd NAAR BENEDEN afronden op .95.
- * 40.75 → 39.95 · 41.00 → 40.95 · 39.95 → 39.95 · 40.94 → 39.95
+ * Psychologische prijs op het 5-dollar-rooster: altijd eindigen op
+ * X4,95 of X9,95. 52,95 → 54,95 · 51 → 49,95 · 63 → 64,95 · 66 → 64,95.
+ * Geen tussenprijzen als 52,95 of 61,95 meer — elk product landt op een
+ * herkenbaar prijsanker.
  */
 function roundTo95(n) {
-  if (!(n > 0)) return 0.95;
-  const f = Math.floor(n);
-  let out = n >= f + 0.95 ? f + 0.95 : f - 0.05;
-  if (out < 0.95) out = 0.95;
+  if (!(n > 0)) return 4.95;
+  const out = Math.max(4.95, Math.round(n / 5) * 5 - 0.05);
   return round2(out);
 }
 
@@ -49,6 +49,11 @@ export async function POST(req) {
 
   const s = settings || {};
   const rate = s.manualRate ? Number(s.manualRate) : fx && fx.rate ? Number(fx.rate) : 1;
+  // Herkomst voor de import-log: bron-valuta → land van herkomst
+  const CUR_LAND = { USD: "USA", EUR: "EU", GBP: "UK", AUD: "AUS", CAD: "CANADA", NZD: "NZ", PLN: "PL", SEK: "SE", DKK: "DK", CHF: "CH" };
+  const srcCur = String(product.sourceCurrency || "").toUpperCase() || "?";
+  const srcPrices = (product.variants || []).map((v) => Number(v.price) || 0).filter((n) => n > 0);
+  const srcPrice = srcPrices.length ? Math.min(...srcPrices) : 0;
   const discountPct = Number(s.discountPct || 0);
 
   // Opties hernoemen: Color/Colour + eigen Size-label
@@ -280,6 +285,13 @@ export async function POST(req) {
 
   return NextResponse.json({
     ok: true,
+    pricing: {
+      originCountry: CUR_LAND[srcCur] || srcCur,
+      originCurrency: srcCur,
+      sourcePrice: srcPrice ? srcPrice.toFixed(2) : "",
+      rate: rate ? Number(rate).toFixed(4) : "1",
+      finalPrice: variants.length ? variants[0].price : "",
+    },
     product: {
       id: created.id,
       title: created.title,
