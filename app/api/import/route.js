@@ -4,6 +4,8 @@ import {
   setImageVariants,
   updateProduct,
   getPreviewUrl,
+  findTaxonomyCategory,
+  setProductCategory,
   ensureSmartCollection,
 } from "@/lib/shopify";
 import { collectionFor } from "@/lib/verdeling";
@@ -62,6 +64,22 @@ const PRICE_BANDS = {
   bra: [24.95, 39.95],
 };
 const DEFAULT_BAND = [44.95, 64.95];
+
+/* Producttype → zoekterm in Shopify's Standard Product Taxonomy. De
+   categorie stuurt belastingregels, filters én Google's productclassificatie
+   in de feed — leeg laten kost feed-kwaliteit. */
+const TYPE_TAXONOMY = {
+  dress: "Dresses", tshirt: "T-Shirts", shirt: "Shirts", blouse: "Blouses",
+  top: "Tops", sweater: "Sweaters", hoodie: "Hoodies", cardigan: "Cardigans",
+  jacket: "Jackets", coat: "Coats", blazer: "Blazers", jeans: "Jeans",
+  pants: "Pants", leggings: "Leggings", shorts: "Shorts", skirt: "Skirts",
+  jumpsuit: "Jumpsuits", heels: "Heels", boots: "Boots", sneakers: "Sneakers",
+  loafers: "Loafers", sandals: "Sandals", flats: "Flats", mules: "Mules",
+  bag: "Handbags", scarf: "Scarves", belt: "Belts", hat: "Hats",
+  swimsuit: "Swimwear", bikini: "Swimwear", vest: "Vests", polo: "Polos",
+  bodysuit: "Bodysuits", kimono: "Kimonos", pajamas: "Pajamas", bra: "Bras",
+  set: "Outfit Sets", suit: "Suits",
+};
 
 function bandFor(keyword) {
   try {
@@ -340,6 +358,20 @@ export async function POST(req) {
   }
 
   // Preview-link (werkt ook voor drafts) — handig voor de import-log & QA
+  /* Productcategorie automatisch zetten — geen "Suggested"-klikwerk meer.
+     Best effort: een mislukte categorie houdt de import nooit tegen. */
+  let categorySet = "";
+  try {
+    const taxTerm = TYPE_TAXONOMY[priceType];
+    if (taxTerm) {
+      const node = await findTaxonomyCategory(store, taxTerm);
+      if (node) {
+        const setRes = await setProductCategory(store, created.id, node.id);
+        if (setRes.ok) categorySet = setRes.fullName || node.fullName;
+      }
+    }
+  } catch {}
+
   let previewUrl = null;
   try {
     previewUrl = await getPreviewUrl(store, created.id);
@@ -347,6 +379,7 @@ export async function POST(req) {
 
   return NextResponse.json({
     ok: true,
+    category: categorySet,
     pricing: {
       originCountry: CUR_LAND[srcCur] || srcCur,
       originCurrency: srcCur,

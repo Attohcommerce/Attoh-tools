@@ -433,9 +433,10 @@ export default function ImporterPage() {
           ? ` · collecties: ${cols.map((c) => c.title + (c.created ? " (nieuw)" : "")).join(", ")}`
           : "";
         const tplTxt = iData.templateSuffix ? ` · template: ${iData.templateSuffix}` : "";
+        const catTxt = iData.category ? ` · categorie: ${iData.category.split(" > ").pop()}` : "";
         pushLog({
           ok: true,
-          text: iData.product.title + linked + colTxt + tplTxt,
+          text: iData.product.title + linked + colTxt + tplTxt + catTxt,
           href: iData.product.adminUrl,
           score: gData.listing.score,
           scoreNotes: gData.listing.scoreNotes,
