@@ -14,9 +14,12 @@ const MONTHS = [
   { key: "okt", label: "Okt" }, { key: "nov", label: "Nov" }, { key: "dec", label: "Dec" },
 ];
 
-// Standaard: de komende 4 maanden vanaf nu
+// Standaard: 4 maanden vanaf VOLGENDE maand. De lopende maand is grotendeels
+// voorbij tegen de tijd dat producten live staan en campagnes leren — wie in
+// augustus draait, wil sep-okt-nov-dec zien, niet aug-nov. Drie runs op rij
+// stond het venster één maand te vroeg omdat dit de standaard was.
 function defaultMonths() {
-  const m = new Date().getMonth();
+  const m = new Date().getMonth() + 1;
   return [0, 1, 2, 3].map((i) => MONTHS[(m + i) % 12].key);
 }
 
