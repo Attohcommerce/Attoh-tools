@@ -409,6 +409,12 @@ export default function ImporterPage() {
         const iData = await iRes.json();
         if (!iRes.ok) throw new Error(iData.error || "upload mislukt");
         okCount++;
+        if (iData.pricing && iData.pricing.clamped) {
+          pushLog({
+            info: true,
+            text: `${nr} · Prijs binnen de band gezet (${iData.pricing.band}): bron ${iData.pricing.originCurrency} ${iData.pricing.sourcePrice} → ${iData.pricing.finalPrice}.`,
+          });
+        }
         if (iData.brandingRemoved) {
           pushLog({
             info: true,

@@ -8,11 +8,67 @@ import {
 } from "@/lib/shopify";
 import { collectionFor } from "@/lib/verdeling";
 import { flagBrandedImages } from "@/lib/ai";
+import { analyzeKeyword } from "@/lib/fashion";
 
 export const maxDuration = 60;
 
 function round2(n) {
   return Math.round(n * 100) / 100;
+}
+
+/* PRIJSBANDEN per productsoort (USD, altijd op het X4,95/X9,95-rooster).
+   De bron-prijs bepaalt alleen nog WAAR in de band het product landt —
+   nooit meer of het bedrag redelijk is. Een jas van $250 bij de bron wordt
+   $89,95; een trui van $100 wordt $59,95; een te goedkope blouse wordt
+   opgetild naar de bandondergrens. */
+const PRICE_BANDS = {
+  tshirt: [24.95, 34.95],
+  top: [29.95, 44.95],
+  bodysuit: [29.95, 44.95],
+  leggings: [29.95, 44.95],
+  polo: [34.95, 44.95],
+  shorts: [34.95, 44.95],
+  bikini: [34.95, 44.95],
+  shirt: [34.95, 49.95],
+  blouse: [34.95, 49.95],
+  swimsuit: [34.95, 49.95],
+  skirt: [39.95, 54.95],
+  sandals: [39.95, 54.95],
+  pajamas: [39.95, 54.95],
+  bag: [39.95, 59.95],
+  sweater: [44.95, 59.95],
+  hoodie: [44.95, 59.95],
+  cardigan: [44.95, 59.95],
+  kimono: [44.95, 59.95],
+  pants: [44.95, 59.95],
+  flats: [44.95, 59.95],
+  mules: [44.95, 59.95],
+  jeans: [49.95, 64.95],
+  jumpsuit: [49.95, 64.95],
+  heels: [49.95, 64.95],
+  loafers: [49.95, 64.95],
+  vest: [49.95, 64.95],
+  dress: [49.95, 69.95],
+  sneakers: [49.95, 69.95],
+  set: [54.95, 74.95],
+  blazer: [59.95, 79.95],
+  boots: [59.95, 79.95],
+  jacket: [69.95, 89.95],
+  coat: [79.95, 99.95],
+  suit: [79.95, 99.95],
+  scarf: [24.95, 34.95],
+  belt: [24.95, 34.95],
+  hat: [24.95, 34.95],
+  bra: [24.95, 39.95],
+};
+const DEFAULT_BAND = [44.95, 64.95];
+
+function bandFor(keyword) {
+  try {
+    const a = analyzeKeyword(String(keyword || "").toLowerCase());
+    if (a && a.typeId && PRICE_BANDS[a.typeId]) return { band: PRICE_BANDS[a.typeId], type: a.typeId };
+  } catch {}
+  return { band: DEFAULT_BAND, type: "onbekend" };
 }
 
 /**
@@ -64,9 +120,15 @@ export async function POST(req) {
     return { name };
   });
 
+  const { band, type: priceType } = bandFor(s.keyword);
+  let clampedCount = 0;
   const variants = (product.variants || []).map((v) => {
-    // 1. Omrekenen naar store-valuta  2. ALTIJD afronden op .95 (naar beneden)
-    const price = roundTo95(Number(v.price || 0) * rate);
+    // 1. Omrekenen  2. Op het rooster  3. Binnen de band van de productsoort
+    const raw = roundTo95(Number(v.price || 0) * rate);
+    let price = raw;
+    if (price < band[0]) price = band[0];
+    if (price > band[1]) price = band[1];
+    if (price !== raw) clampedCount++;
     // 3. Doorstreepprijs berekend vanaf de AFGERONDE prijs → bij 50% exact het dubbele
     let compareAt = null;
     if (discountPct > 0 && price > 0) {
@@ -291,6 +353,8 @@ export async function POST(req) {
       sourcePrice: srcPrice ? srcPrice.toFixed(2) : "",
       rate: rate ? Number(rate).toFixed(4) : "1",
       finalPrice: variants.length ? variants[0].price : "",
+      band: `${priceType} $${band[0]}–$${band[1]}`,
+      clamped: clampedCount,
     },
     product: {
       id: created.id,
