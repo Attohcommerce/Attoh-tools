@@ -11,7 +11,7 @@ export const maxDuration = 60;
 // daarom de HELE catalogus en sorteren daarna — de eerste N die je
 // terugkrijgt zijn dus altijd de best mogelijke N.
 export async function POST(req) {
-  const { store, keyword, gender, need, excludeLinks, maxPerStore, minImages } =
+  const { store, keyword, gender, need, excludeLinks, maxPerStore } =
     await req.json().catch(() => ({}));
   if (!store || !keyword) {
     return NextResponse.json({ error: "store en keyword zijn verplicht" }, { status: 400 });
@@ -37,24 +37,18 @@ export async function POST(req) {
     });
   }
 
-  // Een productpagina met één foto verkoopt niet en valt in Merchant Center
-  // meteen op. Standaard eisen we er minstens twee.
-  const MIN_IMAGES = Number.isFinite(Number(minImages)) ? Number(minImages) : 2;
-
-  const skipped = { soldOut: 0, tooFewImages: 0, gender: 0, foreign: 0 };
+  const skipped = { soldOut: 0, gender: 0, foreign: 0 };
   const scored = [];
   for (let i = 0; i < catalog.products.length; i++) {
     const p = catalog.products[i];
     const link = p.url.toLowerCase().replace(/\/$/, "");
     if (exclude.has(link)) continue;
 
-    // Uitverkocht → nooit importeren. Te weinig foto's → nooit importeren.
+    // Uitverkocht → nooit importeren. (Foto-aantal is bewust GEEN eis:
+    // producten met één foto zijn gewoon toegestaan — een magere fotoset
+    // weegt alleen mee in de rangorde, verderop.)
     if (p.available === false) {
       skipped.soldOut++;
-      continue;
-    }
-    if ((p.imageCount || (p.images || []).length) < MIN_IMAGES) {
-      skipped.tooFewImages++;
       continue;
     }
 

@@ -125,16 +125,41 @@ export async function POST(req) {
       }
       const max = Math.max(5, Math.min(60, Number(maxStores) || 25));
 
-      /* Deterministische basis-ranking als vangnet én als voorwerk:
-         eigen markt eerst (hoogste bezoek = bewezen winnaars), dan
-         Engelstalige markten, dan vertaal-markten — telkens op bezoek. */
+      /* Deterministische basis-ranking als vangnet én als voorwerk — met een
+         HARDE marktmix. Zonder quota vulde de eigen markt (48 USA-stores bij
+         max 25) alle plekken en kwam het buitenland er nooit in, terwijl
+         juist dáár de producten zitten die de eigen markt nog niet verkoopt:
+         ±60% eigen markt, ±25% andere Engelstalige markten, ±15%
+         vertaal-markten (NL/BE, FR, PL, DE) — telkens de hoogste bezoekers. */
       const EN = new Set(["USA", "UK", "AUS", "CANADA"]);
-      const rank = (s) => {
-        const m = String(s.market || "");
-        const same = m.includes(targetMarket) ? 0 : EN.has(m.split("+")[0]) ? 1 : 2;
-        return same * 1e9 - (s.visits || 0);
-      };
-      const baseline = [...stores].sort((a, b) => rank(a) - rank(b)).slice(0, max)
+      const inMarket = (s, m) => String(s.market || "").split("+").includes(m);
+      const byVisits = (a, b) => (b.visits || 0) - (a.visits || 0);
+      const same = stores.filter((s) => inMarket(s, targetMarket)).sort(byVisits);
+      const enOther = stores
+        .filter((s) => !inMarket(s, targetMarket) && EN.has(String(s.market).split("+")[0]))
+        .sort(byVisits);
+      const foreign = stores
+        .filter((s) => !EN.has(String(s.market).split("+")[0]) && s.market !== "?")
+        .sort(byVisits);
+      const nSame = Math.round(max * 0.6);
+      const nEn = Math.round(max * 0.25);
+      const mix = [
+        ...same.slice(0, nSame),
+        ...enOther.slice(0, nEn),
+        ...foreign.slice(0, Math.max(0, max - Math.min(nSame, same.length) - Math.min(nEn, enOther.length))),
+      ];
+      // ondervulling van een groep → aanvullen met de beste rest
+      if (mix.length < max) {
+        const chosen = new Set(mix.map((s) => s.domain));
+        for (const s of [...same, ...enOther, ...foreign]) {
+          if (mix.length >= max) break;
+          if (!chosen.has(s.domain)) {
+            chosen.add(s.domain);
+            mix.push(s);
+          }
+        }
+      }
+      const baseline = mix.slice(0, max)
         .map((s) => ({ domain: s.domain, market: s.market, visits: s.visits, reason: "ranking op bezoek", lang: MARKET_LANG[String(s.market).split("+")[0]] || "en" }));
 
       try {

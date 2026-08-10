@@ -649,7 +649,7 @@ export default function ScraperPage() {
               let foundThisStore = 0;
               let scanned = 0;
               let bestSelling = false;
-              const skips = { soldOut: 0, tooFewImages: 0, gender: 0, foreign: 0 };
+              const skips = { soldOut: 0, gender: 0, foreign: 0 };
               /* Buitenlandse store? Dan éérst de vertaalde termen ("laarzen",
                  "robe de cocktail"), daarna alsnog de Engelse — veel
                  NL/PL-shops titelen deels in het Engels. */
@@ -680,7 +680,10 @@ export default function ScraperPage() {
                   let found = data.matches || [];
                   scanned = Math.max(scanned, data.total || 0);
                   bestSelling = bestSelling || !!data.usedBestSelling;
-                  if (data.skipped) for (const key of Object.keys(skips)) skips[key] += data.skipped[key] || 0;
+                  // Elke zoekterm scant dezelfde catalogus en telt dezelfde
+                  // overgeslagen producten opnieuw — max i.p.v. som, anders
+                  // staat er "964 te weinig foto's" waar het er 241 zijn.
+                  if (data.skipped) for (const key of Object.keys(skips)) skips[key] = Math.max(skips[key], data.skipped[key] || 0);
 
                   // FOTO-CONTROLE OP ELK PRODUCT — niet alleen bij
                   // via-alternatieven. De tekstmatcher kan een keyword te ruim
@@ -803,10 +806,9 @@ export default function ScraperPage() {
                 ok: true,
                 text:
                   `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bestSelling ? ", best-selling volgorde" : ", ⚠ GEEN best-selling volgorde — catalogusvolgorde gebruikt"}) — nog ${Math.max(needed, 0)} nodig` +
-                  (skips.soldOut || skips.tooFewImages || skips.gender || skips.foreign
+                  (skips.soldOut || skips.gender || skips.foreign
                     ? ` · overgeslagen: ${[
                         skips.soldOut ? `${skips.soldOut} uitverkocht` : "",
-                        skips.tooFewImages ? `${skips.tooFewImages} te weinig foto's` : "",
                         skips.gender ? `${skips.gender} verkeerd geslacht` : "",
                         skips.foreign ? `${skips.foreign} anderstalig zonder titelbewijs` : "",
                       ].filter(Boolean).join(" · ")}`
@@ -1218,9 +1220,10 @@ export default function ScraperPage() {
                     </button>
                   </div>
                   <div className="hint">
-                    AI rangschikt op maandbezoek binnen jouw markt, vult aan met sterke buitenlandse
-                    stores (keywords worden bij de run automatisch vertaald) en respecteert opmerkingen
-                    als "alleen schoentjes". De keuze vervangt de lijst hieronder.
+                    Doelmarkt = de markt van jóuw store — het is een prioriteit, geen filter. De
+                    selectie is altijd een mix: ±60% eigen markt, ±25% andere Engelstalige markten en
+                    ±15% vertaal-markten (NL/FR/PL — keywords worden bij de run automatisch vertaald).
+                    Opmerkingen als "alleen schoentjes" wegen mee. De keuze vervangt de lijst hieronder.
                   </div>
                 </>
               )}
