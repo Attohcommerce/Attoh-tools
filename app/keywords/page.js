@@ -97,6 +97,14 @@ const DEFAULT_ORG_SHEET =
 
 export default function KeywordsPage() {
   const [files, setFiles] = useState([]);
+  /* Bron voor de keyword-stats: verse CSV's uit Keyword Planner, of een
+     tabblad dat er al staat. Bij een bestaand tabblad hoeft er niets
+     samengevoegd of geüpload te worden — stap 2 en 3 draaien toch al
+     server-side op sheet + bladnaam. */
+  const [srcMode, setSrcMode] = useState("csv"); // "csv" | "sheet"
+  const [srcTab, setSrcTab] = useState("");
+  const [srcBusy, setSrcBusy] = useState(false);
+  const [srcReady, setSrcReady] = useState(false);
   const [sheetLink, setSheetLink] = useState(DEFAULT_RESEARCH_SHEET);
   const [tabName, setTabName] = useState("");
   const [running, setRunning] = useState(false);
@@ -237,6 +245,54 @@ export default function KeywordsPage() {
     return data;
   }
 
+  /* ----- bestaand tabblad als bron ----- */
+
+  // Leest alleen de kop van het tabblad (paar rijen) om te controleren of het
+  // écht een keyword-stats-lijst is. De volledige lijst blijft in de sheet:
+  // de merken-check en de verdeling lezen hem daar zelf, server-side.
+  async function useExistingTab() {
+    const tab = srcTab.trim();
+    if (!tab || !sheetLink.trim() || srcBusy) return;
+    setSrcBusy(true);
+    setSrcReady(false);
+    setLogs([]);
+    try {
+      pushLog({ strong: true, text: `— Bestaand tabblad controleren: "${tab}"` });
+      const data = await api("/api/sheets", {
+        action: "read",
+        sheetId: sheetLink.trim(),
+        range: `'${tab}'!A1:Z3`,
+      });
+      const values = data.values || [];
+      if (!values.length) throw new Error(`Tabblad "${tab}" is leeg of bestaat niet`);
+      const header = (values[0] || []).map((h) => String(h || "").trim());
+      if (!/^keyword$/i.test(header[0] || "")) {
+        throw new Error(`Kolom A van "${tab}" moet "Keyword" heten, niet "${header[0] || "(leeg)"}"`);
+      }
+      const avgIdx = header.findIndex((h) => /^avg/i.test(h));
+      if (avgIdx === -1) throw new Error(`Geen kolom "Avg. monthly search" gevonden in "${tab}"`);
+      const monthNames = header.slice(avgIdx + 1).filter(Boolean);
+      if (monthNames.length < 4) {
+        throw new Error(`Maar ${monthNames.length} maandkolommen gevonden — er zijn er minstens 4 nodig`);
+      }
+      pushLog({ ok: true, text: `Kolommen herkend: ${monthNames.join(" · ")}` });
+      const sample = values[1] ? String(values[1][0] || "") : "";
+      if (sample) pushLog({ muted: true, text: `Eerste keyword: "${sample}"` });
+
+      // Dit tabblad is vanaf nu de bron voor de merken-check en de verdeling.
+      setTabName(tab);
+      setCleanTab(tab);
+      setSrcReady(true);
+      pushLog({ info: true, text: `Klaar — "${tab}" staat klaar voor de merken-check en de verdeling. Samenvoegen is niet nodig.` });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+    } catch (e) {
+      pushLog({ err: true, text: String(e.message || e) });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+    } finally {
+      setSrcBusy(false);
+    }
+  }
+
   /* ----- stap 1: samenvoegen & opmaken ----- */
 
   async function start() {
@@ -370,7 +426,7 @@ export default function KeywordsPage() {
 
   /* ----- stap 3: Collection & Product organization ----- */
 
-  const step1Done = Boolean(doneUrl) || activeId !== null;
+  const step1Done = Boolean(doneUrl) || activeId !== null || srcReady;
 
   function toggleMonth(key) {
     setVMonths((prev) => {
@@ -531,6 +587,48 @@ export default function KeywordsPage() {
           <div>
             {activeId === null && (
               <div className="card">
+                <div className="srctabs">
+                  <button
+                    className={"srctab" + (srcMode === "csv" ? " on" : "")}
+                    onClick={() => { setSrcMode("csv"); setSrcReady(false); }}
+                  >
+                    CSV-bestanden
+                  </button>
+                  <button
+                    className={"srctab" + (srcMode === "sheet" ? " on" : "")}
+                    onClick={() => { setSrcMode("sheet"); setFiles([]); }}
+                  >
+                    Bestaand tabblad
+                  </button>
+                </div>
+
+                {srcMode === "sheet" ? (
+                  <>
+                    <h2>Bestaande keyword-stats <span className="opt">(al in de sheet)</span></h2>
+                    <div className="field-label">Exacte bladnaam</div>
+                    <input
+                      type="text"
+                      placeholder="bv. 9 augustus latest test"
+                      value={srcTab}
+                      onChange={(e) => { setSrcTab(e.target.value); setSrcReady(false); }}
+                    />
+                    <div className="hint">
+                      De sheet-link hieronder wordt gebruikt. Hij controleert of het tabblad bestaat
+                      en of de kolommen kloppen (Keyword · Avg. monthly search · maanden) en gebruikt
+                      het daarna direct — samenvoegen en uploaden slaat hij over.
+                    </div>
+                    <div style={{ marginTop: 12 }}>
+                      <button
+                        className="btn"
+                        onClick={useExistingTab}
+                        disabled={srcBusy || !srcTab.trim() || !sheetLink.trim()}
+                      >
+                        {srcBusy ? "Controleren…" : srcReady ? "✓ Tabblad in gebruik" : "⌕ Tabblad inlezen"}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
                 <h2>CSV-bestanden <span className="opt">(1–10, uit Keyword Planner)</span></h2>
                 <input
                   ref={fileInput}
@@ -558,6 +656,8 @@ export default function KeywordsPage() {
                     <div className="hint">Samen {totalRows} rijen — dubbelingen worden samengevoegd.</div>
                   </div>
                 )}
+                  </>
+                )}
               </div>
             )}
 
@@ -571,7 +671,9 @@ export default function KeywordsPage() {
                 onChange={(e) => setSheetLink(e.target.value)}
                 disabled={activeId !== null}
               />
-              <div className="field-label">{activeId === null ? "Naam nieuw tabblad" : "Tabblad"}</div>
+              <div className="field-label">
+                {activeId !== null ? "Tabblad" : srcMode === "sheet" ? "Tabblad (uit het blok hierboven)" : "Naam nieuw tabblad"}
+              </div>
               <input
                 type="text"
                 placeholder="bv. UK 4 augustus"
@@ -580,10 +682,14 @@ export default function KeywordsPage() {
                   setTabName(e.target.value);
                   if (activeId === null) setCleanTab(e.target.value);
                 }}
-                disabled={activeId !== null}
+                disabled={activeId !== null || srcMode === "sheet"}
               />
               {activeId === null ? (
-                <div className="hint">Elke run maakt een nieuw tabblad — niets wordt overschreven.</div>
+                <div className="hint">
+                  {srcMode === "sheet"
+                    ? "Er wordt niets aangemaakt of overschreven — de tool leest dit bestaande tabblad."
+                    : "Elke run maakt een nieuw tabblad — niets wordt overschreven."}
+                </div>
               ) : (
                 doneUrl && (
                   <div style={{ marginTop: 12 }}>
@@ -595,7 +701,7 @@ export default function KeywordsPage() {
               )}
             </div>
 
-            {activeId === null && (
+            {activeId === null && srcMode === "csv" && (
               <div style={{ marginTop: 16 }}>
                 <button className="btn" onClick={start} disabled={!canStart}>
                   {running ? "Bezig…" : "⌕ Samenvoegen & opmaken"}

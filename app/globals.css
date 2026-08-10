@@ -3102,3 +3102,37 @@ select:focus {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Bron-schakelaar in de Keyword-tool (CSV / bestaand tabblad) ---------- */
+.srctabs {
+  display: flex;
+  gap: 6px;
+  margin: -4px 0 16px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.srctab {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  white-space: nowrap;
+}
+.srctab:hover {
+  color: var(--ink);
+}
+.srctab.on {
+  background: var(--accent-dim);
+  color: var(--accent-hi);
+  box-shadow: 0 0 18px -10px var(--accent-glow);
+}
