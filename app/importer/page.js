@@ -299,21 +299,15 @@ export default function ImporterPage() {
     }
 
     let okCount = 0;
-    for (let i = 0; i < urls.length; i++) {
-      // Stop: direct afbreken vóór het volgende product (lopend product maakt af).
-      if (stopRef.current) {
-        pushLog({ info: true, text: `Gestopt door gebruiker na ${i} van ${urls.length} producten.` });
-        break;
-      }
-      // Pauze: wachten tot hervat (of stop).
-      while (pauseRef.current && !stopRef.current) {
-        setStep(`Gepauzeerd — ${i}/${urls.length} gedaan. Klik Hervat om door te gaan.`);
-        await new Promise((r) => setTimeout(r, 400));
-      }
-      if (stopRef.current) {
-        pushLog({ info: true, text: `Gestopt door gebruiker na ${i} van ${urls.length} producten.` });
-        break;
-      }
+    let finished = 0;
+
+    /* WORKER-POOL: 6 producten tegelijk door de keten. Scrapen, AI-schrijven
+       en uploaden van verschillende producten raken elkaar nergens, dus
+       na-elkaar was pure wachttijd (30-60 sec per product = uren per run).
+       Zelfde stappen, zelfde checks, zelfde logs — alleen tegelijk. */
+    const IMPORT_CONCURRENCY = 6;
+
+    const processOne = async (i) => {
       // Sheet-rijen zijn objecten {url, keyword, collection}; geplakte URL's zijn strings.
       const entry = urls[i];
       const url = typeof entry === "string" ? entry : entry.url;
@@ -476,7 +470,30 @@ export default function ImporterPage() {
         pushLog({ ok: false, text: `${url} — ${e.message}` });
         window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
       }
-      setProgress({ done: i + 1, total: urls.length });
+      finished++;
+      setProgress({ done: finished, total: urls.length });
+      setStep(`${finished}/${urls.length} klaar — tot ${IMPORT_CONCURRENCY} producten tegelijk in de keten.`);
+    };
+
+    let cursor = 0;
+    const worker = async () => {
+      for (;;) {
+        if (stopRef.current) return;
+        while (pauseRef.current && !stopRef.current) {
+          setStep(`Gepauzeerd — ${finished}/${urls.length} gedaan. Klik Hervat om door te gaan.`);
+          await new Promise((r) => setTimeout(r, 400));
+        }
+        if (stopRef.current) return;
+        const i = cursor++;
+        if (i >= urls.length) return;
+        await processOne(i);
+      }
+    };
+    await Promise.all(
+      Array.from({ length: Math.min(IMPORT_CONCURRENCY, urls.length) }, () => worker())
+    );
+    if (stopRef.current) {
+      pushLog({ info: true, text: `Gestopt door gebruiker na ${finished} van ${urls.length} producten.` });
     }
     pushLog({ info: true, text: `Klaar: ${okCount}/${urls.length} producten geïmporteerd als ${status === "active" ? "Active" : "Draft"}.` });
     if (okCount > 0) window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
