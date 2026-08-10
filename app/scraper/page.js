@@ -80,6 +80,18 @@ function broadTermFor(keyword, alts) {
   return null;
 }
 
+/* Competitor-sheet: het dashboard met alle concurrenten per markt
+   (naam, land, domein, productaantal, maandbezoek, opmerkingen). De tool
+   leest hem in, ontdubbelt, en laat AI de beste selectie kiezen voor de
+   doelmarkt — hoogste maandbezoek eerst, aangevuld met buitenland-stores
+   die met vertaalde keywords uniek aanbod leveren. */
+const DEFAULT_COMP_SHEET =
+  "https://docs.google.com/spreadsheets/d/1oZ_F0JktM0uuICiZIAO_ZaVCbentEvUpiDjEtivsKe4/edit";
+const LS_COMP_SHEET = "sa_comp_sheet";
+const LS_COMP_TAB = "sa_comp_tab";
+const LS_COMP_META = "sa_comp_meta_v1"; // domein → {market, visits, lang, reason}
+const LS_TRANS = "sa_kw_trans_v1"; // taal → {keyword: [zoektermen]}
+
 // Vaste geheugen-sheet — staat altijd automatisch ingevuld, ook na
 // Reset session, nieuwe logins of een andere browser.
 const DEFAULT_MEM_SHEET =
@@ -136,6 +148,14 @@ function storeOf(link) {
 export default function ScraperPage() {
   const [storeInput, setStoreInput] = useState("");
   const [storeList, setStoreList] = useState([]);
+  // Competitor-sheet (slimme selectie)
+  const [compSheet, setCompSheet] = useState(DEFAULT_COMP_SHEET);
+  const [compTab, setCompTab] = useState("");
+  const [compStores, setCompStores] = useState([]); // geparste sheet-rijen
+  const [compMeta, setCompMeta] = useState({}); // domein → meta (ook tijdens de run)
+  const [compMarket, setCompMarket] = useState("USA");
+  const [compMax, setCompMax] = useState("25");
+  const [compBusy, setCompBusy] = useState("");
   const [kw, setKw] = useState({ vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] });
   const [workSheet, setWorkSheet] = useState("");
   const [memSheet, setMemSheet] = useState("");
@@ -177,6 +197,9 @@ export default function ScraperPage() {
     setRunTab(load(LS.runTab, ""));
     setNewTabName(load(LS.newTab, ""));
     setOrgSheet(load(LS.orgSheet, "") || DEFAULT_ORG_SHEET);
+    setCompSheet(load(LS_COMP_SHEET, "") || DEFAULT_COMP_SHEET);
+    setCompTab(load(LS_COMP_TAB, ""));
+    setCompMeta(load(LS_COMP_META, {}));
     setOrgTab(load(LS.orgTab, "Collection & Product organization"));
     fetch("/api/sheets", {
       method: "POST",
@@ -486,6 +509,40 @@ export default function ScraperPage() {
         }
       }
 
+      /* ---- Buitenlandse competitors: keywords vooraf vertalen ----
+         De AI-selectie kan NL/FR/PL-stores bevatten; die winkels titelen in
+         hun eigen taal. Per taal één batch-vertaling (gecachet), zodat de
+         run zelf nergens hoeft te wachten. */
+      const transCache = load(LS_TRANS, {});
+      const foreignLangs = [
+        ...new Set(
+          stores
+            .map((d) => (compMeta[d] && compMeta[d].lang) || "en")
+            .filter((l) => l && l !== "en")
+        ),
+      ];
+      const LANG_MARKET = { nl: "NL/BE", fr: "FR", pl: "PL", de: "DE" };
+      for (const lang of foreignLangs) {
+        const missing = allKwItems.map((x) => x.kw).filter((k) => !(transCache[lang] || {})[k]);
+        if (!missing.length) continue;
+        try {
+          pushLog({ muted: true, text: `Keywords vertalen naar ${lang.toUpperCase()} voor buitenlandse stores…` });
+          const res = await fetch("/api/competitors", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "translate", keywords: missing, market: LANG_MARKET[lang] || lang }),
+          });
+          const data = await res.json();
+          if (res.ok && data.map) {
+            transCache[lang] = { ...(transCache[lang] || {}), ...data.map };
+            save(LS_TRANS, transCache);
+            pushLog({ ok: true, text: `Vertalingen klaar (${lang.toUpperCase()}) — bv. ${Object.entries(data.map).slice(0, 2).map(([k, v]) => `"${k}" → "${v[0]}"`).join(" · ")}` });
+          }
+        } catch (e) {
+          pushLog({ warn: true, text: `Vertalen naar ${lang} mislukt (${e.message}) — die stores zoeken dan met de Engelse term.` });
+        }
+      }
+
       let grandTotal = 0;
       const hardKeywords = []; // bleef op 0 ondanks alles
       for (const [gender, rows] of groups) {
@@ -587,7 +644,15 @@ export default function ScraperPage() {
               let scanned = 0;
               let bestSelling = false;
               const skips = { soldOut: 0, tooFewImages: 0, gender: 0, foreign: 0 };
-              for (const term of terms) {
+              /* Buitenlandse store? Dan éérst de vertaalde termen ("laarzen",
+                 "robe de cocktail"), daarna alsnog de Engelse — veel
+                 NL/PL-shops titelen deels in het Engels. */
+              const storeLang = (compMeta[store] && compMeta[store].lang) || "en";
+              const storeTerms =
+                storeLang !== "en"
+                  ? [...new Set([...((transCache[storeLang] || {})[kwLower] || []), ...terms])]
+                  : terms;
+              for (const term of storeTerms) {
                 if (needed <= 0) break;
                 try {
                   const res = await fetch("/api/scraper-search", {
@@ -890,6 +955,89 @@ export default function ScraperPage() {
     return null;
   }
 
+  /* ---------- Competitor-sheet: inlezen + slimme selectie ---------- */
+
+  async function compParse() {
+    if (compBusy || !compSheet.trim() || !compTab.trim()) return;
+    setCompBusy("parse");
+    try {
+      pushLog({ strong: true, text: `— Competitor-sheet inlezen: "${compTab.trim()}"` });
+      const res = await fetch("/api/competitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "parse", sheetId: compSheet.trim(), tab: compTab.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      setCompStores(data.stores);
+      save(LS_COMP_SHEET, compSheet.trim());
+      save(LS_COMP_TAB, compTab.trim());
+      const perMarket = Object.entries(data.perMarket || {})
+        .sort((a, b) => b[1] - a[1])
+        .map(([m, n]) => `${m}: ${n}`)
+        .join(" · ");
+      pushLog({ ok: true, text: `${data.stores.length} unieke stores herkend (duplicaten samengevoegd) — ${perMarket}` });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+    } catch (e) {
+      pushLog({ err: true, text: "Sheet inlezen mislukt: " + (e.message || e) });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+    } finally {
+      setCompBusy("");
+    }
+  }
+
+  async function compSelect() {
+    if (compBusy || !compStores.length) return;
+    setCompBusy("select");
+    try {
+      const kws = [
+        ...kw.vrouw.map((r) => r.k).filter(Boolean),
+        ...kw.man.map((r) => r.k).filter(Boolean),
+      ];
+      pushLog({ strong: true, text: `— AI kiest de beste competitors voor markt ${compMarket} (max ${compMax})` });
+      const res = await fetch("/api/competitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "select",
+          stores: compStores,
+          targetMarket: compMarket,
+          keywords: kws,
+          maxStores: Number(compMax) || 25,
+          totalProducts: kw.vrouw.concat(kw.man).reduce((a, r) => a + (Number(r.n) || 0), 0),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      const picks = data.picks || [];
+      if (!picks.length) throw new Error("AI koos geen enkele store");
+
+      // Zoekvolgorde = deze volgorde (beste eerst); meta bewaren voor de run
+      const meta = {};
+      for (const p of picks) meta[p.domain] = { market: p.market, visits: p.visits, lang: p.lang || "en", reason: p.reason || "" };
+      setCompMeta(meta);
+      save(LS_COMP_META, meta);
+      setStoreList(picks.map((p) => p.domain));
+      save(LS.stores, picks.map((p) => p.domain));
+
+      pushLog({ ok: true, text: `${picks.length} stores gekozen${data.ai ? " (AI)" : " (ranking op bezoek — AI onbereikbaar)"}. Zoekvolgorde = beste eerst.` });
+      const foreign = picks.filter((p) => p.lang && p.lang !== "en");
+      for (const p of picks.slice(0, 8)) {
+        pushLog({ muted: true, text: `${p.domain} — ${p.market} · ${p.visits ? p.visits.toLocaleString("nl-NL") + "/mnd" : "?"}${p.reason ? ` · ${p.reason}` : ""}` });
+      }
+      if (picks.length > 8) pushLog({ muted: true, text: `… en ${picks.length - 8} meer (zie de lijst links).` });
+      if (foreign.length) {
+        pushLog({ muted: true, text: `${foreign.length} buitenlandse stores — keywords worden bij de run automatisch vertaald (${[...new Set(foreign.map((p) => p.lang))].join(", ")}).` });
+      }
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+    } catch (e) {
+      pushLog({ err: true, text: "Selectie mislukt: " + (e.message || e) });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+    } finally {
+      setCompBusy("");
+    }
+  }
+
   // ---------- Checks ----------
   async function runGenderCheck(forceTab) {
     if (!workSheet.trim() || checkBusy) return;
@@ -1017,6 +1165,62 @@ export default function ScraperPage() {
           {/* -------- Linker kolom -------- */}
           <div>
             <div className="card">
+              <h2>Competitor-sheet <span className="opt">(slimme selectie)</span></h2>
+              <div className="field-label">Google Sheet-link</div>
+              <input
+                type="text"
+                placeholder="https://docs.google.com/spreadsheets/d/…"
+                value={compSheet}
+                onChange={(e) => setCompSheet(e.target.value)}
+              />
+              <div className="field-label">Exacte bladnaam</div>
+              <input
+                type="text"
+                placeholder="bv. Google competitors"
+                value={compTab}
+                onChange={(e) => setCompTab(e.target.value)}
+              />
+              <div style={{ marginTop: 10 }}>
+                <button className="btn-ghost btn-small" onClick={compParse} disabled={!!compBusy || !compSheet.trim() || !compTab.trim()}>
+                  {compBusy === "parse" ? "Inlezen…" : "⌕ Sheet inlezen"}
+                </button>
+                {compStores.length > 0 && (
+                  <span className="muted small" style={{ marginLeft: 10 }}>
+                    {compStores.length} stores herkend
+                  </span>
+                )}
+              </div>
+              {compStores.length > 0 && (
+                <>
+                  <div className="kw-row" style={{ gridTemplateColumns: "1fr 90px", marginTop: 12 }}>
+                    <div>
+                      <div className="field-label">Doelmarkt van jouw store</div>
+                      <select value={compMarket} onChange={(e) => setCompMarket(e.target.value)}>
+                        {["USA", "UK", "AUS", "CANADA", "NL/BE", "FR", "PL"].map((m) => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <div className="field-label">Max stores</div>
+                      <input type="number" value={compMax} onChange={(e) => setCompMax(e.target.value)} />
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 10 }}>
+                    <button className="btn" onClick={compSelect} disabled={!!compBusy}>
+                      {compBusy === "select" ? "AI kiest…" : "✨ Beste competitors kiezen"}
+                    </button>
+                  </div>
+                  <div className="hint">
+                    AI rangschikt op maandbezoek binnen jouw markt, vult aan met sterke buitenlandse
+                    stores (keywords worden bij de run automatisch vertaald) en respecteert opmerkingen
+                    als "alleen schoentjes". De keuze vervangt de lijst hieronder.
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="card">
               <h2>Competitor stores</h2>
               <div className="kw-row" style={{ gridTemplateColumns: "1fr 36px", marginTop: 0 }}>
                 <input
@@ -1045,6 +1249,13 @@ export default function ScraperPage() {
                 <div className="kw-row" key={s} style={{ gridTemplateColumns: "1fr 24px" }}>
                   <span className="small" style={{ wordBreak: "break-all" }}>
                     {s}
+                    {compMeta[s] && (
+                      <span className="muted">
+                        {" "}· {compMeta[s].market}
+                        {compMeta[s].visits ? ` · ${Math.round(compMeta[s].visits / 1000)}k/mnd` : ""}
+                        {compMeta[s].lang && compMeta[s].lang !== "en" ? ` · ${compMeta[s].lang.toUpperCase()}` : ""}
+                      </span>
+                    )}
                   </span>
                   <button className="kw-x" onClick={() => removeStoreItem(s)}>
                     ×
