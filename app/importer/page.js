@@ -409,6 +409,9 @@ export default function ImporterPage() {
         const iData = await iRes.json();
         if (!iRes.ok) throw new Error(iData.error || "upload mislukt");
         okCount++;
+        if (iData.categoryWarn) {
+          pushLog({ ok: false, text: `${nr} · CATEGORIE NIET GEZET: ${iData.categoryWarn}` });
+        }
         if (iData.pricing && iData.pricing.clamped) {
           pushLog({
             info: true,

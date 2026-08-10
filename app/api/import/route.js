@@ -361,16 +361,24 @@ export async function POST(req) {
   /* Productcategorie automatisch zetten — geen "Suggested"-klikwerk meer.
      Best effort: een mislukte categorie houdt de import nooit tegen. */
   let categorySet = "";
+  let categoryWarn = "";
   try {
     const taxTerm = TYPE_TAXONOMY[priceType];
     if (taxTerm) {
       const node = await findTaxonomyCategory(store, taxTerm);
       if (node) {
-        const setRes = await setProductCategory(store, created.id, node.id);
+        const setRes = await setProductCategory(store, created.id, node.id, taxTerm);
         if (setRes.ok) categorySet = setRes.fullName || node.fullName;
+        else categoryWarn = setRes.error || "zetten mislukt";
+      } else {
+        categoryWarn = `geen exacte taxonomie-match voor "${taxTerm}" — categorie leeg gelaten (handmatig zetten)`;
       }
+    } else {
+      categoryWarn = `onbekend producttype "${priceType}" — categorie leeg gelaten`;
     }
-  } catch {}
+  } catch (e) {
+    categoryWarn = String(e.message || e);
+  }
 
   let previewUrl = null;
   try {
@@ -380,6 +388,7 @@ export async function POST(req) {
   return NextResponse.json({
     ok: true,
     category: categorySet,
+    categoryWarn,
     pricing: {
       originCountry: CUR_LAND[srcCur] || srcCur,
       originCurrency: srcCur,
