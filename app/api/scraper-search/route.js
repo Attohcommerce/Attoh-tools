@@ -37,20 +37,16 @@ export async function POST(req) {
     });
   }
 
-  const skipped = { soldOut: 0, gender: 0, foreign: 0 };
+  const skipped = { gender: 0, foreign: 0 };
   const scored = [];
   for (let i = 0; i < catalog.products.length; i++) {
     const p = catalog.products[i];
     const link = p.url.toLowerCase().replace(/\/$/, "");
     if (exclude.has(link)) continue;
 
-    // Uitverkocht → nooit importeren. (Foto-aantal is bewust GEEN eis:
-    // producten met één foto zijn gewoon toegestaan — een magere fotoset
-    // weegt alleen mee in de rangorde, verderop.)
-    if (p.available === false) {
-      skipped.soldOut++;
-      continue;
-    }
+    // Bewust GEEN filters op foto-aantal of voorraad: de voorraad van de
+    // concurrent zegt niets over de leverancier — uitverkocht bij de
+    // concurrent is eerder een bestseller-signaal dan een bezwaar.
 
     const m = matchProduct(analysis, p);
     if (!m) continue;

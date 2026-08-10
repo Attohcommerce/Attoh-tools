@@ -599,6 +599,10 @@ export default function ScraperPage() {
           let altsFull = false;
           let broadActive = false;
           let storesTried = 0;
+          // Elke store×term-combinatie maar één keer zoeken. De ladder
+          // draaide bij moeilijke keywords dezelfde combinaties opnieuw
+          // (ronde 2 herhaalde álle termen van ronde 1) — puur wachttijd.
+          const triedPairs = new Set();
 
           const expandAlts = (reason) => {
             if (altsFull) return;
@@ -649,7 +653,7 @@ export default function ScraperPage() {
               let foundThisStore = 0;
               let scanned = 0;
               let bestSelling = false;
-              const skips = { soldOut: 0, gender: 0, foreign: 0 };
+              const skips = { gender: 0, foreign: 0 };
               /* Buitenlandse store? Dan éérst de vertaalde termen ("laarzen",
                  "robe de cocktail"), daarna alsnog de Engelse — veel
                  NL/PL-shops titelen deels in het Engels. */
@@ -660,6 +664,9 @@ export default function ScraperPage() {
                   : terms;
               for (const term of storeTerms) {
                 if (needed <= 0) break;
+                const pairKey = `${store}|${term.toLowerCase()}`;
+                if (triedPairs.has(pairKey)) continue;
+                triedPairs.add(pairKey);
                 try {
                   const res = await fetch("/api/scraper-search", {
                     method: "POST",
@@ -692,9 +699,18 @@ export default function ScraperPage() {
                   // product-briefing van dit keyword. Alleen bij een kaal
                   // producttype zonder eisen (bv. "boots") slaan we het over,
                   // want daar valt weinig te verwarren.
-                  const needsCheck =
-                    !!kwBrief || term !== k || k.trim().split(/\s+/).length > 1;
-                  if (found.length && needsCheck) {
+                  /* Foto-AI alleen waar hij iets kan tegenhouden: producten
+                     met zwak bewijs (kleur/materiaal niet in de titel,
+                     match via omschrijving, anderstalig) en ALLES wat via
+                     een alternatieve zoekterm binnenkwam. Een titel-match
+                     op een direct keyword ("boots" in "Chelsea Boots")
+                     hoeft niet langs de foto — dat was de grootste
+                     tijdvreter van de hele run. */
+                  const toVerify =
+                    term !== k || isOccasion
+                      ? found
+                      : found.filter((m) => m.needsPhotoProof);
+                  if (toVerify.length) {
                     try {
                       const vres = await fetch("/api/verify-products", {
                         method: "POST",
@@ -703,8 +719,8 @@ export default function ScraperPage() {
                           keyword: k,
                           gender,
                           brief: kwBrief,
-                          items: found.map((m, fi) => ({
-                            index: fi,
+                          items: toVerify.map((m) => ({
+                            index: found.indexOf(m),
                             title: m.title,
                             image: m.image || null,
                             images: m.images || null,
@@ -806,9 +822,8 @@ export default function ScraperPage() {
                 ok: true,
                 text:
                   `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bestSelling ? ", best-selling volgorde" : ", ⚠ GEEN best-selling volgorde — catalogusvolgorde gebruikt"}) — nog ${Math.max(needed, 0)} nodig` +
-                  (skips.soldOut || skips.gender || skips.foreign
+                  (skips.gender || skips.foreign
                     ? ` · overgeslagen: ${[
-                        skips.soldOut ? `${skips.soldOut} uitverkocht` : "",
                         skips.gender ? `${skips.gender} verkeerd geslacht` : "",
                         skips.foreign ? `${skips.foreign} anderstalig zonder titelbewijs` : "",
                       ].filter(Boolean).join(" · ")}`
