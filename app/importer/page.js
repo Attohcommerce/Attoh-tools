@@ -301,6 +301,7 @@ export default function ImporterPage() {
     let okCount = 0;
     let finished = 0;
     let aiRunUsd = 0; // geschatte AI-kosten van deze run (komt uit de API-responses)
+    let vangnetCount = 0; // hoe vaak het grote model moest bijspringen (cijfer onder de lat)
 
     /* WORKER-POOL: 6 producten tegelijk door de keten. Scrapen, AI-schrijven
        en uploaden van verschillende producten raken elkaar nergens, dus
@@ -353,6 +354,8 @@ export default function ImporterPage() {
         if (!gRes.ok) throw new Error(gData.error || "AI-generatie mislukt");
         const genUsd = (gData.listing && gData.listing.ai && gData.listing.ai.usd) || 0;
         aiRunUsd += genUsd;
+        const escalated = !!(gData.listing && gData.listing.ai && gData.listing.ai.escalated);
+        if (escalated) vangnetCount++;
         if (gData.listing && gData.listing.warnings && gData.listing.warnings.length) {
           pushLog({
             ok: false,
@@ -436,7 +439,7 @@ export default function ImporterPage() {
           : "";
         const tplTxt = iData.templateSuffix ? ` · template: ${iData.templateSuffix}` : "";
         const catTxt = iData.category ? ` · categorie: ${iData.category.split(" > ").pop()}` : "";
-        const aiTxt = genUsd + brandUsd > 0 ? ` · AI ±$${(genUsd + brandUsd).toFixed(3)}` : "";
+        const aiTxt = genUsd + brandUsd > 0 ? ` · AI ±$${(genUsd + brandUsd).toFixed(3)}${escalated ? " (vangnet)" : ""}` : "";
         pushLog({
           ok: true,
           text: iData.product.title + linked + colTxt + tplTxt + catTxt + aiTxt,
@@ -501,7 +504,7 @@ export default function ImporterPage() {
     if (stopRef.current) {
       pushLog({ info: true, text: `Gestopt door gebruiker na ${finished} van ${urls.length} producten.` });
     }
-    const aiTotalTxt = aiRunUsd > 0 ? ` AI-kosten deze run: ±$${aiRunUsd.toFixed(2)}.` : "";
+    const aiTotalTxt = aiRunUsd > 0 ? ` AI-kosten deze run: ±$${aiRunUsd.toFixed(2)}${vangnetCount ? ` · vangnet (groot model) ${vangnetCount}x` : ""}.` : "";
     pushLog({ info: true, text: `Klaar: ${okCount}/${urls.length} producten geïmporteerd als ${status === "active" ? "Active" : "Draft"}.${aiTotalTxt}` });
     if (okCount > 0) window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     setStep("");
