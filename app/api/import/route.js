@@ -176,13 +176,16 @@ export async function POST(req) {
   let keptImages = allImages;
   let brandingRemoved = [];
   let imageCheckFailed = false;
+  let brandingAi = null; // token-/kostenverbruik van de branding-check (voor de log)
   try {
     const items = allImages
       .map((im, i) => ({ index: i, url: im && im.src }))
       .filter((x) => typeof x.url === "string" && /^https?:\/\//.test(x.url))
       .slice(0, 20);
     if (items.length) {
-      const flags = await flagBrandedImages(items);
+      const check = await flagBrandedImages(items);
+      brandingAi = check.ai;
+      const flags = check.remove;
       if (flags.length) {
         const bad = new Set(flags.map((f) => f.index));
         const kept = allImages.filter((_, i) => !bad.has(i));
@@ -415,6 +418,7 @@ export async function POST(req) {
     templateSuffix: payload.template_suffix || null,
     brandingRemoved: brandingRemoved.length,
     brandingReasons: [...new Set(brandingRemoved)],
+    brandingAi,
     imageCheckFailed,
   });
 }

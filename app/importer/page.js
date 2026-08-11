@@ -300,6 +300,7 @@ export default function ImporterPage() {
 
     let okCount = 0;
     let finished = 0;
+    let aiRunUsd = 0; // geschatte AI-kosten van deze run (komt uit de API-responses)
 
     /* WORKER-POOL: 6 producten tegelijk door de keten. Scrapen, AI-schrijven
        en uploaden van verschillende producten raken elkaar nergens, dus
@@ -350,6 +351,8 @@ export default function ImporterPage() {
         });
         const gData = await gRes.json();
         if (!gRes.ok) throw new Error(gData.error || "AI-generatie mislukt");
+        const genUsd = (gData.listing && gData.listing.ai && gData.listing.ai.usd) || 0;
+        aiRunUsd += genUsd;
         if (gData.listing && gData.listing.warnings && gData.listing.warnings.length) {
           pushLog({
             ok: false,
@@ -403,6 +406,8 @@ export default function ImporterPage() {
         const iData = await iRes.json();
         if (!iRes.ok) throw new Error(iData.error || "upload mislukt");
         okCount++;
+        const brandUsd = (iData.brandingAi && iData.brandingAi.usd) || 0;
+        aiRunUsd += brandUsd;
         if (iData.categoryWarn) {
           pushLog({ ok: false, text: `${nr} · CATEGORIE NIET GEZET: ${iData.categoryWarn}` });
         }
@@ -431,9 +436,10 @@ export default function ImporterPage() {
           : "";
         const tplTxt = iData.templateSuffix ? ` · template: ${iData.templateSuffix}` : "";
         const catTxt = iData.category ? ` · categorie: ${iData.category.split(" > ").pop()}` : "";
+        const aiTxt = genUsd + brandUsd > 0 ? ` · AI ±$${(genUsd + brandUsd).toFixed(3)}` : "";
         pushLog({
           ok: true,
-          text: iData.product.title + linked + colTxt + tplTxt + catTxt,
+          text: iData.product.title + linked + colTxt + tplTxt + catTxt + aiTxt,
           href: iData.product.adminUrl,
           score: gData.listing.score,
           scoreNotes: gData.listing.scoreNotes,
@@ -495,7 +501,8 @@ export default function ImporterPage() {
     if (stopRef.current) {
       pushLog({ info: true, text: `Gestopt door gebruiker na ${finished} van ${urls.length} producten.` });
     }
-    pushLog({ info: true, text: `Klaar: ${okCount}/${urls.length} producten geïmporteerd als ${status === "active" ? "Active" : "Draft"}.` });
+    const aiTotalTxt = aiRunUsd > 0 ? ` AI-kosten deze run: ±$${aiRunUsd.toFixed(2)}.` : "";
+    pushLog({ info: true, text: `Klaar: ${okCount}/${urls.length} producten geïmporteerd als ${status === "active" ? "Active" : "Draft"}.${aiTotalTxt}` });
     if (okCount > 0) window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     setStep("");
     setRunning(false);
