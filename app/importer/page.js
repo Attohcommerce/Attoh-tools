@@ -119,7 +119,18 @@ export default function ImporterPage() {
   }, [tab, urlsText, sheetLinks]);
 
   const selectedStore = stores.find((s) => s.domain === selected) || null;
-  const discountPct = discount === "custom" ? Number(customDiscount) || 0 : discount;
+  const aiSale = discount === "ai"; // AI kiest per product 30/40/50
+  const discountPct = discount === "custom" ? Number(customDiscount) || 0 : aiSale ? 0 : discount;
+
+  // Vangnet als de AI geen sale_tier teruggeeft: deterministisch uit de URL,
+  // zodat hetzelfde product bij een herimport altijd dezelfde korting krijgt
+  // (prijs-stabiliteit = GMC-eis).
+  function fallbackSaleTier(u) {
+    let h = 0;
+    const s = String(u || "");
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return [30, 40, 50][h % 3];
+  }
 
   function pushLog(line) {
     setLogs((l) => [...l, line]);
@@ -347,6 +358,7 @@ export default function ImporterPage() {
               forceMensKeywords: forceMens,
               colorLabel,
               sizeLabel,
+              aiSale,
             },
           }),
         });
@@ -356,6 +368,12 @@ export default function ImporterPage() {
         aiRunUsd += genUsd;
         const escalated = !!(gData.listing && gData.listing.ai && gData.listing.ai.escalated);
         if (escalated) vangnetCount++;
+
+        // Korting bepalen: vast percentage, of in AI-modus de tier die het
+        // model koos (met deterministische fallback per URL).
+        const rowDiscount = aiSale
+          ? ([30, 40, 50].includes(gData.listing.saleTier) ? gData.listing.saleTier : fallbackSaleTier(url))
+          : discountPct;
         if (gData.listing && gData.listing.warnings && gData.listing.warnings.length) {
           pushLog({
             ok: false,
@@ -389,7 +407,7 @@ export default function ImporterPage() {
             listing: gData.listing,
             fx: { rate },
             settings: {
-              discountPct,
+              discountPct: rowDiscount,
               status,
               tags,
               colorLabel,
@@ -440,9 +458,10 @@ export default function ImporterPage() {
         const tplTxt = iData.templateSuffix ? ` · template: ${iData.templateSuffix}` : "";
         const catTxt = iData.category ? ` · categorie: ${iData.category.split(" > ").pop()}` : "";
         const aiTxt = genUsd + brandUsd > 0 ? ` · AI ±$${(genUsd + brandUsd).toFixed(3)}${escalated ? " (vangnet)" : ""}` : "";
+        const saleTxt = aiSale && rowDiscount ? ` · sale −${rowDiscount}%` : "";
         pushLog({
           ok: true,
-          text: iData.product.title + linked + colTxt + tplTxt + catTxt + aiTxt,
+          text: iData.product.title + linked + colTxt + tplTxt + catTxt + saleTxt + aiTxt,
           href: iData.product.adminUrl,
           score: gData.listing.score,
           scoreNotes: gData.listing.scoreNotes,
@@ -814,6 +833,9 @@ export default function ImporterPage() {
                     </button>
                   );
                 })}
+                <button className={discount === "ai" ? "on" : ""} onClick={() => setDiscount("ai")}>
+                  AI kiest (30–50%)
+                </button>
                 <button className={discount === "custom" ? "on" : ""} onClick={() => setDiscount("custom")}>
                   Custom %
                 </button>
@@ -828,7 +850,9 @@ export default function ImporterPage() {
                 )}
               </div>
               <div className="hint">
-                {discountPct > 0
+                {aiSale
+                  ? "AI kiest per product een geloofwaardige korting (30, 40 of 50%) op basis van het producttype — statement-stukken dieper, basics lichter. Zo krijgt de store een natuurlijke sale-mix i.p.v. alles op hetzelfde percentage."
+                  : discountPct > 0
                   ? `Compare-at price will be set to show ${discountPct}% off.`
                   : "Geen doorgestreepte prijs."}
               </div>
