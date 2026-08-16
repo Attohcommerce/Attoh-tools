@@ -497,6 +497,51 @@ export default function ScraperPage() {
       const allKwItems = [];
       for (const [g2, rows2] of groups) for (const { k } of rows2) allKwItems.push({ kw: k.toLowerCase(), gender: g2 });
 
+      /* ---- UNDERDOG-VOORBEREIDING ----
+         Underdog-keywords staan per definitie niet letterlijk in de titels
+         van concurrenten. Voor die keywords bouwen we vooraf een profiel uit
+         de uitleg-zin in kolom J: woorden die winkels WÉL gebruiken, harde
+         eisen en breekpunten. Dat profiel stuurt straks zowel het zoeken als
+         de fotocontrole. Gewone keywords raken hier niets van. */
+      const underdogRows = [];
+      for (const [, rows2] of groups) {
+        for (const r of rows2) if (r.type === "Underdog") underdogRows.push(r);
+      }
+      const udProfiles = {};
+      if (underdogRows.length) {
+        pushLog({
+          strong: true,
+          text: `${underdogRows.length} underdog-keywords — die krijgen de slimme route: zoeken op het brede producttype binnen de BESTSELLERS van elke winkel, daarna fotocontrole tegen de uitleg uit kolom J.`,
+        });
+        const zonderUitleg = underdogRows.filter((r) => !r.uitleg).length;
+        if (zonderUitleg) {
+          pushLog({
+            err: true,
+            text: `${zonderUitleg} underdog-keywords hebben geen uitleg in kolom J — die vallen terug op het brede producttype en worden veel minder precies. Draai de underdog-run in de Keywords-tool opnieuw als dat er veel zijn.`,
+          });
+        }
+        const CH = 12;
+        for (let i = 0; i < underdogRows.length; i += CH) {
+          const part = underdogRows.slice(i, i + CH);
+          pushLog({ key: "ud-prof", muted: true, text: `Underdog-profielen bouwen ${Math.min(i + CH, underdogRows.length)}/${underdogRows.length}…` });
+          try {
+            const res = await fetch("/api/underdog-profile", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                items: part.map((r) => ({ kw: r.k.toLowerCase(), uitleg: r.uitleg || "", col: r.col || "" })),
+                market: "AUS",
+              }),
+            });
+            const data = await res.json();
+            if (res.ok && data.map) Object.assign(udProfiles, data.map);
+          } catch {
+            /* profiel mislukt → die keywords vallen terug op het brede type */
+          }
+        }
+        pushLog({ key: "ud-prof", ok: true, text: `Underdog-profielen klaar voor ${Object.keys(udProfiles).length}/${underdogRows.length} keywords.` });
+      }
+
       /* ---- Product-briefings: eerst WETEN wat elk keyword werkelijk is,
               daarna pas zoeken. De briefing (definitie, harde eisen,
               disqualifiers, klassieke verwarringen) stuurt straks de
@@ -587,7 +632,13 @@ export default function ScraperPage() {
         for (const { k, n, col, type } of rows) {
           let needed = Number(n) || 10;
           const target = needed;
-          const kwBrief = briefCache[k.toLowerCase()] || null;
+          const udProfile = type === "Underdog" ? udProfiles[k.toLowerCase()] || null : null;
+          /* Bij een underdog vervangt het profiel de gewone briefing: de
+             titelvorm (kolom K) en de fotocontrole komen dan uit de uitleg
+             in kolom J in plaats van uit een algemene productdefinitie. */
+          const kwBrief = udProfile
+            ? { ...(briefCache[k.toLowerCase()] || {}), titleForm: udProfile.titleForm, definition: udProfile.uitleg }
+            : briefCache[k.toLowerCase()] || null;
           // Type uit de organization-sheet, of anders uit de AI-briefing
           const kwType =
             type ||
@@ -613,6 +664,10 @@ export default function ScraperPage() {
           const alts = altCache[kwLower] || [];
           const provenHit = altHits[kwLower]; // alternatief dat vorige keer scoorde
           let terms = provenHit && provenHit !== kwLower ? [k, provenHit] : [k];
+          /* Underdogs kennen hun eigen zoekwoorden al: die zitten in het
+             profiel en worden server-side gebruikt. Eén term per winkel dus,
+             anders scannen we dezelfde catalogus meerdere keren voor niets. */
+          if (udProfile) terms = [k];
           // GELEGENHEIDS-KEYWORDS: geen enkele shop titelt een product
           // "christmas party dress". Wachten tot de letterlijke zoekterm
           // faalt is zonde van de tijd — de fysieke proxies uit de briefing
@@ -700,12 +755,17 @@ export default function ScraperPage() {
                 if (triedPairs.has(pairKey)) continue;
                 triedPairs.add(pairKey);
                 try {
-                  const res = await fetch("/api/scraper-search", {
+                  /* Underdogs gaan langs de slimme route: breed vangen op het
+                     producttype, maar alléén binnen de bestsellers van de
+                     winkel, en daarna fotocontrole tegen de uitleg. Zo levert
+                     een niche-zoekvraag alsnog bewezen verkopers op. */
+                  const res = await fetch(udProfile ? "/api/underdog-search" : "/api/scraper-search", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       store,
-                      keyword: term,
+                      keyword: udProfile ? k : term,
+                      profile: udProfile || undefined,
                       gender,
                       need: needed,
                       excludeLinks: [...exclude],
@@ -738,10 +798,16 @@ export default function ScraperPage() {
                      op een direct keyword ("boots" in "Chelsea Boots")
                      hoeft niet langs de foto — dat was de grootste
                      tijdvreter van de hele run. */
-                  const toVerify =
-                    term !== k || isOccasion
-                      ? found
-                      : found.filter((m) => m.needsPhotoProof);
+                  /* Underdogs zijn server-side al op titel, omschrijving én
+                     foto beoordeeld tegen hun profiel — nog een keer langs
+                     de algemene fotocontrole is dubbel werk en dubbele
+                     kosten, en die controle kent de uitleg uit kolom J niet
+                     eens. */
+                  const toVerify = udProfile
+                    ? []
+                    : term !== k || isOccasion
+                    ? found
+                    : found.filter((m) => m.needsPhotoProof);
                   if (toVerify.length) {
                     try {
                       const vres = await fetch("/api/verify-products", {
