@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { readRange, readColumnsBatch, appendRows, parseSheetId } from "@/lib/sheets";
+import {
+  readRange, readColumnsBatch, appendRows, parseSheetId,
+  getTabIdByTitle, formatUnderdogBlock,
+} from "@/lib/sheets";
 import {
   canonKey, isVerdelingJunk, collectionFor, consistentCollection,
   MARKETS, seasonOf, seasonFactor, eventFactor, storeProfile,
@@ -252,6 +255,8 @@ async function writeStep(body) {
     const rank = Number(r[0]) || 0;
     if (rank > maxRank) maxRank = rank;
   }
+  // Waar het nieuwe blok begint (0-based rij-index in het tabblad)
+  const existingRowCount = orgRows.length;
 
   const clean = picks
     .map((p) => ({
@@ -308,37 +313,76 @@ async function writeStep(body) {
   }
   const summaryRows = [...colSummary.values()].sort((a, b) => b.products - a.products);
 
+  /* Opbouw van het blok. Bewust met een EIGEN KOPRIJ (het las eerst niet als
+     tabel) en met het overzicht in L-O in plaats van K-N: kolom J bevat de
+     lange uitleg en liep visueel over het overzicht heen. K blijft leeg als
+     scheiding. */
   const stamp = new Date().toISOString().slice(0, 10);
   const EMPTY10 = ["", "", "", "", "", "", "", "", "", ""];
-  const title = [
-    "", `UNDERDOG KEYWORDS — niche kansen (${stamp})`, "", "", "", "", "", "", "",
-    "Uitleg voor de scraper (wat is het + hoe herken je het op de foto)",
+  const banner = [`UNDERDOG KEYWORDS — niche kansen (${stamp})`, "", "", "", "", "", "", "", "", ""];
+  const header = [
+    "Rank", "Keyword", "Collectie", "Groep", "Avg. volume", "Venster-volume",
+    "Piekmaand", "Aantal producten", "Type", "Uitleg voor de scraper (wat is het + hoe herken je het)",
   ];
-  const leftRows = [
-    EMPTY10,
-    title,
-    ...final.map((c, i) => [
-      maxRank + i + 1, c.kw, c.col, c.g, c.avg, c.windowVol, c.peak, c.n, "Underdog", c.uitleg || "",
-    ]),
+  const dataRows = final.map((c, i) => [
+    maxRank + i + 1, c.kw, c.col, c.g, c.avg, c.windowVol, c.peak, c.n, "Underdog", c.uitleg || "",
+  ]);
+  const leftRows = [EMPTY10, banner, header, ...dataRows];
+
+  const infoLines = [
+    "WAT ZIJN UNDERDOG-KEYWORDS?",
+    "Echte zoekvragen met bewezen vraag maar lage concurrentie — bewust níet de voor de hand liggende termen waar iedereen op adverteert.",
+    "Gekozen op data: venstervolume × groei × YoY-trend × concurrentie-index × biedingen × long-tail, plus AI-review.",
+    "Voor de scraper: deze woorden staan zelden letterlijk in producttitels van concurrenten. Kolom J zegt per keyword wat het item ís en hoe je het herkent — match op titel + omschrijving + foto, niet op de letterlijke term.",
+    "Voor de importer: verwerk het keyword functioneel in titel, omschrijving en tags, zodat de zoekvraag bij onze store landt.",
   ];
   const rightRows = [
     ["Collectie", "Aantal keywords", "Aantal producten", "Top keywords"],
     ...summaryRows.map((c) => [c.col, c.kws, c.products, c.top.join(", ")]),
     ["", "", "", ""],
-    ["WAT ZIJN UNDERDOG-KEYWORDS?", "", "", ""],
-    ["Echte zoekvragen met bewezen vraag maar lage concurrentie — bewust níet de voor de hand liggende termen waar iedereen op adverteert.", "", "", ""],
-    ["Gekozen op data: venstervolume × groei × YoY-trend × concurrentie-index × biedingen × long-tail, plus AI-review.", "", "", ""],
-    ["Voor de scraper: deze woorden staan zelden letterlijk in producttitels van concurrenten. Kolom J zegt per keyword wat het item ís en hoe je het herkent — match op titel + omschrijving + foto, niet op de letterlijke term.", "", "", ""],
-    ["Voor de importer: verwerk het keyword functioneel in titel, omschrijving en tags, zodat de zoekvraag bij onze store landt.", "", "", ""],
+    ...infoLines.map((t) => [t, "", "", ""]),
   ];
-  const nOut = Math.max(leftRows.length, rightRows.length + 1);
+
+  // Rechterblok start op de koprij-hoogte; K blijft leeg als scheidingskolom.
+  const rightOffset = 2; // 0 = lege rij, 1 = banner, 2 = koprij
+  const nOut = Math.max(leftRows.length, rightRows.length + rightOffset);
   const values = [];
   for (let i = 0; i < nOut; i++) {
     const L = leftRows[i] || EMPTY10;
-    const R = i >= 1 ? rightRows[i - 1] || [] : [];
-    values.push([...L, ...R]);
+    const R = i >= rightOffset ? rightRows[i - rightOffset] || [] : [];
+    values.push([...L, "", ...R]);
   }
   await appendRows(orgSheetId, `'${oTab}'!A1`, values, "RAW");
+
+  /* Opmaak. Faalt dit, dan is de data er nog steeds — daarom apart en
+     niet-blokkerend. */
+  let formatted = false;
+  try {
+    const tabId = await getTabIdByTitle(orgSheetId, oTab);
+    if (tabId != null) {
+      const base = existingRowCount; // 0-based index van de eerste nieuwe rij
+      const bannerRow = base + 1;
+      const headerRow = base + 2;
+      const firstDataRow = base + 3;
+      const lastDataRow = firstDataRow + dataRows.length;
+      const summaryHeaderRow = base + rightOffset;
+      const summaryLastRow = summaryHeaderRow + 1 + summaryRows.length;
+      const infoFirstRow = summaryLastRow + 1;
+      await formatUnderdogBlock(orgSheetId, tabId, {
+        bannerRow,
+        headerRow,
+        firstDataRow,
+        lastDataRow,
+        summaryHeaderRow,
+        summaryLastRow,
+        infoFirstRow,
+        infoLastRow: infoFirstRow + infoLines.length,
+      });
+      formatted = true;
+    }
+  } catch (e) {
+    warnings.push(`Opmaak van het underdog-blok mislukte (${e.message}) — de gegevens staan er wel gewoon in.`);
+  }
 
   const id = parseSheetId(orgSheetId);
   return {
@@ -348,6 +392,7 @@ async function writeStep(body) {
     totalUnderdogProducts: final.reduce((s, x) => s + x.n, 0),
     productTarget: budget,
     collections: summaryRows,
+    formatted,
     warnings,
   };
 }
