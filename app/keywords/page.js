@@ -408,6 +408,10 @@ export default function KeywordsPage() {
         sheetId: sheetLink.trim(),
         tabName: tabName.trim(),
         header,
+        // Voor de capaciteits-check én een exact raster (geen 26-koloms
+        // default die het workbook onnodig richting de 10M-cellenlimiet duwt)
+        rowCount: rows.length,
+        colCount: header.length,
       });
       log({ ok: true, text: `Tabblad "${created.title}" aangemaakt` });
 

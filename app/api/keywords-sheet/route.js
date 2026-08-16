@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { addTab, appendRows, formatKeywordTab, parseSheetId } from "@/lib/sheets";
+import {
+  addTab, appendRows, formatKeywordTab, parseSheetId,
+  getSheetSizes, SHEETS_CELL_LIMIT,
+} from "@/lib/sheets";
 import { cleanTopRows } from "@/lib/keyword-clean";
 
 export const maxDuration = 60;
@@ -19,7 +22,41 @@ export async function POST(req) {
       if (!tabName || !String(tabName).trim()) {
         return NextResponse.json({ error: "Geef het nieuwe tabblad een naam" }, { status: 400 });
       }
-      const r = await addTab(sheetId, String(tabName).trim());
+
+      /* Capaciteits-check VOORAF. Google's limiet van 10 miljoen cellen geldt
+         voor het hele workbook (alle tabbladen samen, lege cellen incl.).
+         Zonder deze check klapte de upload halverwege op een cryptische
+         Engelse fout; nu zie je vóóraf wat er niet past en wat je kunt doen. */
+      const plannedRows = Number(rowCount) || 0;
+      const plannedCols = Number(colCount) || (Array.isArray(header) ? header.length : 26);
+      if (plannedRows > 0) {
+        const sizes = await getSheetSizes(sheetId);
+        const used = sizes.reduce((s, t) => s + t.cells, 0);
+        const needed = (plannedRows + 1) * plannedCols;
+        if (used + needed > SHEETS_CELL_LIMIT) {
+          const big = sizes
+            .sort((a, b) => b.cells - a.cells)
+            .slice(0, 4)
+            .map((t) => `"${t.title}" (${(t.cells / 1e6).toFixed(1)}M cellen)`)
+            .join(", ");
+          const usedM = (used / 1e6).toFixed(1);
+          const neededM = (needed / 1e6).toFixed(1);
+          return NextResponse.json(
+            {
+              error:
+                `Dit workbook zit vol: ${usedM}M van de 10M cellen in gebruik en dit tabblad heeft er nog ${neededM}M nodig. ` +
+                `Grootste tabbladen: ${big}. Twee opties: verwijder oude tabbladen die je niet meer gebruikt (rechtsklik op het tabblad onderin → Verwijderen), ` +
+                `of maak een léég Google Sheets-bestand en plak die link hierboven in het sheet-veld — de tool werkt met elke sheet-link.`,
+            },
+            { status: 422 }
+          );
+        }
+      }
+
+      // Exact raster aanmaken: alleen de cellen die de data echt nodig heeft
+      // (default is 26 kolommen breed — 25% verspilling op een keyword-tab).
+      const grid = plannedRows > 0 ? { rows: plannedRows + 1, cols: plannedCols } : null;
+      const r = await addTab(sheetId, String(tabName).trim(), grid);
       if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
       if (Array.isArray(header) && header.length) {
         // RAW: "jul 2025" blijft letterlijke tekst, wordt nooit een datum
