@@ -492,6 +492,16 @@ export default function KeywordsPage() {
       pushLog({ ok: true, text: `${r.keywordCount} keywords → ${r.totalProducts} producten in "${r.title}"` });
       const top = (r.collections || []).slice(0, 5).map((c) => `${c.col} ${c.products}`).join(" · ");
       if (top) pushLog({ text: `Grootste collecties: ${top}` });
+      if (r.market && r.windowSeasons && r.windowSeasons.length) {
+        const uniek = [...new Set(r.windowSeasons)];
+        const NL = { spring: "lente", summer: "zomer", autumn: "herfst", winter: "winter" };
+        pushLog({
+          text: `Seizoen in ${r.market} voor ${orderedMonths.join("-")}: ${uniek.map((s) => NL[s] || s).join(" → ")} — soorten die eraan komen kregen voorrang, soorten die net voorbij zijn zijn gedempt.`,
+        });
+      }
+      if (r.stats && r.stats.colorCapped) {
+        pushLog({ text: `${r.stats.colorCapped} kleur-varianten geschrapt (kleur is een filter op dezelfde producten, geen aparte zoekvraag) — budget naar echte extra productsoorten.` });
+      }
       if (r.stats && r.stats.variantMerged) {
         pushLog({ text: `${r.stats.variantMerged} close-variants samengevouwen (identiek volume = zelfde zoekvraag, dubbel geteld door Keyword Planner) — budget vrijgekomen voor échte extra keywords.` });
       }
@@ -762,15 +772,25 @@ export default function KeywordsPage() {
                 />
                 <div className="field-label">Markt</div>
                 <div className="seg">
-                  {["USA", "UK", "AUS", "CAN"].map((m) => (
-                    <button key={m} className={vMarket === m ? "on" : ""} onClick={() => setVMarket(m)} type="button">
-                      {m}
+                  {[
+                    ["USA", "USA"],
+                    ["UK", "UK"],
+                    ["AUS", "AUS + NZ"],
+                    ["CAN", "CAN"],
+                  ].map(([val, label]) => (
+                    <button key={val} className={vMarket === val ? "on" : ""} onClick={() => setVMarket(val)} type="button">
+                      {label}
                     </button>
                   ))}
                 </div>
                 <div className="hint">
-                  De AI-nacontrole gebruikt de markt om verkeerde-markt-woorden te schrappen
-                  (bv. Brits "jumpers"/"trainers" op een USA-store).
+                  De markt stuurt nu de hele verdeling, niet alleen de taalcontrole. Het halfrond
+                  bepaalt welk seizoen je gekozen maanden zijn — sep t/m dec is lente-zomer in
+                  AUS + NZ en herfst-winter in USA/UK/CAN. Productsoorten die eraan komen krijgen
+                  meer producten dan soorten die net voorbij zijn, en een gelegenheidskeyword telt
+                  alleen vol mee als het evenement binnen je venster valt (spring racing carnival,
+                  kerst, bruiloftseizoen). Daarbovenop blijft de controle op verkeerde-markt-woorden
+                  staan (bv. Brits "jumpers"/"trainers" op een USA-store).
                 </div>
                 <div className="field-label">Doelgroep</div>
                 <div className="seg">

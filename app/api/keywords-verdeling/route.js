@@ -120,11 +120,19 @@ export async function POST(req) {
     }
 
     /* ---- 3. verdeling berekenen ---- */
+    /* Markt en store gaan nu ook de VERDEEL-ENGINE in, niet alleen de
+       AI-prompt. Daar bepalen ze het halfrond (dus welk seizoen de gekozen
+       maanden zijn), of een productsoort aan de beurt is of net voorbij, en
+       of het evenement achter een gelegenheidskeyword binnen het venster
+       valt. Zonder dit kreeg een Australische lente-store evenveel laarzen
+       en truien als een Amerikaanse herfst-store. */
     const opts = {
       monthNames: months,
       genders: genders === "M" || genders === "V" ? genders : "MV",
       total: Math.max(1, Math.min(2000, Number(total) || 1000)),
       mode: mode === "focus" ? "focus" : "spread",
+      market,
+      storeUrl,
     };
     let result = buildVerdeling(rows, opts);
 
@@ -226,7 +234,8 @@ export async function POST(req) {
         const flagged = await reviewVerdelingFinal(
           result.rows.map((r) => ({ kw: r.kw, col: r.col, n: r.n })),
           market,
-          storeUrl
+          storeUrl,
+          { months, seasons: result.windowSeasons || [] }
         );
         const fresh = flagged.filter((f) => result.rows.some((r) => r.kw === f.kw));
         if (!fresh.length) break;
@@ -248,6 +257,31 @@ export async function POST(req) {
             meestal dat de bron-CSV's die doelgroep amper dekken ---- */
     const warnings = [];
     if (windowWarn) warnings.push(windowWarn);
+    if (!result.market) {
+      warnings.push(
+        "Geen markt gekozen — de verdeling rekent dan zonder halfrond, seizoen en verkoopagenda. Kies een markt voor een verdeling die op koopgedrag stuurt in plaats van op kaal zoekvolume."
+      );
+    }
+    if (result.storeProfile && result.market && result.storeProfile.market !== result.market) {
+      warnings.push(
+        `${result.storeProfile.domain} staat bekend als een ${result.storeProfile.market}-store, maar je hebt markt ${result.market} gekozen. Klopt dat? De seizoensberekening draait nu op het verkeerde halfrond.`
+      );
+    }
+    if (result.storeProfile && result.storeProfile.genders && result.storeProfile.genders !== opts.genders) {
+      warnings.push(
+        `${result.storeProfile.domain} is ingesteld als "${result.storeProfile.genders}"-store; je draait deze verdeling op "${opts.genders}".`
+      );
+    }
+    if (result.stats && result.stats.artefact) {
+      warnings.push(
+        `${result.stats.artefact} artefact-frasen geweerd (fors volume, maar komen in geen enkel ander keyword voor — Planner-bundels, geen echte zoekvraag): ${(result.stats.artefactList || []).join(", ")}`
+      );
+    }
+    if (result.blockedCollections && result.blockedCollections.length) {
+      warnings.push(
+        `Collecties bewust buiten deze store gehouden (past niet bij de positionering): ${result.blockedCollections.join(", ")}`
+      );
+    }
     if (skipped.length) {
       warnings.push(
         `Tijdslimiet bereikt — overgeslagen: ${[...new Set(skipped)].join(", ")}. De verdeling klopt, maar draai 'm nog eens (of met een kleiner bron-tabblad) voor de volledige AI-controle.`
@@ -305,6 +339,8 @@ export async function POST(req) {
       collections: result.collections.map(({ col, kws, products }) => ({ col, kws, products })),
       droppedCollections: result.droppedCollections || [],
       mode: result.mode,
+      market: result.market,
+      windowSeasons: result.windowSeasons || [],
       aiRemoved,
       warnings,
       stats: result.stats,
