@@ -33,7 +33,7 @@ export async function POST(req) {
   const body = await req.json().catch(() => ({}));
   const {
     orgSheetId, orgTab, statsSheetId, statsTab,
-    months, genders, market, storeUrl, count,
+    months, genders, market, storeUrl, count, productTarget,
   } = body;
 
   if (!orgSheetId || !String(orgTab || "").trim())
@@ -43,7 +43,14 @@ export async function POST(req) {
   if (!Array.isArray(months) || months.length !== 4)
     return NextResponse.json({ error: "Kies precies 4 maanden" }, { status: 400 });
 
-  const target = Math.max(10, Math.min(300, Number(count) || 100));
+  /* Justin kiest het aantal PRODUCTEN; hoeveel keywords daarvoor nodig zijn
+     bepaalt de engine zelf (vloer 2 / cap 6 per keyword, naar score). Oude
+     aanroepen met "count" (keywords) blijven werken via ×3. */
+  const budget = Math.max(
+    20,
+    Math.min(900, Number(productTarget) || (Number(count) ? Number(count) * 3 : 250))
+  );
+  const target = Math.min(300, Math.floor(budget / 2)); // max # keywords als alles de vloer krijgt
   const T0 = Date.now();
   const msLeft = () => 50000 - (Date.now() - T0);
   const warnings = [];
@@ -313,26 +320,77 @@ export async function POST(req) {
     if (!picked.length)
       throw new Error("Geen underdog-keywords overgebleven — verlaag het aantal niet-gedekte filters of check de bron-tabbladen.");
 
-    /* ---- 8. Productaantallen + wegschrijven in de bestaande organization ---- */
-    const final = allocateUnderdogs(picked);
+    /* ---- 8. Productbudget vullen: beste underdogs eerst, tot het gekozen
+            aantal PRODUCTEN bereikt is (vloer 2 / cap 6 per keyword) ---- */
+    const scored = allocateUnderdogs(picked);
+    const final = [];
+    let left = budget;
+    for (const c of scored) {
+      if (left < 2) break;
+      const n = Math.max(2, Math.min(c.n, left));
+      final.push({ ...c, n });
+      left -= n;
+    }
+    // Budget nog niet vol maar keywords op → sterkste keywords bijvullen tot cap
+    for (let i = 0; left > 0 && final.length && i < 6000; i++) {
+      if (final.every((f) => f.n >= 6)) break;
+      const x = final[i % final.length];
+      if (x.n < 6) {
+        x.n++;
+        left--;
+      }
+    }
+    if (left > 0) {
+      warnings.push(
+        `Niet genoeg sterke underdogs voor ${budget} producten — ${budget - left} gevuld met ${final.length} keywords. Meer batch-data (stap 1 met verse CSV's incl. concurrentie-kolommen) geeft de engine meer om uit te kiezen.`
+      );
+    }
+
+    const colSummary = new Map();
+    for (const c of final) {
+      if (!colSummary.has(c.col)) colSummary.set(c.col, { col: c.col, kws: 0, products: 0, top: [] });
+      const s = colSummary.get(c.col);
+      s.kws++;
+      s.products += c.n;
+      if (s.top.length < 3) s.top.push(c.kw);
+    }
+    const summaryRows = [...colSummary.values()].sort((a, b) => b.products - a.products);
+
+    /* ---- 9. Wegschrijven: tabel (A-J) + underdog-overzicht en uitleg (K-N),
+            in dezelfde stijl als het overzicht van de hoofdverdeling ---- */
     const stamp = new Date().toISOString().slice(0, 10);
-    const sep = ["", "", "", "", "", "", "", "", "", ""];
+    const EMPTY10 = ["", "", "", "", "", "", "", "", "", ""];
     const title = [
       "", `UNDERDOG KEYWORDS — niche kansen (${stamp})`, "", "", "", "", "", "", "",
       "Uitleg voor de scraper (wat is het + hoe herken je het op de foto)",
     ];
-    const rows = final.map((c, i) => [
-      maxRank + i + 1, c.kw, c.col, c.g, c.avg, c.windowVol, c.peak, c.n, "Underdog", c.uitleg || "",
-    ]);
-    await appendRows(orgSheetId, `'${oTab}'!A1`, [sep, title, ...rows], "RAW");
-
-    const colSummary = new Map();
-    for (const c of final) {
-      if (!colSummary.has(c.col)) colSummary.set(c.col, { col: c.col, kws: 0, products: 0 });
-      const s = colSummary.get(c.col);
-      s.kws++;
-      s.products += c.n;
+    const leftRows = [
+      EMPTY10,
+      title,
+      ...final.map((c, i) => [
+        maxRank + i + 1, c.kw, c.col, c.g, c.avg, c.windowVol, c.peak, c.n, "Underdog", c.uitleg || "",
+      ]),
+    ];
+    const rightRows = [
+      ["Collectie", "Aantal keywords", "Aantal producten", "Top keywords"],
+      ...summaryRows.map((c) => [c.col, c.kws, c.products, c.top.join(", ")]),
+      ["", "", "", ""],
+      ["WAT ZIJN UNDERDOG-KEYWORDS?", "", "", ""],
+      ["Echte zoekvragen met bewezen vraag maar lage concurrentie — bewust níet de voor de hand liggende termen waar iedereen op adverteert.", "", "", ""],
+      ["Gekozen op data: venstervolume × groei × YoY-trend × concurrentie-index × biedingen × long-tail, plus AI-review.", "", "", ""],
+      ["Voor de scraper: deze woorden staan zelden letterlijk in producttitels van concurrenten. Kolom J zegt per keyword wat het item ís en hoe je het herkent — match op titel + omschrijving + foto, niet op de letterlijke term.", "", "", ""],
+      ["Voor de importer: verwerk het keyword functioneel in titel, omschrijving en tags, zodat de zoekvraag bij onze store landt.", "", "", ""],
+    ];
+    // Rechterblok begint naast de titelregel; is het langer dan de tabel, dan
+    // vullen lege A-J-rijen aan zodat alles netjes uitlijnt.
+    const nOut = Math.max(leftRows.length, rightRows.length + 1);
+    const values = [];
+    for (let i = 0; i < nOut; i++) {
+      const L = leftRows[i] || EMPTY10;
+      const R = i >= 1 ? rightRows[i - 1] || [] : [];
+      values.push([...L, ...R]);
     }
+    await appendRows(orgSheetId, `'${oTab}'!A1`, values, "RAW");
 
     const id = parseSheetId(orgSheetId);
     return NextResponse.json({
@@ -340,8 +398,9 @@ export async function POST(req) {
       url: `https://docs.google.com/spreadsheets/d/${id}/edit`,
       added: final.length,
       totalUnderdogProducts: final.reduce((s, x) => s + x.n, 0),
+      productTarget: budget,
       existingProducts,
-      collections: [...colSummary.values()].sort((a, b) => b.products - a.products),
+      collections: summaryRows,
       aiRemoved: aiRemoved.slice(0, 40),
       stats: {
         statsRows: nRows, kandidaten: candidates.length, naDedupe: unique.length,

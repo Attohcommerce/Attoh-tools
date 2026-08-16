@@ -165,6 +165,9 @@ export default function ScraperPage() {
   // Verdeling (Collection & Product organization) inladen
   const [orgSheet, setOrgSheet] = useState("");
   const [orgTab, setOrgTab] = useState("Collection & Product organization");
+  // Welke keywords uit het blad meegenomen worden: alles, alleen de normale
+  // verdeling, of alleen de underdog-rijen (Type = "Underdog" in kolom I).
+  const [orgFilter, setOrgFilter] = useState("alles"); // "alles" | "normaal" | "underdog"
   const [orgBusy, setOrgBusy] = useState(false);
   const [orgInfo, setOrgInfo] = useState(null);
 
@@ -310,7 +313,9 @@ export default function ScraperPage() {
       save(LS.orgSheet, sheet);
       save(LS.orgTab, tab);
       pushLog({ strong: true, text: `— Verdeling inladen uit "${tab}"` });
-      const data = await sheetsCall({ action: "read", sheetId: sheet, range: `'${tab}'!A1:I` });
+      // t/m kolom J: underdog-rijen hebben daar hun uitleg (wat is het item +
+      // hoe herken je het op de foto) — die reist mee voor de foto-controle.
+      const data = await sheetsCall({ action: "read", sheetId: sheet, range: `'${tab}'!A1:J` });
       const values = data.values || [];
       if (!values.length) throw new Error(`Tabblad "${tab}" is leeg of bestaat niet`);
 
@@ -327,17 +332,37 @@ export default function ScraperPage() {
       for (const r of values.slice(1)) {
         const k = String(r[1] || "").trim();
         if (!k) continue;
+        // Scheidingsregel van het underdog-blok is geen keyword
+        if (k.toUpperCase().startsWith("UNDERDOG KEYWORDS")) continue;
         const n = Math.max(1, Number(r[7]) || 0);
         const g = String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw";
         const col = String(r[2] || "").trim(); // C = Collectie — reist mee naar de importlijst
-        const type = String(r[8] || "").trim() || "Direct"; // I = Type (Direct/Attribuut/Gelegenheid)
-        parsed.push({ k, n, g, col, type });
+        const type = String(r[8] || "").trim() || "Direct"; // I = Type (Direct/Attribuut/Gelegenheid/Underdog)
+        const uitleg = String(r[9] || "").trim(); // J = underdog-uitleg voor de foto-controle
+        parsed.push({ k, n, g, col, type, uitleg });
       }
       if (!parsed.length) throw new Error("Geen keywords gevonden in dit blad");
 
-      const vrouw = parsed.filter((p) => p.g === "vrouw").map(({ k, n, col, type }) => ({ k, n, col, type }));
-      const man = parsed.filter((p) => p.g === "man").map(({ k, n, col, type }) => ({ k, n, col, type }));
-      const lastig = parsed.filter((p) => p.type === "Gelegenheid").length;
+      // Filter uit de schakelaar hierboven toepassen
+      const totalUd = parsed.filter((p) => p.type === "Underdog").length;
+      let kept = parsed;
+      if (orgFilter === "underdog") kept = parsed.filter((p) => p.type === "Underdog");
+      if (orgFilter === "normaal") kept = parsed.filter((p) => p.type !== "Underdog");
+      if (!kept.length) {
+        throw new Error(
+          orgFilter === "underdog"
+            ? `Geen underdog-keywords in dit blad (Type "Underdog" in kolom I ontbreekt) — draai eerst de Underdog-run in de Keywords-tool.`
+            : "Geen keywords over na dit filter"
+        );
+      }
+      if (totalUd && orgFilter === "alles") {
+        pushLog({ muted: true, text: `${totalUd} underdog-keywords zitten in deze lading — zet de schakelaar op "Alleen underdogs" om ze apart te scrapen.` });
+      }
+      const parsedFiltered = kept;
+
+      const vrouw = parsedFiltered.filter((p) => p.g === "vrouw").map(({ k, n, col, type, uitleg }) => ({ k, n, col, type, uitleg }));
+      const man = parsedFiltered.filter((p) => p.g === "man").map(({ k, n, col, type, uitleg }) => ({ k, n, col, type, uitleg }));
+      const lastig = parsedFiltered.filter((p) => p.type === "Gelegenheid").length;
       if (lastig) {
         pushLog({
           muted: true,
@@ -1319,9 +1344,24 @@ export default function ScraperPage() {
                 value={orgTab}
                 onChange={(e) => setOrgTab(e.target.value)}
               />
+              <div className="field-label">Welke keywords</div>
+              <div className="seg">
+                {[
+                  ["alles", "Alles"],
+                  ["normaal", "Zonder underdogs"],
+                  ["underdog", "Alleen underdogs"],
+                ].map(([val, label]) => (
+                  <button key={val} className={orgFilter === val ? "on" : ""} onClick={() => setOrgFilter(val)} type="button">
+                    {label}
+                  </button>
+                ))}
+              </div>
               <div className="hint">
                 Leest het blad uit de Keywords-tool en vult hieronder automatisch alle keywords, aantallen en
-                groepen (man/vrouw) in — niets meer zelf overtypen.
+                groepen (man/vrouw) in — niets meer zelf overtypen. Underdog-rijen (Type "Underdog", onderaan
+                het blad) nemen hun uitleg uit kolom J mee: die beschrijft wat het item ís, zodat de
+                foto-controle kan matchen op betekenis — concurrenten zetten deze woorden zelden letterlijk
+                in hun titels.
               </div>
               <div style={{ marginTop: 12 }}>
                 <button

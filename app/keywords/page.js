@@ -177,7 +177,7 @@ export default function KeywordsPage() {
   const [uOrgTab, setUOrgTab] = useState("");
   const [uStatsSheet, setUStatsSheet] = useState(DEFAULT_RESEARCH_SHEET);
   const [uStatsTab, setUStatsTab] = useState("");
-  const [uCount, setUCount] = useState(100);
+  const [uProducts, setUProducts] = useState(250);
   const [uRunning, setURunning] = useState(false);
   const [uLogs, setULogs] = useState([]);
   const [uDoneUrl, setUDoneUrl] = useState("");
@@ -667,7 +667,7 @@ export default function KeywordsPage() {
     try {
       push({
         strong: true,
-        text: `— Underdog-run: ${vStore.trim() || "store ?"} · markt ${vMarket} · ${orderedMonths.join(", ")} · doel ${uCount} keywords`,
+        text: `— Underdog-run: ${vStore.trim() || "store ?"} · markt ${vMarket} · ${orderedMonths.join(", ")} · doel ${uProducts} producten (AI bepaalt het aantal keywords)`,
       });
       push({
         text: "Organization + alle batch-stats inlezen, underdog-algoritme (volume × trend × concurrentie × long-tail) en AI-review draaien — dit kan 1–2 minuten duren…",
@@ -681,11 +681,11 @@ export default function KeywordsPage() {
         genders: vGenders === "M" ? "M" : "V",
         market: vMarket,
         storeUrl: vStore.trim(),
-        count: Math.max(10, Math.min(300, Number(uCount) || 100)),
+        productTarget: Math.max(20, Math.min(900, Number(uProducts) || 250)),
       });
       push({
         ok: true,
-        text: `${r.added} underdog-keywords (${r.totalUnderdogProducts} producten) toegevoegd onderaan "${uOrgTab.trim()}" — duidelijk gemarkeerd als Underdog, met per keyword de scraper-uitleg in kolom J.`,
+        text: `${r.totalUnderdogProducts} producten over ${r.added} underdog-keywords toegevoegd onderaan "${uOrgTab.trim()}" — gemarkeerd als Underdog, met per keyword de scraper-uitleg in kolom J en het overzicht per collectie ernaast.`,
       });
       if (r.stats) {
         push({
@@ -805,15 +805,19 @@ export default function KeywordsPage() {
                     );
                   })}
                 </div>
-                <div className="field-label">Aantal underdog-keywords <span className="opt">(10–300)</span></div>
+                <div className="field-label">Aantal underdog-producten <span className="opt">(20–900)</span></div>
                 <input
                   type="number"
                   style={{ width: 110 }}
-                  min={10}
-                  max={300}
-                  value={uCount}
-                  onChange={(e) => setUCount(e.target.value)}
+                  min={20}
+                  max={900}
+                  value={uProducts}
+                  onChange={(e) => setUProducts(e.target.value)}
                 />
+                <div className="hint">
+                  Jij kiest het aantal producten; de engine en de AI bepalen zelf hoeveel keywords
+                  daarvoor nodig zijn (2–6 producten per keyword, sterkste underdogs eerst).
+                </div>
 
                 <div style={{ marginTop: 14 }}>
                   <button className="btn" onClick={runUnderdog} disabled={!canUnderdog}>
