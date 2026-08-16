@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
+import { applyDiscountPlan, describeDiscountPlan } from "@/lib/discount-brief";
 
 const LS = {
   stores: "sa_stores",
@@ -64,6 +65,12 @@ export default function ImporterPage() {
   const [tags, setTags] = useState("");
   const [discount, setDiscount] = useState(50);
   const [customDiscount, setCustomDiscount] = useState("");
+  // "Anders": korting in je eigen woorden. De zin wordt één keer omgezet in
+  // een regelset; die regelset bepaalt daarna per product de korting.
+  const [discountBrief, setDiscountBrief] = useState("");
+  const [briefPlan, setBriefPlan] = useState(null);
+  const [briefBusy, setBriefBusy] = useState(false);
+  const [briefMsg, setBriefMsg] = useState("");
   const [status, setStatus] = useState("draft");
   const [listingStyle, setListingStyle] = useState("stacking");
   const [genderPrefix, setGenderPrefix] = useState(false);
@@ -120,7 +127,46 @@ export default function ImporterPage() {
 
   const selectedStore = stores.find((s) => s.domain === selected) || null;
   const aiSale = discount === "ai"; // AI kiest per product 30/40/50
-  const discountPct = discount === "custom" ? Number(customDiscount) || 0 : aiSale ? 0 : discount;
+  const briefMode = discount === "brief"; // korting in eigen woorden
+  const discountPct =
+    discount === "custom" ? Number(customDiscount) || 0 : aiSale || briefMode ? 0 : discount;
+
+  /* De briefing één keer laten omzetten in regels. Kan vooraf met de knop
+     "Regels bekijken" (dan zie je precies wat er gaat gebeuren vóór je
+     honderden producten importeert), en gebeurt anders automatisch bij de
+     start van de run. */
+  async function buildBriefPlan(silent) {
+    const brief = discountBrief.trim();
+    if (!brief) {
+      setBriefMsg("Typ eerst hoe je de korting wil hebben.");
+      return null;
+    }
+    setBriefBusy(true);
+    setBriefMsg("");
+    try {
+      const res = await fetch("/api/discount-brief", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brief,
+          storeUrl: selectedStore ? selectedStore.domain : "",
+          currency: selectedStore ? selectedStore.currency : "",
+          collections: [...new Set((sheetLinks || []).map((l) => l && l.collection).filter(Boolean))],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Kon de briefing niet omzetten");
+      setBriefPlan(data.plan);
+      if (!silent) setBriefMsg(data.plan.summary || "Regels klaar.");
+      return data.plan;
+    } catch (e) {
+      setBriefPlan(null);
+      setBriefMsg(`Mislukt: ${e.message}`);
+      return null;
+    } finally {
+      setBriefBusy(false);
+    }
+  }
 
   // Vangnet als de AI geen sale_tier teruggeeft: deterministisch uit de URL,
   // zodat hetzelfde product bij een herimport altijd dezelfde korting krijgt
@@ -309,6 +355,21 @@ export default function ImporterPage() {
       } catch {}
     }
 
+    /* Korting-briefing: één keer omzetten in regels, dan de rest van de run
+       deterministisch. Lukt het niet, dan stoppen we — liever geen import dan
+       honderden producten met de verkeerde doorgestreepte prijs. */
+    let planForRun = null;
+    if (briefMode) {
+      planForRun = briefPlan || (await buildBriefPlan(true));
+      if (!planForRun) {
+        pushLog({ ok: false, text: "Korting-briefing kon niet omgezet worden — import gestopt." });
+        setRunning(false);
+        return;
+      }
+      pushLog({ strong: true, text: `Korting volgens jouw briefing: ${planForRun.summary || "(regelset klaar)"}` });
+      for (const line of describeDiscountPlan(planForRun)) pushLog({ text: `   ${line}` });
+    }
+
     let okCount = 0;
     let finished = 0;
     let aiRunUsd = 0; // geschatte AI-kosten van deze run (komt uit de API-responses)
@@ -371,7 +432,7 @@ export default function ImporterPage() {
 
         // Korting bepalen: vast percentage, of in AI-modus de tier die het
         // model koos (met deterministische fallback per URL).
-        const rowDiscount = aiSale
+        let rowDiscount = aiSale
           ? ([30, 40, 50].includes(gData.listing.saleTier) ? gData.listing.saleTier : fallbackSaleTier(url))
           : discountPct;
         if (gData.listing && gData.listing.warnings && gData.listing.warnings.length) {
@@ -389,6 +450,26 @@ export default function ImporterPage() {
           const from = rates[product.sourceCurrency];
           const to = rates[selectedStore.currency];
           if (from && to) rate = to / from;
+        }
+
+        /* Briefing-korting pas hier bepalen: de regels mogen op PRIJS matchen
+           ("alles onder de 25 geen korting"), en die prijs kennen we pas als
+           de wisselkoers rond is. */
+        if (planForRun) {
+          const srcPrices = (product.variants || [])
+            .map((v) => Number(v.price) || 0)
+            .filter((n) => n > 0);
+          const estPrice = srcPrices.length ? Math.min(...srcPrices) * rate : null;
+          const verdict = applyDiscountPlan(planForRun, {
+            keyword: rowKeyword,
+            collection: rowCollection,
+            title: (gData.listing && gData.listing.title) || product.title || "",
+            price: estPrice,
+          });
+          rowDiscount = verdict.pct;
+          pushLog({
+            text: `${nr} · Korting ${verdict.pct}% — ${verdict.why}${estPrice ? ` (±${selectedStore.currency || ""} ${estPrice.toFixed(2)})` : ""}`,
+          });
         }
 
         // 4. Upload
@@ -848,9 +929,49 @@ export default function ImporterPage() {
                     onChange={(e) => setCustomDiscount(e.target.value)}
                   />
                 )}
+                <button className={briefMode ? "on" : ""} onClick={() => setDiscount("brief")}>
+                  Anders…
+                </button>
               </div>
+
+              {briefMode && (
+                <div style={{ marginTop: 10 }}>
+                  <textarea
+                    rows={4}
+                    style={{ width: "100%" }}
+                    placeholder={
+                      "Zeg gewoon hoe je de korting wil hebben, bijvoorbeeld:\n" +
+                      "Jurken en gelegenheidskleding 50% korting, basics en tops 30%, schoenen 40%. " +
+                      "Alles onder de 25 dollar geen korting, en nooit dieper dan 60%."
+                    }
+                    value={discountBrief}
+                    onChange={(e) => {
+                      setDiscountBrief(e.target.value);
+                      setBriefPlan(null); // tekst veranderd → regels opnieuw laten maken
+                      setBriefMsg("");
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+                    <button onClick={() => buildBriefPlan(false)} disabled={briefBusy || !discountBrief.trim()}>
+                      {briefBusy ? "Bezig…" : briefPlan ? "Regels opnieuw bepalen" : "Regels bekijken"}
+                    </button>
+                    {briefPlan && <span className="ok">Regels klaar — worden bij de import gebruikt.</span>}
+                  </div>
+                  {briefMsg && <div className="hint" style={{ marginTop: 8 }}>{briefMsg}</div>}
+                  {briefPlan && (
+                    <ul className="hint" style={{ marginTop: 8 }}>
+                      {describeDiscountPlan(briefPlan).map((line, i) => (
+                        <li key={i}>{line}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
               <div className="hint">
-                {aiSale
+                {briefMode
+                  ? "Beschrijf de korting in je eigen woorden. Je zin wordt één keer omgezet in vaste regels (collectie, keyword, titel, prijsgrenzen) en die regels bepalen daarna per product de doorgestreepte prijs — dus dezelfde batch geeft morgen exact dezelfde prijzen. Je ziet de regels vóór de import, en per product komt in het log te staan welke regel er gepakt is. Boven de 80% wordt sowieso afgekapt: een doorgestreepte prijs van meer dan vijf keer de verkoopprijs leest als misleiding en is een GMC-afkeuring."
+                  : aiSale
                   ? "AI kiest per product een geloofwaardige korting (30, 40 of 50%) op basis van het producttype — statement-stukken dieper, basics lichter. Zo krijgt de store een natuurlijke sale-mix i.p.v. alles op hetzelfde percentage."
                   : discountPct > 0
                   ? `Compare-at price will be set to show ${discountPct}% off.`
