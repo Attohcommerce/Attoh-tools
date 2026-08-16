@@ -181,6 +181,10 @@ export default function KeywordsPage() {
   const [uRunning, setURunning] = useState(false);
   const [uLogs, setULogs] = useState([]);
   const [uDoneUrl, setUDoneUrl] = useState("");
+  // Looptijd + huidige stap: zonder dit was niet te zien of hij nog bezig
+  // was, vastliep of klaar was.
+  const [uElapsed, setUElapsed] = useState(0);
+  const [uPhase, setUPhase] = useState("");
 
   const fileInput = useRef(null);
   const chatEnd = useRef(null);
@@ -206,6 +210,14 @@ export default function KeywordsPage() {
   useEffect(() => {
     if (chatEnd.current) chatEnd.current.scrollIntoView({ behavior: "smooth" });
   }, [chatMsgs, chatBusy]);
+
+  // Seconden-teller zolang de underdog-run loopt
+  useEffect(() => {
+    if (!uRunning) return;
+    setUElapsed(0);
+    const t = setInterval(() => setUElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [uRunning]);
 
   function pushLog(entry) {
     setLogs((l) => {
@@ -688,6 +700,7 @@ export default function KeywordsPage() {
          dus een HTTP 504 kan niet meer. Bonus: je ziet de voortgang live. */
       const budget = Math.max(20, Math.min(900, Number(uProducts) || 250));
 
+      setUPhase("Stap 1/4 · sheets inlezen + algoritme");
       push({ text: "Stap 1/4 · Sheets inlezen en underdog-algoritme draaien (volume × trend × concurrentie × long-tail)…", key: "u-step" });
       const prep = await api("/api/keywords-underdog", {
         action: "prep",
@@ -711,6 +724,7 @@ export default function KeywordsPage() {
 
       // Stap 2: onbekende woorden — merk-risico's die de woordenlijst niet kent
       if ((prep.suspects || []).length) {
+        setUPhase("Stap 2/4 · merk-check");
         push({ text: `Stap 2/4 · ${prep.suspects.length} keywords met onbekende woorden langs de merk-check…`, key: "u-step" });
         try {
           const sv = await api("/api/keywords-underdog", { action: "sieve", suspects: prep.suspects });
@@ -724,6 +738,7 @@ export default function KeywordsPage() {
           push({ err: true, text: `Merk-check faalde (${e2.message}) — ${sus.size} verdachte keywords uit voorzorg geweerd.` });
         }
       } else {
+        setUPhase("Stap 2/4 · merk-check overgeslagen");
         push({ text: "Stap 2/4 · Geen onbekende woorden in de pool — merk-check overgeslagen.", key: "u-step" });
       }
 
@@ -741,6 +756,7 @@ export default function KeywordsPage() {
       const pickedMap = new Map();
       for (let i = 0; i < pool.length; i += CHUNK) {
         const part = pool.slice(i, i + CHUNK);
+        setUPhase(`Stap 3/4 · AI-review ${Math.min(i + CHUNK, pool.length)}/${pool.length}`);
         push({
           text: `Stap 3/4 · AI-review ${Math.min(i + CHUNK, pool.length)}/${pool.length} kandidaten…`,
           key: "u-step",
@@ -761,6 +777,7 @@ export default function KeywordsPage() {
         .map((c) => ({ ...c, col: pickedMap.get(c.kw).col || c.col, uitleg: pickedMap.get(c.kw).uitleg }));
 
       // Stap 4: budget vullen (collectie-plafond ~20%) en wegschrijven
+      setUPhase("Stap 4/4 · wegschrijven");
       push({ text: `Stap 4/4 · ${picks.length} goedgekeurde underdogs — budget van ${budget} producten vullen en wegschrijven…`, key: "u-step" });
       const r = await api("/api/keywords-underdog", {
         action: "write",
@@ -801,6 +818,7 @@ export default function KeywordsPage() {
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
     } finally {
       setURunning(false);
+      setUPhase("");
     }
   }
 
@@ -913,7 +931,9 @@ export default function KeywordsPage() {
 
                 <div style={{ marginTop: 14 }}>
                   <button className="btn" onClick={runUnderdog} disabled={!canUnderdog}>
-                    {uRunning ? "Bezig…" : "⚑ Underdogs zoeken & toevoegen"}
+                    {uRunning
+                      ? `Bezig… ${Math.floor(uElapsed / 60)}:${String(uElapsed % 60).padStart(2, "0")}`
+                      : "⚑ Underdogs zoeken & toevoegen"}
                   </button>
                 </div>
               </div>
@@ -921,7 +941,16 @@ export default function KeywordsPage() {
 
             <div>
               <div className="card">
-                <h2>Underdog-log</h2>
+                <h2>
+                  Underdog-log
+                  {uRunning && (
+                    <span className="opt">
+                      {" "}— bezig: {uPhase || "…"} · {Math.floor(uElapsed / 60)}:
+                      {String(uElapsed % 60).padStart(2, "0")}
+                    </span>
+                  )}
+                  {!uRunning && uDoneUrl && <span className="opt"> — klaar</span>}
+                </h2>
                 {uLogs.length === 0 && !uRunning && (
                   <div className="center-note" style={{ padding: "18px 8px" }}>
                     Vul beide bladnamen in, kies je venster en start. De underdogs worden
@@ -934,6 +963,12 @@ export default function KeywordsPage() {
                       {l.text}
                     </div>
                   ))}
+                  {uRunning && (
+                    <div className="logline muted">
+                      ⏳ Nog bezig — {uPhase || "…"} ({Math.floor(uElapsed / 60)}:
+                      {String(uElapsed % 60).padStart(2, "0")}). Laat dit tabblad open staan.
+                    </div>
+                  )}
                 </div>
                 {uDoneUrl && (
                   <div style={{ marginTop: 10 }}>
