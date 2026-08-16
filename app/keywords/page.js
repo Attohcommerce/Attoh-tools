@@ -685,21 +685,20 @@ export default function KeywordsPage() {
       });
       push({
         ok: true,
-        text: `${r.totalUnderdogProducts} producten over ${r.added} underdog-keywords toegevoegd onderaan "${uOrgTab.trim()}" — gemarkeerd als Underdog, met per keyword de scraper-uitleg in kolom J en het overzicht per collectie ernaast.`,
+        text: `✓ ${r.totalUnderdogProducts} producten · ${r.added} keywords · ${(r.collections || []).length} collecties — onderaan "${uOrgTab.trim()}"`,
       });
+      push({ text: `Elk keyword staat er met Type "Underdog" en zijn uitleg in kolom J; het overzicht per collectie + de uitleg voor scraper en importer staan ernaast in K–N.` });
       if (r.stats) {
         push({
-          text: `Data: ${r.stats.statsRows} stats-rijen → ${r.stats.kandidaten} kandidaten na filters → ${r.stats.naDedupe} na ontdubbelen → top ${r.stats.poolNaarAi} langs de AI. Familie-van-bestaand geweerd: ${r.stats.family}. Seizoen: ${r.stats.seizoen}.`,
+          text: `Trechter: ${r.stats.statsRows} keywords → ${r.stats.kandidaten} kandidaten → ${r.stats.naDedupe} uniek → ${r.stats.poolNaarAi} naar de AI-review · familie van bestaande keywords geweerd: ${r.stats.family} · seizoen ${r.stats.seizoen}${r.stats.compData ? " · concurrentie/bid/trend-data gebruikt" : ""}`,
         });
-        if (!r.stats.compData) {
-          push({ err: true, text: "Stats-tabblad had geen concurrentie/bid/trend-kolommen — draai stap 1 opnieuw met je CSV's, dan wordt de selectie een stuk scherper." });
-        }
       }
-      if (r.collections && r.collections.length) {
-        push({ text: "Per collectie: " + r.collections.map((c) => `${c.col} ${c.kws}kw/${c.products}p`).join(" · ") });
+      {
+        const cols6 = (r.collections || []).slice(0, 6).map((c) => `${c.col} ${c.products}p`).join(" · ");
+        if (cols6) push({ text: `Spreiding (max ~20% per collectie): ${cols6}${(r.collections || []).length > 6 ? " · …" : ""}` });
       }
       if (r.aiRemoved && r.aiRemoved.length) {
-        push({ text: `AI schrapte o.a.: ${r.aiRemoved.slice(0, 10).join(", ")}${r.aiRemoved.length > 10 ? " …" : ""}` });
+        push({ text: `AI-review schrapte ${r.aiRemoved.length} keywords, o.a. ${r.aiRemoved.slice(0, 6).join(", ")}${r.aiRemoved.length > 6 ? " …" : ""}` });
       }
       for (const w of r.warnings || []) push({ err: true, text: `Let op: ${w}` });
       setUDoneUrl(r.url);

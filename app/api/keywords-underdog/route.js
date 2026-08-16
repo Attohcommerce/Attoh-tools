@@ -5,9 +5,9 @@ import {
   MARKETS, seasonOf, seasonFactor, eventFactor, storeProfile,
 } from "@/lib/verdeling";
 import {
-  underdogScore, isFamilyOfExisting, allocateUnderdogs, growthFactor,
+  underdogScore, isFamilyOfExisting, prepFamilies, allocateUnderdogs, growthFactor,
 } from "@/lib/underdog";
-import { classifyJunkKeywordsBatch, classifyUnknownTokens, reviewUnderdogPicks } from "@/lib/ai";
+import { classifyUnknownTokens, reviewUnderdogPicks } from "@/lib/ai";
 import { unknownFashionTokens } from "@/lib/brands";
 
 export const maxDuration = 60;
@@ -159,49 +159,62 @@ export async function POST(req) {
     const blocked = new Set((profile && profile.block) || []);
     const wantG = genders === "M" || genders === "V" ? genders : "V";
 
-    /* ---- 4. Kandidaten bouwen ---- */
+    /* ---- 4. Kandidaten bouwen ----
+       Volgorde is hier prestatie-kritisch: het VOLUME-filter (goedkoop, kale
+       getallen) draait eerst en gooit ~90% van de 182k rijen weg vóór de
+       dure regex-, canon- en familie-checks. Zo blijft er tijd over voor
+       waar de kwaliteit vandaan komt: de AI-lagen. De vorige versie deed het
+       andersom en sloeg daardoor álle AI-controles over (tijd op). */
     const MIN_SEASON = 1200; // lager dan de hoofdverdeling: underdogs mogen klein zijn
+    const prepped = prepFamilies(existingCanons);
     const seen = new Set();
-    const candidates = [];
-    const phraseCount = new Map();
+    const pre = []; // kandidaten vóór de artefact-check
     const allKws = [];
-    for (let r = 0; r < nRows; r++) {
-      const kw = String(cols[kwIdx][r] || "").toLowerCase().trim().replace(/\s+(uk|united kingdom)$/, "");
-      if (!kw || seen.has(kw)) continue;
-      seen.add(kw);
-      allKws.push(kw);
-    }
-    // Steun-index over de VOLLEDIGE lijst (182k) — artefact-detectie
-    for (const kw of allKws) {
-      const w = kw.split(" ");
-      const grams = new Set();
-      for (let i = 0; i < w.length; i++) {
-        for (let j = i + 2; j <= w.length; j++) grams.add(w.slice(i, j).join(" "));
-      }
-      for (const g of grams) phraseCount.set(g, (phraseCount.get(g) || 0) + 1);
-    }
-    const supportOf = (kw) => Math.max(0, (phraseCount.get(kw) || 0) - 1);
-
-    seen.clear();
     let stat = { junk: 0, family: 0, low: 0, unmapped: 0, gender: 0, artefact: 0, blocked: 0 };
     for (let r = 0; r < nRows; r++) {
       const kw = String(cols[kwIdx][r] || "").toLowerCase().trim().replace(/\s+(uk|united kingdom)$/, "");
       if (!kw || seen.has(kw)) continue;
       seen.add(kw);
-      if (isVerdelingJunk(kw)) { stat.junk++; continue; }
-      const canon = canonKey(kw);
-      if (isFamilyOfExisting(canon, existingCanons)) { stat.family++; continue; }
+      allKws.push(kw);
       const mm = monthIdx.map((i) => num(cols[i][r]));
       const windowVol = mm.reduce((s, v) => s + v, 0);
       if (windowVol < MIN_SEASON) { stat.low++; continue; }
-      const avg = avgIdx >= 0 ? num(cols[avgIdx][r]) : 0;
-      const multi = kw.split(/\s+/).length >= 2;
-      if (multi && avg >= 10000 && supportOf(kw) === 0) { stat.artefact++; continue; }
+      if (isVerdelingJunk(kw)) { stat.junk++; continue; }
+      const canon = canonKey(kw);
+      if (isFamilyOfExisting(canon, prepped)) { stat.family++; continue; }
       let { col, g } = collectionFor(kw);
       col = consistentCollection(kw, col);
       if (!col) { stat.unmapped++; continue; }
       if (blocked.has(col)) { stat.blocked++; continue; }
       if (g !== wantG) { stat.gender++; continue; }
+      pre.push({ kw, canon, col, g, mm, windowVol, row: r });
+    }
+
+    /* Steun-index GERICHT: alleen tellen wat een kandidaat-keyword is.
+       De vorige versie indexeerde álle woordgroepen van 182k keywords
+       (~1,5M map-entries) — zwaar en grotendeels weggegooid werk. */
+    const candSet = new Set(pre.filter((c) => c.kw.includes(" ")).map((c) => c.kw));
+    const phraseCount = new Map();
+    if (candSet.size) {
+      for (const kw of allKws) {
+        const w = kw.split(" ");
+        if (w.length < 2) continue;
+        for (let i = 0; i < w.length; i++) {
+          for (let j = i + 2; j <= w.length; j++) {
+            const g = w.slice(i, j).join(" ");
+            if (candSet.has(g)) phraseCount.set(g, (phraseCount.get(g) || 0) + 1);
+          }
+        }
+      }
+    }
+    const supportOf = (kw) => Math.max(0, (phraseCount.get(kw) || 0) - 1);
+
+    const candidates = [];
+    for (const c of pre) {
+      const { kw, canon, col, g, mm, windowVol, row: r } = c;
+      const avg = avgIdx >= 0 ? num(cols[avgIdx][r]) : 0;
+      const multi = kw.includes(" ");
+      if (multi && avg >= 10000 && supportOf(kw) === 0) { stat.artefact++; continue; }
 
       let peak = 0;
       for (let i = 1; i < mm.length; i++) if (mm[i] > mm[peak]) peak = i;
@@ -245,43 +258,39 @@ export async function POST(req) {
     }
     unique = [...byFp.values()].sort((a, b) => b.score - a.score);
 
-    /* ---- 6. AI-lagen over de top-pool ---- */
+    /* ---- 6. AI-lagen over de top-pool ----
+       Twee lagen i.p.v. drie: de losse merken-batch is eruit — de underdog-
+       review vangt merken zelf af, en de bespaarde tijd garandeert dat de
+       review (mét uitleg per keyword) ALTIJD draait. */
     const pool = unique.slice(0, Math.min(Math.max(target * 2, 120), 400));
     const excluded = new Set();
     const aiRemoved = [];
 
+    // Onbekend-woord-zeef: één gerichte call; onbekend + niet goedgekeurd = eruit.
     try {
-      if (msLeft() > 15000) {
-        const items = pool.map((c, i) => ({ index: i, kw: c.kw }));
-        for (let i = 0; i < items.length; i += 160) {
-          const part = items.slice(i, i + 160);
-          const removals = await classifyJunkKeywordsBatch(part, { market: mkt });
-          for (const rem of removals) {
-            const hit = items[rem.index];
-            if (hit && part.some((p) => p.index === rem.index)) {
-              excluded.add(hit.kw);
-              aiRemoved.push(`${hit.kw} (${rem.reason || "junk"})`);
-            }
-          }
+      const suspects = pool
+        .map((c) => ({ kw: c.kw, unknown: unknownFashionTokens(c.kw) }))
+        .filter((s) => s.unknown.length)
+        .slice(0, 150);
+      if (suspects.length && msLeft() > 30000) {
+        const verdicts = await classifyUnknownTokens(suspects);
+        for (const v of verdicts) {
+          excluded.add(v.kw);
+          aiRemoved.push(`${v.kw} (${v.reason})`);
         }
-      } else warnings.push("Tijd krap — merken-AI-check overgeslagen.");
-    } catch { warnings.push("Merken-AI-check faalde — statische filters blijven gelden."); }
-
-    try {
-      if (msLeft() > 12000) {
-        const suspects = pool
-          .filter((c) => !excluded.has(c.kw))
-          .map((c) => ({ kw: c.kw, unknown: unknownFashionTokens(c.kw) }))
-          .filter((s) => s.unknown.length);
-        if (suspects.length) {
-          const verdicts = await classifyUnknownTokens(suspects.slice(0, 200));
-          for (const v of verdicts) {
-            excluded.add(v.kw);
-            aiRemoved.push(`${v.kw} (${v.reason})`);
-          }
+      } else if (suspects.length) {
+        // Geen tijd voor de check → uit voorzorg weren (merk-risico)
+        for (const s of suspects) {
+          excluded.add(s.kw);
+          aiRemoved.push(`${s.kw} (onbekend woord "${s.unknown.join("/")}" — niet gecheckt)`);
         }
       }
-    } catch {}
+    } catch {
+      warnings.push("Onbekend-woord-check faalde — verdachte woorden uit voorzorg geweerd.");
+      for (const c of pool) {
+        if (unknownFashionTokens(c.kw).length) excluded.add(c.kw);
+      }
+    }
 
     /* ---- 7. De denk-laag: AI kiest en schrijft de scraper-uitleg ---- */
     let picked = [];
@@ -321,17 +330,39 @@ export async function POST(req) {
       throw new Error("Geen underdog-keywords overgebleven — verlaag het aantal niet-gedekte filters of check de bron-tabbladen.");
 
     /* ---- 8. Productbudget vullen: beste underdogs eerst, tot het gekozen
-            aantal PRODUCTEN bereikt is (vloer 2 / cap 6 per keyword) ---- */
+            aantal PRODUCTEN bereikt is (vloer 2 / cap 6 per keyword) ----
+       MET COLLECTIE-PLAFOND: max ~20% van het budget per collectie. De vorige
+       run stopte 68% van alles in Casual Dresses + Swimwear — dat is geen
+       niche-strategie meer, dat is dezelfde berg met een ander etiket.
+       Underdogs horen juist BREED te liggen: veel kleine weddenschappen
+       verspreid over de hele store. */
     const scored = allocateUnderdogs(picked);
+    const capPerCol = Math.max(8, Math.ceil(budget * 0.2));
+    const colUsed = new Map();
     const final = [];
+    const skippedByCap = [];
     let left = budget;
     for (const c of scored) {
+      if (left < 2) break;
+      const used = colUsed.get(c.col) || 0;
+      if (used + 2 > capPerCol) {
+        skippedByCap.push(c);
+        continue;
+      }
+      const n = Math.max(2, Math.min(c.n, left, capPerCol - used));
+      final.push({ ...c, n });
+      colUsed.set(c.col, used + n);
+      left -= n;
+    }
+    // Budget nog niet vol maar alle collecties aan hun plafond → tweede ronde
+    // zonder plafond (liever vol met iets minder spreiding dan half leeg).
+    for (const c of skippedByCap) {
       if (left < 2) break;
       const n = Math.max(2, Math.min(c.n, left));
       final.push({ ...c, n });
       left -= n;
     }
-    // Budget nog niet vol maar keywords op → sterkste keywords bijvullen tot cap
+    // Laatste restje naar de sterkste keywords (tot cap 6)
     for (let i = 0; left > 0 && final.length && i < 6000; i++) {
       if (final.every((f) => f.n >= 6)) break;
       const x = final[i % final.length];
