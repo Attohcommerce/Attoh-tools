@@ -334,6 +334,13 @@ export default function ScraperPage() {
         if (!k) continue;
         // Scheidingsregel van het underdog-blok is geen keyword
         if (k.toUpperCase().startsWith("UNDERDOG KEYWORDS")) continue;
+        /* Het underdog-blok heeft zijn eigen KOPRIJ ("Keyword | Collectie |
+           … | Aantal producten"). Zonder deze controle werd die als keyword
+           "Keyword" ingelezen en zou de scraper er producten voor gaan
+           zoeken. Een echte datarij heeft altijd een numerieke rank (A) of
+           een numeriek aantal (H); een koprij geen van beide. */
+        if (/^keyword$/i.test(k)) continue;
+        if (!Number.isFinite(Number(r[0])) && !Number.isFinite(Number(r[7]))) continue;
         const n = Math.max(1, Number(r[7]) || 0);
         const g = String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw";
         const col = String(r[2] || "").trim(); // C = Collectie — reist mee naar de importlijst
