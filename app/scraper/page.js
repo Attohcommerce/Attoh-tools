@@ -189,6 +189,11 @@ export default function ScraperPage() {
   // Pauzeren / stoppen tijdens de run
   const [paused, setPaused] = useState(false);
   const controlRef = useRef("run"); // "run" | "pause" | "stop-save" | "stop-delete"
+  /* Handmatig overslaan: altijd beschikbaar tijdens de run, niet alleen als
+     de tool zelf vastloopt. Zet de naam van het keyword dat weg moet; de
+     loop pikt dat op en gaat direct door naar het volgende. */
+  const skipRef = useRef(null);
+  const [skipHint, setSkipHint] = useState("");
   // Voortgangsbalk
   const [prog, setProg] = useState(null); // {target, found, kwDone, kwTotal, currentKw, currentGender, kwTarget, kwFound}
 
@@ -452,6 +457,9 @@ export default function ScraperPage() {
       if (controlRef.current === "stop-save") throw { stop: "save" };
       if (controlRef.current === "stop-delete") throw { stop: "delete" };
     };
+    // Is er op "Sla dit keyword over" geklikt voor het keyword dat nu draait?
+    const skipRequested = (kwNow) =>
+      skipRef.current != null && String(skipRef.current).toLowerCase() === String(kwNow).toLowerCase();
 
     try {
       // Elke run een eigen, schoon tabblad in het werkboek.
@@ -679,6 +687,8 @@ export default function ScraperPage() {
           // Per keyword: schone staat + de zoek-ladder
           stallDecision.current = null;
           setStall(null);
+          skipRef.current = null;
+          setSkipHint("");
           const kwLower = k.toLowerCase();
           const alts = altCache[kwLower] || [];
           const provenHit = altHits[kwLower]; // alternatief dat vorige keer scoorde
@@ -790,6 +800,11 @@ export default function ScraperPage() {
             for (const store of stores) {
               await checkControl();
               if (needed <= 0) return;
+              // Handmatig overgeslagen? Direct stoppen met dit keyword.
+              if (skipRequested(k)) {
+                stallDecision.current = "skip";
+                return;
+              }
               if (stallDecision.current === "skip" || stallDecision.current === "skip-auto") return;
               if (stallDecision.current === "ai") {
                 setStall(null);
@@ -841,6 +856,21 @@ export default function ScraperPage() {
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.error || res.status);
                   let found = data.matches || [];
+                  /* Bij underdogs laten zien WAAR de kandidaten sneuvelen —
+                     anders zie je alleen "0 gevonden" zonder te weten of het
+                     aan de bestseller-grens, het producttype of de
+                     fotocontrole lag. */
+                  if (udProfile && data.stats && !found.length) {
+                    const st = data.stats;
+                    pushLog({
+                      muted: true,
+                      text:
+                        `${store}: ${data.candidates || 0} kandidaten` +
+                        (st.grensLos ? " (bestseller-grens losgelaten — te weinig in de top)" : "") +
+                        ` · afgevallen: ${st.typeMis || 0} verkeerd producttype, ${st.breekpunt || 0} breekpunt in titel, ${st.geslacht || 0} verkeerd geslacht` +
+                        (st.naarAi ? ` · ${st.naarAi} naar de fotocontrole` : " · niets voor de fotocontrole"),
+                    });
+                  }
                   scanned = Math.max(scanned, data.total || 0);
                   bestSelling = bestSelling || !!data.usedBestSelling;
                   // Elke zoekterm scant dezelfde catalogus en telt dezelfde
@@ -1146,6 +1176,16 @@ export default function ScraperPage() {
     controlRef.current = "run";
     setPaused(false);
     pushLog({ muted: true, text: "Hervat." });
+  }
+  /* Keyword overslaan — altijd beschikbaar zolang de run draait. Wat al
+     gevonden is voor dit keyword blijft gewoon in de sheet staan; alleen het
+     verder zoeken stopt. */
+  function skipKeyword() {
+    const kwNow = prog && prog.currentKw;
+    if (!kwNow) return;
+    skipRef.current = kwNow;
+    setSkipHint(kwNow);
+    pushLog({ warn: true, text: `"${kwNow}" handmatig overgeslagen — door naar het volgende keyword.` });
   }
   function stopSave() {
     controlRef.current = "stop-save";
@@ -1787,6 +1827,11 @@ export default function ScraperPage() {
                       <button className="btn-ghost" onClick={resumeRun}>▶ Hervat</button>
                     ) : (
                       <button className="btn-ghost" onClick={pauseRun}>⏸ Pauzeer</button>
+                    )}
+                    {prog && prog.currentKw && (
+                      <button className="btn-ghost" onClick={skipKeyword} title={`Stop met "${prog.currentKw}" en ga door naar het volgende keyword`}>
+                        ⏭ Sla "{prog.currentKw}" over
+                      </button>
                     )}
                     <button className="btn-ghost" onClick={stopSave}>⏹ Stop & opslaan</button>
                     <button className="btn-ghost runctl-del" onClick={stopDelete}>🗑 Stop & verwijderen</button>

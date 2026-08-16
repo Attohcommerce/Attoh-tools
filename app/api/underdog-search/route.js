@@ -64,6 +64,12 @@ export async function POST(req) {
     return NextResponse.json({ ok: true, store: catalog.domain, total: 0, matches: [], stats: {} });
   }
 
+  /* Als de bestseller-grens te weinig overlaat om uit te kiezen, heeft de
+     AI-controle niets te beoordelen en komt er per definitie niets uit. Dan
+     is de grens contraproductief: we rekken hem in dezelfde beurt op i.p.v.
+     nul terug te geven. Bestsellers blijven wel altijd vóóraan staan. */
+  const MIN_KANDIDATEN = 6;
+
   /* 1+2. Zoeken op de VAKTERM eerst, daarna pas verbreden.
 
      De kern: "pregnancy swimsuit" bestaat niet in producttitels, maar
@@ -101,12 +107,14 @@ export async function POST(req) {
   const stats = { bekeken: 0, buitenBestseller: 0, typeMis: 0, geslacht: 0, breekpunt: 0, naarAi: 0 };
 
   const pool = [];
-  for (let i = 0; i < catalog.products.length; i++) {
+  const bouwPool = (grens) => {
+    pool.length = 0;
+    for (let i = 0; i < catalog.products.length; i++) {
     const prod = catalog.products[i];
     const link = prod.url.toLowerCase().replace(/\/$/, "");
     if (exclude.has(link)) continue;
     stats.bekeken++;
-    if (i >= cutoff) {
+    if (i >= grens) {
       stats.buitenBestseller++;
       continue;
     }
@@ -141,7 +149,11 @@ export async function POST(req) {
     const title = norm(prod.title);
     const body = norm(String(prod.bodyHtml || "").replace(/<[^>]+>/g, " ")).slice(0, 1200);
     const tags = norm(prod.tags);
-    if (hitCount(title, p.disqualifiers) > 0) {
+    /* Breekpunt in de titel is hard — maar alleen als het niet óók een
+       gezochte eigenschap is. Zonder deze uitzondering sloopte een
+       breekpunt als "one piece" bij "onesie swimsuit" precies de goede
+       producten. */
+    if (hitCount(title, p.disqualifiers) > 0 && hitCount(title, p.searchTerms) === 0) {
       stats.breekpunt++;
       continue;
     }
@@ -170,6 +182,23 @@ export async function POST(req) {
       imageCount: prod.imageCount || 0,
     });
   }
+
+  };
+
+  bouwPool(cutoff);
+  /* Te mager? Dan alsnog de hele catalogus — met de bestsellers vooraan in
+     de sortering, dus bewezen verkopers houden voorrang. */
+  let grensLos = false;
+  if (pool.length < MIN_KANDIDATEN && cutoff < catalog.products.length) {
+    grensLos = true;
+    stats.buitenBestseller = 0;
+    stats.typeMis = 0;
+    stats.geslacht = 0;
+    stats.breekpunt = 0;
+    stats.bekeken = 0;
+    bouwPool(catalog.products.length);
+  }
+  stats.grensLos = grensLos;
 
   if (!pool.length) {
     return NextResponse.json({
