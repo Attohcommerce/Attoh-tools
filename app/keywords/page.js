@@ -51,10 +51,37 @@ async function parseKeywordCsv(file) {
     throw new Error(`${file.name}: kolommen niet herkend`);
   }
 
+  /* DATA IS LAW. Keyword Planner exporteert per keyword ook concurrentie,
+     biedingen en trend — precies de kolommen die verraden welk keyword een
+     underdog is (vraag zonder concurrentie). Die gooiden we bij het
+     samenvoegen weg voor de netheid; vanaf nu reizen ze allemaal mee. */
+  const findCol = (...tests) =>
+    headerCells.findIndex((h) => tests.some((t) => t.test(String(h || ""))));
+  const compTxtIdx = findCol(/^Competition$/i);
+  const compIdxIdx = findCol(/^Competition \(indexed/i);
+  const bidLowIdx = findCol(/bid \(low/i);
+  const bidHighIdx = findCol(/bid \(high/i);
+  const chg3Idx = findCol(/^Three month change/i);
+  const yoyIdx = findCol(/^YoY change/i);
+
   const clean = (v) => String(v || "").trim().replace(/^"|"$/g, "");
   const num = (v) => {
     const s = clean(v);
     return /^\d+$/.test(s) ? parseInt(s, 10) : 0;
+  };
+  // Decimalen (biedingen) en percentages (trend). Planner schrijft "25%",
+  // "-100%" en "∞" (nieuw keyword zonder historie) — ∞ wordt 9999.
+  const dec = (v) => {
+    const s = clean(v).replace(/,/g, "");
+    const n = Number(s);
+    return Number.isFinite(n) && s !== "" ? n : "";
+  };
+  const pct = (v) => {
+    const s = clean(v);
+    if (!s || s === "-") return "";
+    if (s.includes("∞")) return 9999;
+    const n = Number(s.replace(/%/g, "").replace(/,/g, ""));
+    return Number.isFinite(n) ? n : "";
   };
 
   const out = [];
@@ -63,7 +90,17 @@ async function parseKeywordCsv(file) {
     const p = l.split("\t");
     const kw = clean(p[0]);
     if (!kw) continue;
-    out.push({ kw, avg: num(p[avgIdx]), months: monthIdx.map((i) => num(p[i])) });
+    out.push({
+      kw,
+      avg: num(p[avgIdx]),
+      months: monthIdx.map((i) => num(p[i])),
+      comp: compTxtIdx >= 0 ? clean(p[compTxtIdx]) : "",
+      compIdx: compIdxIdx >= 0 ? dec(p[compIdxIdx]) : "",
+      bidLow: bidLowIdx >= 0 ? dec(p[bidLowIdx]) : "",
+      bidHigh: bidHighIdx >= 0 ? dec(p[bidHighIdx]) : "",
+      chg3: chg3Idx >= 0 ? pct(p[chg3Idx]) : "",
+      yoy: yoyIdx >= 0 ? pct(p[yoyIdx]) : "",
+    });
   }
   return { rows: out, monthNames };
 }
@@ -133,6 +170,18 @@ export default function KeywordsPage() {
   const [chatMsgs, setChatMsgs] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatBusy, setChatBusy] = useState(false);
+
+  /* ---- Tabblad 2: Underdog keywords ---- */
+  const [view, setView] = useState("run"); // "run" | "underdog"
+  const [uOrgSheet, setUOrgSheet] = useState(DEFAULT_ORG_SHEET);
+  const [uOrgTab, setUOrgTab] = useState("");
+  const [uStatsSheet, setUStatsSheet] = useState(DEFAULT_RESEARCH_SHEET);
+  const [uStatsTab, setUStatsTab] = useState("");
+  const [uCount, setUCount] = useState(100);
+  const [uRunning, setURunning] = useState(false);
+  const [uLogs, setULogs] = useState([]);
+  const [uDoneUrl, setUDoneUrl] = useState("");
+
   const fileInput = useRef(null);
   const chatEnd = useRef(null);
 
@@ -146,6 +195,10 @@ export default function KeywordsPage() {
       if (st) setVStore(st);
       const mk = localStorage.getItem("kw_market");
       if (mk) setVMarket(mk);
+      const uo = localStorage.getItem("kw_u_orgtab");
+      if (uo) setUOrgTab(uo);
+      const us = localStorage.getItem("kw_u_statstab");
+      if (us) setUStatsTab(us);
     } catch {}
     setSessions(loadSessions());
   }, []);
@@ -317,20 +370,39 @@ export default function KeywordsPage() {
       log({ strong: true, text: "— Stap 1: CSV's samenvoegen" });
       const merged = new Map();
       let monthNames = null;
+      // Bij dubbele keywords wint de rij met het hoogste volume, maar lege
+      // extra velden (concurrentie/bids/trend) worden aangevuld vanuit de
+      // andere batch — geen data weggooien die één van de twee wél had.
+      const EXTRA = ["comp", "compIdx", "bidLow", "bidHigh", "chg3", "yoy"];
       for (const f of files) {
         if (!f.rows) continue;
         if (!monthNames) monthNames = f.monthNames;
         for (const r of f.rows) {
           const k = r.kw.toLowerCase();
           const cur = merged.get(k);
-          if (!cur || r.avg > cur.avg) merged.set(k, r);
+          if (!cur) {
+            merged.set(k, { ...r });
+          } else {
+            const win = r.avg > cur.avg ? { ...r } : { ...cur };
+            const lose = r.avg > cur.avg ? cur : r;
+            for (const fld of EXTRA) {
+              if (win[fld] === "" || win[fld] == null) win[fld] = lose[fld];
+            }
+            merged.set(k, win);
+          }
         }
       }
       const rows = [...merged.values()].sort((a, b) => b.avg - a.avg);
       log({ ok: true, text: `${totalRows} rijen gelezen → ${rows.length} unieke keywords` });
 
       log({ strong: true, text: "— Stap 2: nieuw tabblad aanmaken" });
-      const header = ["Keyword", "Avg. monthly search", ...monthNames];
+      // Extra kolommen NA de maanden, zodat alle bestaande lezers (verdeling,
+      // merken-check) die op naam zoeken gewoon blijven werken.
+      const header = [
+        "Keyword", "Avg. monthly search", ...monthNames,
+        "Competition", "Comp. index", "Top bid low", "Top bid high",
+        "3-mnd verandering %", "YoY verandering %",
+      ];
       const created = await api("/api/keywords-sheet", {
         action: "create",
         sheetId: sheetLink.trim(),
@@ -341,7 +413,10 @@ export default function KeywordsPage() {
 
       log({ strong: true, text: "— Stap 3: keywords uploaden" });
       const CHUNK = 4000;
-      const values = rows.map((r) => [r.kw, r.avg, ...r.months]);
+      const values = rows.map((r) => [
+        r.kw, r.avg, ...r.months,
+        r.comp ?? "", r.compIdx ?? "", r.bidLow ?? "", r.bidHigh ?? "", r.chg3 ?? "", r.yoy ?? "",
+      ]);
       for (let i = 0; i < values.length; i += CHUNK) {
         await api("/api/keywords-sheet", {
           action: "append",
@@ -567,12 +642,212 @@ export default function KeywordsPage() {
     }
   }
 
+  /* ----- underdog-run ----- */
+
+  const canUnderdog =
+    !uRunning && uOrgSheet.trim() && uOrgTab.trim() && uStatsSheet.trim() &&
+    uStatsTab.trim() && orderedMonths.length === 4;
+
+  async function runUnderdog() {
+    if (!canUnderdog) return;
+    setURunning(true);
+    setUDoneUrl("");
+    setULogs([]);
+    const push = (e) => setULogs((l) => [...l, e]);
+    try {
+      localStorage.setItem("kw_u_orgtab", uOrgTab.trim());
+      localStorage.setItem("kw_u_statstab", uStatsTab.trim());
+      localStorage.setItem("kw_store", vStore.trim());
+      localStorage.setItem("kw_market", vMarket);
+    } catch {}
+    try {
+      push({
+        strong: true,
+        text: `— Underdog-run: ${vStore.trim() || "store ?"} · markt ${vMarket} · ${orderedMonths.join(", ")} · doel ${uCount} keywords`,
+      });
+      push({
+        text: "Organization + alle batch-stats inlezen, underdog-algoritme (volume × trend × concurrentie × long-tail) en AI-review draaien — dit kan 1–2 minuten duren…",
+      });
+      const r = await api("/api/keywords-underdog", {
+        orgSheetId: uOrgSheet.trim(),
+        orgTab: uOrgTab.trim(),
+        statsSheetId: uStatsSheet.trim(),
+        statsTab: uStatsTab.trim(),
+        months: orderedMonths,
+        genders: vGenders === "M" ? "M" : "V",
+        market: vMarket,
+        storeUrl: vStore.trim(),
+        count: Math.max(10, Math.min(300, Number(uCount) || 100)),
+      });
+      push({
+        ok: true,
+        text: `${r.added} underdog-keywords (${r.totalUnderdogProducts} producten) toegevoegd onderaan "${uOrgTab.trim()}" — duidelijk gemarkeerd als Underdog, met per keyword de scraper-uitleg in kolom J.`,
+      });
+      if (r.stats) {
+        push({
+          text: `Data: ${r.stats.statsRows} stats-rijen → ${r.stats.kandidaten} kandidaten na filters → ${r.stats.naDedupe} na ontdubbelen → top ${r.stats.poolNaarAi} langs de AI. Familie-van-bestaand geweerd: ${r.stats.family}. Seizoen: ${r.stats.seizoen}.`,
+        });
+        if (!r.stats.compData) {
+          push({ err: true, text: "Stats-tabblad had geen concurrentie/bid/trend-kolommen — draai stap 1 opnieuw met je CSV's, dan wordt de selectie een stuk scherper." });
+        }
+      }
+      if (r.collections && r.collections.length) {
+        push({ text: "Per collectie: " + r.collections.map((c) => `${c.col} ${c.kws}kw/${c.products}p`).join(" · ") });
+      }
+      if (r.aiRemoved && r.aiRemoved.length) {
+        push({ text: `AI schrapte o.a.: ${r.aiRemoved.slice(0, 10).join(", ")}${r.aiRemoved.length > 10 ? " …" : ""}` });
+      }
+      for (const w of r.warnings || []) push({ err: true, text: `Let op: ${w}` });
+      setUDoneUrl(r.url);
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+    } catch (e) {
+      push({ err: true, text: String(e.message || e) });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+    } finally {
+      setURunning(false);
+    }
+  }
+
   /* ---------- render ---------- */
 
   return (
     <>
       <Header icon="A" title="Attoh Tools" subtitle="Keyword Planner → nette sheet" />
       <div className="page">
+        {/* -------- Tool-tabbladen -------- */}
+        <div className="srctabs" style={{ marginBottom: 14 }}>
+          <button className={"srctab" + (view === "run" ? " on" : "")} onClick={() => setView("run")}>
+            Keyword-batches & verdeling
+          </button>
+          <button className={"srctab" + (view === "underdog" ? " on" : "")} onClick={() => setView("underdog")}>
+            Underdog keywords
+          </button>
+        </div>
+
+        {/* -------- Tabblad 2: Underdog keywords -------- */}
+        {view === "underdog" && (
+          <div className="layout-scraper">
+            <div>
+              <div className="card">
+                <h2>Underdog keywords <span className="opt">(niche kansen uit ALLE batch-data)</span></h2>
+                <div className="hint" style={{ marginBottom: 12 }}>
+                  Leest je bestaande Collection &amp; Product organization én de volledige batch-stats
+                  (180k+ keywords) en kiest daaruit keywords met échte, liefst stijgende vraag maar
+                  weinig concurrentie — geen varianten van wat er al staat. De selectie wordt onderaan
+                  je bestaande organization-tabblad toegevoegd, gemarkeerd als "Underdog", met per
+                  keyword een uitleg-zin voor de scraper (concurrenten gebruiken deze woorden vaak
+                  niet letterlijk, dus de scraper moet straks op betekenis en foto matchen).
+                </div>
+
+                <div className="field-label">Collection &amp; Product organization — sheet</div>
+                <input type="text" value={uOrgSheet} onChange={(e) => setUOrgSheet(e.target.value)} />
+                <div className="field-label">Bladnaam van je organization-tabblad</div>
+                <input
+                  type="text"
+                  placeholder='bv. "LGB - 16/08/2026"'
+                  value={uOrgTab}
+                  onChange={(e) => setUOrgTab(e.target.value)}
+                />
+
+                <div className="field-label">Alle batch-stats — sheet</div>
+                <input type="text" value={uStatsSheet} onChange={(e) => setUStatsSheet(e.target.value)} />
+                <div className="field-label">Bladnaam van het stats-tabblad</div>
+                <input
+                  type="text"
+                  placeholder='bv. "LGB alle batches"'
+                  value={uStatsTab}
+                  onChange={(e) => setUStatsTab(e.target.value)}
+                />
+
+                <div className="field-label">Store</div>
+                <input
+                  type="text"
+                  placeholder="bv. ladyglamboutique.com"
+                  value={vStore}
+                  onChange={(e) => setVStore(e.target.value)}
+                />
+                <div className="field-label">Markt</div>
+                <div className="seg">
+                  {[["USA", "USA"], ["UK", "UK"], ["AUS", "AUS + NZ"], ["CAN", "CAN"]].map(([val, label]) => (
+                    <button key={val} className={vMarket === val ? "on" : ""} onClick={() => setVMarket(val)} type="button">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="field-label">Doelgroep</div>
+                <div className="seg">
+                  {[["V", "Vrouw"], ["M", "Man"]].map(([val, label]) => (
+                    <button key={val} className={vGenders === val ? "on" : ""} onClick={() => setVGenders(val)} type="button">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="field-label">
+                  Maanden <span className="opt">(zelfde venster als je verdeling — {orderedMonths.length}/4)</span>
+                </div>
+                <div className="mcal">
+                  {MONTHS.map((m) => {
+                    const on = vMonths.includes(m.key);
+                    const full = !on && vMonths.length >= 4;
+                    return (
+                      <button
+                        key={m.key}
+                        type="button"
+                        className={"mcal-m" + (on ? " on" : "") + (full ? " dim" : "")}
+                        onClick={() => toggleMonth(m.key)}
+                      >
+                        {m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="field-label">Aantal underdog-keywords <span className="opt">(10–300)</span></div>
+                <input
+                  type="number"
+                  style={{ width: 110 }}
+                  min={10}
+                  max={300}
+                  value={uCount}
+                  onChange={(e) => setUCount(e.target.value)}
+                />
+
+                <div style={{ marginTop: 14 }}>
+                  <button className="btn" onClick={runUnderdog} disabled={!canUnderdog}>
+                    {uRunning ? "Bezig…" : "⚑ Underdogs zoeken & toevoegen"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="card">
+                <h2>Underdog-log</h2>
+                {uLogs.length === 0 && !uRunning && (
+                  <div className="center-note" style={{ padding: "18px 8px" }}>
+                    Vul beide bladnamen in, kies je venster en start. De underdogs worden
+                    onderaan je bestaande organization gezet — niets wordt overschreven.
+                  </div>
+                )}
+                <div className="logpanel">
+                  {uLogs.map((l, i) => (
+                    <div key={i} className={"logline" + (l.err ? " err" : l.ok ? " ok" : l.strong ? " strong" : "")}>
+                      {l.text}
+                    </div>
+                  ))}
+                </div>
+                {uDoneUrl && (
+                  <div style={{ marginTop: 10 }}>
+                    <a className="btn" href={uDoneUrl} target="_blank" rel="noreferrer">
+                      ↗ Open de organization-sheet
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === "run" && (<>
         {/* -------- Sessies -------- */}
         <div className="sess-bar">
           <button
@@ -973,6 +1248,7 @@ export default function KeywordsPage() {
             </div>
           </div>
         )}
+        </>)}
       </div>
     </>
   );
