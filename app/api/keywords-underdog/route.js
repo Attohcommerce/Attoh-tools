@@ -366,14 +366,19 @@ export async function POST(req) {
     if (body.action === "prep") return NextResponse.json(await prepStep(body));
 
     if (body.action === "sieve") {
-      const suspects = (Array.isArray(body.suspects) ? body.suspects : []).slice(0, 150);
+      // Client stuurt stukken van 50 — de cap hier is een vangnet, zodat één
+      // verzoek nooit meer dan ~1 snelle AI-call hoeft te doen.
+      const suspects = (Array.isArray(body.suspects) ? body.suspects : []).slice(0, 60);
       if (!suspects.length) return NextResponse.json({ ok: true, removals: [] });
       const removals = await classifyUnknownTokens(suspects);
       return NextResponse.json({ ok: true, removals });
     }
 
     if (body.action === "review") {
-      const items = (Array.isArray(body.items) ? body.items : []).slice(0, 120);
+      // Client stuurt stukken van 25 — cap 30 als vangnet: altijd precies één
+      // Sonnet-call per verzoek, ruim binnen Vercel's 60s-venster (60 items
+      // paste NIET; dat was de 504 midden in de review).
+      const items = (Array.isArray(body.items) ? body.items : []).slice(0, 30);
       if (!items.length) return NextResponse.json({ ok: true, picks: [], drop: [] });
       const out = await reviewUnderdogPicks(items, body.opts || {});
       return NextResponse.json({ ok: true, ...out });

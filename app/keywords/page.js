@@ -175,7 +175,10 @@ export default function KeywordsPage() {
   const [view, setView] = useState("run"); // "run" | "underdog"
   const [uOrgSheet, setUOrgSheet] = useState(DEFAULT_ORG_SHEET);
   const [uOrgTab, setUOrgTab] = useState("");
-  const [uStatsSheet, setUStatsSheet] = useState(DEFAULT_RESEARCH_SHEET);
+  // Stats-link bewust LEEG: Justin kiest zelf welk stats-bestand deze run
+  // voedt (een vooringevulde link wees stilletjes naar het verkeerde bestand).
+  // De laatst gebruikte link wordt wel onthouden.
+  const [uStatsSheet, setUStatsSheet] = useState("");
   const [uStatsTab, setUStatsTab] = useState("");
   const [uProducts, setUProducts] = useState(250);
   const [uRunning, setURunning] = useState(false);
@@ -203,6 +206,8 @@ export default function KeywordsPage() {
       if (uo) setUOrgTab(uo);
       const us = localStorage.getItem("kw_u_statstab");
       if (us) setUStatsTab(us);
+      const usl = localStorage.getItem("kw_u_statssheet");
+      if (usl) setUStatsSheet(usl);
     } catch {}
     setSessions(loadSessions());
   }, []);
@@ -686,6 +691,7 @@ export default function KeywordsPage() {
     try {
       localStorage.setItem("kw_u_orgtab", uOrgTab.trim());
       localStorage.setItem("kw_u_statstab", uStatsTab.trim());
+      localStorage.setItem("kw_u_statssheet", uStatsSheet.trim());
       localStorage.setItem("kw_store", vStore.trim());
       localStorage.setItem("kw_market", vMarket);
     } catch {}
@@ -722,30 +728,51 @@ export default function KeywordsPage() {
       const aiRemovedAll = [];
       let pool = prep.pool || [];
 
-      // Stap 2: onbekende woorden — merk-risico's die de woordenlijst niet kent
+      /* Stap 2: onbekende woorden — merk-risico's die de woordenlijst niet
+         kent. In stukken van 50 (één snelle AI-call per verzoek) en per stuk
+         een herkansing: één mislukte call kost hooguit zijn eigen 50
+         verdachten, nooit meer de hele lijst van 118 zoals eerst. */
       if ((prep.suspects || []).length) {
-        setUPhase("Stap 2/4 · merk-check");
-        push({ text: `Stap 2/4 · ${prep.suspects.length} keywords met onbekende woorden langs de merk-check…`, key: "u-step" });
-        try {
-          const sv = await api("/api/keywords-underdog", { action: "sieve", suspects: prep.suspects });
-          const drop = new Set((sv.removals || []).map((v) => v.kw));
-          for (const v of sv.removals || []) aiRemovedAll.push(`${v.kw} (${v.reason})`);
-          pool = pool.filter((c) => !drop.has(c.kw));
-        } catch (e2) {
-          // Check faalde → verdachte keywords uit voorzorg weren
-          const sus = new Set(prep.suspects.map((s) => s.kw));
-          pool = pool.filter((c) => !sus.has(c.kw));
-          push({ err: true, text: `Merk-check faalde (${e2.message}) — ${sus.size} verdachte keywords uit voorzorg geweerd.` });
+        const S_CHUNK = 50;
+        const total = prep.suspects.length;
+        let weggefilterd = 0;
+        for (let i = 0; i < total; i += S_CHUNK) {
+          const part = prep.suspects.slice(i, i + S_CHUNK);
+          setUPhase(`Stap 2/4 · merk-check ${Math.min(i + S_CHUNK, total)}/${total}`);
+          push({ text: `Stap 2/4 · Merk-check ${Math.min(i + S_CHUNK, total)}/${total} verdachte keywords…`, key: "u-step" });
+          let removals = null;
+          for (let attempt = 0; attempt < 2 && !removals; attempt++) {
+            try {
+              const sv = await api("/api/keywords-underdog", { action: "sieve", suspects: part });
+              removals = sv.removals || [];
+            } catch {}
+          }
+          if (removals) {
+            const drop = new Set(removals.map((v) => v.kw));
+            for (const v of removals) aiRemovedAll.push(`${v.kw} (${v.reason})`);
+            weggefilterd += drop.size;
+            pool = pool.filter((c) => !drop.has(c.kw));
+          } else {
+            // Twee keer mislukt → alleen dít stuk uit voorzorg weren
+            const sus = new Set(part.map((s) => s.kw));
+            pool = pool.filter((c) => !sus.has(c.kw));
+            weggefilterd += sus.size;
+            push({ err: true, text: `Merk-check van ${sus.size} keywords bleef falen — dat stuk uit voorzorg geweerd; de run gaat door.` });
+          }
         }
+        push({ text: `Stap 2/4 · Merk-check klaar — ${weggefilterd} keywords geweerd, ${pool.length} over.`, key: "u-step" });
       } else {
         setUPhase("Stap 2/4 · merk-check overgeslagen");
         push({ text: "Stap 2/4 · Geen onbekende woorden in de pool — merk-check overgeslagen.", key: "u-step" });
       }
 
-      // Stap 3: AI-review in stukken — kiest de keepers en schrijft per keyword
-      // de scraper-uitleg. 60 per server-call = één AI-call per verzoek, ruim
-      // binnen tijd- én token-limieten.
-      const CHUNK = 60;
+      /* Stap 3: AI-review in stukken — kiest de keepers en schrijft per
+         keyword de scraper-uitleg. 25 per call: bij 60 duurde één Sonnet-call
+         (uitleg-zinnen!) langer dan Vercel's 60s-venster → HTTP 504 midden in
+         de review. 25 items ≈ 15-35s, ruim binnen de limiet. Mislukt een
+         stuk twee keer, dan vallen alleen díe kandidaten af en loopt de run
+         gewoon door. */
+      const CHUNK = 25;
       const reviewOpts = {
         market: vMarket,
         months: orderedMonths,
@@ -754,6 +781,7 @@ export default function KeywordsPage() {
         existing: Object.entries(prep.colProducts || {}).map(([col, products]) => ({ col, products })),
       };
       const pickedMap = new Map();
+      let nietBeoordeeld = 0;
       for (let i = 0; i < pool.length; i += CHUNK) {
         const part = pool.slice(i, i + CHUNK);
         setUPhase(`Stap 3/4 · AI-review ${Math.min(i + CHUNK, pool.length)}/${pool.length}`);
@@ -761,16 +789,29 @@ export default function KeywordsPage() {
           text: `Stap 3/4 · AI-review ${Math.min(i + CHUNK, pool.length)}/${pool.length} kandidaten…`,
           key: "u-step",
         });
-        const rv = await api("/api/keywords-underdog", {
-          action: "review",
-          items: part.map((c) => ({ kw: c.kw, col: c.col, windowVol: c.windowVol, avg: c.avg, compIdx: c.compIdx, growthPct: c.growthPct })),
-          opts: reviewOpts,
-        });
+        let rv = null;
+        for (let attempt = 0; attempt < 2 && !rv; attempt++) {
+          try {
+            rv = await api("/api/keywords-underdog", {
+              action: "review",
+              items: part.map((c) => ({ kw: c.kw, col: c.col, windowVol: c.windowVol, avg: c.avg, compIdx: c.compIdx, growthPct: c.growthPct })),
+              opts: reviewOpts,
+            });
+          } catch {}
+        }
+        if (!rv) {
+          nietBeoordeeld += part.length;
+          push({ err: true, text: `Review van ${part.length} kandidaten bleef falen — dat stuk overgeslagen; de run gaat door.` });
+          continue;
+        }
         for (const d of rv.drop || []) aiRemovedAll.push(`${d.kw} (${d.reason})`);
         for (const p of rv.picks || []) {
           const col = prep.colProducts && prep.colProducts[p.collection] != null ? p.collection : null;
           pickedMap.set(p.kw, { uitleg: p.uitleg || "", col });
         }
+      }
+      if (nietBeoordeeld) {
+        push({ err: true, text: `Let op: ${nietBeoordeeld} kandidaten zijn niet beoordeeld door herhaalde fouten — de rest van de run is gewoon doorgegaan.` });
       }
       const picks = pool
         .filter((c) => pickedMap.has(c.kw))
@@ -863,8 +904,13 @@ export default function KeywordsPage() {
                   onChange={(e) => setUOrgTab(e.target.value)}
                 />
 
-                <div className="field-label">Alle batch-stats — sheet</div>
-                <input type="text" value={uStatsSheet} onChange={(e) => setUStatsSheet(e.target.value)} />
+                <div className="field-label">Alle batch-stats — sheet <span className="opt">(zelf invullen)</span></div>
+                <input
+                  type="text"
+                  placeholder="https://docs.google.com/spreadsheets/d/…"
+                  value={uStatsSheet}
+                  onChange={(e) => setUStatsSheet(e.target.value)}
+                />
                 <div className="field-label">Bladnaam van het stats-tabblad</div>
                 <input
                   type="text"
