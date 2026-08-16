@@ -657,7 +657,20 @@ export default function KeywordsPage() {
     setURunning(true);
     setUDoneUrl("");
     setULogs([]);
-    const push = (e) => setULogs((l) => [...l, e]);
+    // Regels met dezelfde key vervangen elkaar: de stap-voortgang blijft
+    // één levende regel i.p.v. een stapel.
+    const push = (e) =>
+      setULogs((l) => {
+        if (e.key) {
+          const i = l.findIndex((x) => x.key === e.key);
+          if (i >= 0) {
+            const copy = [...l];
+            copy[i] = e;
+            return copy;
+          }
+        }
+        return [...l, e];
+      });
     try {
       localStorage.setItem("kw_u_orgtab", uOrgTab.trim());
       localStorage.setItem("kw_u_statstab", uStatsTab.trim());
@@ -669,10 +682,15 @@ export default function KeywordsPage() {
         strong: true,
         text: `— Underdog-run: ${vStore.trim() || "store ?"} · markt ${vMarket} · ${orderedMonths.join(", ")} · doel ${uProducts} producten (AI bepaalt het aantal keywords)`,
       });
-      push({
-        text: "Organization + alle batch-stats inlezen, underdog-algoritme (volume × trend × concurrentie × long-tail) en AI-review draaien — dit kan 1–2 minuten duren…",
-      });
-      const r = await api("/api/keywords-underdog", {
+
+      /* De run is opgeknipt in korte server-stappen die hier na elkaar worden
+         aangeroepen — elke stap blijft ruim onder de Vercel-tijdslimiet,
+         dus een HTTP 504 kan niet meer. Bonus: je ziet de voortgang live. */
+      const budget = Math.max(20, Math.min(900, Number(uProducts) || 250));
+
+      push({ text: "Stap 1/4 · Sheets inlezen en underdog-algoritme draaien (volume × trend × concurrentie × long-tail)…", key: "u-step" });
+      const prep = await api("/api/keywords-underdog", {
+        action: "prep",
         orgSheetId: uOrgSheet.trim(),
         orgTab: uOrgTab.trim(),
         statsSheetId: uStatsSheet.trim(),
@@ -681,18 +699,85 @@ export default function KeywordsPage() {
         genders: vGenders === "M" ? "M" : "V",
         market: vMarket,
         storeUrl: vStore.trim(),
-        productTarget: Math.max(20, Math.min(900, Number(uProducts) || 250)),
+        productTarget: budget,
       });
+      if (prep.stats) {
+        push({
+          text: `Trechter: ${prep.stats.statsRows} keywords → ${prep.stats.kandidaten} kandidaten → ${prep.stats.naDedupe} uniek → ${prep.stats.poolNaarAi} naar de AI-review · familie van bestaande keywords geweerd: ${prep.stats.family} · seizoen ${prep.stats.seizoen}${prep.stats.compData ? " · concurrentie/bid/trend-data gebruikt" : ""}`,
+        });
+      }
+      const aiRemovedAll = [];
+      let pool = prep.pool || [];
+
+      // Stap 2: onbekende woorden — merk-risico's die de woordenlijst niet kent
+      if ((prep.suspects || []).length) {
+        push({ text: `Stap 2/4 · ${prep.suspects.length} keywords met onbekende woorden langs de merk-check…`, key: "u-step" });
+        try {
+          const sv = await api("/api/keywords-underdog", { action: "sieve", suspects: prep.suspects });
+          const drop = new Set((sv.removals || []).map((v) => v.kw));
+          for (const v of sv.removals || []) aiRemovedAll.push(`${v.kw} (${v.reason})`);
+          pool = pool.filter((c) => !drop.has(c.kw));
+        } catch (e2) {
+          // Check faalde → verdachte keywords uit voorzorg weren
+          const sus = new Set(prep.suspects.map((s) => s.kw));
+          pool = pool.filter((c) => !sus.has(c.kw));
+          push({ err: true, text: `Merk-check faalde (${e2.message}) — ${sus.size} verdachte keywords uit voorzorg geweerd.` });
+        }
+      } else {
+        push({ text: "Stap 2/4 · Geen onbekende woorden in de pool — merk-check overgeslagen.", key: "u-step" });
+      }
+
+      // Stap 3: AI-review in stukken — kiest de keepers en schrijft per keyword
+      // de scraper-uitleg. 60 per server-call = één AI-call per verzoek, ruim
+      // binnen tijd- én token-limieten.
+      const CHUNK = 60;
+      const reviewOpts = {
+        market: vMarket,
+        months: orderedMonths,
+        seasons: prep.windowSeasons || [],
+        storeUrl: vStore.trim(),
+        existing: Object.entries(prep.colProducts || {}).map(([col, products]) => ({ col, products })),
+      };
+      const pickedMap = new Map();
+      for (let i = 0; i < pool.length; i += CHUNK) {
+        const part = pool.slice(i, i + CHUNK);
+        push({
+          text: `Stap 3/4 · AI-review ${Math.min(i + CHUNK, pool.length)}/${pool.length} kandidaten…`,
+          key: "u-step",
+        });
+        const rv = await api("/api/keywords-underdog", {
+          action: "review",
+          items: part.map((c) => ({ kw: c.kw, col: c.col, windowVol: c.windowVol, avg: c.avg, compIdx: c.compIdx, growthPct: c.growthPct })),
+          opts: reviewOpts,
+        });
+        for (const d of rv.drop || []) aiRemovedAll.push(`${d.kw} (${d.reason})`);
+        for (const p of rv.picks || []) {
+          const col = prep.colProducts && prep.colProducts[p.collection] != null ? p.collection : null;
+          pickedMap.set(p.kw, { uitleg: p.uitleg || "", col });
+        }
+      }
+      const picks = pool
+        .filter((c) => pickedMap.has(c.kw))
+        .map((c) => ({ ...c, col: pickedMap.get(c.kw).col || c.col, uitleg: pickedMap.get(c.kw).uitleg }));
+
+      // Stap 4: budget vullen (collectie-plafond ~20%) en wegschrijven
+      push({ text: `Stap 4/4 · ${picks.length} goedgekeurde underdogs — budget van ${budget} producten vullen en wegschrijven…`, key: "u-step" });
+      const r = await api("/api/keywords-underdog", {
+        action: "write",
+        orgSheetId: uOrgSheet.trim(),
+        orgTab: uOrgTab.trim(),
+        productTarget: budget,
+        picks,
+      });
+      r.aiRemoved = aiRemovedAll;
+      r.stats = null;
+      r.warnings = [...(prep.warnings || []), ...(r.warnings || [])];
       push({
         ok: true,
         text: `✓ ${r.totalUnderdogProducts} producten · ${r.added} keywords · ${(r.collections || []).length} collecties — onderaan "${uOrgTab.trim()}"`,
+        key: "u-step",
       });
       push({ text: `Elk keyword staat er met Type "Underdog" en zijn uitleg in kolom J; het overzicht per collectie + de uitleg voor scraper en importer staan ernaast in K–N.` });
-      if (r.stats) {
-        push({
-          text: `Trechter: ${r.stats.statsRows} keywords → ${r.stats.kandidaten} kandidaten → ${r.stats.naDedupe} uniek → ${r.stats.poolNaarAi} naar de AI-review · familie van bestaande keywords geweerd: ${r.stats.family} · seizoen ${r.stats.seizoen}${r.stats.compData ? " · concurrentie/bid/trend-data gebruikt" : ""}`,
-        });
-      }
       {
         const cols6 = (r.collections || []).slice(0, 6).map((c) => `${c.col} ${c.products}p`).join(" · ");
         if (cols6) push({ text: `Spreiding (max ~20% per collectie): ${cols6}${(r.collections || []).length > 6 ? " · …" : ""}` });
