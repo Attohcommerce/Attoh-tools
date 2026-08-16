@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { readRange, addTab, appendRows, formatVerdelingTab, parseSheetId } from "@/lib/sheets";
+import { readRange, readColumnsBatch, addTab, appendRows, formatVerdelingTab, parseSheetId } from "@/lib/sheets";
 import { buildVerdeling, keywordType } from "@/lib/verdeling";
 import { classifyJunkKeywordsBatch, reviewVerdelingFinal, classifyUnknownTokens } from "@/lib/ai";
 import { unknownFashionTokens } from "@/lib/brands";
 
-export const maxDuration = 60;
+// 300s (Fluid Compute) — faalt de deploy hierop, zet 60 terug; het interne
+// tijdsbudget rekent automatisch mee.
+export const maxDuration = 300;
 
 // Nederlandse maand-key → Engels token zoals in de sheet-koppen ("Jul 2025")
 const MONTH_TOKEN = {
@@ -37,11 +39,11 @@ export async function POST(req) {
     return NextResponse.json({ error: "Kies precies 4 maanden" }, { status: 400 });
   }
 
-  // Vercel kapt de functie na 60s af (→ HTTP 504). We bewaken de tijd zelf:
-  // zware AI-controles worden overgeslagen zodra de klok krap wordt, zodat
-  // je altijd een verdeling terugkrijgt i.p.v. een timeout.
+  // Vercel kapt de functie op maxDuration af (→ HTTP 504). We bewaken de tijd
+  // zelf: zware AI-controles worden overgeslagen zodra de klok krap wordt,
+  // zodat je altijd een verdeling terugkrijgt i.p.v. een timeout.
   const T0 = Date.now();
-  const msLeft = () => 46000 - (Date.now() - T0);
+  const msLeft = () => maxDuration * 1000 - 14000 - (Date.now() - T0);
   const skipped = [];
 
   try {
@@ -73,17 +75,9 @@ export async function POST(req) {
     const nextIdx = header.findIndex((h) => h.replace(/^searches:\s*/, "").startsWith(afterTok));
 
     /* ---- 2. alleen de nodige kolommen lezen (bron kan tienduizenden rijen zijn) ---- */
-    // Kolommen PARALLEL ophalen — bij een tabblad van 100k rijen scheelt dat
-    // tientallen seconden t.o.v. één voor één (was de hoofdoorzaak van 504's).
-    const wanted = [...new Set([kwIdx, avgIdx, ...monthIdx, nextIdx].filter((i) => i >= 0))];
-    const fetched = await Promise.all(
-      wanted.map(async (i) => {
-        const L = colLetter(i);
-        const vals = await readRange(sourceSheetId, `'${src}'!${L}2:${L}`);
-        return [i, vals.map((r) => r[0])];
-      })
-    );
-    const columns = Object.fromEntries(fetched);
+    // Alle kolommen in ÉÉN batchGet-verzoek — minder roundtrips dan parallel
+    // losse reads, en voorspelbaarder onder de Vercel-tijdslimiet.
+    const columns = await readColumnsBatch(sourceSheetId, src, [kwIdx, avgIdx, ...monthIdx, nextIdx]);
     const nRows = columns[kwIdx].length;
     const num = (v) => {
       const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));

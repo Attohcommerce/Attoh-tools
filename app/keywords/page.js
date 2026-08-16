@@ -704,7 +704,15 @@ export default function KeywordsPage() {
       setUDoneUrl(r.url);
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     } catch (e) {
-      push({ err: true, text: String(e.message || e) });
+      const msg = String(e.message || e);
+      if (msg.includes("504")) {
+        push({
+          err: true,
+          text: "Time-out (HTTP 504): de server kapte de run af. Controleer of de nieuwste versie live staat (het log hoort \"doel … producten\" te zeggen, niet \"keywords\") en ververs de pagina hard met Ctrl+Shift+R. Check daarna of er géén half UNDERDOG-blok onderaan het organization-tabblad staat voordat je opnieuw draait.",
+        });
+      } else {
+        push({ err: true, text: msg });
+      }
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
     } finally {
       setURunning(false);

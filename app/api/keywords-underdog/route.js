@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readRange, appendRows, parseSheetId } from "@/lib/sheets";
+import { readRange, readColumnsBatch, appendRows, parseSheetId } from "@/lib/sheets";
 import {
   canonKey, isVerdelingJunk, collectionFor, consistentCollection, keywordType,
   MARKETS, seasonOf, seasonFactor, eventFactor, storeProfile,
@@ -10,7 +10,11 @@ import {
 import { classifyUnknownTokens, reviewUnderdogPicks } from "@/lib/ai";
 import { unknownFashionTokens } from "@/lib/brands";
 
-export const maxDuration = 60;
+/* 300s (Fluid Compute). De eerste live run klapte op HTTP 504: 182k rijen
+   lezen + AI-lagen paste niet in 60s. Faalt de deploy hierop (oud plan
+   zonder Fluid Compute), zet dan 60 terug — het interne tijdsbudget
+   hieronder rekent automatisch mee. */
+export const maxDuration = 300;
 
 const MONTH_TOKEN = {
   jan: "jan", feb: "feb", mrt: "mar", apr: "apr", mei: "may", jun: "jun",
@@ -52,7 +56,8 @@ export async function POST(req) {
   );
   const target = Math.min(300, Math.floor(budget / 2)); // max # keywords als alles de vloer krijgt
   const T0 = Date.now();
-  const msLeft = () => 50000 - (Date.now() - T0);
+  // Tijdsbudget volgt maxDuration (8s marge voor het wegschrijven + antwoord)
+  const msLeft = () => maxDuration * 1000 - 8000 - (Date.now() - T0);
   const warnings = [];
 
   try {
@@ -128,21 +133,11 @@ export async function POST(req) {
         `"${sTab}" heeft geen concurrentie/bid/trend-kolommen — draai stap 1 opnieuw met je CSV's voor een véél scherpere underdog-selectie. Nu rekent de engine op volume, venster-groei en long-tail alleen.`
       );
 
-    const wanted = [
-      ...new Set(
-        [kwIdx, avgIdx, ...monthIdx, nextIdx, compTxtIdx, compIdxIdx, bidLowIdx, bidHighIdx, chg3Idx, yoyIdx].filter(
-          (i) => i >= 0
-        )
-      ),
-    ];
-    const fetched = await Promise.all(
-      wanted.map(async (i) => {
-        const L = colLetter(i);
-        const vals = await readRange(statsSheetId, `'${sTab}'!${L}2:${L}`);
-        return [i, vals.map((r) => r[0])];
-      })
-    );
-    const cols = Object.fromEntries(fetched);
+    // Alle kolommen in ÉÉN batchGet — twaalf losse reads over 182k rijen was
+    // de grootste tijdvreter en de directe aanleiding van de 504.
+    const cols = await readColumnsBatch(statsSheetId, sTab, [
+      kwIdx, avgIdx, ...monthIdx, nextIdx, compTxtIdx, compIdxIdx, bidLowIdx, bidHighIdx, chg3Idx, yoyIdx,
+    ]);
     const nRows = cols[kwIdx].length;
     const num = (v) => {
       const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));
