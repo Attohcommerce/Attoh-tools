@@ -38,16 +38,25 @@ const HEADER_ROW = [
 const STORE_TTL_DAYS = 14;
 const LS_LAST_ACTIVE = "sa_last_active";
 
-// Slim zoeken (underdog-keywords) — de trap-ladder per keyword:
-//   store 1-2   → alleen het originele keyword (+ eerder bewezen winnaar)
-//   store 3+    → ook de AI-alternatieven (vóór de run al klaargezet)
-//   store 8+    → ook het brede vangnet (kale producttype, bv. "dress")
-//   store 6     → instructie-paneel (overslaan / doorgaan) — loopt gewoon door
-//   store 20    → nog steeds 0? automatisch door naar het volgende keyword
-const ALTS_AT = 3;
-const BROAD_AT = 8;
+/* Slim zoeken — de trap-ladder per keyword:
+     store 1     → alleen het originele keyword (+ eerder bewezen winnaar)
+     store 2+    → ook de AI-alternatieven, en de ladder begint OPNIEUW BIJ
+                   STORE 1 met die nieuwe termen
+     store 4+    → ook het brede vangnet, opnieuw vanaf store 1
+     store 6     → instructie-paneel — loopt gewoon door, wachten hoeft niet
+     store 20    → nog steeds 0? automatisch door naar het volgende keyword
+
+   Waarom opnieuw vanaf store 1: de winkels staan op volgorde van kwaliteit
+   (beste eerst). Als de AI-aanpak pas bij winkel 4 aanslaat, komt je hele
+   quotum uit de mindere winkels terwijl de beste er nooit mee doorzocht is.
+   Herhalingen kosten niets: elke winkel×zoekterm-combinatie draait maar één
+   keer (triedPairs), dus winkel 1 wordt alleen opnieuw bezocht mét de
+   nieuwe termen. */
+const ALTS_AT = 2;
+const BROAD_AT = 4;
 const STALL_PROMPT_AT = 6;
 const STALL_AUTO_AT = 20;
+const MAX_LADDER_ROUNDS = 4; // vangnet tegen eindeloos herstarten
 
 // Geleerde kennis blijft bewaard tussen runs:
 const LS_ALTS = "sa_kw_alts"; // kw → AI-alternatieven (cache, geen dubbele AI-calls)
@@ -540,6 +549,16 @@ export default function ScraperPage() {
           }
         }
         pushLog({ key: "ud-prof", ok: true, text: `Underdog-profielen klaar voor ${Object.keys(udProfiles).length}/${underdogRows.length} keywords.` });
+        /* De vertaalslag zichtbaar maken: dit is waar de vondsten vandaan
+           komen. "pregnancy swimsuit" bestaat niet in titels, "maternity
+           swimsuit" wel — en dat is exact hetzelfde product. */
+        const vertaald = Object.entries(udProfiles)
+          .filter(([kw, pr]) => pr.mainstream && pr.mainstream.toLowerCase() !== kw)
+          .slice(0, 8)
+          .map(([kw, pr]) => `${kw} → "${pr.mainstream}"`);
+        if (vertaald.length) {
+          pushLog({ text: `Zoekt op de vakterm i.p.v. het niche-woord: ${vertaald.join(" · ")}${Object.keys(udProfiles).length > 8 ? " …" : ""}` });
+        }
       }
 
       /* ---- Product-briefings: eerst WETEN wat elk keyword werkelijk is,
@@ -664,9 +683,29 @@ export default function ScraperPage() {
           const alts = altCache[kwLower] || [];
           const provenHit = altHits[kwLower]; // alternatief dat vorige keer scoorde
           let terms = provenHit && provenHit !== kwLower ? [k, provenHit] : [k];
+
+          /* DE VAKTERM — geldt voor ELK keyword, niet alleen underdogs.
+             Shoppers en winkels gebruiken andere woorden voor exact hetzelfde
+             product: niemand titelt "pregnancy swimsuit", iedereen titelt
+             "maternity swimsuit". Zoeken op het woord van de winkel levert de
+             treffer; in de sheet blijft gewoon JOUW keyword staan, zodat het
+             product straks ook op jouw zoekterm wordt geïmporteerd.
+             Daarom gaat de vakterm meteen mee — niet pas als vangnet. */
+          const mainstream = (kwBrief && kwBrief.mainstream) || "";
+          if (mainstream && mainstream !== kwLower && alternativeIsSafe(k, mainstream)) {
+            if (!terms.some((t) => t.toLowerCase() === mainstream)) {
+              terms = [...terms, mainstream];
+              pushLog({
+                ok: true,
+                text: `Vakterm: winkels noemen "${k}" een "${mainstream}" — daar wordt meteen ook op gezocht, het product krijgt in de sheet gewoon "${k}".`,
+              });
+            }
+          }
+
           /* Underdogs kennen hun eigen zoekwoorden al: die zitten in het
-             profiel en worden server-side gebruikt. Eén term per winkel dus,
-             anders scannen we dezelfde catalogus meerdere keren voor niets. */
+             profiel en worden server-side gebruikt (vakterm → zoektermen →
+             breed type). Eén term per winkel dus, anders scannen we dezelfde
+             catalogus meerdere keren voor niets. */
           if (udProfile) terms = [k];
           // GELEGENHEIDS-KEYWORDS: geen enkele shop titelt een product
           // "christmas party dress". Wachten tot de letterlijke zoekterm
@@ -691,8 +730,10 @@ export default function ScraperPage() {
           // (ronde 2 herhaalde álle termen van ronde 1) — puur wachttijd.
           const triedPairs = new Set();
 
+          /* Geven true terug als er écht nieuwe zoektermen bij zijn gekomen.
+             Dat is het sein om de ladder opnieuw vanaf winkel 1 te starten. */
           const expandAlts = (reason) => {
-            if (altsFull) return;
+            if (altsFull) return false;
             altsFull = true;
             // Een alternatief mag het producttype verbreden, maar nooit een
             // kleur, materiaal of patroon laten vallen: "camouflage pants" →
@@ -706,23 +747,42 @@ export default function ScraperPage() {
             const merged = [...new Set([...terms, ...safeAlts])];
             if (merged.length > terms.length) {
               terms = merged;
-              pushLog({ ok: true, text: `${reason} — zoekt nu ook op: ${safeAlts.join(" · ")} (telt mee voor "${k}").` });
+              pushLog({ ok: true, text: `${reason} — zoekt nu ook op: ${safeAlts.join(" · ")}, opnieuw vanaf de beste winkel.` });
+              return true;
             }
+            return false;
           };
           const expandBroad = () => {
-            if (broadActive) return;
+            if (broadActive) return false;
             broadActive = true;
             // Bij een keyword met een harde eigenschap bestaat er geen breed
             // vangnet: "boots" is geen vervanging voor "waterproof boots".
             if (hardAttributes(k).length) {
               pushLog({ muted: true, text: `Geen breed vangnet voor "${k}" — de eigenschap "${hardAttributes(k).join(", ")}" mag niet wegvallen.` });
-              return;
+              return false;
             }
             const b = broadTermFor(k, alts);
             if (b && !terms.some((t) => t.toLowerCase() === b)) {
               terms = [...terms, b];
-              pushLog({ ok: true, text: `Breed vangnet actief — ook op "${b}" (strenge match + geslacht blijven gelden).` });
+              pushLog({ ok: true, text: `Breed vangnet actief — ook op "${b}", opnieuw vanaf de beste winkel (strenge match + geslacht blijven gelden).` });
+              return true;
             }
+            return false;
+          };
+
+          /* Underdogs hebben hun eigen verbreding: de bestseller-eis. Vinden
+             we niets binnen de bovenste 45% van een winkel, dan gaan we in de
+             volgende ronde door de hele catalogus — opnieuw vanaf winkel 1,
+             zodat de béste winkel als eerste die ruimere kans krijgt. */
+          let udRelax = false;
+          const relaxUnderdog = () => {
+            if (!udProfile || udRelax) return false;
+            udRelax = true;
+            pushLog({
+              ok: true,
+              text: `Geen bewezen bestseller gevonden voor "${k}" — tweede ronde zonder bestseller-grens, opnieuw vanaf de beste winkel.`,
+            });
+            return true;
           };
 
           // Eén ronde langs alle stores met de huidige zoektermen
@@ -734,8 +794,10 @@ export default function ScraperPage() {
               if (stallDecision.current === "ai") {
                 setStall(null);
                 stallDecision.current = "continue";
-                expandAlts("Op jouw verzoek");
-                expandBroad();
+                const a = expandAlts("Op jouw verzoek");
+                const b = expandBroad();
+                const c = relaxUnderdog();
+                if (a || b || c) return "restart"; // ook nu: beste winkel eerst
               }
               let foundThisStore = 0;
               let scanned = 0;
@@ -766,6 +828,8 @@ export default function ScraperPage() {
                       store,
                       keyword: udProfile ? k : term,
                       profile: udProfile || undefined,
+                      // Tweede ronde: bestseller-grens los (zie relaxUnderdog)
+                      relaxBestseller: udRelax || undefined,
                       gender,
                       need: needed,
                       excludeLinks: [...exclude],
@@ -931,8 +995,20 @@ export default function ScraperPage() {
 
               // Vastloop-ladder: alleen zolang er nog NIETS gevonden is
               if (withStallLogic && needed === target) {
-                if (storesTried >= ALTS_AT && alts.length) expandAlts(`Na ${storesTried} stores nog 0`);
-                if (storesTried >= BROAD_AT) expandBroad();
+                /* Zodra de aanpak verbreedt, stoppen we deze ronde en
+                   beginnen we opnieuw bij winkel 1 — de beste winkel moet de
+                   nieuwe zoektermen als eerste krijgen, niet als laatste. */
+                /* Underdogs hebben hun eigen laddertje server-side (vakterm →
+                   zoektermen → breed type). De generieke alternatieven en het
+                   brede vangnet zouden hier alleen dezelfde zoekactie
+                   herhalen — voor die keywords is de bestseller-grens
+                   loslaten de enige zinnige verbreding. */
+                if (udProfile) {
+                  if (storesTried >= ALTS_AT && relaxUnderdog()) return "restart";
+                } else {
+                  if (storesTried >= ALTS_AT && alts.length && expandAlts(`Na ${storesTried} winkel(s) nog 0`)) return "restart";
+                  if (storesTried >= BROAD_AT && expandBroad()) return "restart";
+                }
                 if (storesTried === STALL_PROMPT_AT && !stallDecision.current) {
                   setStall({ kw: k, gender });
                   pushLog({
@@ -953,7 +1029,17 @@ export default function ScraperPage() {
             }
           };
 
-          await scanStores(true);
+          /* De ladder draait in rondes: elke keer dat de aanpak verbreedt
+             (AI-alternatieven, breed vangnet, of bij underdogs de
+             bestseller-grens los) begint hij opnieuw bij winkel 1. Zo krijgt
+             de beste winkel élke aanpak als eerste te zien, in plaats van
+             alleen de eerste en slechtste variant ervan. */
+          for (let ronde = 0; ronde < MAX_LADDER_ROUNDS; ronde++) {
+            const res = await scanStores(true);
+            if (res !== "restart") break;
+            if (needed <= 0) break;
+            storesTried = 0; // nieuwe aanpak = de ladder opnieuw
+          }
 
           // Bij weinig stores kan de ladder nooit geactiveerd zijn — dan alsnog
           // één slimme ronde (tenzij het keyword is overgeslagen).

@@ -48,7 +48,7 @@ function hitCount(haystack, phrases) {
 }
 
 export async function POST(req) {
-  const { store, keyword, profile, gender, need, excludeLinks, maxPerStore } =
+  const { store, keyword, profile, gender, need, excludeLinks, maxPerStore, relaxBestseller } =
     await req.json().catch(() => ({}));
   if (!store || !keyword) {
     return NextResponse.json({ error: "store en keyword zijn verplicht" }, { status: 400 });
@@ -64,12 +64,40 @@ export async function POST(req) {
     return NextResponse.json({ ok: true, store: catalog.domain, total: 0, matches: [], stats: {} });
   }
 
-  /* 1+2. Breed vangen op producttype, binnen de bestseller-bovenkant. */
-  const broad = (p.broadType || "").trim() || String(keyword).split(" ").pop();
-  const analysis = analyzeKeyword(broad) || analyzeKeyword(String(keyword));
-  const cutoff = catalog.usedBestSelling
-    ? Math.max(BESTSELLER_MIN_POOL, Math.ceil(catalog.products.length * BESTSELLER_TOP_FRACTION))
-    : catalog.products.length; // geen betrouwbare volgorde → geen bestseller-eis
+  /* 1+2. Zoeken op de VAKTERM eerst, daarna pas verbreden.
+
+     De kern: "pregnancy swimsuit" bestaat niet in producttitels, maar
+     "maternity swimsuit" wél — exact hetzelfde product, andere woorden. Het
+     profiel levert die vakterm (mainstream) plus een paar zoektermen. We
+     proberen ze op volgorde van precisie:
+       1. de vakterm            → "maternity swimsuit"   (beste treffer)
+       2. de overige zoektermen → "pregnancy swimwear", "ruched belly …"
+       3. het brede type        → "swimsuit"             (laatste redmiddel)
+     Het keyword dat in de sheet belandt blijft gewoon de underdog zelf. */
+  const ladder = [];
+  const seenTerm = new Set();
+  const addTerm = (t, level) => {
+    const s = String(t || "").trim().toLowerCase();
+    if (!s || seenTerm.has(s)) return;
+    seenTerm.add(s);
+    const a = analyzeKeyword(s);
+    if (a) ladder.push({ term: s, analysis: a, level });
+  };
+  addTerm(p.mainstream, 0);
+  for (const t of p.searchTerms || []) addTerm(t, 1);
+  addTerm(p.broadType, 2);
+  addTerm(String(keyword).split(" ").pop(), 2);
+  if (!ladder.length) {
+    const a = analyzeKeyword(String(keyword));
+    if (a) ladder.push({ term: String(keyword).toLowerCase(), analysis: a, level: 2 });
+  }
+  /* Bestseller-eis. Tweede ronde (relaxBestseller) laat hem los: liever een
+     passend product uit de staart dan een leeg keyword — maar pas nadat de
+     bewezen verkopers van álle winkels geprobeerd zijn. */
+  const cutoff =
+    catalog.usedBestSelling && !relaxBestseller
+      ? Math.max(BESTSELLER_MIN_POOL, Math.ceil(catalog.products.length * BESTSELLER_TOP_FRACTION))
+      : catalog.products.length;
   const stats = { bekeken: 0, buitenBestseller: 0, typeMis: 0, geslacht: 0, breekpunt: 0, naarAi: 0 };
 
   const pool = [];
@@ -82,7 +110,17 @@ export async function POST(req) {
       stats.buitenBestseller++;
       continue;
     }
-    if (analysis && !matchProduct(analysis, prod)) {
+    /* Welke trede van de ladder raakt dit product? De eerste (meest
+       precieze) die matcht telt; raakt geen enkele, dan valt het af. */
+    let hit = null;
+    for (const step of ladder) {
+      const m = matchProduct(step.analysis, prod);
+      if (m) {
+        hit = { ...step, m };
+        break;
+      }
+    }
+    if (!hit) {
       stats.typeMis++;
       continue;
     }
@@ -108,7 +146,12 @@ export async function POST(req) {
       continue;
     }
     const haystack = `${title} ${tags} ${body}`;
+    /* Een treffer op de vakterm is véél meer waard dan een treffer op het
+       brede type: die eerste zegt "dit ís het product", de tweede alleen
+       "dit is de juiste categorie". */
+    const levelBonus = hit.level === 0 ? 8 : hit.level === 1 ? 4 : 0;
     const score =
+      levelBonus +
       hitCount(title, p.searchTerms) * 3 +
       hitCount(haystack, p.searchTerms) +
       hitCount(haystack, p.mustHave) * 2 -
@@ -118,6 +161,8 @@ export async function POST(req) {
       idx: i,
       rank: i + 1,
       score,
+      level: hit.level,
+      via: hit.term,
       link: prod.url,
       title: prod.title,
       desc: body.slice(0, 300),
@@ -135,7 +180,8 @@ export async function POST(req) {
 
   /* Volgorde naar de AI: eerst kenmerk-score, dan bestseller-rang. Zo krijgt
      de dure fotocontrole de meest kansrijke bewezen verkopers als eerste. */
-  pool.sort((a, b) => b.score - a.score || a.rank - b.rank);
+  // Eerst de precieze treffers (vakterm), daarbinnen de bestverkopende.
+  pool.sort((a, b) => a.level - b.level || b.score - a.score || a.rank - b.rank);
   const want = Math.max(1, Math.min(Number(need) || 5, Number(maxPerStore) || 5));
   const shortlist = pool.slice(0, Math.min(MAX_TO_AI, Math.max(want * 3, 8)));
   stats.naarAi = shortlist.length;
@@ -165,9 +211,12 @@ export async function POST(req) {
       return {
         link: c.link,
         title: c.title,
-        // Zichtbaar bewijs in de sheet: hoe hoog stond dit product in de
-        // best-selling volgorde van de concurrent?
-        source: `Onderbouwd${catalog.usedBestSelling ? ` · bestseller #${c.rank}` : ""}`,
+        /* Zichtbaar bewijs in de sheet: via welke vakterm is hij gevonden, en
+           hoe hoog stond het product in de best-selling volgorde? */
+        source:
+          `via "${c.via}"` +
+          (catalog.usedBestSelling ? ` · bestseller #${c.rank}` : "") +
+          (relaxBestseller ? " · buiten top" : ""),
         literal: "Ruim",
         why: k.why,
         rank: c.rank,
@@ -185,6 +234,7 @@ export async function POST(req) {
     total: catalog.products.length,
     usedBestSelling: catalog.usedBestSelling,
     candidates: pool.length,
+    ladder: ladder.map((l) => l.term),
     stats,
     matches,
   });
