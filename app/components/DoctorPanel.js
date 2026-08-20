@@ -11,9 +11,14 @@
    taal-restlaag) → AI-resultaten hebben hun eigen toepas-knoppen. */
 
 import { useEffect, useRef, useState } from "react";
+import { MARKETS, MARKET_SIZE_GUIDE } from "@/lib/sizes";
 
 const LS_BACKUP = "sa_doctor_backup";
+const LS_MARKET = "sa_doctor_market::"; // + store-domein
 const WERKBOEK = "1Y3wg8X5ivuwaUTfUapzgUOIMzVqr0KRs6g2FR1COuKE"; // Import-werkboek (default)
+
+// Slimme default: de store-valuta verraadt de markt
+const CUR_MARKET = { USD: "USA", GBP: "UK", AUD: "AUS+NZ", NZD: "AUS+NZ", CAD: "CAN" };
 
 // Chunk per AI-check (server verwerkt per call precies dit plukje)
 const AI_CHUNK = { gender: 40, language: 25, "color-photo": 8, watermark: 4, sample: 12 };
@@ -52,6 +57,9 @@ export default function DoctorPanel({ store, since }) {
   const [aiRes, setAiRes] = useState({});
   const [aiUsd, setAiUsd] = useState({});
 
+  const [market, setMarket] = useState("");
+  const [showGuide, setShowGuide] = useState(false);
+
   useEffect(() => {
     try {
       const v = localStorage.getItem(LS_BACKUP);
@@ -60,6 +68,23 @@ export default function DoctorPanel({ store, since }) {
       setBackupSheet(WERKBOEK);
     }
   }, []);
+
+  // Markt per store onthouden; eerste keer afgeleid uit de valuta
+  useEffect(() => {
+    if (!store || !store.domain) return;
+    let v = "";
+    try {
+      v = localStorage.getItem(LS_MARKET + store.domain) || "";
+    } catch {}
+    setMarket(v || CUR_MARKET[String(store.currency || "").toUpperCase()] || "USA");
+  }, [store && store.domain]);
+
+  function pickMarket(m) {
+    setMarket(m);
+    try {
+      localStorage.setItem(LS_MARKET + store.domain, m);
+    } catch {}
+  }
 
   const storeBody = store
     ? { domain: store.domain, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret, name: store.name }
@@ -84,6 +109,7 @@ export default function DoctorPanel({ store, since }) {
           max: Number(max) || 1000,
           sinceISO: since && useSince ? since : null,
           vendorName: store.name || "",
+          market,
         }),
       });
       const data = await r.json();
@@ -99,68 +125,127 @@ export default function DoctorPanel({ store, since }) {
 
   /* ---------------- FIXES ---------------- */
 
-  async function runFix(findingId, fix, ids, options = {}) {
-    if (!store || fixBusy || busy || !ids.length) return;
-    const key = `${findingId}|${fix.id}`;
+  // Standaard-opties die élke fix meekrijgt (markt voor de maten-conversie,
+  // storenaam voor de vendor-fix, kortingsmix voor de doorstreepprijzen).
+  function fixOptions(extra) {
+    return { vendorName: store.name || "", pcts: [30, 40, 50], menTemplate: "men", market, ...(extra || {}) };
+  }
+
+  function backupPlanFor(fixId) {
+    const sheet = String(backupSheet || "").trim();
+    if (!sheet) return null;
+    const d = new Date();
+    const tab = `Doctor ${fixId} ${d.getDate()}-${d.getMonth() + 1} ${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}${String(d.getSeconds()).padStart(2, "0")}`;
+    return { sheetId: sheet, tab };
+  }
+
+  function askBackupSkip() {
+    if (String(backupSheet || "").trim()) {
+      try {
+        localStorage.setItem(LS_BACKUP, backupSheet.trim());
+      } catch {}
+      return { ok: true, skipBackup: false };
+    }
+    const skip = window.confirm("Geen backup-sheet ingevuld. ZONDER backup doorgaan? (niet aan te raden bij verwijder-fixes)");
+    return { ok: skip, skipBackup: skip };
+  }
+
+  // Kern: één fix over een id-lijst, in chunks tot done. Gooit bij een fout.
+  async function execFix(fix, ids, options, skipBackup) {
+    const backup = skipBackup ? null : backupPlanFor(fix.id);
+    const tot = { done: 0, total: ids.length, fixed: 0, failed: 0, skipped: 0, label: fix.label };
+    setFixProg({ ...tot });
+    let cursor = 0;
+    for (;;) {
+      if (stopRef.current) break;
+      const r = await fetch("/api/doctor-fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ store: storeBody, fix: fix.id, ids, options, cursor, backup, skipBackup }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || r.status);
+      tot.done = data.nextCursor != null ? data.nextCursor : tot.total;
+      tot.fixed += data.fixed || 0;
+      tot.failed += data.failed || 0;
+      tot.skipped += data.skipped || 0;
+      setFixProg({ ...tot });
+      if (data.notes && data.notes.length) {
+        setFixNotes((cur) => [...data.notes, ...cur].slice(0, 80));
+      }
+      if (data.done) break;
+      cursor = data.nextCursor;
+    }
+    const backupTxt = backup ? ` · backup: "${backup.tab}"` : " · zonder backup";
+    setFixNotes((cur) => [
+      `✓ ${fix.label}: ${tot.fixed} aangepast · ${tot.skipped} overgeslagen · ${tot.failed} mislukt${backupTxt}`,
+      ...cur,
+    ]);
+    return tot;
+  }
+
+  async function runFix(findingId, fix, ids, extraOptions) {
+    if (!store || fixBusy || busy || aiBusy || !ids.length) return;
     if (fix.danger) {
       const zeker = window.confirm(
         `${fix.label}\n\n${ids.length} product(en). Dit is niet terug te draaien via de tool zelf — de oude waarden gaan wél eerst naar het backup-tabblad. Doorgaan?`
       );
       if (!zeker) return;
     }
-    const sheet = String(backupSheet || "").trim();
-    let backup = null;
-    let skipBackup = false;
-    if (sheet) {
-      const stamp = new Date();
-      const tab = `Doctor ${fix.id} ${stamp.getDate()}-${stamp.getMonth() + 1} ${String(stamp.getHours()).padStart(2, "0")}${String(stamp.getMinutes()).padStart(2, "0")}${String(stamp.getSeconds()).padStart(2, "0")}`;
-      backup = { sheetId: sheet, tab };
-    } else {
-      skipBackup = window.confirm("Geen backup-sheet ingevuld. ZONDER backup doorgaan? (niet aan te raden bij verwijder-fixes)");
-      if (!skipBackup) return;
-    }
-    try {
-      localStorage.setItem(LS_BACKUP, sheet);
-    } catch {}
-
-    setFixBusy(key);
+    const b = askBackupSkip();
+    if (!b.ok) return;
+    setFixBusy(`${findingId}|${fix.id}`);
     setFixNotes([]);
     setErr("");
     stopRef.current = false;
-    const tot = { done: 0, total: ids.length, fixed: 0, failed: 0, skipped: 0 };
-    setFixProg({ ...tot });
     try {
-      let cursor = 0;
-      for (;;) {
-        if (stopRef.current) break;
-        const r = await fetch("/api/doctor-fix", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ store: storeBody, fix: fix.id, ids, options, cursor, backup, skipBackup }),
-        });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || r.status);
-        tot.done = data.nextCursor != null ? data.nextCursor : tot.total;
-        tot.fixed += data.fixed || 0;
-        tot.failed += data.failed || 0;
-        tot.skipped += data.skipped || 0;
-        setFixProg({ ...tot });
-        if (data.notes && data.notes.length) {
-          setFixNotes((cur) => [...data.notes, ...cur].slice(0, 60));
-        }
-        if (data.done) break;
-        cursor = data.nextCursor;
-      }
-      const backupTxt = backup ? ` Backup: tabblad "${backup.tab}".` : " (zonder backup gedraaid)";
-      setFixNotes((cur) => [
-        `KLAAR: ${tot.fixed} aangepast · ${tot.skipped} overgeslagen · ${tot.failed} mislukt.${backupTxt}`,
-        ...cur,
-      ]);
+      const tot = await execFix(fix, ids, fixOptions(extraOptions), b.skipBackup);
       sfx(tot.failed ? "error" : "success");
       // teller verversen — zelfde scope opnieuw scannen
       await scan();
     } catch (e) {
       setErr(`Fix gestopt: ${String(e.message || e)}`);
+      sfx("error");
+    } finally {
+      setFixBusy(null);
+      setFixProg(null);
+    }
+  }
+
+  /* "Fix alle veilige punten": alle fixes met een bulk-vlag na elkaar, één
+     bevestiging, per fix een eigen backup-tabblad, één re-scan aan het eind.
+     Verwijder-acties, tekst-ingrepen en de maten-conversie zitten er bewust
+     NIET bij — die blijven bewuste losse klikken. */
+  async function bulkFix() {
+    if (!store || !rep || fixBusy || busy || aiBusy) return;
+    const jobs = new Map(); // fix-id → {fix, ids:Set} (translate-options zit in 2 checks → samenvoegen)
+    for (const f of rep.findings) {
+      for (const fx of f.fixes || []) {
+        if (!fx.bulk) continue;
+        if (!jobs.has(fx.id)) jobs.set(fx.id, { fix: fx, ids: new Set() });
+        for (const id of f.ids) jobs.get(fx.id).ids.add(id);
+      }
+    }
+    if (!jobs.size) return;
+    const lijst = [...jobs.values()].map((j) => `· ${j.fix.label} (${j.ids.size})`).join("\n");
+    if (!window.confirm(`Alle veilige fixes na elkaar draaien:\n\n${lijst}\n\nVerwijder-acties, titel-ingrepen en de maten-omrekening zitten hier bewust NIET bij. Doorgaan?`)) return;
+    const b = askBackupSkip();
+    if (!b.ok) return;
+    setFixBusy("bulk");
+    setFixNotes([]);
+    setErr("");
+    stopRef.current = false;
+    let failedTotal = 0;
+    try {
+      for (const j of jobs.values()) {
+        if (stopRef.current) break;
+        const tot = await execFix(j.fix, [...j.ids], fixOptions(), b.skipBackup);
+        failedTotal += tot.failed;
+      }
+      sfx(failedTotal ? "error" : "success");
+      await scan();
+    } catch (e) {
+      setErr(`Bulk gestopt: ${String(e.message || e)}`);
       sfx("error");
     } finally {
       setFixBusy(null);
@@ -265,6 +350,33 @@ export default function DoctorPanel({ store, since }) {
           />
         </div>
       </div>
+      <div className="field-label">
+        Doelmarkt <span className="opt">(stuurt de maten-check & omrekening)</span>
+      </div>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        {MARKETS.map((m) => (
+          <button
+            key={m}
+            type="button"
+            className="btn-ghost btn-small"
+            onClick={() => pickMarket(m)}
+            style={market === m ? { borderColor: "var(--ok)", color: "var(--ok)", fontWeight: 700 } : {}}
+          >
+            {m}
+          </button>
+        ))}
+        <button type="button" className="linklike" onClick={() => setShowGuide((v) => !v)}>
+          {showGuide ? "▾" : "▸"} maten-spiekbrief
+        </button>
+      </div>
+      {showGuide && market ? (
+        <div className="hint" style={{ marginTop: 6 }}>
+          {(MARKET_SIZE_GUIDE[market] || []).map((line, i) => (
+            <div key={i}>· {line}</div>
+          ))}
+        </div>
+      ) : null}
+
       {since ? (
         <label className="hint" style={{ display: "flex", gap: 6, alignItems: "center", cursor: "pointer" }}>
           <input type="checkbox" checked={useSince} onChange={(e) => setUseSince(e.target.checked)} />
@@ -291,7 +403,7 @@ export default function DoctorPanel({ store, since }) {
       {fixProg && (
         <div className="prog-card" style={{ marginTop: 12 }}>
           <div className="prog-top">
-            <span className="prog-title">Fix bezig…</span>
+            <span className="prog-title">Fix bezig… {fixProg.label ? `· ${fixProg.label}` : ""}</span>
             <span className="prog-count">
               {fixProg.done}/{fixProg.total}
               <span className="prog-sep"> · </span>
@@ -331,6 +443,17 @@ export default function DoctorPanel({ store, since }) {
             </span>
           </div>
 
+          {rep.findings.some((f) => (f.fixes || []).some((x) => x.bulk)) && (
+            <div style={{ marginTop: 8 }}>
+              <button className="btn-ghost btn-small" disabled={disabled} onClick={bulkFix}>
+                {fixBusy === "bulk" ? "Bulk bezig…" : "⚡ Fix alle veilige punten in één keer"}
+              </button>
+              <span className="hint" style={{ marginLeft: 8 }}>
+                verwijderen, titel-ingrepen en maten-omrekening blijven losse klikken
+              </span>
+            </div>
+          )}
+
           <div className="logpanel" style={{ marginTop: 12 }}>
             {rep.findings.length === 0 && <div className="center-note">Alles schoon. Netjes.</div>}
             {rep.findings.map((f) => (
@@ -353,13 +476,7 @@ export default function DoctorPanel({ store, since }) {
                         className="btn-ghost btn-small"
                         style={{ marginRight: 8, marginTop: 6, ...(fx.danger ? { color: "var(--err)", borderColor: "var(--err)" } : {}) }}
                         disabled={disabled}
-                        onClick={() =>
-                          runFix(f.id, fx, f.ids, {
-                            vendorName: store.name || "",
-                            pcts: [30, 40, 50],
-                            menTemplate: "men",
-                          })
-                        }
+                        onClick={() => runFix(f.id, fx, f.ids)}
                       >
                         {fixBusy === `${f.id}|${fx.id}` ? "Bezig…" : `⚡ ${fx.label} (${f.count})`}
                       </button>

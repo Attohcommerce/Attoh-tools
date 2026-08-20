@@ -21,6 +21,7 @@ const CHUNK_FOR = {
   "delete-flagged-images": 6,
   "delete-no-image-products": 10,
   "translate-options": 12,
+  "convert-sizes": 12,
   default: 15,
 };
 
@@ -34,6 +35,7 @@ function snapshotFor(fix, p) {
     case "delete-orphan-variants":
       return { orphan_variants: (p.variants || []).filter((x) => !x.image_id) };
     case "translate-options":
+    case "convert-sizes":
       return {
         options: (p.options || []).map((o) => o.name),
         variants: vars((x) => [x.id, x.option1, x.option2, x.option3]),
