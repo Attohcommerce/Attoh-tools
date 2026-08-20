@@ -11,6 +11,8 @@ import {
 import { collectionFor } from "@/lib/verdeling";
 import { flagBrandedImages } from "@/lib/ai";
 import { analyzeKeyword } from "@/lib/fashion";
+import { canonOptionName, translateValue } from "@/lib/lang";
+import { repairVariantImages } from "@/lib/doctor";
 
 export const maxDuration = 60;
 
@@ -130,17 +132,49 @@ export async function POST(req) {
   const srcPrice = srcPrices.length ? Math.min(...srcPrices) : 0;
   const discountPct = Number(s.discountPct || 0);
 
-  // Opties hernoemen: Color/Colour + eigen Size-label
+  /* ----------------------------------------------------------------
+     TAAL-FIX (automatisch, gratis): bron-stores zijn vaak FR/DE/ES/…
+     en dan komen optienamen ("Taille", "Größe") en waarden ("Bleu",
+     "Schwarz") in die taal mee — verkeerde taal in de size/color-
+     attributen is een GMC-afkeuring. Woordenboek-vertaling vóór de
+     upload; de Store Doctor's AI-taalcheck vangt de rest.
+  ---------------------------------------------------------------- */
+  const langNames = []; // "Taille→Size" voor de log
+  let langValues = 0;
+
+  // Opties hernoemen: eerst naar canoniek Engels, dan de eigen labels
   const options = (product.options || []).map((o) => {
     let name = o.name;
+    const t = canonOptionName(name);
+    if (t.changed) {
+      langNames.push(`${name}→${t.name}`);
+      name = t.name;
+    }
     if (/^colou?r$/i.test(name)) name = s.colorLabel || "Color";
     if (/^size$/i.test(name)) name = s.sizeLabel || "Size";
     return { name };
   });
 
+  /* Waarden vertalen op een KOPIE van de bron-varianten. Belangrijk: de
+     variant-foto-koppeling verderop matcht bron-variant ↔ aangemaakte
+     variant op de optie-waarden — dus vertalen moet op ÉÉN plek gebeuren
+     en beide kanten moeten dezelfde (vertaalde) waarden zien. */
+  const tVariants = (product.variants || []).map((v) => {
+    const nv = { ...v };
+    for (const k of ["option1", "option2", "option3"]) {
+      if (nv[k] == null) continue;
+      const r = translateValue(nv[k]);
+      if (r.changed) {
+        nv[k] = r.value;
+        langValues++;
+      }
+    }
+    return nv;
+  });
+
   const { band, type: priceType } = bandFor(s.keyword);
   let clampedCount = 0;
-  const variants = (product.variants || []).map((v) => {
+  const variants = tVariants.map((v) => {
     // 1. Omrekenen  2. Op het rooster  3. Binnen de band van de productsoort
     const raw = roundTo95(Number(v.price || 0) * rate);
     let price = raw;
@@ -294,13 +328,41 @@ export async function POST(req) {
     // Let op: koppeling loopt over de GEHOUDEN foto's — created.images[i]
     // correspondeert met keptImages[i] (zelfde volgorde doorgestuurd).
     const srcImages = keptImages;
-    const srcVariants = product.variants || [];
+    // Dezelfde vertaalde varianten als de payload — anders matcht keyOf()
+    // "Bleu" (bron) nooit meer op "Blue" (aangemaakt) en koppelt er niets.
+    const srcVariants = tVariants;
 
     // bron image-id → index in de lijst
     const srcImgIndex = new Map();
     srcImages.forEach((im, i) => {
       if (im.id != null) srcImgIndex.set(String(im.id), i);
     });
+
+    /* Index-mapping klopt alleen als Shopify ALLE foto's heeft geaccepteerd.
+       Faalt er één (dode bron-URL, dedupe), dan schuift alles op en zouden
+       varianten aan de VERKEERDE foto hangen. Bij een lengteverschil dus
+       terugvallen op bestandsnaam-matching; wat niet matcht wordt door de
+       verify-pass hieronder opgevangen. */
+    const createdImgs = created.images || [];
+    let mapIdx;
+    if (createdImgs.length === srcImages.length) {
+      mapIdx = (i) => i;
+    } else {
+      const stem = (u) => {
+        try {
+          const f = new URL(String(u)).pathname.split("/").pop() || "";
+          return decodeURIComponent(f).toLowerCase().replace(/\.[a-z0-9]+$/, "");
+        } catch {
+          return String(u).toLowerCase();
+        }
+      };
+      const byStem = new Map();
+      createdImgs.forEach((im, i) => byStem.set(stem(im.src), i));
+      mapIdx = (i) => {
+        const k = stem(srcImages[i] && srcImages[i].src);
+        return byStem.has(k) ? byStem.get(k) : null;
+      };
+    }
 
     // aangemaakte variant terugvinden op optie-combinatie
     const keyOf = (v) => [v.option1, v.option2, v.option3].map((x) => x ?? "").join("|||");
@@ -313,7 +375,8 @@ export async function POST(req) {
       if (sv.imageId == null) continue;
       const imgIdx = srcImgIndex.get(String(sv.imageId));
       if (imgIdx == null) continue;
-      const createdImg = (created.images || [])[imgIdx];
+      const ci = mapIdx(imgIdx);
+      const createdImg = ci == null ? null : createdImgs[ci];
       const createdVarId = createdByKey.get(keyOf(sv));
       if (!createdImg || !createdVarId) continue;
       if (!wanted.has(createdImg.id)) wanted.set(createdImg.id, []);
@@ -331,6 +394,22 @@ export async function POST(req) {
     await Promise.all(jobs);
   } catch {
     /* koppeling is nice-to-have; import zelf is al gelukt */
+  }
+
+  /* ----------------------------------------------------------------
+     VERIFY-PASS (dé bron-fix): direct na het koppelen vers ophalen en
+     controleren of ELKE variant een foto heeft. Wezen ontstaan door
+     (a) de branding-check die de kleur-foto verwijderde, (b) foto's
+     die Shopify async niet binnenkreeg, (c) rate limits op de koppel-
+     stap. Her-koppelen op kleur; lukt dat niet, dan de hoofdfoto —
+     beter een neutrale foto in de feed dan een GMC-afkeuring.
+  ---------------------------------------------------------------- */
+  let photoFix = null;
+  try {
+    const rep = await repairVariantImages(store, created.id);
+    if (rep && !rep.error) photoFix = rep;
+  } catch {
+    /* verify is een vangnet — nooit een showstopper */
   }
 
   /* ----------------------------------------------------------------
@@ -410,6 +489,8 @@ export async function POST(req) {
       previewUrl,
     },
     linkedImages,
+    photoFix, // {variants, missing, relinked, fallback, stillMissing} | null
+    langFixed: { names: langNames, values: langValues },
     collection: collectionInfo ? collectionInfo.title : null,
     collectionCreated: collectionInfo ? collectionInfo.created : false,
     collections: collectionInfos,

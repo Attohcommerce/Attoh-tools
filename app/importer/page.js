@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
+import DoctorPanel from "../components/DoctorPanel";
 
 const LS = {
   stores: "sa_stores",
@@ -91,6 +92,9 @@ export default function ImporterPage() {
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [step, setStep] = useState(""); // live stap binnen het huidige product
   const [logs, setLogs] = useState([]);
+  // Starttijd van de laatste run — de Controles-sectie scant daarmee
+  // ALLEEN de zojuist geïmporteerde producten (created_at-filter).
+  const [runStamp, setRunStamp] = useState(null);
 
   // Queue
   const [queue, setQueue] = useState([]);
@@ -312,6 +316,8 @@ export default function ImporterPage() {
     setRunning(true);
     setLogs([]);
     setProgress({ done: 0, total: urls.length });
+    // 2 min marge tegen klok-verschil met Shopify's created_at
+    setRunStamp(new Date(Date.now() - 2 * 60 * 1000).toISOString());
 
     // Import-log-tabblad klaarzetten (één keer per run)
     let logReady = false;
@@ -500,6 +506,26 @@ export default function ImporterPage() {
             ok: false,
             text: `${nr} · LET OP: branding-check op de foto's kon niet draaien — check de foto's van dit product handmatig op logo's/watermerken.`,
           });
+        }
+        if (iData.langFixed && (iData.langFixed.names.length || iData.langFixed.values)) {
+          const parts = [];
+          if (iData.langFixed.names.length) parts.push(`optienamen ${iData.langFixed.names.join(", ")}`);
+          if (iData.langFixed.values) parts.push(`${iData.langFixed.values} waarde(n) vertaald`);
+          pushLog({ info: true, text: `${nr} · Taal-fix: ${parts.join(" · ")}.` });
+        }
+        if (iData.photoFix && iData.photoFix.missing) {
+          const pf = iData.photoFix;
+          if (pf.stillMissing) {
+            pushLog({
+              ok: false,
+              text: `${nr} · FOTO-CHECK: ${pf.stillMissing} variant(en) nog steeds zonder foto — fix via de Controles-sectie hieronder.`,
+            });
+          } else {
+            pushLog({
+              info: true,
+              text: `${nr} · Foto-check: ${pf.missing} variant(en) zonder foto hersteld (${pf.relinked} op kleur, ${pf.fallback} op hoofdfoto).`,
+            });
+          }
         }
         const linked = iData.linkedImages ? ` · ${iData.linkedImages} kleurfoto's gekoppeld` : "";
         const cols = iData.collections && iData.collections.length ? iData.collections : [];
@@ -1155,6 +1181,20 @@ export default function ImporterPage() {
                 </div>
               )}
             </div>
+
+            {/* -------- Controles (Store Doctor, gescoped op deze run) -------- */}
+            {selectedStore && (
+              <div className="card">
+                <h2>✚ Controles &amp; fixes</h2>
+                <div className="hint" style={{ marginTop: 0 }}>
+                  Zelfde motor als de Store Doctor, hier standaard gescoped op de producten van de
+                  laatste import-run: taal-check, foto-check (elke variant een foto?), prijzen, tags —
+                  en per gevonden probleem een 1-tik-fix. AI-checks (geslacht, kleur↔foto, watermerk)
+                  staan er als aparte knoppen met de kosten vooraf in beeld.
+                </div>
+                <DoctorPanel store={selectedStore} since={runStamp} />
+              </div>
+            )}
 
             {/* -------- URL Queue -------- */}
             <div className="card">
