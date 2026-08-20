@@ -50,6 +50,7 @@ function snapshotFor(fix, p) {
       return { title: p.title || "" };
     case "fix-compareat":
     case "remix-compareat":
+    case "unify-variant-prices":
       return { prices: vars((x) => [x.id, x.price, x.compare_at_price]) };
     case "fix-size-order":
       return { order: vars((x) => [x.id, x.position, x.title]) };

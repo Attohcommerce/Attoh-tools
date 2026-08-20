@@ -47,6 +47,7 @@ const FIXALL_ORDER = [
   "fix-gender-from-title",
   "translate-options",
   "convert-sizes",
+  "unify-variant-prices",
   "clear-barcodes",
   "set-vendor",
   "set-product-type",
@@ -265,7 +266,7 @@ export default function DoctorPanel({ store, since }) {
     const aiEst = (n * (AI_EST.gender + AI_EST.language + AI_EST.watermark + AI_EST["color-photo"]) + 0.05).toFixed(2);
     const zeker = window.confirm(
       `FIX ALLES over ${rep ? n : "max " + n} producten (markt: ${market || "—"}):\n\n` +
-        `1. Alle veilige fixes — foto's her-koppelen, gender uit titel (incl. dubbele Men+Women-tags), opties vertalen, maten omrekenen, barcodes, vendor, product type, alt-teksten, maten-volgorde, templates, publiceren, doorstreepprijzen, titels opschonen\n` +
+        `1. Alle veilige fixes — foto's her-koppelen, gender uit titel (incl. dubbele Men+Women-tags), opties vertalen, maten klant-logisch maken, variant-prijzen gelijktrekken, barcodes, vendor, product type, alt-teksten, maten-volgorde, templates, publiceren, doorstreepprijzen, titels opschonen\n` +
         `2. Alle AI-controles (geschat ±$${aiEst}) — geslacht op titel+omschrijving+foto (wordt direct toegepast), taal, watermerk, kleur↔foto, steekproef\n` +
         `3. Eindverslag — verwijderen doe ik NOOIT automatisch; dat komt als beslissing in het verslag\n\n` +
         `Pauzeren kan altijd; daarna werk je gewoon per onderdeel verder. Starten?`
