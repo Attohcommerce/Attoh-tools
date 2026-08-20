@@ -77,8 +77,28 @@ export default function DoctorPanel({ store, since }) {
 
   const [fixBusy, setFixBusy] = useState(null); // "findingId|fixId"
   const [fixProg, setFixProg] = useState(null); // {done,total,fixed,failed,skipped}
-  const [fixNotes, setFixNotes] = useState([]);
+  // Fix-log als BLOKKEN per fix (i.p.v. één doorlopende brij): kop met
+  // ✓/⚠ + samenvatting, details ingeklapt eronder.
+  const [fixLog, setFixLog] = useState([]);
+  const blockSeq = useRef(0);
   const stopRef = useRef(false);
+  const [repAt, setRepAt] = useState(null);
+
+  function newBlock(label, total) {
+    const id = ++blockSeq.current;
+    setFixLog((cur) => [{ id, label, total, status: "busy", sum: "", failed: 0, open: false, details: [] }, ...cur].slice(0, 16));
+    return id;
+  }
+  function blockDetail(id, lines) {
+    if (!lines || !lines.length) return;
+    setFixLog((cur) => cur.map((b) => (b.id === id ? { ...b, details: [...b.details, ...lines].slice(0, 80) } : b)));
+  }
+  function blockDone(id, sum, failed) {
+    setFixLog((cur) => cur.map((b) => (b.id === id ? { ...b, status: "done", sum, failed: failed || 0 } : b)));
+  }
+  function toggleBlock(id) {
+    setFixLog((cur) => cur.map((b) => (b.id === id ? { ...b, open: !b.open } : b)));
+  }
 
   const [aiBusy, setAiBusy] = useState(null);
   const [aiProg, setAiProg] = useState("");
@@ -146,6 +166,7 @@ export default function DoctorPanel({ store, since }) {
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || r.status);
       setRep(data);
+      setRepAt(new Date());
       if (!opts.silent) sfx(data.stats.errors ? "error" : "success");
       return data;
     } catch (e) {
@@ -186,34 +207,35 @@ export default function DoctorPanel({ store, since }) {
   // Kern: één fix over een id-lijst, in chunks tot done. Gooit bij een fout.
   async function execFix(fix, ids, options, skipBackup) {
     const backup = skipBackup ? null : backupPlanFor(fix.id);
+    const blockId = newBlock(fix.label, ids.length);
     const tot = { done: 0, total: ids.length, fixed: 0, failed: 0, skipped: 0, label: fix.label };
     setFixProg({ ...tot });
     let cursor = 0;
-    for (;;) {
-      if (stopRef.current) break;
-      const r = await fetch("/api/doctor-fix", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ store: storeBody, fix: fix.id, ids, options, cursor, backup, skipBackup }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || r.status);
-      tot.done = data.nextCursor != null ? data.nextCursor : tot.total;
-      tot.fixed += data.fixed || 0;
-      tot.failed += data.failed || 0;
-      tot.skipped += data.skipped || 0;
-      setFixProg({ ...tot });
-      if (data.notes && data.notes.length) {
-        setFixNotes((cur) => [...data.notes, ...cur].slice(0, 80));
+    try {
+      for (;;) {
+        if (stopRef.current) break;
+        const r = await fetch("/api/doctor-fix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ store: storeBody, fix: fix.id, ids, options, cursor, backup, skipBackup }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || r.status);
+        tot.done = data.nextCursor != null ? data.nextCursor : tot.total;
+        tot.fixed += data.fixed || 0;
+        tot.failed += data.failed || 0;
+        tot.skipped += data.skipped || 0;
+        setFixProg({ ...tot });
+        if (data.notes && data.notes.length) blockDetail(blockId, data.notes);
+        if (data.done) break;
+        cursor = data.nextCursor;
       }
-      if (data.done) break;
-      cursor = data.nextCursor;
+    } catch (e) {
+      blockDone(blockId, `gestopt: ${String(e.message || e).slice(0, 120)}`, tot.failed + 1);
+      throw e;
     }
-    const backupTxt = backup ? ` · backup: "${backup.tab}"` : " · zonder backup";
-    setFixNotes((cur) => [
-      `✓ ${fix.label}: ${tot.fixed} aangepast · ${tot.skipped} overgeslagen · ${tot.failed} mislukt${backupTxt}`,
-      ...cur,
-    ]);
+    const backupTxt = backup ? ` · backup "${backup.tab}"` : " · zonder backup";
+    blockDone(blockId, `${tot.fixed} aangepast · ${tot.skipped} overgeslagen · ${tot.failed} mislukt${backupTxt}`, tot.failed);
     return tot;
   }
 
@@ -228,7 +250,7 @@ export default function DoctorPanel({ store, since }) {
     const b = askBackupSkip();
     if (!b.ok) return;
     setFixBusy(`${findingId}|${fix.id}`);
-    setFixNotes([]);
+    setFixLog([]);
     setErr("");
     stopRef.current = false;
     try {
@@ -277,11 +299,13 @@ export default function DoctorPanel({ store, since }) {
     setFixBusy("all");
     setErr("");
     setVerslag(null);
-    setFixNotes([]);
+    setFixLog([]);
     stopRef.current = false;
     const V = { auto: [], ai: [], open: [], usd: 0, paused: false };
     try {
-      let report = rep || (await scan({ silent: true }));
+      /* ALTIJD vers scannen — een oud rapport op het scherm (bv. van vóór
+         een deploy of van een andere run) mag nooit het fix-plan sturen. */
+      const report = await scan({ silent: true });
       if (!report) throw new Error("scan mislukt");
 
       /* FASE 1 — veilige fixes in logische volgorde */
@@ -545,11 +569,35 @@ export default function DoctorPanel({ store, since }) {
         </div>
       )}
 
-      {fixNotes.length > 0 && !fixProg && (
-        <div className="logpanel" style={{ marginTop: 10, maxHeight: 140 }}>
-          {fixNotes.map((n, i) => (
-            <div className="log" key={i}>
-              <span className={/MISLUKT|LET OP/.test(n) ? "err" : "muted"}>{n}</span>
+      {fixLog.length > 0 && (
+        <div className="logpanel" style={{ marginTop: 10, maxHeight: 260 }}>
+          {fixLog.map((b) => (
+            <div key={b.id} className="log" style={{ display: "block" }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
+                <span className={b.status === "busy" ? "muted" : b.failed ? "warn" : "ok"}>
+                  {b.status === "busy" ? "▸" : b.failed ? "⚠" : "✓"}
+                </span>
+                <span style={{ flex: 1, fontWeight: 600 }}>{b.label}</span>
+                <span className="muted small">{b.status === "busy" ? `bezig… (${b.total})` : b.sum}</span>
+              </div>
+              {b.details.length > 0 && (
+                <div style={{ paddingLeft: 20, marginTop: 3 }}>
+                  {(b.open ? b.details : b.details.slice(0, 4)).map((d, i) => (
+                    <div
+                      key={i}
+                      className="hint"
+                      style={{ marginTop: 1, ...(/MISLUKT|LET OP/.test(d) ? { color: "var(--err)" } : {}) }}
+                    >
+                      {d}
+                    </div>
+                  ))}
+                  {b.details.length > 4 && (
+                    <button type="button" className="linklike" onClick={() => toggleBlock(b.id)}>
+                      {b.open ? "▾ inklappen" : `▸ alle ${b.details.length} regels tonen`}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -616,6 +664,12 @@ export default function DoctorPanel({ store, since }) {
               <span className="err">{rep.stats.errors} fouten</span>
               <span className="prog-sep"> · </span>
               {rep.stats.warns} waarschuwingen
+              {repAt ? (
+                <span className="muted">
+                  <span className="prog-sep"> · </span>
+                  bijgewerkt {String(repAt.getHours()).padStart(2, "0")}:{String(repAt.getMinutes()).padStart(2, "0")}
+                </span>
+              ) : null}
             </span>
           </div>
 
