@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { listProductsByIds } from "@/lib/shopify";
 import {
-  classifyGenderBatch,
+  classifyGenderDeep,
   checkColorPhotoBatch,
   findForeignTextBatch,
   flagBrandedImages,
@@ -33,21 +33,32 @@ export async function POST(req) {
     const results = [];
 
     if (check === "gender") {
-      const r = await listProductsByIds(store, ids, "id,title,tags");
+      // GRONDIGE MODUS: titel + omschrijving + eerste productfoto tegelijk.
+      // Vangt ook producten die in BEIDE collecties hangen (Men+Women-tags).
+      const r = await listProductsByIds(store, ids, "id,title,body_html,tags,images");
       if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
       const products = r.products || [];
-      const rows = products.map((p, i) => ({ index: i, title: p.title, keyword: p.tags || "" }));
-      const map = await classifyGenderBatch(rows);
-      products.forEach((p, i) => {
-        if (map[i] == null) return; // AI gaf geen oordeel → nooit gokken
-        const suggested = map[i] === "Man" ? "Men" : "Women";
+      const items = products.map((p, i) => ({
+        index: i,
+        title: p.title,
+        desc: stripHtml(p.body_html).slice(0, 300),
+        tags: p.tags || "",
+        url: (p.images && p.images[0] && typeof p.images[0].src === "string" && /^https?:\/\//.test(p.images[0].src)) ? p.images[0].src : null,
+      }));
+      const out = await classifyGenderDeep(items);
+      aiUsd += (out.ai && out.ai.usd) || 0;
+      for (const l of out.labels) {
+        const p = products[l.index];
+        if (!p) continue;
+        const suggested = l.label; // "Men" | "Women" (al gevalideerd)
         const tags = String(p.tags || "").split(",").map((t) => t.trim());
-        const current = tags.find((t) => /^(men|women)$/i.test(t)) || "";
-        const cur = current ? current.charAt(0).toUpperCase() + current.slice(1).toLowerCase() : "";
-        if (cur !== suggested) {
-          results.push({ id: p.id, title: p.title, current: cur || "—", suggested });
+        const hasMen = tags.some((t) => /^men$/i.test(t));
+        const hasWomen = tags.some((t) => /^women$/i.test(t));
+        const current = hasMen && hasWomen ? "Men+Women" : hasMen ? "Men" : hasWomen ? "Women" : "—";
+        if (current !== suggested) {
+          results.push({ id: p.id, title: p.title, current, suggested });
         }
-      });
+      }
     } else if (check === "language") {
       const r = await listProductsByIds(store, ids, "id,title,body_html");
       if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });

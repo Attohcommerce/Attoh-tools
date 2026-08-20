@@ -63,7 +63,8 @@ function snapshotFor(fix, p) {
     case "delete-no-image-products":
       return { product: { id: p.id, title: p.title, handle: p.handle, status: p.status, tags: p.tags } };
     case "gender-tags":
-      return { tags: p.tags || "" };
+    case "fix-gender-from-title":
+      return { tags: p.tags || "", template_suffix: p.template_suffix || "" };
     case "delete-flagged-images":
       return { images: (p.images || []).map((im) => [im.id, im.src]) };
     default:

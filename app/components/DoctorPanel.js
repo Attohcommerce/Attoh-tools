@@ -5,10 +5,14 @@
    - Importer → "Controles": zelfde motor, gescoped op de zojuist
      geïmporteerde producten (created_at-filter)
 
-   Flow: Scan (gratis, deterministisch) → rapport per categorie → per
-   categorie een 1-tik-fix met verplichte backup → AI-checks als aparte
-   knoppen met kostenraming vooraf (geslacht / kleur↔foto / watermerk /
-   taal-restlaag) → AI-resultaten hebben hun eigen toepas-knoppen. */
+   Twee manieren van werken:
+   1. Per onderdeel: Scan → rapport per categorie → 1-tik-fix per punt,
+      AI-checks als losse knoppen met kostenraming vooraf.
+   2. FIX ALLES: één knop die alle veilige fixes én alle AI-controles in
+      logische volgorde draait (gender wordt op titel + omschrijving + foto
+      beoordeeld en direct toegepast) en eindigt met een eindverslag.
+      Pauzeerbaar; verwijderen gebeurt NOOIT automatisch — dat komt als
+      beslissing in het verslag. */
 
 import { useEffect, useRef, useState } from "react";
 import { MARKETS, MARKET_SIZE_GUIDE } from "@/lib/sizes";
@@ -20,17 +24,40 @@ const WERKBOEK = "1Y3wg8X5ivuwaUTfUapzgUOIMzVqr0KRs6g2FR1COuKE"; // Import-werkb
 // Slimme default: de store-valuta verraadt de markt
 const CUR_MARKET = { USD: "USA", GBP: "UK", AUD: "AUS+NZ", NZD: "AUS+NZ", CAD: "CAN" };
 
-// Chunk per AI-check (server verwerkt per call precies dit plukje)
-const AI_CHUNK = { gender: 40, language: 25, "color-photo": 8, watermark: 4, sample: 12 };
+// Chunk per AI-check (server verwerkt per call precies dit plukje).
+// Gender staat op 6: grondige modus met foto's — titel + omschrijving +
+// eerste productfoto per product.
+const AI_CHUNK = { gender: 6, language: 25, "color-photo": 8, watermark: 4, sample: 12 };
 // Ruwe kostenraming per product (haiku-tarieven) — alleen voor de knop-tekst
-const AI_EST = { gender: 0.0006, language: 0.0007, "color-photo": 0.002, watermark: 0.004 };
+const AI_EST = { gender: 0.002, language: 0.0007, "color-photo": 0.002, watermark: 0.004 };
 const AI_META = {
-  gender: { label: "Geslacht-check", desc: "Klopt de Men/Women-tag bij elke titel? (alleen draaien bij twijfel)" },
+  gender: { label: "Geslacht-check (grondig)", desc: "Beoordeelt élk product op titel + omschrijving + foto: Men of Women — vangt ook producten die in beide collecties hangen" },
   "color-photo": { label: "Kleur ↔ foto-check", desc: "Toont de gekoppelde foto écht de kleur van de variant? (per kleurgroep beoordeeld)" },
   watermark: { label: "Watermerk/branding-check", desc: "Logo's, watermerken of tekst op bestaande productfoto's" },
   language: { label: "AI-taalcheck", desc: "Vindt vreemde taal die het woordenboek mist" },
   sample: { label: "AI-steekproef — patronen", desc: "12 producten uit alle hoeken in samenhang; zoekt fouten die zich herhalen (groot model)" },
 };
+
+/* FIX ALLES — volgorde van de automatische fase. Bewust logisch geordend:
+   eerst foto's her-koppelen (voedt alt-teksten), dan gender (voedt de
+   template-fixes), dan taal/maten, dan de rest. Verwijder-acties zitten er
+   NOOIT in — die landen in het eindverslag. */
+const FIXALL_ORDER = [
+  "relink-photos",
+  "fix-gender-from-title",
+  "translate-options",
+  "convert-sizes",
+  "clear-barcodes",
+  "set-vendor",
+  "set-product-type",
+  "fill-alt",
+  "fix-size-order",
+  "fix-men-template",
+  "fix-women-template",
+  "publish-products",
+  "fix-compareat",
+  "clean-titles",
+];
 
 function sfx(kind) {
   try {
@@ -56,6 +83,7 @@ export default function DoctorPanel({ store, since }) {
   const [aiProg, setAiProg] = useState("");
   const [aiRes, setAiRes] = useState({});
   const [aiUsd, setAiUsd] = useState({});
+  const [verslag, setVerslag] = useState(null); // eindverslag van FIX ALLES
 
   const [market, setMarket] = useState("");
   const [showGuide, setShowGuide] = useState(false);
@@ -93,13 +121,15 @@ export default function DoctorPanel({ store, since }) {
 
   /* ---------------- SCAN ---------------- */
 
-  async function scan() {
-    if (!store || busy) return;
+  async function scan(opts = {}) {
+    if (!store) return null;
     setBusy(true);
     setErr("");
-    setRep(null);
-    setAiRes({});
-    setAiUsd({});
+    if (!opts.keepAi) {
+      setRep(null);
+      setAiRes({});
+      setAiUsd({});
+    }
     try {
       const r = await fetch("/api/doctor-scan", {
         method: "POST",
@@ -115,9 +145,11 @@ export default function DoctorPanel({ store, since }) {
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || r.status);
       setRep(data);
-      sfx(data.stats.errors ? "error" : "success");
+      if (!opts.silent) sfx(data.stats.errors ? "error" : "success");
+      return data;
     } catch (e) {
       setErr(String(e.message || e));
+      return null;
     } finally {
       setBusy(false);
     }
@@ -201,8 +233,8 @@ export default function DoctorPanel({ store, since }) {
     try {
       const tot = await execFix(fix, ids, fixOptions(extraOptions), b.skipBackup);
       sfx(tot.failed ? "error" : "success");
-      // teller verversen — zelfde scope opnieuw scannen
-      await scan();
+      // teller verversen — AI-resultaten blijven staan voor vervolg-acties
+      await scan({ keepAi: true, silent: true });
     } catch (e) {
       setErr(`Fix gestopt: ${String(e.message || e)}`);
       sfx("error");
@@ -212,86 +244,173 @@ export default function DoctorPanel({ store, since }) {
     }
   }
 
-  /* "Fix alle veilige punten": alle fixes met een bulk-vlag na elkaar, één
-     bevestiging, per fix een eigen backup-tabblad, één re-scan aan het eind.
-     Verwijder-acties, tekst-ingrepen en de maten-conversie zitten er bewust
-     NIET bij — die blijven bewuste losse klikken. */
-  async function bulkFix() {
-    if (!store || !rep || fixBusy || busy || aiBusy) return;
-    const jobs = new Map(); // fix-id → {fix, ids:Set} (translate-options zit in 2 checks → samenvoegen)
-    for (const f of rep.findings) {
-      for (const fx of f.fixes || []) {
-        if (!fx.bulk) continue;
-        if (!jobs.has(fx.id)) jobs.set(fx.id, { fix: fx, ids: new Set() });
-        for (const id of f.ids) jobs.get(fx.id).ids.add(id);
-      }
-    }
-    if (!jobs.size) return;
-    const lijst = [...jobs.values()].map((j) => `· ${j.fix.label} (${j.ids.size})`).join("\n");
-    if (!window.confirm(`Alle veilige fixes na elkaar draaien:\n\n${lijst}\n\nVerwijder-acties, titel-ingrepen en de maten-omrekening zitten hier bewust NIET bij. Doorgaan?`)) return;
+  /* ================= FIX ALLES =================
+     Eén knop die alles doet wat veilig kan, in logische volgorde, en al het
+     overige expliciet in een eindverslag zet — er wordt niets stilzwijgend
+     overgeslagen én niets verwijderd:
+       1. scan (als die er nog niet is)
+       2. alle veilige fixes (FIXALL_ORDER, incl. gender-uit-titel en de
+          maten-omrekening naar de gekozen markt)
+       3. alle AI-controles over de hele selectie; het geslacht-oordeel
+          (titel + omschrijving + foto) wordt direct toegepast
+       4. verse scan + eindverslag: wat is gefixt, wat vond de AI, en welke
+          beslissingen (verwijderen etc.) aan jou zijn
+     Pauzeren kan altijd: de lopende stap maakt netjes af, daarna sta je
+     weer in het gewone scherm om per onderdeel verder te werken; nóg een
+     keer FIX ALLES pakt gewoon op waar het bleef (gefixte punten komen
+     niet terug uit de scan). */
+  async function fixAll() {
+    if (!store || fixBusy || busy || aiBusy) return;
+    const n = rep ? (rep.productIds || []).length : Number(max) || 1000;
+    const aiEst = (n * (AI_EST.gender + AI_EST.language + AI_EST.watermark + AI_EST["color-photo"]) + 0.05).toFixed(2);
+    const zeker = window.confirm(
+      `FIX ALLES over ${rep ? n : "max " + n} producten (markt: ${market || "—"}):\n\n` +
+        `1. Alle veilige fixes — foto's her-koppelen, gender uit titel (incl. dubbele Men+Women-tags), opties vertalen, maten omrekenen, barcodes, vendor, product type, alt-teksten, maten-volgorde, templates, publiceren, doorstreepprijzen, titels opschonen\n` +
+        `2. Alle AI-controles (geschat ±$${aiEst}) — geslacht op titel+omschrijving+foto (wordt direct toegepast), taal, watermerk, kleur↔foto, steekproef\n` +
+        `3. Eindverslag — verwijderen doe ik NOOIT automatisch; dat komt als beslissing in het verslag\n\n` +
+        `Pauzeren kan altijd; daarna werk je gewoon per onderdeel verder. Starten?`
+    );
+    if (!zeker) return;
     const b = askBackupSkip();
     if (!b.ok) return;
-    setFixBusy("bulk");
-    setFixNotes([]);
+    setFixBusy("all");
     setErr("");
+    setVerslag(null);
+    setFixNotes([]);
     stopRef.current = false;
-    let failedTotal = 0;
+    const V = { auto: [], ai: [], open: [], usd: 0, paused: false };
     try {
-      for (const j of jobs.values()) {
-        if (stopRef.current) break;
-        const tot = await execFix(j.fix, [...j.ids], fixOptions(), b.skipBackup);
-        failedTotal += tot.failed;
+      let report = rep || (await scan({ silent: true }));
+      if (!report) throw new Error("scan mislukt");
+
+      /* FASE 1 — veilige fixes in logische volgorde */
+      const jobs = new Map();
+      for (const f of report.findings) {
+        for (const fx of f.fixes || []) {
+          if (!FIXALL_ORDER.includes(fx.id)) continue;
+          if (!jobs.has(fx.id)) jobs.set(fx.id, { fix: fx, ids: new Set() });
+          for (const id of f.ids) jobs.get(fx.id).ids.add(id);
+        }
       }
-      sfx(failedTotal ? "error" : "success");
-      await scan();
+      for (const fid of FIXALL_ORDER) {
+        if (stopRef.current) break;
+        const j = jobs.get(fid);
+        if (!j) continue;
+        const tot = await execFix(j.fix, [...j.ids], fixOptions(), b.skipBackup);
+        V.auto.push({ label: j.fix.label, fixed: tot.fixed, skipped: tot.skipped, failed: tot.failed });
+      }
+
+      /* FASE 2 — AI-controles over de hele selectie */
+      setFixProg(null); // voortgang is nu zichtbaar bij de AI-knoppen zelf
+      const allIds = report.productIds || [];
+      if (!stopRef.current && allIds.length) {
+        const g = await runAiCore("gender", allIds);
+        V.usd += g.usd;
+        if (g.results.length) {
+          const labels = {};
+          for (const m of g.results) labels[String(m.id)] = m.suggested;
+          const tot = await execFix(
+            { id: "gender-tags", label: "Gender rechtzetten (AI: titel + omschrijving + foto)" },
+            g.results.map((m) => m.id),
+            fixOptions({ labels }),
+            b.skipBackup
+          );
+          V.ai.push(`Geslacht: ${g.results.length} product(en) fout ingedeeld → ${tot.fixed} rechtgezet, incl. dubbele Men+Women-tags`);
+        } else {
+          V.ai.push(stopRef.current ? "Geslacht: gepauzeerd vóór er resultaten waren" : "Geslacht: alle producten kloppen (titel + omschrijving + foto beoordeeld)");
+        }
+      }
+      const AI_REST = [
+        ["language", (nr) => (nr ? `AI-taalcheck: ${nr} product(en) met vreemde taal — lijst staat hieronder (handwerk)` : "AI-taalcheck: alles Engels")],
+        ["watermark", (nr) => (nr ? `Watermerk-check: ${nr} foto('s) geflagd — verwijder-knop staat hieronder (jouw beslissing)` : "Watermerk-check: schoon")],
+        ["color-photo", (nr) => (nr ? `Kleur↔foto: ${nr} afwijking(en) — lijst staat hieronder` : "Kleur↔foto: klopt")],
+        ["sample", (nr) => (nr ? `Steekproef: ${nr} patroon/patronen gevonden — zie hieronder` : "Steekproef: geen terugkerende fouten")],
+      ];
+      for (const [check, lijn] of AI_REST) {
+        if (stopRef.current) break;
+        const out = await runAiCore(check, allIds);
+        V.usd += out.usd;
+        V.ai.push(lijn(out.results.length));
+      }
+
+      V.paused = stopRef.current;
+
+      /* FASE 3 — eindstand + open beslissingen (niets valt stil weg) */
+      const fresh = await scan({ keepAi: true, silent: true });
+      if (fresh) {
+        for (const f of fresh.findings) {
+          const danger = (f.fixes || []).some((x) => x.danger);
+          if (danger) V.open.push(`${f.title}: nog ${f.count} — verwijder-knop staat in het rapport; dat doe ik nooit automatisch`);
+          else if (f.level === "error") V.open.push(`${f.title}: nog ${f.count} — zie het rapport hieronder`);
+        }
+        if (!V.open.length) V.open.push("Geen open fouten meer — loop hooguit de waarschuwingen in het rapport na.");
+      }
+      setVerslag(V);
+      sfx(V.paused ? "toggle" : "success");
     } catch (e) {
-      setErr(`Bulk gestopt: ${String(e.message || e)}`);
+      V.paused = true;
+      setVerslag(V);
+      setErr(`FIX ALLES gestopt: ${String(e.message || e)} — hieronder kun je per onderdeel verder.`);
       sfx("error");
     } finally {
       setFixBusy(null);
       setFixProg(null);
+      setAiBusy(null);
+      setAiProg("");
     }
   }
 
   /* ---------------- AI-CHECKS ---------------- */
 
-  async function runAi(check) {
-    if (!store || !rep || aiBusy || fixBusy) return;
-    let ids = rep.productIds || [];
-    if (!ids.length) return;
+  // Kern van een AI-check: de chunk-loop, zonder bevestiging — gedeeld
+  // tussen de losse knoppen en FIX ALLES. Resultaten streamen live naar
+  // de UI; pauzeren (stopRef) stopt na het lopende plukje.
+  async function runAiCore(check, idsAll) {
+    let ids = idsAll || [];
     if (check === "sample") {
       // 12 producten gelijk verspreid over de catalogus
       const step = Math.max(1, Math.floor(ids.length / 12));
       ids = ids.filter((_, i) => i % step === 0).slice(0, 12);
     }
-    const est = check === "sample" ? "0.05" : (AI_EST[check] * ids.length).toFixed(2);
-    const zeker = window.confirm(
-      `${AI_META[check].label} over ${ids.length} producten — geschat ±$${est} aan AI-kosten. Starten?`
-    );
-    if (!zeker) return;
     setAiBusy(check);
-    setErr("");
-    stopRef.current = false;
+    setFixProg(null); // AI-voortgang is zichtbaar op de check-knop zelf
     const chunk = AI_CHUNK[check];
     const all = [];
     let usd = 0;
+    for (let i = 0; i < ids.length; i += chunk) {
+      if (stopRef.current) break;
+      setAiProg(`${Math.min(i + chunk, ids.length)}/${ids.length}`);
+      const r = await fetch("/api/doctor-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ store: storeBody, check, ids: ids.slice(i, i + chunk) }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || r.status);
+      all.push(...(data.results || []));
+      usd += data.aiUsd || 0;
+      setAiRes((cur) => ({ ...cur, [check]: [...all] }));
+      setAiUsd((cur) => ({ ...cur, [check]: usd }));
+    }
+    setAiProg("");
+    return { results: all, usd };
+  }
+
+  async function runAi(check) {
+    if (!store || !rep || aiBusy || fixBusy || busy) return;
+    const baseIds = rep.productIds || [];
+    if (!baseIds.length) return;
+    const cnt = check === "sample" ? Math.min(12, baseIds.length) : baseIds.length;
+    const est = check === "sample" ? "0.05" : (AI_EST[check] * cnt).toFixed(2);
+    const zeker = window.confirm(
+      `${AI_META[check].label} over ${cnt} producten — geschat ±$${est} aan AI-kosten. Starten?`
+    );
+    if (!zeker) return;
+    setErr("");
+    stopRef.current = false;
     try {
-      for (let i = 0; i < ids.length; i += chunk) {
-        if (stopRef.current) break;
-        setAiProg(`${Math.min(i + chunk, ids.length)}/${ids.length}`);
-        const r = await fetch("/api/doctor-ai", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ store: storeBody, check, ids: ids.slice(i, i + chunk) }),
-        });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || r.status);
-        all.push(...(data.results || []));
-        usd += data.aiUsd || 0;
-        setAiRes((cur) => ({ ...cur, [check]: [...all] }));
-        setAiUsd((cur) => ({ ...cur, [check]: usd }));
-      }
-      sfx(all.length ? "error" : "success");
+      const out = await runAiCore(check, baseIds);
+      sfx(out.results.length ? "error" : "success");
     } catch (e) {
       setErr(`${AI_META[check].label} gestopt: ${String(e.message || e)}`);
       sfx("error");
@@ -384,13 +503,21 @@ export default function DoctorPanel({ store, since }) {
         </label>
       ) : null}
 
-      <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center" }}>
-        <button className="btn" onClick={scan} disabled={disabled}>
+      <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <button className="btn" onClick={() => scan()} disabled={disabled}>
           {busy ? "Scannen…" : "✚ Scan producten"}
+        </button>
+        <button
+          className="btn"
+          onClick={fixAll}
+          disabled={disabled}
+          title="Scant (indien nodig), draait alle veilige fixes én alle AI-controles in logische volgorde, en eindigt met een verslag. Verwijderen blijft altijd aan jou."
+        >
+          {fixBusy === "all" ? "FIX ALLES bezig…" : "⚡ FIX ALLES"}
         </button>
         {(fixBusy || aiBusy) && (
           <button className="btn-ghost btn-small" onClick={() => { stopRef.current = true; }}>
-            ■ Stop na deze stap
+            {fixBusy === "all" ? "⏸ Pauzeer — daarna per onderdeel verder" : "■ Stop na deze stap"}
           </button>
         )}
       </div>
@@ -427,6 +554,54 @@ export default function DoctorPanel({ store, since }) {
         </div>
       )}
 
+      {verslag && !fixProg && (
+        <div className="prog-card" style={{ marginTop: 12 }}>
+          <div className="prog-top">
+            <span className="prog-title">
+              Eindverslag FIX ALLES{verslag.paused ? " — gepauzeerd" : ""}
+            </span>
+            <span className="prog-count">AI ±${verslag.usd.toFixed(2)}</span>
+          </div>
+          {verslag.paused && (
+            <div className="hint" style={{ marginTop: 4 }}>
+              Gepauzeerd — hieronder werk je gewoon per onderdeel verder. Nóg een keer FIX ALLES
+              pakt op waar het bleef (wat al gefixt is, komt niet terug uit de scan).
+            </div>
+          )}
+          <div className="logpanel" style={{ marginTop: 8 }}>
+            {verslag.auto.map((a, i) => (
+              <div className="log" key={"a" + i}>
+                <span className={a.failed ? "warn" : "ok"}>✓</span>
+                <span style={{ flex: 1 }}>
+                  {a.label}: {a.fixed} aangepast · {a.skipped} overgeslagen
+                  {a.failed ? ` · ${a.failed} mislukt` : ""}
+                </span>
+              </div>
+            ))}
+            {verslag.ai.map((t, i) => (
+              <div className="log" key={"i" + i}>
+                <span className="ok">✦</span>
+                <span style={{ flex: 1 }}>{t}</span>
+              </div>
+            ))}
+            {verslag.open.length > 0 && (
+              <>
+                <div className="field-label">Voor jou om te beslissen</div>
+                {verslag.open.map((t, i) => (
+                  <div className="log" key={"o" + i}>
+                    <span className="warn">!</span>
+                    <span style={{ flex: 1 }}>{t}</span>
+                  </div>
+                ))}
+              </>
+            )}
+            {!verslag.auto.length && !verslag.ai.length && (
+              <div className="center-note">Niets te fixen gevonden.</div>
+            )}
+          </div>
+        </div>
+      )}
+
       {rep && (
         <div className="prog-card" style={{ marginTop: 12 }}>
           <div className="prog-top">
@@ -442,17 +617,6 @@ export default function DoctorPanel({ store, since }) {
               {rep.stats.warns} waarschuwingen
             </span>
           </div>
-
-          {rep.findings.some((f) => (f.fixes || []).some((x) => x.bulk)) && (
-            <div style={{ marginTop: 8 }}>
-              <button className="btn-ghost btn-small" disabled={disabled} onClick={bulkFix}>
-                {fixBusy === "bulk" ? "Bulk bezig…" : "⚡ Fix alle veilige punten in één keer"}
-              </button>
-              <span className="hint" style={{ marginLeft: 8 }}>
-                verwijderen, titel-ingrepen en maten-omrekening blijven losse klikken
-              </span>
-            </div>
-          )}
 
           <div className="logpanel" style={{ marginTop: 12 }}>
             {rep.findings.length === 0 && <div className="center-note">Alles schoon. Netjes.</div>}
