@@ -340,6 +340,9 @@ export async function POST(req) {
       stats: result.stats,
     });
   } catch (e) {
+    // Stack naar de Vercel-runtime-log: de UI krijgt alleen de (geminifieerde)
+    // melding — "e.replace is not a function" zei niets over wáár het misging.
+    console.error("[keywords-verdeling]", e && e.stack ? e.stack : e);
     return NextResponse.json({ error: String(e.message || e) }, { status: 500 });
   }
 }
