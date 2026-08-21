@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readRange, readColumnsBatch, addTab, appendRows, formatVerdelingTab, parseSheetId } from "@/lib/sheets";
+import { readRange, readColumnsBatch, addTab, appendRows, formatVerdelingTab, parseSheetId, a1Tab } from "@/lib/sheets";
 import { buildVerdeling, keywordType } from "@/lib/verdeling";
 import { classifyJunkKeywordsBatch, reviewVerdelingFinal, classifyUnknownTokens } from "@/lib/ai";
 import { unknownFashionTokens } from "@/lib/brands";
@@ -50,7 +50,7 @@ export async function POST(req) {
     const src = String(sourceTab).trim();
 
     /* ---- 1. kolommen vinden in het bron-tabblad ---- */
-    const headerRows = await readRange(sourceSheetId, `'${src}'!1:1`);
+    const headerRows = await readRange(sourceSheetId, `${a1Tab(src)}!1:1`);
     const header = (headerRows[0] || []).map((h) => String(h || "").toLowerCase());
     if (!header.length) throw new Error(`Tabblad "${src}" is leeg`);
 
@@ -345,7 +345,7 @@ export async function POST(req) {
     for (let i = 0; i < nOut; i++) {
       values.push([...(left[i] || padLeft), "", ...(right[i] || padRight), "", ...(diag[i] || [])]);
     }
-    await appendRows(targetSheetId, `'${t.title}'!A1`, values, "RAW");
+    await appendRows(targetSheetId, `${a1Tab(t.title)}!A1`, values, "RAW");
     await formatVerdelingTab(targetSheetId, t.tabId, left.length, 9, 17);
 
     const id = parseSheetId(targetSheetId);

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   readRange, readColumnsBatch, appendRows, parseSheetId,
-  getTabIdByTitle, formatUnderdogBlock,
+  getTabIdByTitle, formatUnderdogBlock, a1Tab,
 } from "@/lib/sheets";
 import {
   canonKey, isVerdelingJunk, collectionFor, consistentCollection,
@@ -42,7 +42,7 @@ async function prepStep(body) {
 
   /* -- Bestaande organization -- */
   const oTab = String(orgTab).trim();
-  const orgRows = await readRange(orgSheetId, `'${oTab}'!A1:J`);
+  const orgRows = await readRange(orgSheetId, `${a1Tab(oTab)}!A1:J`);
   if (!orgRows.length) throw httpErr(422, `Organization-tabblad "${oTab}" is leeg of bestaat niet`);
   const oHead = (orgRows[0] || []).map((h) => String(h || "").toLowerCase());
   const oKw = oHead.findIndex((h) => h.startsWith("keyword"));
@@ -78,7 +78,7 @@ async function prepStep(body) {
 
   /* -- Stats-tabblad -- */
   const sTab = String(statsTab).trim();
-  const headerRows = await readRange(statsSheetId, `'${sTab}'!1:1`);
+  const headerRows = await readRange(statsSheetId, `${a1Tab(sTab)}!1:1`);
   const header = (headerRows[0] || []).map((h) => String(h || "").toLowerCase());
   if (!header.length) throw httpErr(422, `Stats-tabblad "${sTab}" is leeg of bestaat niet`);
 
@@ -245,7 +245,7 @@ async function writeStep(body) {
 
   /* Verse guard + rank: het tabblad kan veranderd zijn tussen prep en write */
   const oTab = String(orgTab).trim();
-  const orgRows = await readRange(orgSheetId, `'${oTab}'!A1:J`);
+  const orgRows = await readRange(orgSheetId, `${a1Tab(oTab)}!A1:J`);
   if (!orgRows.length) throw httpErr(422, `Organization-tabblad "${oTab}" is leeg of bestaat niet`);
   let maxRank = 0;
   for (let i = 1; i < orgRows.length; i++) {
@@ -352,7 +352,7 @@ async function writeStep(body) {
     const R = i >= rightOffset ? rightRows[i - rightOffset] || [] : [];
     values.push([...L, "", ...R]);
   }
-  await appendRows(orgSheetId, `'${oTab}'!A1`, values, "RAW");
+  await appendRows(orgSheetId, `${a1Tab(oTab)}!A1`, values, "RAW");
 
   /* Opmaak. Faalt dit, dan is de data er nog steeds — daarom apart en
      niet-blokkerend. */

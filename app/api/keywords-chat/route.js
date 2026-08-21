@@ -6,6 +6,7 @@ import {
   deleteRows,
   renameTab,
   sortTabByColumn,
+  a1Tab,
 } from "@/lib/sheets";
 import { cleanTopRows } from "@/lib/keyword-clean";
 
@@ -69,7 +70,7 @@ async function execTool(name, input, ctx) {
 
   if (name === "get_top_keywords") {
     const n = Math.min(Math.max(Number(input.n) || 50, 1), 300);
-    const values = await readRange(sheetId, `'${ctx.tabName}'!A2:B${n + 1}`);
+    const values = await readRange(sheetId, `${a1Tab(ctx.tabName)}!A2:B${n + 1}`);
     return {
       summary: `Top ${values.length} gelezen`,
       data: values.map((r) => ({ kw: r[0], avg: r[1] })),
@@ -83,7 +84,7 @@ async function execTool(name, input, ctx) {
     if (!wanted.size) return { summary: "Geen keywords opgegeven", data: { removed: 0 } };
     const tabId = await getTabIdByTitle(sheetId, tabName);
     if (tabId === null) throw new Error(`Tabblad "${tabName}" niet gevonden`);
-    const col = await readRange(sheetId, `'${tabName}'!A2:A`);
+    const col = await readRange(sheetId, `${a1Tab(tabName)}!A2:A`);
     const rows = [];
     const found = [];
     col.forEach((r, i) => {
@@ -124,7 +125,7 @@ async function execTool(name, input, ctx) {
   if (name === "sort_by_column") {
     const tabId = await getTabIdByTitle(sheetId, tabName);
     if (tabId === null) throw new Error(`Tabblad "${tabName}" niet gevonden`);
-    const header = (await readRange(sheetId, `'${tabName}'!A1:Z1`))[0] || [];
+    const header = (await readRange(sheetId, `${a1Tab(tabName)}!A1:Z1`))[0] || [];
     const want = String(input.column || "").trim().toLowerCase();
     let colIndex = -1;
     if (want === "avg" || want.includes("avg") || want.includes("monthly")) {
@@ -138,7 +139,7 @@ async function execTool(name, input, ctx) {
       }
     }
     if (colIndex < 1) throw new Error(`Kolom "${input.column}" niet gevonden`);
-    const colA = await readRange(sheetId, `'${tabName}'!A2:A`);
+    const colA = await readRange(sheetId, `${a1Tab(tabName)}!A2:A`);
     await sortTabByColumn(
       sheetId,
       tabId,

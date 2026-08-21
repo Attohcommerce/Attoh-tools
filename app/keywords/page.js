@@ -5,6 +5,28 @@ import Header from "../components/Header";
 
 const LS_SHEET = "attoh_kw_sheet";
 const LS_VSHEET = "attoh_kw_vsheet"; // doel-sheet van de verdeling
+const LS_SRCSHEET = "attoh_kw_srcsheet"; // stats-sheet bij "Bestaand tabblad"
+
+// Tabbladnaam veilig in A1-notatie: een apostrof in de naam ("Men's USA")
+// brak anders de hele range ("Unable to parse range").
+function a1Tab(name) {
+  return `'${String(name || "").replace(/'/g, "''")}'`;
+}
+
+// Google-fouten vertalen naar wat je moet DOEN.
+function explainSheetError(msg, tab) {
+  const m = String(msg || "");
+  if (/unable to parse range|not found/i.test(m)) {
+    return `Tabblad "${tab}" niet gevonden in deze sheet — kopieer de exacte bladnaam (onderaan in Google Sheets: rechtsklik op het tabblad → Naam wijzigen → tekst kopiëren). Hoofdletters en spaties tellen mee.`;
+  }
+  if (/permission|403|forbidden/i.test(m)) {
+    return "Geen toegang tot deze sheet — deel hem als Bewerker met attoh-sheets@attoh-tools.iam.gserviceaccount.com en probeer opnieuw.";
+  }
+  if (/requested entity was not found|404/i.test(m)) {
+    return "Sheet niet gevonden — controleer de link (moet een docs.google.com/spreadsheets/d/…-link of het ID zijn).";
+  }
+  return m;
+}
 const LS_SESSIONS = "attoh_kw_sessions"; // max 2, nieuwste eerst
 
 const MONTHS = [
@@ -143,6 +165,9 @@ export default function KeywordsPage() {
      server-side op sheet + bladnaam. */
   const [srcMode, setSrcMode] = useState("csv"); // "csv" | "sheet"
   const [srcTab, setSrcTab] = useState("");
+  // Eigen link-veld voor de stats-sheet bij "Bestaand tabblad" — die is vaak
+  // een ANDER bestand dan de doel-sheet (bv. "Keyword Stats — alle batches").
+  const [srcSheetLink, setSrcSheetLink] = useState(DEFAULT_RESEARCH_SHEET);
   const [srcBusy, setSrcBusy] = useState(false);
   const [srcReady, setSrcReady] = useState(false);
   const [sheetLink, setSheetLink] = useState(DEFAULT_RESEARCH_SHEET);
@@ -196,6 +221,9 @@ export default function KeywordsPage() {
     try {
       const s = localStorage.getItem(LS_SHEET);
       if (s) setSheetLink(s);
+      const ss = localStorage.getItem(LS_SRCSHEET);
+      if (ss) setSrcSheetLink(ss);
+      else if (s) setSrcSheetLink(s);
       const v = localStorage.getItem(LS_VSHEET);
       if (v) setVSheetLink(v);
       const st = localStorage.getItem("kw_store");
@@ -325,37 +353,56 @@ export default function KeywordsPage() {
   // de merken-check en de verdeling lezen hem daar zelf, server-side.
   async function useExistingTab() {
     const tab = srcTab.trim();
-    if (!tab || !sheetLink.trim() || srcBusy) return;
+    const link = srcSheetLink.trim();
+    if (!tab || !link || srcBusy) return;
     setSrcBusy(true);
     setSrcReady(false);
     setLogs([]);
     try {
       pushLog({ strong: true, text: `— Bestaand tabblad controleren: "${tab}"` });
-      const data = await api("/api/sheets", {
-        action: "read",
-        sheetId: sheetLink.trim(),
-        range: `'${tab}'!A1:Z3`,
-      });
+      let data;
+      try {
+        data = await api("/api/sheets", {
+          action: "read",
+          sheetId: link,
+          range: `${a1Tab(tab)}!A1:AD3`,
+        });
+      } catch (e) {
+        throw new Error(explainSheetError(e.message, tab));
+      }
       const values = data.values || [];
-      if (!values.length) throw new Error(`Tabblad "${tab}" is leeg of bestaat niet`);
+      if (!values.length) throw new Error(`Tabblad "${tab}" is leeg`);
       const header = (values[0] || []).map((h) => String(h || "").trim());
-      if (!/^keyword$/i.test(header[0] || "")) {
-        throw new Error(`Kolom A van "${tab}" moet "Keyword" heten, niet "${header[0] || "(leeg)"}"`);
+      // Zelfde herkenning als de verdeling-route: kolom "Keyword…", kolom
+      // "Avg…", en maandkolommen ("Jul 2025" of "Searches: Jul 2025").
+      const kwIdx = header.findIndex((h) => /^keyword/i.test(h));
+      if (kwIdx === -1) {
+        throw new Error(
+          `Geen kolom "Keyword" gevonden in rij 1 van "${tab}" (gevonden: ${header.filter(Boolean).slice(0, 6).join(" · ") || "niets"}). Is dit wel een keyword-stats-tabblad?`
+        );
       }
       const avgIdx = header.findIndex((h) => /^avg/i.test(h));
       if (avgIdx === -1) throw new Error(`Geen kolom "Avg. monthly search" gevonden in "${tab}"`);
-      const monthNames = header.slice(avgIdx + 1).filter(Boolean);
+      const MONTH_RE = /^(searches:\s*)?(jan|feb|ma?r|apr|ma?y|mei|jun|jul|aug|sep|o[ck]t|nov|dec)/i;
+      const monthNames = header.filter((h) => MONTH_RE.test(h));
       if (monthNames.length < 4) {
-        throw new Error(`Maar ${monthNames.length} maandkolommen gevonden — er zijn er minstens 4 nodig`);
+        throw new Error(`Maar ${monthNames.length} maandkolommen gevonden in "${tab}" — er zijn er minstens 4 nodig (bv. "Sep 2025").`);
       }
-      pushLog({ ok: true, text: `Kolommen herkend: ${monthNames.join(" · ")}` });
-      const sample = values[1] ? String(values[1][0] || "") : "";
+      const extras = header.filter((h) => /competition|comp\. index|bid|verandering|change/i.test(h));
+      pushLog({ ok: true, text: `Kolommen herkend: Keyword · Avg · ${monthNames.length} maanden (${monthNames[0]} … ${monthNames[monthNames.length - 1]})${extras.length ? ` · ${extras.length} extra Planner-kolommen (concurrentie/bids/trend)` : " · geen concurrentie/bid/trend-kolommen (stap 1 opnieuw draaien met CSV's voor de underdog-engine)"}` });
+      const sample = values[1] ? String(values[1][kwIdx] || "") : "";
       if (sample) pushLog({ muted: true, text: `Eerste keyword: "${sample}"` });
 
-      // Dit tabblad is vanaf nu de bron voor de merken-check en de verdeling.
+      // Dit tabblad is vanaf nu de bron voor de merken-check en de verdeling —
+      // dus ook de sheet-link van de sessie wijst nu naar deze stats-sheet.
+      setSheetLink(link);
       setTabName(tab);
       setCleanTab(tab);
       setSrcReady(true);
+      try {
+        localStorage.setItem(LS_SRCSHEET, link);
+        localStorage.setItem(LS_SHEET, link);
+      } catch {}
       pushLog({ info: true, text: `Klaar — "${tab}" staat klaar voor de merken-check en de verdeling. Samenvoegen is niet nodig.` });
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     } catch (e) {
@@ -1073,24 +1120,34 @@ export default function KeywordsPage() {
 
                 {srcMode === "sheet" ? (
                   <>
-                    <h2>Bestaande keyword-stats <span className="opt">(al in de sheet)</span></h2>
+                    <h2>Bestaande keyword-stats <span className="opt">(all-batch-stats-sheet)</span></h2>
+                    <div className="field-label">Google Sheet-link van de stats-sheet</div>
+                    <input
+                      type="text"
+                      placeholder="https://docs.google.com/spreadsheets/d/…"
+                      value={srcSheetLink}
+                      onChange={(e) => { setSrcSheetLink(e.target.value); setSrcReady(false); }}
+                    />
                     <div className="field-label">Exacte bladnaam</div>
                     <input
                       type="text"
-                      placeholder="bv. 9 augustus latest test"
+                      placeholder="bv. Keyword Stats — alle batches"
                       value={srcTab}
                       onChange={(e) => { setSrcTab(e.target.value); setSrcReady(false); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") useExistingTab(); }}
                     />
                     <div className="hint">
-                      De sheet-link hieronder wordt gebruikt. Hij controleert of het tabblad bestaat
-                      en of de kolommen kloppen (Keyword · Avg. monthly search · maanden) en gebruikt
-                      het daarna direct — samenvoegen en uploaden slaat hij over.
+                      Plak de link van het bestand waar de stats al in staan en typ de bladnaam precies
+                      zoals hij onderaan in Google Sheets staat. Hij controleert de kolommen
+                      (Keyword · Avg. monthly search · maanden) en gebruikt het tabblad daarna direct
+                      voor de merken-check en de verdeling — samenvoegen en uploaden slaat hij over.
+                      De sheet moet gedeeld zijn met attoh-sheets@attoh-tools.iam.gserviceaccount.com.
                     </div>
                     <div style={{ marginTop: 12 }}>
                       <button
                         className="btn"
                         onClick={useExistingTab}
-                        disabled={srcBusy || !srcTab.trim() || !sheetLink.trim()}
+                        disabled={srcBusy || !srcTab.trim() || !srcSheetLink.trim()}
                       >
                         {srcBusy ? "Controleren…" : srcReady ? "✓ Tabblad in gebruik" : "⌕ Tabblad inlezen"}
                       </button>
@@ -1130,6 +1187,9 @@ export default function KeywordsPage() {
               </div>
             )}
 
+            {/* In "Bestaand tabblad"-modus staan link + bladnaam al in het blok
+                hierboven; dit kaartje zou dan alleen verwarren ("Doel-sheet"?). */}
+            {!(activeId === null && srcMode === "sheet") && (
             <div className="card">
               <h2>{activeId === null ? "Doel-sheet" : "Sessie"}</h2>
               <div className="field-label">Google Sheet-link</div>
@@ -1141,7 +1201,7 @@ export default function KeywordsPage() {
                 disabled={activeId !== null}
               />
               <div className="field-label">
-                {activeId !== null ? "Tabblad" : srcMode === "sheet" ? "Tabblad (uit het blok hierboven)" : "Naam nieuw tabblad"}
+                {activeId !== null ? "Tabblad" : "Naam nieuw tabblad"}
               </div>
               <input
                 type="text"
@@ -1151,13 +1211,11 @@ export default function KeywordsPage() {
                   setTabName(e.target.value);
                   if (activeId === null) setCleanTab(e.target.value);
                 }}
-                disabled={activeId !== null || srcMode === "sheet"}
+                disabled={activeId !== null}
               />
               {activeId === null ? (
                 <div className="hint">
-                  {srcMode === "sheet"
-                    ? "Er wordt niets aangemaakt of overschreven — de tool leest dit bestaande tabblad."
-                    : "Elke run maakt een nieuw tabblad — niets wordt overschreven."}
+                  Elke run maakt een nieuw tabblad — niets wordt overschreven.
                 </div>
               ) : (
                 doneUrl && (
@@ -1169,6 +1227,7 @@ export default function KeywordsPage() {
                 )
               )}
             </div>
+            )}
 
             {activeId === null && srcMode === "csv" && (
               <div style={{ marginTop: 16 }}>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   addTab, appendRows, formatKeywordTab, parseSheetId,
-  getSheetSizes, SHEETS_CELL_LIMIT,
+  getSheetSizes, SHEETS_CELL_LIMIT, a1Tab,
 } from "@/lib/sheets";
 import { cleanTopRows } from "@/lib/keyword-clean";
 
@@ -60,7 +60,7 @@ export async function POST(req) {
       if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
       if (Array.isArray(header) && header.length) {
         // RAW: "jul 2025" blijft letterlijke tekst, wordt nooit een datum
-        await appendRows(sheetId, `'${r.title}'!A1`, [header], "RAW");
+        await appendRows(sheetId, `${a1Tab(r.title)}!A1`, [header], "RAW");
       }
       return NextResponse.json({ ok: true, tabId: r.tabId, title: r.title, gid: r.tabId });
     }
@@ -70,7 +70,7 @@ export async function POST(req) {
         return NextResponse.json({ error: "Geen rijen" }, { status: 400 });
       }
       // RAW: getallen blijven getallen — geen dag-nummer-interpretatie
-      await appendRows(sheetId, `'${tabName}'!A1`, rows, "RAW");
+      await appendRows(sheetId, `${a1Tab(tabName)}!A1`, rows, "RAW");
       return NextResponse.json({ ok: true, appended: rows.length });
     }
 
