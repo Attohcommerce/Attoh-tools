@@ -226,10 +226,14 @@ export async function POST(req) {
           break;
         }
         const flagged = await reviewVerdelingFinal(
-          result.rows.map((r) => ({ kw: r.kw, col: r.col, n: r.n })),
+          result.rows.map((r) => ({ kw: r.kw, col: r.col, n: r.n, vol: r.season })),
           market,
           storeUrl,
-          { months, seasons: result.windowSeasons || [] }
+          {
+            months,
+            seasons: result.windowSeasons || [],
+            audience: result.storeProfile && result.storeProfile.audience,
+          }
         );
         const fresh = flagged.filter((f) => result.rows.some((r) => r.kw === f.kw));
         if (!fresh.length) break;
@@ -286,6 +290,16 @@ export async function POST(req) {
         `Uit voorzorg verwijderd (onbekend woord, niet door de merk-check goedgekeurd): ${unknownWarn.join(", ")}. Staat hier een echt mode-keyword tussen, draai de verdeling dan nog eens — dan krijgt de AI-check wél de tijd.`
       );
     }
+    if (result.stats && result.stats.marketWord) {
+      warnings.push(
+        `${result.stats.marketWord} keywords met Brits/Australisch jargon geweerd voor de USA-markt (jumpers, trainers, cord trousers, waistcoat …).`
+      );
+    }
+    if (result.caps) {
+      warnings.push(
+        `Cap per keyword bij ${opts.total} producten: ${result.caps.perKeyword} (kale kop-termen zoals "mens shoes": ${result.caps.headTerm}).`
+      );
+    }
     if (opts.genders === "MV") {
       const mKws = result.rows.filter((r) => r.g === "M").length;
       const vKws = result.rows.filter((r) => r.g === "V").length;
@@ -314,13 +328,25 @@ export async function POST(req) {
       ["Collectie", "Aantal keywords", "Aantal producten", "Top keywords"],
       ...result.collections.map((c) => [c.col, c.kws, c.products, c.top.join(", ")]),
     ];
-    const nOut = Math.max(left.length, right.length);
+    /* Diagnose-blok (P-Q): wat de AI schrapte, waarschuwingen en de trechter.
+       Stond tot nu toe alleen in de vluchtige run-log — onzichtbaar zodra je
+       de sheet later terugkijkt, terwijl juist DAAR de vraag "waarom staat
+       mens sneakers er niet in?" beantwoord wordt. */
+    const st = result.stats || {};
+    const diag = [["Diagnose", ""]];
+    diag.push(["Trechter", `${st.input || 0} rijen → junk ${st.junk || 0} · te weinig volume ${st.lowSeason || 0} · geen collectie ${st.unmapped || 0} · ander geslacht ${st.genderSkip || 0} · markt-jargon ${st.marketWord || 0} · na dedupe ${st.afterDedupe || 0} · gekozen ${result.rows.length}`]);
+    for (const w of warnings) diag.push(["Let op", w]);
+    for (const d of result.droppedCollections || []) diag.push(["Weggelaten collectie", d]);
+    for (const a of aiRemoved) diag.push(["AI verwijderde", a]);
+    const nOut = Math.max(left.length, right.length, diag.length);
     const values = [];
+    const padLeft = ["", "", "", "", "", "", "", "", ""];
+    const padRight = ["", "", "", ""];
     for (let i = 0; i < nOut; i++) {
-      values.push([...(left[i] || ["", "", "", "", "", "", "", "", ""]), "", ...(right[i] || [])]);
+      values.push([...(left[i] || padLeft), "", ...(right[i] || padRight), "", ...(diag[i] || [])]);
     }
     await appendRows(targetSheetId, `'${t.title}'!A1`, values, "RAW");
-    await formatVerdelingTab(targetSheetId, t.tabId, left.length, 9, 14);
+    await formatVerdelingTab(targetSheetId, t.tabId, left.length, 9, 17);
 
     const id = parseSheetId(targetSheetId);
     return NextResponse.json({
