@@ -165,6 +165,13 @@ export default function KeywordsPage() {
      server-side op sheet + bladnaam. */
   const [srcMode, setSrcMode] = useState("csv"); // "csv" | "sheet"
   const [srcTab, setSrcTab] = useState("");
+  // MARKT VAN DE BATCHES — verplicht bij stap 1 (bewust GEEN default: de
+  // markt is heilig, dus altijd een bewuste klik).
+  const [srcMarket, setSrcMarket] = useState("");
+  // Geheugen-tabblad (per markt: gekoppelde sheet + status)
+  const [memStatus, setMemStatus] = useState(null);
+  const [memBusy, setMemBusy] = useState("");
+  const [memLinks, setMemLinks] = useState({ USA: "", UK: "", AUS: "", CAN: "" });
   // Eigen link-veld voor de stats-sheet bij "Bestaand tabblad" — die is vaak
   // een ANDER bestand dan de doel-sheet (bv. "Keyword Stats — alle batches").
   const [srcSheetLink, setSrcSheetLink] = useState(DEFAULT_RESEARCH_SHEET);
@@ -333,7 +340,7 @@ export default function KeywordsPage() {
   }
 
   const totalRows = files.reduce((s, f) => s + (f.rows ? f.rows.length : 0), 0);
-  const canStart = !running && files.some((f) => f.rows) && sheetLink.trim() && tabName.trim();
+  const canStart = !running && files.some((f) => f.rows) && sheetLink.trim() && tabName.trim() && !!srcMarket;
 
   async function api(url, body) {
     const res = await fetch(url, {
@@ -413,6 +420,66 @@ export default function KeywordsPage() {
     }
   }
 
+  /* ----- batch-geheugen ----- */
+
+  async function loadMemStatus() {
+    try {
+      const r = await api("/api/keywords-memory", { action: "status" });
+      setMemStatus(r.markets || []);
+      const links = { USA: "", UK: "", AUS: "", CAN: "" };
+      for (const row of r.markets || []) if (row.sheetUrl) links[row.market] = row.sheetUrl;
+      setMemLinks(links);
+    } catch (e) {
+      setMemStatus([]);
+      pushLog({ err: true, text: "Geheugen-status laden mislukt: " + (e.message || e) });
+    }
+  }
+
+  async function memSaveLink(market) {
+    setMemBusy(market + ":save");
+    try {
+      await api("/api/keywords-memory", { action: "configSet", market, link: memLinks[market] });
+      pushLog({ ok: true, text: `Geheugen-sheet voor ${market} gekoppeld. Deel hem met de service account (attoh-sheets@attoh-tools.iam.gserviceaccount.com) als dat nog niet gebeurd is.` });
+      await loadMemStatus();
+    } catch (e) {
+      pushLog({ err: true, text: `Koppelen mislukt (${market}): ` + (e.message || e) });
+    } finally {
+      setMemBusy("");
+    }
+  }
+
+  async function memMake(market) {
+    setMemBusy(market + ":make");
+    try {
+      pushLog({ strong: true, text: `— All-batch-tabblad maken uit geheugen ${market}…` });
+      const r = await api("/api/keywords-memory", { action: "make", market });
+      pushLog({ ok: true, text: `"${r.tab}" staat klaar (${r.rows ?? "?"} keywords) — 1-op-1 bruikbaar als bron voor de merken-check en de verdeling.` });
+      window.open(r.url, "_blank", "noopener");
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+    } catch (e) {
+      pushLog({ err: true, text: `All-batch maken mislukt (${market}): ` + (e.message || e) });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+    } finally {
+      setMemBusy("");
+    }
+  }
+
+  async function memUseAsSource(market) {
+    // 1 klik: het geheugen-tabblad zelf als bron voor merken-check + verdeling.
+    const row = (memStatus || []).find((x) => x.market === market);
+    if (!row || !row.sheetUrl) return;
+    setSrcMode("sheet");
+    setView("run");
+    setSrcSheetLink(row.sheetUrl);
+    setSrcTab(`MEM ${market}`);
+    setSheetLink(row.sheetUrl);
+    setTabName(`MEM ${market}`);
+    setCleanTab(`MEM ${market}`);
+    setSrcReady(true);
+    setVMarket(market);
+    pushLog({ ok: true, text: `Geheugen ${market} staat klaar als bron ("MEM ${market}") — markt in de verdeling is op ${market} gezet.` });
+  }
+
   /* ----- stap 1: samenvoegen & opmaken ----- */
 
   async function start() {
@@ -431,7 +498,7 @@ export default function KeywordsPage() {
     };
 
     try {
-      log({ strong: true, text: "— Stap 1: CSV's samenvoegen" });
+      log({ strong: true, text: `— Stap 1: CSV's samenvoegen · MARKT ${srcMarket}` });
       const merged = new Map();
       let monthNames = null;
       // Bij dubbele keywords wint de rij met het hoogste volume, maar lege
@@ -507,6 +574,30 @@ export default function KeywordsPage() {
       setDoneUrl(fmt.url);
       setCleanTab(created.title);
       log({ info: true, text: `Klaar! ${rows.length} keywords in "${created.title}".` });
+
+      /* ---- Stap 5: batch-geheugen (markt is heilig) ----
+         Tabblad → markt registreren (de verdeling weigert straks een
+         verkeerde markt) en de batch samenvoegen in het geheugen van deze
+         markt, zodat een all-batch-tabblad altijd 1 klik is. */
+      try {
+        await api("/api/keywords-memory", {
+          action: "register", sheetId: sheetLink.trim(), tab: created.title, market: srcMarket,
+        });
+      } catch {}
+      try {
+        log({ strong: true, text: `— Stap 5: opslaan in geheugen ${srcMarket}` });
+        log({ key: "mem-prog", text: "Batch samenvoegen met het geheugen — dit kan bij grote batches een paar minuten duren…" });
+        const mem = await api("/api/keywords-memory", {
+          action: "merge", market: srcMarket, srcSheetId: sheetLink.trim(), srcTab: created.title, label: created.title,
+        });
+        if (mem.notConfigured) {
+          log({ key: "mem-prog", err: true, text: `NIET in het geheugen opgeslagen: er is nog geen geheugen-sheet gekoppeld voor ${srcMarket}. Ga naar het Geheugen-tabblad bovenin, plak daar een (lege) sheet-link voor ${srcMarket} en draai stap 1 opnieuw — of laat het; deze run zelf is gewoon klaar.` });
+        } else {
+          log({ key: "mem-prog", ok: true, text: `Geheugen ${srcMarket} bijgewerkt: ${mem.added} nieuw · ${mem.updated} bijgewerkt · totaal ${mem.total} keywords. Booming-venster: ${mem.window}.` });
+        }
+      } catch (e) {
+        log({ key: "mem-prog", err: true, text: `Geheugen bijwerken mislukt (${e.message || e}) — de run zelf is klaar; draai het later opnieuw via stap 1 of meld het.` });
+      }
 
       // Sessie opslaan (max 2) — voortgangs-spam (zelfde key) eruit,
       // alleen de laatste stand bewaren
@@ -924,9 +1015,83 @@ export default function KeywordsPage() {
           <button className={"srctab" + (view === "underdog" ? " on" : "")} onClick={() => setView("underdog")}>
             Underdog keywords
           </button>
+          <button className={"srctab" + (view === "geheugen" ? " on" : "")} onClick={() => { setView("geheugen"); loadMemStatus(); }}>
+            Geheugen
+          </button>
         </div>
 
         {/* -------- Tabblad 2: Underdog keywords -------- */}
+        {/* -------- Tabblad 3: Geheugen (batch-geheugen per markt) -------- */}
+        {view === "geheugen" && (
+          <div className="layout-scraper">
+            <div>
+              <div className="card">
+                <h2>Batch-geheugen <span className="opt">(per markt, blijvend in Google Sheets)</span></h2>
+                <div className="hint" style={{ marginBottom: 12 }}>
+                  Elke stap 1-run wordt hier per markt samengevoegd en onthouden. Kwijt of kapot?
+                  Eén klik op "Maak all-batch-tabblad" en je hebt de volledige batch terug — nooit
+                  meer CSV's opnieuw uit Google Ads vissen. Koppel per markt één (lege) Google Sheet
+                  en deel die met attoh-sheets@attoh-tools.iam.gserviceaccount.com. Advies: één eigen
+                  sheet per markt (de 10M-cellenlimiet geldt per bestand).
+                </div>
+                {(memStatus || []).map((row) => (
+                  <div key={row.market} style={{ borderTop: "1px solid #2a2a2a", paddingTop: 12, marginTop: 12 }}>
+                    <div className="field-label">
+                      {row.market}
+                      {row.meta ? (
+                        <span className="opt">
+                          {" "}· {row.meta.rows} keywords · bijgewerkt {String(row.meta.updatedAt || "").slice(0, 10)} · laatste batch "{row.meta.lastBatch}" · booming-venster {row.meta.window || "-"}
+                        </span>
+                      ) : (
+                        <span className="opt"> · nog leeg</span>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder={`Google Sheet-link voor het ${row.market}-geheugen`}
+                      value={memLinks[row.market] || ""}
+                      onChange={(e) => setMemLinks((l) => ({ ...l, [row.market]: e.target.value }))}
+                    />
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                      <button className="btn" onClick={() => memSaveLink(row.market)} disabled={!!memBusy || !(memLinks[row.market] || "").trim()}>
+                        {memBusy === row.market + ":save" ? "Opslaan…" : row.sheetUrl ? "Sheet-link bijwerken" : "Sheet koppelen"}
+                      </button>
+                      <button className="btn" onClick={() => memMake(row.market)} disabled={!!memBusy || !row.sheetUrl || !row.meta}>
+                        {memBusy === row.market + ":make" ? "Bezig…" : "⚡ Maak all-batch-tabblad"}
+                      </button>
+                      <button className="btn" onClick={() => memUseAsSource(row.market)} disabled={!!memBusy || !row.sheetUrl || !row.meta}>
+                        → Gebruik als bron
+                      </button>
+                      {row.sheetUrl && (
+                        <a className="linklike" href={row.sheetUrl} target="_blank" rel="noreferrer noopener" style={{ alignSelf: "center" }}>
+                          Sheet openen ↗
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {memStatus === null && <div className="hint">Status laden…</div>}
+              </div>
+            </div>
+            <div>
+              <div className="card">
+                <h2>Zo werkt het</h2>
+                <div className="hint">
+                  1. Stap 1 draaien mét markt-knop → de batch wordt automatisch in het geheugen van die
+                  markt samengevoegd (hoogste volume wint, maandkolommen schuiven netjes mee).<br /><br />
+                  2. "⚡ Maak all-batch-tabblad" zet een verse kopie ("ALL USA 21-08") in de geheugen-sheet —
+                  direct bruikbaar als bron. "→ Gebruik als bron" slaat zelfs dat over en zet het
+                  geheugen-tabblad meteen klaar voor de merken-check en de verdeling.<br /><br />
+                  3. De markt is heilig: elk tabblad wordt geregistreerd, en de verdeling WEIGERT een
+                  tabblad waarvan de markt niet klopt met je keuze.<br /><br />
+                  4. De importer gebruikt hetzelfde geheugen: per markt de booming zoektermen van de
+                  komende 4 maanden, verwerkt in de omschrijvingen (TOP-tabblad, automatisch bijgewerkt).
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {view === "underdog" && (
           <div className="layout-scraper">
             <div>
@@ -1156,6 +1321,17 @@ export default function KeywordsPage() {
                 ) : (
                   <>
                 <h2>CSV-bestanden <span className="opt">(1–10, uit Keyword Planner)</span></h2>
+                <div className="field-label">Markt van deze batches <span className="opt">(verplicht — bepaalt het geheugen)</span></div>
+                <div className="seg">
+                  {[["USA", "USA"], ["UK", "UK"], ["AUS", "AUS + NZ"], ["CAN", "CAN"]].map(([val, label]) => (
+                    <button key={val} className={srcMarket === val ? "on" : ""} onClick={() => setSrcMarket(val)} type="button">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {!srcMarket && (
+                  <div className="hint">Kies eerst de markt — elke batch wordt per markt onthouden, en de verdeling controleert hier later hard op.</div>
+                )}
                 <input
                   ref={fileInput}
                   type="file"

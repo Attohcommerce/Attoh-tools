@@ -3,6 +3,7 @@ import { readRange, readColumnsBatch, addTab, appendRows, formatVerdelingTab, pa
 import { buildVerdeling, keywordType } from "@/lib/verdeling";
 import { classifyJunkKeywordsBatch, reviewVerdelingFinal, classifyUnknownTokens } from "@/lib/ai";
 import { unknownFashionTokens } from "@/lib/brands";
+import { getTabMarket } from "@/lib/kw-memory";
 
 // 300s (Fluid Compute) — faalt de deploy hierop, zet 60 terug; het interne
 // tijdsbudget rekent automatisch mee.
@@ -48,6 +49,22 @@ export async function POST(req) {
 
   try {
     const src = String(sourceTab).trim();
+
+    /* ---- 0. MARKT-BEWAKING (heilig): is dit tabblad via stap 1 of het
+            geheugen als een ANDERE markt geregistreerd, dan is elke verdeling
+            erop verspild geld — hard weigeren i.p.v. waarschuwen. Bij een
+            onbekend tabblad of een Redis-storing draait alles gewoon door. ---- */
+    const knownMarket = await getTabMarket(sourceSheetId, src);
+    if (knownMarket && market && knownMarket !== market) {
+      return NextResponse.json(
+        {
+          error:
+            `MARKT KLOPT NIET: "${src}" is geregistreerd als ${knownMarket}-batch, maar je draait deze verdeling op ${market}. ` +
+            `Kies markt ${knownMarket}, of gebruik een ${market}-tabblad (zie het Geheugen-tabblad in de Keywords-module).`,
+        },
+        { status: 422 }
+      );
+    }
 
     /* ---- 1. kolommen vinden in het bron-tabblad ---- */
     const headerRows = await readRange(sourceSheetId, `${a1Tab(src)}!1:1`);

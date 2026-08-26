@@ -72,6 +72,10 @@ export default function ImporterPage() {
   const [mixPcts, setMixPcts] = useState([40, 50]);
   const [status, setStatus] = useState("draft");
   const [listingStyle, setListingStyle] = useState("stacking");
+  // Booming zoektermen uit het batch-geheugen (Keywords-module) in de
+  // omschrijvingen verwerken. "auto" = markt via het store-domein.
+  const [boomMode, setBoomMode] = useState("auto"); // "auto" | "uit"
+  const boomRef = useRef(null); // {market, rows: [{kw, vol, peak}], window}
   const [genderPrefix, setGenderPrefix] = useState(false);
   const [forceMens, setForceMens] = useState(false);
   const [currencyOverride, setCurrencyOverride] = useState(false);
@@ -307,6 +311,50 @@ export default function ImporterPage() {
     return data;
   }
 
+  // ---------- Booming keywords (batch-geheugen) ----------
+  const BOOM_SKIP = new Set(["mens","men","man","male","womens","women","woman","ladies","for","the","a","with","and","best","new","black","white","red","blue","green","brown","grey","gray","navy","beige","pink","purple","yellow","orange"]);
+  const boomStem = (w) => {
+    let t = String(w || "").toLowerCase().replace(/'s$/, "");
+    if (t.length > 3 && t.endsWith("s") && !t.endsWith("ss")) t = t.slice(0, -1);
+    return t;
+  };
+  const boomTokens = (text) =>
+    String(text || "").toLowerCase().split(/[^a-z0-9]+/).map(boomStem).filter((t) => t && t.length > 2 && !BOOM_SKIP.has(t));
+
+  async function loadBoom() {
+    if (boomMode === "uit" || !selectedStore) return null;
+    try {
+      const res = await fetch("/api/keywords-memory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "top", domain: selectedStore.domain }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.market || !(data.rows || []).length) return null;
+      return { market: data.market, window: data.window, rows: data.rows.map((r) => ({ ...r, toks: boomTokens(r.kw) })) };
+    } catch {
+      return null;
+    }
+  }
+
+  /* Per product: booming termen die bij DIT producttype horen (minstens één
+     gedeeld type-woord met het rij-keyword) — max 6, sterkste eerst. */
+  function pickBooming(rowKeyword, extra) {
+    const boom = boomRef.current;
+    if (!boom) return [];
+    const mine = new Set([...boomTokens(rowKeyword), ...boomTokens(extra)]);
+    if (!mine.size) return [];
+    const base = String(rowKeyword || "").toLowerCase().trim();
+    const out = [];
+    for (const r of boom.rows) {
+      if (out.length >= 6) break;
+      if (!r.toks.some((t) => mine.has(t))) continue;
+      if (r.kw === base) continue;
+      out.push(r.kw);
+    }
+    return out;
+  }
+
   // ---------- Import ----------
   async function runImport() {
     if (!selectedStore || urls.length === 0 || running) return;
@@ -318,6 +366,17 @@ export default function ImporterPage() {
     setProgress({ done: 0, total: urls.length });
     // 2 min marge tegen klok-verschil met Shopify's created_at
     setRunStamp(new Date(Date.now() - 2 * 60 * 1000).toISOString());
+
+    // Booming zoektermen één keer per run ophalen uit het batch-geheugen
+    boomRef.current = null;
+    if (boomMode !== "uit") {
+      boomRef.current = await loadBoom();
+      if (boomRef.current) {
+        pushLog({ info: true, text: `Trend-keywords aan: geheugen ${boomRef.current.market}, venster ${boomRef.current.window || "?"} (${boomRef.current.rows.length} booming zoektermen) — waar passend verwerkt de AI ze in de omschrijving.` });
+      } else {
+        pushLog({ muted: true, text: "Trend-keywords: geen geheugen voor deze store gevonden (markt onbekend of geheugen leeg) — omschrijvingen draaien gewoon zonder." });
+      }
+    }
 
     // Import-log-tabblad klaarzetten (één keer per run)
     let logReady = false;
@@ -409,6 +468,7 @@ export default function ImporterPage() {
               colorLabel,
               sizeLabel,
               aiSale,
+              boomingKeywords: pickBooming(rowKeyword, typeof entry === "object" ? entry.col || "" : ""),
             },
           }),
         });
@@ -1023,6 +1083,14 @@ export default function ImporterPage() {
                   type="button"
                 />
                 Force men's keywords (voor stores zonder apart men-template)
+              </div>
+              <div className="toggle-row">
+                <button
+                  className={"switch" + (boomMode === "auto" ? " on" : "")}
+                  onClick={() => setBoomMode(boomMode === "auto" ? "uit" : "auto")}
+                  type="button"
+                />
+                Trend-keywords uit het batch-geheugen in de omschrijving (markt via het store-domein)
               </div>
               <div className="toggle-row">
                 <button
