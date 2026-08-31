@@ -12,6 +12,7 @@ const NAV = [
   { href: "/keywords", label: "Keywords" },
   { href: "/qa", label: "Store Doctor" },
   { href: "/gmc-checklist", label: "GMC Checklist" },
+  { href: "/bills", label: "Bills" },
 ];
 
 export default function Header({ icon, title, subtitle }) {
