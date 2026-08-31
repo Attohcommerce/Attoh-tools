@@ -6,7 +6,16 @@ import {
   addTab,
   getTabIdByTitle,
 } from "@/lib/sheets";
-import { LOG_TAB, LOG_HEADER, MONTHS_EN, splitDate, toNum, dupKey, round2 } from "@/lib/bills";
+import {
+  LOG_TAB,
+  LOG_HEADER,
+  MONTHS_EN,
+  londonToday,
+  splitDate,
+  toNum,
+  dupKey,
+  round2,
+} from "@/lib/bills";
 
 export const maxDuration = 60;
 
@@ -45,13 +54,21 @@ export async function POST(req) {
     const seen = new Set();
     for (const r of existing) if (r[1] != null && r[1] !== "") seen.add(dupKey(r[1], r[2]));
 
+    // VANDAAG-REGEL (ook hier, los van de preview): de dag van vandaag
+    // wordt nooit geschreven — die is pas morgen compleet.
+    const today = londonToday();
     const clean = [];
     let dupesSkipped = 0;
+    let tooEarlySkipped = 0;
     for (const r of rows) {
       const key = dupKey(r.order, r.invoiceNo);
       const valid =
         r && r.order && r.date && r.dateNL && Number.isFinite(Number(r.gbp)) && Number.isFinite(Number(r.cost));
       if (!valid) continue;
+      if (String(r.date) >= today) {
+        tooEarlySkipped++;
+        continue;
+      }
       if (seen.has(key)) {
         dupesSkipped++;
         continue;
@@ -150,6 +167,7 @@ export async function POST(req) {
       logCreated,
       appended: clean.length,
       dupesSkipped,
+      tooEarlySkipped,
       results,
     });
   } catch (e) {

@@ -189,11 +189,21 @@ export default function BillsPage() {
       const ok = out.filter((r) => r.status === "ok");
       const dupes = out.filter((r) => r.status === "dupe");
       const missing = out.filter((r) => r.status === "niet_gevonden");
+      const today = out.filter((r) => r.status === "vandaag");
       pushLog({
         strong: true,
-        text: `Analyse klaar: ${ok.length} nieuw · ${dupes.length} al gelogd · ${missing.length} niet gevonden in Shopify.`,
+        text: `Analyse klaar: ${ok.length} nieuw · ${dupes.length} al gelogd · ${missing.length} niet gevonden in Shopify${
+          today.length ? ` · ${today.length} van vandaag (wacht tot morgen)` : ""
+        }.`,
       });
+      if (today.length) {
+        pushLog({
+          warn: true,
+          text: `${today.length} order${today.length === 1 ? "" : "s"} van vandaag wordt bewust NIET ingevuld — de dag is pas morgen compleet. Upload de bill morgen (opnieuw): alleen deze orders gaan dan mee, de rest valt vanzelf als dupe af.`,
+        });
+      }
       for (const r of out) {
+        if (r.status === "vandaag") continue;
         if (r.status === "niet_gevonden") pushLog({ err: true, text: `Order ${r.order}: ${r.note}` });
         else if (r.status === "koers_mislukt") pushLog({ err: true, text: `Order ${r.order}: ${r.note}` });
         else if (r.note) pushLog({ warn: true, text: `Order ${r.order}: ${r.note}` });
@@ -220,6 +230,12 @@ export default function BillsPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
       if (data.logCreated) pushLog({ ok: true, text: `Tabblad "COGS Log" aangemaakt.` });
+      if (data.tooEarlySkipped) {
+        pushLog({
+          warn: true,
+          text: `${data.tooEarlySkipped} order${data.tooEarlySkipped === 1 ? "" : "s"} van vandaag overgeslagen — vandaag wordt nooit ingevuld, morgen uploaden.`,
+        });
+      }
       for (const r of data.results || []) {
         if (r.written) {
           pushLog({
@@ -253,6 +269,7 @@ export default function BillsPage() {
 
   /* ---------- Overzicht per datum ---------- */
 
+  const vandaagRows = (enriched || []).filter((r) => r.status === "vandaag");
   const perDate = {};
   for (const r of okRows) {
     if (!perDate[r.date]) perDate[r.date] = { dateNL: r.dateNL, orders: 0, stuks: 0, orig: 0, cur: r.currency, gbp: 0, tabMissing: !r.tabExists };
@@ -505,6 +522,13 @@ export default function BillsPage() {
                     zo klopt ook een backlog van oude bills per dag. Kolom V wordt de som van het
                     volledige COGS Log voor die datum.
                   </div>
+                  {vandaagRows.length > 0 && (
+                    <div className="hint" style={{ color: "var(--warn)" }}>
+                      {vandaagRows.length} order{vandaagRows.length === 1 ? "" : "s"} van vandaag
+                      staat hier bewust niet tussen — vandaag wordt nooit ingevuld. Upload de bill
+                      morgen (opnieuw) en alleen die orders gaan alsnog mee.
+                    </div>
+                  )}
                   <div style={{ marginTop: 10 }}>
                     <button className="btn" disabled={!canCommit} onClick={commit}>
                       {busy === "commit"
@@ -517,8 +541,8 @@ export default function BillsPage() {
                 </>
               ) : (
                 <div className="center-note">
-                  Geen nieuwe regels om te schrijven — alles staat al in het COGS Log of is niet
-                  gevonden (zie log).
+                  Geen nieuwe regels om te schrijven — alles staat al in het COGS Log, is niet
+                  gevonden, of is van vandaag (vandaag wordt nooit ingevuld — zie log).
                 </div>
               )}
             </div>

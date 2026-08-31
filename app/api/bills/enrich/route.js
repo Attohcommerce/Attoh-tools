@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server";
 import { storeRequest } from "@/lib/shopify";
 import { readRange, getSheetSizes } from "@/lib/sheets";
-import { LOG_TAB, MONTHS_EN, londonDate, splitDate, dateNLOf, dupKey, round2 } from "@/lib/bills";
+import {
+  LOG_TAB,
+  MONTHS_EN,
+  londonDate,
+  londonToday,
+  splitDate,
+  dateNLOf,
+  dupKey,
+  round2,
+} from "@/lib/bills";
 
 export const maxDuration = 60;
 
@@ -149,6 +158,11 @@ export async function POST(req) {
     }
 
     // 4. Regels verrijken: datum, maandtab, koers, dupe-status.
+    // VANDAAG-REGEL: orders met orderdag (Londen) = vandaag worden NOOIT
+    // ingevuld — de dag is pas morgen compleet, een half dagbedrag in V
+    // geeft alleen verwarring. Morgen dezelfde bill (opnieuw) uploaden is
+    // genoeg: deze regels zijn dan geen dupe en gaan alsnog mee.
+    const today = londonToday();
     const out = [];
     for (const r of rows) {
       const base = {
@@ -176,6 +190,17 @@ export async function POST(req) {
       const s = splitDate(date);
       if (!date || !s) {
         out.push({ ...base, status: "niet_gevonden", note: "orderdatum onleesbaar" });
+        continue;
+      }
+      if (date >= today) {
+        out.push({
+          ...base,
+          shopifyOrder: o.name || `#${o.order_number}`,
+          date,
+          dateNL: dateNLOf(date),
+          status: "vandaag",
+          note: "orderdag is vandaag (Londen) — dag nog niet compleet, vul deze morgen in",
+        });
         continue;
       }
       const monthTab = MONTHS_EN[s.m - 1];
