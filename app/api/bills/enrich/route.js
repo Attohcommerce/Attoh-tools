@@ -36,7 +36,13 @@ async function lookupOrder(store, name) {
       `/orders.json?status=any&name=${encodeURIComponent(q)}&fields=id,name,order_number,created_at,cancelled_at&limit=10`
     );
     if (!r.ok) {
-      if (r.status === 401 || r.status === 403) return { scope: true };
+      if (r.status === 401 || r.status === 403) {
+        // Shopify's eigen tekst meegeven: "requires merchant approval for
+        // read_orders scope" ≠ "not approved to access the Order object"
+        // (protected customer data) ≠ token-fout — drie andere fixes.
+        const detail = String(r.error || "").replace(/\s*—\s*token ongeldig of scopes ontbreken.*$/i, "");
+        return { scope: true, status: r.status, detail };
+      }
       return { err: r.error };
     }
     const list = (r.data && r.data.orders) || [];
@@ -135,21 +141,23 @@ export async function POST(req) {
     // 3. Shopify: unieke ordernummers opzoeken (max 6 tegelijk).
     const uniq = [...new Set(rows.map((r) => String(r.order || "").trim()).filter(Boolean))];
     const orderMap = new Map();
-    let scopeError = false;
+    let scopeError = null;
     let hardError = null;
     await mapLimit(uniq, 6, async (name) => {
       if (scopeError || hardError) return;
       const r = await lookupOrder(store, name);
-      if (r.scope) scopeError = true;
+      if (r.scope) scopeError = r;
       else if (r.err) hardError = r.err;
       else if (r.order) orderMap.set(name, r.order);
     });
     if (scopeError) {
+      const d = scopeError.detail || "";
+      let hint = "Check in het Dev Dashboard: (1) Orders-app-sleutels ingevuld in de Bills-pagina, (2) app geïnstalleerd op deze store, (3) scope read_orders, (4) Protected customer data access aangezet.";
+      if (/merchant approval|scope/i.test(d)) hint = "De app is op deze store nog niet goedgekeurd voor read_orders — installeer/keur de nieuwste versie van de app opnieuw goed op de store (Dev Dashboard → Install).";
+      else if (/not approved to access|protected customer/i.test(d)) hint = "De app mist Protected customer data access — Dev Dashboard → app → API access → Protected customer data → toegang aanvragen (reden: Store management).";
+      else if (scopeError.status === 401) hint = "Token geweigerd (401): Client ID/secret kloppen niet met een app die op deze store geïnstalleerd is.";
       return NextResponse.json(
-        {
-          error:
-            "Shopify weigert de order-lookup (401/403). De gekoppelde app mist vrijwel zeker de read_orders-scope — voeg die toe in het Dev Dashboard bij deze app en probeer opnieuw.",
-        },
+        { error: `Shopify weigert de order-lookup (HTTP ${scopeError.status}${d ? `: ${d}` : ""}). ${hint}` },
         { status: 422 }
       );
     }

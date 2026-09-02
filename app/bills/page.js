@@ -17,6 +17,7 @@ const LS_STORES = "sa_stores";
 const LS_SELECTED = "sa_selected_store";
 const LS_SHEET = "sa_bills_sheet";
 const LS_CODES = "sa_bill_codes";
+const LS_ORDERS_APP = "sa_orders_app::"; // + store-domein → { clientId, clientSecret }
 const DEFAULT_SHEET = "1hwv6MnKzOFlGhxe5vWSApglqwZDTYp-boT0fqGgoFiM"; // P&L Sheet SSB
 
 function load(key, fallback) {
@@ -43,6 +44,12 @@ export default function BillsPage() {
   const [selected, setSelected] = useState(null);
   const [sheetId, setSheetId] = useState("");
   const [codes, setCodes] = useState({}); // storecode → { name, domain }
+  // Orders-app: aparte Dev Dashboard-app (bijv. "P&L Sync") met read_orders /
+  // read_all_orders. De Importer-koppeling houdt z'n producten-app; alleen
+  // de order-lookup hier gebruikt deze sleutels. Leeg = terugvallen op de
+  // store-koppeling zelf.
+  const [ordersApp, setOrdersApp] = useState({ clientId: "", clientSecret: "" });
+  const [ordersTest, setOrdersTest] = useState(null); // resultaat "Test koppeling"
 
   const [bills, setBills] = useState([]); // geparste PDF's
   const [enriched, setEnriched] = useState(null);
@@ -62,6 +69,52 @@ export default function BillsPage() {
   }, []);
 
   const store = stores.find((s) => s.domain === selected) || null;
+
+  // Orders-app-sleutels per store laden
+  useEffect(() => {
+    if (!store || !store.domain) return;
+    const v = load(LS_ORDERS_APP + store.domain, null);
+    setOrdersApp(v && typeof v === "object" ? { clientId: v.clientId || "", clientSecret: v.clientSecret || "" } : { clientId: "", clientSecret: "" });
+    setOrdersTest(null);
+  }, [store && store.domain]);
+
+  function changeOrdersApp(patch) {
+    const next = { ...ordersApp, ...patch };
+    setOrdersApp(next);
+    setOrdersTest(null);
+    if (store && store.domain) save(LS_ORDERS_APP + store.domain, next);
+  }
+
+  // Het store-object voor alles wat ORDERS leest: Orders-app-sleutels als
+  // die ingevuld zijn, anders de gewone koppeling (oude gedrag).
+  function ordersStoreBody() {
+    if (!store) return null;
+    const useOrdersApp = ordersApp.clientId.trim() && ordersApp.clientSecret.trim();
+    return useOrdersApp
+      ? { name: store.name, domain: store.domain, clientId: ordersApp.clientId.trim(), clientSecret: ordersApp.clientSecret.trim() }
+      : { name: store.name, domain: store.domain, clientId: store.clientId, clientSecret: store.clientSecret, token: store.token };
+  }
+
+  async function testOrders() {
+    if (!store) return;
+    setOrdersTest({ busy: true });
+    try {
+      const res = await fetch("/api/bills/test-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ store: ordersStoreBody() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      setOrdersTest(data);
+      pushLog(
+        data.ok
+          ? { ok: true, text: `Orders-koppeling werkt: ${data.shop} · ${data.count} orders zichtbaar via ${data.via}.` }
+          : { err: true, text: `Orders-koppeling: ${data.error}` }
+      );
+    } catch (e) {
+      setOrdersTest({ ok: false, error: String(e.message) });
+    }
+  }
 
   function pushLog(line) {
     setLogs((l) => [...l, line]);
@@ -169,13 +222,7 @@ export default function BillsPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            store: {
-              name: store.name,
-              domain: store.domain,
-              clientId: store.clientId,
-              clientSecret: store.clientSecret,
-              token: store.token,
-            },
+            store: ordersStoreBody(),
             sheetId: sheetId.trim(),
             rows: chunk,
           }),
@@ -309,8 +356,45 @@ export default function BillsPage() {
               </div>
             ))}
             <div className="hint">
-              De orderdatum komt per ordernummer uit Shopify van deze store — daarvoor moet de
-              gekoppelde app de <strong>read_orders</strong>-scope hebben (Dev Dashboard).
+              De orderdatum komt per ordernummer uit Shopify van deze store. De Importer-koppeling
+              blijft voor producten; voor orders vul je hieronder de aparte Orders-app in.
+            </div>
+          </div>
+
+          <div className="card" style={{ marginTop: 14 }}>
+            <h2>Orders-app <span className="opt">— Dev Dashboard-app met read_orders</span></h2>
+            <div className="field-label">Client ID</div>
+            <input
+              type="text"
+              value={ordersApp.clientId}
+              onChange={(e) => changeOrdersApp({ clientId: e.target.value })}
+              placeholder="Client ID van bijv. P&L Sync"
+              disabled={!store}
+            />
+            <div className="field-label" style={{ marginTop: 8 }}>Client secret</div>
+            <input
+              type="password"
+              value={ordersApp.clientSecret}
+              onChange={(e) => changeOrdersApp({ clientSecret: e.target.value })}
+              placeholder="Client secret"
+              disabled={!store}
+            />
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
+              <button className="btn-ghost btn-small" onClick={testOrders} disabled={!store || (ordersTest && ordersTest.busy)}>
+                {ordersTest && ordersTest.busy ? <span className="spin" /> : null} Test koppeling
+              </button>
+              {ordersTest && !ordersTest.busy && (
+                <span className={"small " + (ordersTest.ok ? "" : "muted")} style={ordersTest.ok ? { color: "var(--ok)" } : { color: "var(--err)" }}>
+                  {ordersTest.ok ? `✓ ${ordersTest.shop} · ${ordersTest.count} orders leesbaar` : `✗ ${ordersTest.error}`}
+                </span>
+              )}
+            </div>
+            <div className="hint">
+              Sleutels worden per store in deze browser bewaard en alleen voor de order-lookup
+              gebruikt. Leeg = de gewone store-koppeling. Vereist in het Dev Dashboard: app
+              geïnstalleerd op deze store, scopes <strong>read_orders</strong> (+{" "}
+              <strong>read_all_orders</strong> voor bills ouder dan 60 dagen) en{" "}
+              <strong>Protected customer data access</strong> aangezet.
             </div>
           </div>
 
