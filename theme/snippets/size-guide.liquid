@@ -1,0 +1,134 @@
+{% comment %}
+  SIZE GUIDE — Attoh Tools (02-09-2026)
+  Toont de maattabel uit product-metafield custom.size_guide (json, geschreven
+  door de Size Guide-module). Geen metafield → er wordt niets gerenderd.
+
+  Plaatsen (Dawn): Theme editor → productpagina → blok "Custom Liquid" direct
+  onder de variantkiezer met:   {% render 'size-guide', product: product %}
+  Of in sections/main-product.liquid na de variant_picker-case.
+
+  Huisstijl: font-family inherit, dunne lijntjes, kleine caps met wijde
+  letter-spacing, geen kaarten/schaduwen, mobiel links uitgelijnd + tabel
+  horizontaal scrollbaar. Per store aanpasbaar via de CSS-variabelen
+  bovenaan (lijnkleur, accent) — structuur blijft gelijk.
+{% endcomment %}
+{%- assign sg = product.metafields.custom.size_guide.value -%}
+{%- if sg and sg.rows.size > 0 -%}
+{%- assign sg_id = 'sg-' | append: product.id -%}
+{%- assign sg_unit = sg.unit_default | default: 'in' -%}
+<style>
+  .sg-wrap{--sg-line:#e8e8e8;--sg-ink:currentColor;--sg-muted:rgba(0,0,0,.55);--sg-accent:currentColor;--sg-bg:#fff;font-family:inherit;text-align:left!important;margin:.6rem 0 1rem}
+  .sg-open{display:inline-flex;align-items:center;gap:.5rem;background:none;border:0;border-bottom:1px solid var(--sg-line);padding:0 0 .2rem;font:inherit;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--sg-ink);cursor:pointer}
+  .sg-open svg{width:16px;height:16px;flex:none}
+  .sg-open:hover{border-bottom-color:var(--sg-accent)}
+  .sg-modal[hidden]{display:none}
+  .sg-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .sg-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+  .sg-panel{position:relative;background:var(--sg-bg);color:var(--sg-ink);max-width:720px;width:100%;max-height:90vh;overflow:auto;padding:1.5rem 1.5rem 1.75rem;border:1px solid var(--sg-line);text-align:left!important}
+  .sg-head{display:flex;align-items:center;justify-content:flex-start!important;gap:1rem;border-bottom:1px solid var(--sg-line);padding-bottom:.75rem;margin-bottom:1rem}
+  .sg-title{margin:0;font-size:.85rem;letter-spacing:.16em;text-transform:uppercase;font-weight:500}
+  .sg-units{margin-left:auto;display:inline-flex;border:1px solid var(--sg-line)}
+  .sg-units button{background:none;border:0;font:inherit;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;cursor:pointer;color:var(--sg-muted)}
+  .sg-units button.on{color:var(--sg-ink);border-bottom:2px solid var(--sg-accent)}
+  .sg-close{background:none;border:0;font:inherit;font-size:1.4rem;line-height:1;cursor:pointer;color:var(--sg-ink);padding:0 0 0 .5rem}
+  .sg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .sg-table{width:100%;border-collapse:collapse;font-size:.85rem;min-width:320px}
+  .sg-table th,.sg-table td{text-align:left!important;padding:.55rem .6rem;border-bottom:1px solid var(--sg-line);white-space:nowrap}
+  .sg-table th{font-weight:500;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--sg-muted)}
+  .sg-table td:first-child{font-weight:600}
+  .sg-table .sg-u{font-size:.7em;color:var(--sg-muted);margin-left:.15em}
+  .sg-wrap[data-unit="in"] .sg-cm,.sg-wrap[data-unit="cm"] .sg-in{display:none}
+  .sg-note{margin:.9rem 0 0;font-size:.78rem;color:var(--sg-muted);line-height:1.5}
+  .sg-how{margin:1rem 0 0;padding:0;list-style:none;font-size:.78rem;line-height:1.5}
+  .sg-how li{padding:.35rem 0;border-top:1px solid var(--sg-line)}
+  .sg-how strong{font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:.7rem;display:block;color:var(--sg-muted)}
+  @media (max-width:749px){.sg-panel{padding:1.1rem 1rem 1.4rem;max-height:92vh}.sg-table{font-size:.8rem}}
+</style>
+<div class="sg-wrap" id="{{ sg_id }}" data-unit="{{ sg_unit }}">
+  <button type="button" class="sg-open" aria-haspopup="dialog" aria-controls="{{ sg_id }}-modal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="8" width="19" height="8" rx="1"/><path d="M6 8v3M9.5 8v4.5M13 8v3M16.5 8v4.5M20 8v3"/></svg>
+    Size guide
+  </button>
+  <div class="sg-modal" id="{{ sg_id }}-modal" role="dialog" aria-modal="true" aria-label="Size guide" hidden>
+    <div class="sg-overlay" data-sg-close></div>
+    <div class="sg-panel">
+      <div class="sg-head">
+        <h2 class="sg-title">Size guide</h2>
+        <div class="sg-units" role="group" aria-label="Units">
+          <button type="button" data-sg-unit="in"{% if sg_unit == 'in' %} class="on"{% endif %}>in</button>
+          <button type="button" data-sg-unit="cm"{% if sg_unit == 'cm' %} class="on"{% endif %}>cm</button>
+        </div>
+        <button type="button" class="sg-close" aria-label="Close" data-sg-close>&times;</button>
+      </div>
+      <div class="sg-scroll">
+        <table class="sg-table">
+          <thead>
+            <tr>
+              {%- for c in sg.columns -%}
+                <th scope="col">{{ c.label | escape }}{% if c.kind == 'length' %}<span class="sg-u sg-in">(in)</span><span class="sg-u sg-cm">(cm)</span>{% elsif c.kind == 'mass' %}<span class="sg-u sg-in">(lb)</span><span class="sg-u sg-cm">(kg)</span>{% endif %}</th>
+              {%- endfor -%}
+            </tr>
+          </thead>
+          <tbody>
+            {%- for row in sg.rows -%}
+              <tr>
+                {%- for c in sg.columns -%}
+                  {%- assign v = row[c.key] -%}
+                  <td>
+                    {%- if v == blank -%}
+                      &ndash;
+                    {%- elsif c.kind == 'length' or c.kind == 'mass' -%}
+                      {%- if c.kind == 'length' -%}{%- assign f = 0.3937 -%}{%- else -%}{%- assign f = 2.2046 -%}{%- endif -%}
+                      {%- if v.first != blank -%}
+                        {%- assign a = v.first | times: 1.0 -%}{%- assign b = v.last | times: 1.0 -%}
+                        <span class="sg-in">{{ a | times: f | round: 1 | append: '' | replace: '.0', '' }}&ndash;{{ b | times: f | round: 1 | append: '' | replace: '.0', '' }}</span><span class="sg-cm">{{ a | round: 1 | append: '' | replace: '.0', '' }}&ndash;{{ b | round: 1 | append: '' | replace: '.0', '' }}</span>
+                      {%- else -%}
+                        {%- assign a = v | times: 1.0 -%}
+                        <span class="sg-in">{{ a | times: f | round: 1 | append: '' | replace: '.0', '' }}</span><span class="sg-cm">{{ a | round: 1 | append: '' | replace: '.0', '' }}</span>
+                      {%- endif -%}
+                    {%- else -%}
+                      {{ v | escape }}
+                    {%- endif -%}
+                  </td>
+                {%- endfor -%}
+              </tr>
+            {%- endfor -%}
+          </tbody>
+        </table>
+      </div>
+      {%- if sg.note != blank -%}<p class="sg-note">{{ sg.note | escape }}</p>{%- endif -%}
+      {%- if sg.how_to_measure.size > 0 -%}
+        <ul class="sg-how">
+          {%- for h in sg.how_to_measure -%}
+            {%- assign lbl = h.key -%}
+            {%- for c in sg.columns -%}{%- if c.key == h.key -%}{%- assign lbl = c.label -%}{%- endif -%}{%- endfor -%}
+            <li><strong>{{ lbl | escape }}</strong>{{ h.text | escape }}</li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var wrap = document.getElementById('{{ sg_id }}');
+    if (!wrap || wrap.dataset.sgReady) return;
+    wrap.dataset.sgReady = '1';
+    var modal = wrap.querySelector('.sg-modal');
+    var openBtn = wrap.querySelector('.sg-open');
+    var KEY = 'sg_unit';
+    function setUnit(u, save) {
+      wrap.setAttribute('data-unit', u);
+      wrap.querySelectorAll('[data-sg-unit]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sg-unit') === u); });
+      if (save) { try { localStorage.setItem(KEY, u); } catch (e) {} }
+    }
+    try { var saved = localStorage.getItem(KEY); if (saved === 'in' || saved === 'cm') setUnit(saved, false); } catch (e) {}
+    function open() { modal.hidden = false; document.documentElement.style.overflow = 'hidden'; var c = modal.querySelector('.sg-close'); if (c) c.focus(); }
+    function close() { modal.hidden = true; document.documentElement.style.overflow = ''; openBtn.focus(); }
+    openBtn.addEventListener('click', open);
+    modal.querySelectorAll('[data-sg-close]').forEach(function (el) { el.addEventListener('click', close); });
+    modal.querySelectorAll('[data-sg-unit]').forEach(function (b) { b.addEventListener('click', function () { setUnit(b.getAttribute('data-sg-unit'), true); }); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) close(); });
+  })();
+</script>
+{%- endif -%}

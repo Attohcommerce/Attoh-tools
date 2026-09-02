@@ -11,6 +11,7 @@ const NAV = [
   { href: "/scraper", label: "Product Scraper" },
   { href: "/keywords", label: "Keywords" },
   { href: "/qa", label: "Store Doctor" },
+  { href: "/size-guide", label: "Size Guide" },
   { href: "/gmc-checklist", label: "GMC Checklist" },
   { href: "/bills", label: "Bills" },
 ];
