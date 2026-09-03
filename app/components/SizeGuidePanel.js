@@ -355,6 +355,14 @@ export default function SizeGuidePanel({ store, since }) {
         }
         setProg({ ...p });
         cursor = d.nextCursor;
+        if (d.fatal) {
+          // Zoekdienst ligt eruit (Apify-plan/quota/token): stoppen, niets
+          // overschrijven — de rest wordt de volgende run gewoon opgepakt.
+          addLog(`GESTOPT — zoeken op foto kan niet: ${d.fatal}`, "err");
+          setErr(`Zoeken op foto kan niet: ${d.fatal}. Los dit op (Apify-plan/token) en klik opnieuw op Bouw maattabellen — de resterende ${list.length - cursor} producten zijn niet aangeraakt.`);
+          stopRef.current = true;
+          break;
+        }
         if (d.done) break;
         // tussentijds wegschrijven zodat een stop/504 niets kost
         if (toWrite.length >= 20) {
