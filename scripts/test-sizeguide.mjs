@@ -146,9 +146,10 @@ eq("number-mode mode", bNum.mode, "number");
 const bMiss = buildGuide({ chart, product: { ...summ, sizes: ["XS", "2XS", "3XS"] }, market: "USA" });
 eq("mismatch → ok:false", bMiss.ok, false);
 
-// deels ontbrekend (4 van 5) → amber
+// deels ontbrekend (4 van 5) → geen tabel (website is leidend: exact de variantmaten)
 const bPart = buildGuide({ chart, product: { ...summ, sizes: ["S", "M", "L", "XL", "3XL"] }, market: "USA", confidence: 0.95 });
-eq("deels ontbrekend → amber + missing", [bPart.verdict, bPart.missing], ["amber", ["3XL"]]);
+eq("deels ontbrekend → ok:false + missing", [bPart.ok, bPart.missing], [false, ["3XL"]]);
+ok("deels ontbrekend → reden noemt de maat", /mist maat 3XL/.test(bPart.reason));
 
 // lage match-confidence → cijfer omlaag
 const bLow = buildGuide({ chart, product: summ, market: "USA", confidence: 0.7 });
@@ -240,7 +241,14 @@ eq("checkGuide trui ok", [chk.level, chk.issues], ["ok", []]);
 const chkSkirt = checkGuide(built.guide, skirtProd, "USA");
 eq("checkGuide bust-tabel op rok → error", chkSkirt.level, "error");
 const chkSizes = checkGuide(built.guide, { ...summ, sizes: ["S", "M", "L", "XL", "XXL", "3XL"] }, "USA");
-eq("checkGuide ontbrekende maat → warn", [chkSizes.level, chkSizes.issues[0]], ["warn", "variantmaten zonder rij: 3XL"]);
+eq("checkGuide ontbrekende maat → error", [chkSizes.level, chkSizes.issues[0]], ["error", "variantmaten zonder rij: 3XL"]);
+const chkExtra = checkGuide(built.guide, { ...summ, sizes: ["S", "M", "L"] }, "USA");
+eq("checkGuide extra rijen → error", [chkExtra.level, chkExtra.issues[0]], ["error", "rijen voor maten die niet op de site staan: XL/XXL"]);
+// schoenen: tabel = exact de websitematen (4/5/6/6.5/7/8/9/10/11)
+const stdLoafer = standardGuide({ ...productSummary(shoeProd), gender: "men", sizes: ["4", "5", "6", "6.5", "7", "8", "9", "10", "11"] }, "USA");
+eq("standaard loafer = exact 9 rijen", stdLoafer.guide.rows.map((r) => r.size), ["4", "5", "6", "6.5", "7", "8", "9", "10", "11"]);
+eq("standaard 5XL", standardGuide({ ...summ, sizes: ["4XL", "5XL", "6XL"] }, "USA").guide.rows.map((r) => r.us), ["28", "30", "32"]);
+eq("standaard onbekende maat → geen tabel", standardGuide({ ...summ, sizes: ["S", "M", "7XL"] }, "USA").ok, false);
 eq("checkGuide geen tabel → missing", checkGuide(null, summ, "USA").level, "missing");
 eq("checkGuide accessoire → skip", checkGuide(null, { ...summ, kind: "accessory" }, "USA").level, "skip");
 eq("checkGuide schoenentabel op kleding → error", checkGuide(stdShoe.guide, summ, "USA").level, "error");
