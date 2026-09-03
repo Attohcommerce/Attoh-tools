@@ -110,6 +110,7 @@ export default function SizeGuidePanel({ store, since }) {
   const [filter, setFilter] = useState("all");
   const [openId, setOpenId] = useState(null);
   const [probe, setProbe] = useState(null);
+  const [envInfo, setEnvInfo] = useState(null); // {apify, proxy, redis} — bij laden opgehaald
   const stopRef = useRef(false);
   const fileRef = useRef(null);
   const fileTarget = useRef(null);
@@ -123,6 +124,11 @@ export default function SizeGuidePanel({ store, since }) {
     } catch {
       setLogSheet(WERKBOEK);
     }
+    // Instellingen-check bij laden (geen AliExpress-request): staat de Apify-token er?
+    fetch("/api/size-guide/probe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ envOnly: true }) })
+      .then((r) => r.json())
+      .then((d) => d && d.env && setEnvInfo(d.env))
+      .catch(() => {});
   }, []);
   useEffect(() => {
     if (!store || !store.domain) return;
@@ -234,6 +240,21 @@ export default function SizeGuidePanel({ store, since }) {
     }
     if (!logSheet && !window.confirm("Geen log-sheet ingevuld. Doorgaan zonder log?")) return;
     setErr("");
+    // Zonder APIFY_TOKEN kan er niet op foto gezocht worden — dan zou de hele
+    // run stilletjes in standaardtabellen eindigen. Eerst hard waarschuwen.
+    if (useSearch) {
+      try {
+        const e = await post("/api/size-guide/probe", { envOnly: true });
+        if (e.env && !e.env.apify) {
+          const go = window.confirm(
+            "APIFY_TOKEN staat niet in Vercel — AliExpress zoeken op foto kan niet draaien.\n\n" +
+              "Doorgaan betekent: ALLEEN standaardtabellen (geen leveranciersmaten).\n" +
+              "Annuleer, zet APIFY_TOKEN in Vercel → Environment Variables, redeploy, en start dan opnieuw."
+          );
+          if (!go) return;
+        }
+      } catch {}
+    }
     setBusy(true);
     stopRef.current = false;
     const p = { done: 0, total: list.length, green: 0, amber: 0, standard: 0, red: 0, usd: 0 };
@@ -392,7 +413,7 @@ export default function SizeGuidePanel({ store, since }) {
       <div className="field-label">Log-sheet (ID) <span className="opt">— per run een tabblad "SizeGuide &lt;datum&gt;" met herkomst, cijfer en JSON</span></div>
       <input type="text" value={logSheet} onChange={(e) => saveLogSheet(e.target.value)} placeholder="Google Sheet ID" disabled={busy} style={{ width: "100%", marginBottom: 10 }} />
       <div className="toggle-row"><span className={"switch" + (onlyMissing ? " on" : "")} onClick={() => !busy && setOnlyMissing(!onlyMissing)} /> Alleen producten zonder maattabel (of met standaardtabel)</div>
-      <div className="toggle-row"><span className={"switch" + (useSearch ? " on" : "")} onClick={() => !busy && setUseSearch(!useSearch)} /> AliExpress zoeken op foto (Apify + AI-match)</div>
+      <div className="toggle-row"><span className={"switch" + (useSearch ? " on" : "")} onClick={() => !busy && setUseSearch(!useSearch)} /> AliExpress zoeken op foto (Apify + AI-match){envInfo && !envInfo.apify ? <span className="badge" style={{ marginLeft: 8 }}>APIFY_TOKEN ontbreekt in Vercel</span> : null}</div>
       <div className="toggle-row"><span className={"switch" + (fallbackStandard ? " on" : "")} onClick={() => !busy && setFallbackStandard(!fallbackStandard)} /> Vangnet: standaardtabel als er geen betrouwbare match is</div>
       <div className="toggle-row"><span className={"switch" + (autoWrite ? " on" : "")} onClick={() => !busy && setAutoWrite(!autoWrite)} /> Groen, amber en standaard direct naar Shopify schrijven</div>
 

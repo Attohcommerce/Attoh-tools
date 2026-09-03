@@ -11,6 +11,17 @@ export const maxDuration = 60;
    Default-product = de live geverifieerde damestrui van 02-09-2026. */
 export async function POST(req) {
   const body = await req.json().catch(() => ({}));
+  // envOnly: alleen de instellingen-check (voor de start van een run) — geen AliExpress-request
+  if (body.envOnly) {
+    return NextResponse.json({
+      ok: true,
+      env: {
+        apify: imageSearchConfigured(),
+        proxy: String(process.env.SCRAPER_PROXY_URL || "").includes("{url}"),
+        redis: !!process.env.REDIS_URL,
+      },
+    });
+  }
   let pid = parseAliProductId(body.pid || body.url || "") || null;
   const started = Date.now();
   let resolved = null;
