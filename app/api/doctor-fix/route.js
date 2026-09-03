@@ -25,6 +25,7 @@ const CHUNK_FOR = {
   "convert-sizes": 12,
   "fix-size-guides": 10,
   "delete-small-men-shoe-sizes": 8,
+  "clean-size-labels": 12,
   default: 15,
 };
 
@@ -75,6 +76,8 @@ function snapshotFor(fix, p) {
       return { size_guide: p.__sizeGuide || null };
     case "delete-small-men-shoe-sizes":
       return { variants: vars((x) => [x.id, x.option1, x.option2, x.option3, x.price, x.sku]) };
+    case "clean-size-labels":
+      return { variants: vars((x) => [x.id, x.option1, x.option2, x.option3]) };
     default:
       return { title: p.title || "", tags: p.tags || "" };
   }

@@ -46,6 +46,7 @@ const FIXALL_ORDER = [
   "relink-photos",
   "fix-gender-from-title",
   "translate-options",
+  "clean-size-labels",
   "convert-sizes",
   "unify-variant-prices",
   "clear-barcodes",
