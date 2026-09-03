@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MARKETS } from "@/lib/sizes";
-import { formatCell, unitSuffix } from "@/lib/sizeguide";
+import { formatCell, unitSuffix, checkGuide, KIND_LABEL } from "@/lib/sizeguide";
 
 const LS_LOG = "sa_sizeguide_log";
 const LS_MARKET = "sa_doctor_market::"; // zelfde sleutel als de Store Doctor → één doelmarkt per store
@@ -17,6 +17,7 @@ const WERKBOEK = "1Y3wg8X5ivuwaUTfUapzgUOIMzVqr0KRs6g2FR1COuKE";
 const CUR_MARKET = { USD: "USA", GBP: "UK", AUD: "AUS+NZ", NZD: "AUS+NZ", CAD: "CAN" };
 
 const VERDICT_LABEL = { green: "groen", amber: "amber", standard: "standaard", red: "rood", none: "geen maten" };
+const CHECK_LABEL = { ok: "✓ klopt", warn: "let op", error: "past niet", missing: "geen tabel", skip: "n.v.t." };
 
 function sfx(kind) {
   try {
@@ -101,6 +102,9 @@ export default function SizeGuidePanel({ store, since }) {
 
   const [items, setItems] = useState(null);
   const [counts, setCounts] = useState(null);
+  const [kindsInfo, setKindsInfo] = useState(null); // [{kind,label,count}]
+  const [checks, setChecks] = useState({}); // id → checkGuide-resultaat
+  const [checkSum, setCheckSum] = useState(null); // {ok,warn,error,missing,skip}
   const [results, setResults] = useState({}); // id → build-result
   const [busy, setBusy] = useState(false);
   const [rowBusy, setRowBusy] = useState(null);
@@ -195,13 +199,71 @@ export default function SizeGuidePanel({ store, since }) {
       const d = await post("/api/size-guide/scan", { store: storeBody, sinceISO: since || null });
       setItems(d.items);
       setCounts(d.counts);
+      setKindsInfo(d.kinds || null);
       addLog(`Scan: ${d.counts.total} producten · ${d.counts.withGuide} met maattabel · ${d.counts.noSizes} zonder maten${d.metafieldsReadable ? "" : " · LET OP: metafields niet leesbaar (" + d.metafieldsError + ")"}`, "ok");
+      if (d.kinds) addLog(`Productsoorten: ${d.kinds.map((k) => `${k.label} ${k.count}`).join(" · ")}`, "muted");
+      runCheck(d.items);
       sfx("done");
     } catch (e) {
       setErr(e.message);
     } finally {
       setBusy(false);
     }
+  }
+
+  /* ---------- Check alles (client-side, gratis) ----------
+     Zelfde controle als de Store Doctor: hoort de tabel bij de productSOORT
+     (rok zonder bust, blouse zonder inseam, schoen = voetlengte), kloppen
+     de rijen met de variantmaten, geslacht, markt. */
+  function runCheck(list) {
+    const src = list || items || [];
+    const next = {};
+    const sum = { ok: 0, warn: 0, error: 0, missing: 0, skip: 0, standard: 0 };
+    for (const it of src) {
+      const c = checkGuide(it.guide || null, it, market);
+      next[it.id] = c;
+      sum[c.level] = (sum[c.level] || 0) + 1;
+      if (c.standard) sum.standard++;
+    }
+    setChecks(next);
+    setCheckSum(sum);
+    addLog(`Check: ${sum.ok} kloppen · ${sum.warn} let op · ${sum.error} passen niet · ${sum.missing} zonder tabel · ${sum.skip} n.v.t. · ${sum.standard} standaardtabel`, sum.error || sum.missing ? "warn" : "ok");
+    return next;
+  }
+
+  // Onbekende productsoorten door de AI laten bepalen (alleen tekst, spotgoedkoop)
+  async function classifyUnknown() {
+    const unknown = (items || []).filter((it) => it.kind === "unknown");
+    if (!unknown.length) return;
+    setRowBusy("kinds");
+    try {
+      let usd = 0;
+      const map = {};
+      for (let i = 0; i < unknown.length; i += 40) {
+        const chunk = unknown.slice(i, i + 40);
+        const d = await post("/api/size-guide/kinds", { items: chunk.map((it) => ({ id: it.id, title: it.title })) });
+        for (const k of d.kinds || []) map[k.id] = k.kind;
+        usd += (d.ai && d.ai.usd) || 0;
+      }
+      const next = (items || []).map((it) => (map[it.id] ? { ...it, kind: map[it.id] } : it));
+      setItems(next);
+      const cnt = {};
+      for (const it of next) cnt[it.kind] = (cnt[it.kind] || 0) + 1;
+      setKindsInfo(Object.entries(cnt).sort((a, b) => b[1] - a[1]).map(([k, n]) => ({ kind: k, label: KIND_LABEL[k] || k, count: n })));
+      addLog(`AI-soorten: ${Object.keys(map).length} van ${unknown.length} onbekende producten ingedeeld (±$${usd.toFixed(3)})`, "ok");
+      runCheck(next);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setRowBusy(null);
+    }
+  }
+
+  function problemList() {
+    return (items || []).filter((it) => {
+      const c = checks[it.id];
+      return c && (c.level === "error" || c.level === "missing" || c.level === "warn");
+    });
   }
 
   /* ---------- Schrijven (chunk-loop) ---------- */
@@ -220,10 +282,22 @@ export default function SizeGuidePanel({ store, since }) {
       if (d.done) break;
     }
     addLog(`${label || "Geschreven"}: ${written} maattabel(len) naar Shopify${failed ? ` · ${failed} mislukt` : ""}${bk ? ` · log: ${bk.tab}` : ""}`, failed ? "warn" : "ok");
-    setItems((cur) => (cur || []).map((it) => {
-      const w = list.find((x) => String(x.id) === String(it.id));
-      return w && w.guide ? { ...it, sgStatus: w.guide.status } : it;
-    }));
+    setItems((cur) => {
+      const next = (cur || []).map((it) => {
+        const w = list.find((x) => String(x.id) === String(it.id));
+        return w && w.guide ? { ...it, sgStatus: w.guide.status, guide: w.guide } : it;
+      });
+      // check-status meteen bijwerken voor de geschreven producten
+      setChecks((cc) => {
+        const n = { ...cc };
+        for (const w of list) {
+          const it = next.find((x) => String(x.id) === String(w.id));
+          if (it) n[it.id] = checkGuide(it.guide || null, it, market);
+        }
+        return n;
+      });
+      return next;
+    });
     return { written, failed };
   }
 
@@ -232,10 +306,10 @@ export default function SizeGuidePanel({ store, since }) {
     return (items || []).filter((it) => it.sizes.length && (!onlyMissing || !it.sgStatus || it.sgStatus === "standard"));
   }
 
-  async function run() {
-    const list = selection();
+  async function run(customList, customLabel) {
+    const list = customList || selection();
     if (!list.length) {
-      setErr("Niets te doen — alle producten met maten hebben al een maattabel (zet 'alleen zonder maattabel' uit om te herbouwen).");
+      setErr(customList ? "Geen problemen om te herstellen." : "Niets te doen — alle producten met maten hebben al een maattabel (zet 'alleen zonder maattabel' uit om te herbouwen).");
       return;
     }
     if (!logSheet && !window.confirm("Geen log-sheet ingevuld. Doorgaan zonder log?")) return;
@@ -259,7 +333,7 @@ export default function SizeGuidePanel({ store, since }) {
     stopRef.current = false;
     const p = { done: 0, total: list.length, green: 0, amber: 0, standard: 0, red: 0, usd: 0 };
     setProg({ ...p });
-    addLog(`Start: ${list.length} producten · markt ${market} · image-search ${useSearch ? "aan" : "uit"} · vangnet ${fallbackStandard ? "aan" : "uit"}`, "muted");
+    addLog(`${customLabel || "Start"}: ${list.length} producten · markt ${market} · image-search ${useSearch ? "aan" : "uit"} · vangnet ${fallbackStandard ? "aan" : "uit"}`, "muted");
     const toWrite = [];
     let cursor = 0;
     try {
@@ -392,7 +466,9 @@ export default function SizeGuidePanel({ store, since }) {
   };
   const rows = rowsAll.filter((x) => {
     const v = verdictOf(x);
+    const c = checks[x.it.id];
     if (filter === "all") return true;
+    if (filter === "problems") return c && (c.level === "error" || c.level === "missing" || c.level === "warn");
     if (filter === "review") return v === "red" || v === "amber";
     if (filter === "missing") return v === "missing";
     if (filter === "standard") return v === "standard";
@@ -419,7 +495,11 @@ export default function SizeGuidePanel({ store, since }) {
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12, alignItems: "center" }}>
         <button className="btn" onClick={scan} disabled={busy || !store}>{busy && !items ? <span className="spin" /> : null} Scan store</button>
-        <button className="btn" onClick={run} disabled={busy || !items || !sel}>Bouw maattabellen ({sel})</button>
+        <button className="btn" onClick={() => run()} disabled={busy || !items || !sel}>Bouw maattabellen ({sel})</button>
+        <button className="btn-ghost" onClick={() => runCheck()} disabled={busy || !items}>Check alles</button>
+        {checkSum && problemList().length > 0 && (
+          <button className="btn-ghost" onClick={() => run(problemList(), "Herstel problemen")} disabled={busy}>Herstel problemen ({problemList().length})</button>
+        )}
         {busy && <button className="btn-ghost" onClick={() => (stopRef.current = true)}>Stop na dit product</button>}
         <button className="btn-ghost btn-small" onClick={runProbe} disabled={busy}>Probe AliExpress</button>
       </div>
@@ -430,6 +510,25 @@ export default function SizeGuidePanel({ store, since }) {
         </div>
       )}
       {err && <div className="log err" style={{ marginTop: 10 }}>{err}</div>}
+      {kindsInfo && (
+        <div className="hint" style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <span>Productsoorten: {kindsInfo.map((k) => `${k.label} ${k.count}`).join(" · ")}</span>
+          {kindsInfo.some((k) => k.kind === "unknown") && (
+            <button className="btn-ghost btn-small" onClick={classifyUnknown} disabled={busy || rowBusy === "kinds"}>
+              {rowBusy === "kinds" ? <span className="spin" /> : null} Onbekende soorten bepalen (AI)
+            </button>
+          )}
+        </div>
+      )}
+      {checkSum && (
+        <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "baseline" }}>
+          <span className="badge badge-green">{checkSum.ok} kloppen</span>
+          <span className="badge badge-amber">{checkSum.warn} let op</span>
+          <span className="badge">{checkSum.error} passen niet</span>
+          <span className="badge">{checkSum.missing} zonder tabel</span>
+          <span className="muted small">{checkSum.standard} standaardtabel · {checkSum.skip} n.v.t. (accessoires / geen maten)</span>
+        </div>
+      )}
 
       {/* ---------- voortgang ---------- */}
       {prog && (
@@ -458,7 +557,7 @@ export default function SizeGuidePanel({ store, since }) {
         <div style={{ marginTop: 16 }}>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <div className="seg">
-              {[["all", `alle (${rowsAll.length})`], ["review", "review"], ["missing", "zonder"], ["standard", "standaard"], ["green", "met tabel"]].map(([k, l]) => (
+              {[["all", `alle (${rowsAll.length})`], ["problems", `problemen (${problemList().length})`], ["review", "review"], ["missing", "zonder"], ["standard", "standaard"], ["green", "met tabel"]].map(([k, l]) => (
                 <button key={k} type="button" className={filter === k ? "on" : ""} onClick={() => setFilter(k)}>{l}</button>
               ))}
             </div>
@@ -468,7 +567,9 @@ export default function SizeGuidePanel({ store, since }) {
             <tbody>
               {rows.slice(0, 400).map(({ it, r }) => {
                 const v = verdictOf({ it, r });
+                const c = checks[it.id];
                 const open = openId === it.id;
+                const shownGuide = (r && r.guide) || it.guide || null;
                 return (
                   <tr key={it.id}>
                     <td style={{ width: 44 }}>{it.image ? <img src={it.image + (it.image.includes("?") ? "&" : "?") + "width=80"} alt="" style={{ width: 36, height: 48, objectFit: "cover", borderRadius: 6 }} /> : null}</td>
@@ -476,12 +577,16 @@ export default function SizeGuidePanel({ store, since }) {
                       <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
                         <strong>{it.title}</strong>
                         <span className={badgeClass(v)}>{v === "written" ? it.sgStatus : VERDICT_LABEL[v] || v}</span>
+                        {c && c.level !== "skip" && (
+                          <span className={c.level === "ok" ? "badge badge-green" : c.level === "warn" ? "badge badge-amber" : "badge"} title={c.issues.join("; ")}>{CHECK_LABEL[c.level]}</span>
+                        )}
                         {r && r.score != null && <span className="muted small">{r.score}/10</span>}
                         {r && r.match && r.match.via && r.match.pid && <span className="muted small">match {r.match.via} {Math.round((r.match.confidence || 0) * 100)}%</span>}
                       </div>
-                      <div className="muted small">{it.family} · {it.gender} · {it.sizes.length ? it.sizes.join(" / ") : "geen maten"}{r && !r.ok && r.reason ? ` · ${r.reason}` : ""}{r && r.fallbackReason ? ` · vangnet: ${r.fallbackReason}` : ""}{r && r.issues && r.issues.length ? ` · ${r.issues.join("; ")}` : ""}</div>
+                      <div className="muted small">{KIND_LABEL[it.kind] || it.kind} · {it.gender} · {it.sizes.length ? it.sizes.join(" / ") : "geen maten"}{r && !r.ok && r.reason ? ` · ${r.reason}` : ""}{r && r.fallbackReason ? ` · vangnet: ${r.fallbackReason}` : ""}{r && r.issues && r.issues.length ? ` · ${r.issues.join("; ")}` : ""}</div>
+                      {c && c.issues && c.issues.length > 0 && c.level !== "ok" && <div className={"small " + (c.level === "warn" ? "muted" : "")} style={c.level === "warn" ? {} : { color: "var(--err)" }}>{c.issues.join(" · ")}</div>}
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
-                        {r && r.guide && <button className="btn-ghost btn-small" onClick={() => setOpenId(open ? null : it.id)}>{open ? "sluit" : "bekijk"}</button>}
+                        {shownGuide && <button className="btn-ghost btn-small" onClick={() => setOpenId(open ? null : it.id)}>{open ? "sluit" : "bekijk"}</button>}
                         {it.sizes.length > 0 && (
                           <>
                             <button className="btn-ghost btn-small" disabled={busy || rowBusy === it.id} onClick={() => rowAli(it)}>AliExpress-URL…</button>
@@ -493,7 +598,7 @@ export default function SizeGuidePanel({ store, since }) {
                         {(it.sgStatus || (r && r.guide)) && <button className="btn-ghost btn-small" disabled={busy || rowBusy === it.id} onClick={() => rowRemove(it)}>Verwijder</button>}
                         {rowBusy === it.id && <span className="spin" />}
                       </div>
-                      {open && r && r.guide && <GuidePreview guide={r.guide} />}
+                      {open && shownGuide && <GuidePreview guide={shownGuide} />}
                     </td>
                   </tr>
                 );

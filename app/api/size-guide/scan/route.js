@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { listProducts, listProductMetafieldValues } from "@/lib/shopify";
-import { productSummary, SG_NS, SG_STATUS_KEY } from "@/lib/sizeguide";
+import { productSummary, SG_NS, SG_KEY, KIND_LABEL } from "@/lib/sizeguide";
 
 export const maxDuration = 60;
 
@@ -19,22 +19,37 @@ export async function POST(req) {
     const products = r.products || [];
     if (!products.length) return NextResponse.json({ error: "Geen producten gevonden" }, { status: 422 });
 
-    const mf = await listProductMetafieldValues(store, { namespace: SG_NS, key: SG_STATUS_KEY });
-    const statuses = mf.ok ? mf.values : {};
+    // De hele maattabel per product (JSON) — nodig voor "Check alles" in de client
+    const mf = await listProductMetafieldValues(store, { namespace: SG_NS, key: SG_KEY });
+    const guides = mf.ok ? mf.values : {};
 
     const items = products.map((p) => {
       const s = productSummary(p);
-      return { ...s, sgStatus: statuses[String(p.id)] || null };
+      let guide = null;
+      const raw = guides[String(p.id)];
+      if (raw) {
+        try {
+          guide = JSON.parse(raw);
+        } catch {
+          guide = null;
+        }
+      }
+      return { ...s, sgStatus: guide ? guide.status || "aliexpress" : null, guide };
     });
     const counts = { total: items.length, withGuide: 0, noSizes: 0, aliexpress: 0, standard: 0, manual: 0 };
+    const kinds = {};
     for (const it of items) {
       if (!it.sizes.length) counts.noSizes++;
       if (it.sgStatus) {
         counts.withGuide++;
         if (counts[it.sgStatus] != null) counts[it.sgStatus]++;
       }
+      kinds[it.kind] = (kinds[it.kind] || 0) + 1;
     }
-    return NextResponse.json({ ok: true, items, counts, metafieldsReadable: mf.ok, metafieldsError: mf.ok ? null : mf.error });
+    const kindsList = Object.entries(kinds)
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, n]) => ({ kind: k, label: KIND_LABEL[k] || k, count: n }));
+    return NextResponse.json({ ok: true, items, counts, kinds: kindsList, metafieldsReadable: mf.ok, metafieldsError: mf.ok ? null : mf.error });
   } catch (e) {
     return NextResponse.json({ error: String(e.message || e) }, { status: 500 });
   }

@@ -55,7 +55,8 @@ export default function QaPage() {
             ))}
             <div className="hint">
               Gratis checks: variant-foto's, taal, prijzen &amp; doorstreepprijzen, titels,
-              tags/gender, barcodes, vendor, templates, maten-volgorde, zichtbaarheid.
+              tags/gender, barcodes, vendor, templates, maten-volgorde, zichtbaarheid,
+              maattabellen (ontbreekt / past niet bij de productsoort).
               Daarna optionele AI-checks (geslacht, kleur↔foto, watermerk, taal-restlaag)
               met de kosten vooraf in beeld. Elke fix schrijft eerst een backup-tabblad.
             </div>

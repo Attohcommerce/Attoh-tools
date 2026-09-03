@@ -3,6 +3,7 @@
 import {
   columnFor, parseCell, normalizeChart, normalizeSizeLabel, sizeSortKey, findSizeOption,
   euToMarket, alignRows, sanityCheck, scoreGuide, buildGuide, standardGuide, productSummary, formatCell,
+  kindOf, columnsForKind, checkGuide,
 } from "../lib/sizeguide.js";
 import { parseSizeChartHtml, parseAliProductId, detectBlock } from "../lib/aliexpress.js";
 
@@ -185,8 +186,9 @@ eq("schoenen family", bShoe.guide.family, "shoes");
 const std = standardGuide(summ, "USA");
 ok("standaard dames ok", std.ok);
 eq("standaard status", std.guide.status, "standard");
-eq("standaard kolommen", std.guide.columns.map((c) => c.key), ["size", "us", "bust", "waist", "hip"]);
-eq("standaard rij M", std.guide.rows[1], { size: "M", us: "8/10", bust: [91, 94], waist: [71, 74], hip: [97, 99] });
+eq("standaard kolommen (trui = top: bust+waist)", std.guide.columns.map((c) => c.key), ["size", "us", "bust", "waist"]);
+eq("standaard rij M", std.guide.rows[1], { size: "M", us: "8/10", bust: [91, 94], waist: [71, 74] });
+eq("standaard kind in guide", std.guide.kind, "top");
 eq("standaard XXL → 2XL-rij", std.guide.rows[4].us, "20/22");
 const stdAU = standardGuide(summ, "AUS+NZ");
 eq("standaard AU-label M = 12/14", stdAU.guide.rows[1].au, "12/14");
@@ -199,10 +201,51 @@ const stdShoeAU = standardGuide({ ...productSummary(shoeProd), gender: "men", si
 eq("standaard herenschoen AU 9 = US 10", stdShoeAU.guide.rows[0].us, "10");
 const stdNum = standardGuide({ ...summ, sizes: ["4", "6", "8", "10"] }, "USA");
 eq("standaard US-nummers → letters", stdNum.guide.rows.map((r) => r.bust[0]), [86, 86, 91, 91]);
-const stdWaist = standardGuide({ ...summ, family: "bottoms", sizes: ["26", "28", "30"] }, "USA");
+const stdWaist = standardGuide({ ...summ, family: "bottoms", kind: "bottoms", sizes: ["26", "28", "30"] }, "USA");
 eq("standaard taille-nummers", stdWaist.guide.rows[0], { size: "26", us: "26", waist: 66 });
 eq("standaard bh → geen", standardGuide({ ...summ, family: "bra", sizes: ["34B"] }, "USA").ok, false);
 eq("standaard onbekende maten → geen", standardGuide({ ...summ, sizes: ["A", "B", "C"] }, "USA").ok, false);
+
+/* ---------- productsoorten + soort-controle ---------- */
+eq("kind sweater dress → dress", kindOf("", "Women's Sweater Dress | Ribbed Knit"), "dress");
+eq("kind maxi skirt → skirt", kindOf("", "Pleated Maxi Skirt"), "skirt");
+eq("kind flannel → top", kindOf("Shirts", "Men's Flannel Shirt | Plaid"), "top");
+eq("kind pant set → set", kindOf("", "Women's Two-Piece Pant Set"), "set");
+eq("kind jeans → bottoms", kindOf("", "High Waist Wide Leg Jeans"), "bottoms");
+eq("kind blazer → outerwear", kindOf("", "Men's Slim Fit Blazer"), "outerwear");
+eq("kind boots → shoes", kindOf("Boots", "Men's Boots | Lace-Up"), "shoes");
+eq("kind bag → accessory", kindOf("", "Leather Tote Bag"), "accessory");
+eq("kind onbekend", kindOf("", "Something Nice"), "unknown");
+eq("kind via product_type", kindOf("Dresses", "Evening Elegance"), "dress");
+const colsBlouseBad = [{ key: "size", kind: "size" }, { key: "bust", kind: "length" }, { key: "inseam", kind: "length" }];
+eq("columnsForKind top: inseam verboden", columnsForKind(colsBlouseBad, "top").forbidden, ["inseam"]);
+eq("columnsForKind skirt: bust verboden", columnsForKind([{ key: "bust", kind: "length" }, { key: "waist", kind: "length" }], "skirt").forbidden, ["bust"]);
+eq("columnsForKind bottoms ok", columnsForKind([{ key: "waist", kind: "length" }, { key: "inseam", kind: "length" }], "bottoms").forbidden, []);
+eq("columnsForKind top zonder kernmaat", columnsForKind([{ key: "sleeve", kind: "length" }], "top").missingNeed, true);
+const stdSkirt = standardGuide({ ...summ, kind: "skirt", sizes: ["S", "M", "L"] }, "USA");
+eq("standaard rok = waist+hips", stdSkirt.guide.columns.map((c) => c.key), ["size", "us", "waist", "hip"]);
+const stdDress = standardGuide({ ...summ, kind: "dress", sizes: ["S", "M"] }, "USA");
+eq("standaard jurk = bust+waist+hips", stdDress.guide.columns.map((c) => c.key), ["size", "us", "bust", "waist", "hip"]);
+const stdMenTop = standardGuide({ ...summ, gender: "men", kind: "top", sizes: ["M", "L"] }, "USA");
+eq("standaard heren top = chest+waist", stdMenTop.guide.columns.map((c) => c.label), ["Size", "US", "Chest", "Waist"]);
+eq("standaard accessoire → geen", standardGuide({ ...summ, kind: "accessory", sizes: ["One Size"] }, "USA").ok, false);
+// AliExpress-tabel met bust op een rok → verkeerd product → rood
+const skirtProd = { ...summ, kind: "skirt", title: "Pleated Maxi Skirt", sizes: ["S", "M", "L", "XL", "XXL"] };
+const bSkirt = buildGuide({ chart, product: skirtProd, market: "USA", confidence: 0.95 });
+eq("bust op rok → rood", bSkirt.verdict, "red");
+ok("bust op rok → issue-tekst", /horen niet bij Rokken/.test(bSkirt.issues.join("|")));
+// checkGuide
+const chk = checkGuide(built.guide, summ, "USA");
+eq("checkGuide trui ok", [chk.level, chk.issues], ["ok", []]);
+const chkSkirt = checkGuide(built.guide, skirtProd, "USA");
+eq("checkGuide bust-tabel op rok → error", chkSkirt.level, "error");
+const chkSizes = checkGuide(built.guide, { ...summ, sizes: ["S", "M", "L", "XL", "XXL", "3XL"] }, "USA");
+eq("checkGuide ontbrekende maat → warn", [chkSizes.level, chkSizes.issues[0]], ["warn", "variantmaten zonder rij: 3XL"]);
+eq("checkGuide geen tabel → missing", checkGuide(null, summ, "USA").level, "missing");
+eq("checkGuide accessoire → skip", checkGuide(null, { ...summ, kind: "accessory" }, "USA").level, "skip");
+eq("checkGuide schoenentabel op kleding → error", checkGuide(stdShoe.guide, summ, "USA").level, "error");
+eq("checkGuide andere markt → warn", checkGuide(built.guide, summ, "AUS+NZ").level, "warn");
+eq("checkGuide standaard-vlag", checkGuide(std.guide, summ, "USA").standard, true);
 
 /* ---------- weergave ---------- */
 eq("format 84 cm → in", formatCell(84, "length", "in"), "33.1");

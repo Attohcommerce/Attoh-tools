@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { listProducts } from "@/lib/shopify";
+import { listProducts, listProductMetafieldValues } from "@/lib/shopify";
 import { runDoctor } from "@/lib/doctor";
+import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 
 export const maxDuration = 60;
 
@@ -25,10 +26,20 @@ export async function POST(req) {
       );
     }
 
+    // Maattabellen (metafield custom.size_guide) — één GraphQL-loop, 250 per pagina
+    let guides = null;
+    try {
+      const mf = await listProductMetafieldValues(store, { namespace: SG_NS, key: SG_KEY });
+      guides = mf.ok ? mf.values : {};
+    } catch {
+      guides = {};
+    }
+
     const result = runDoctor(products, {
       vendorName: vendorName || store.name || "",
       menTemplate: "men",
       market: market || "",
+      guides,
     });
 
     return NextResponse.json({

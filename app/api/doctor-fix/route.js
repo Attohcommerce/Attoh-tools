@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { listProductsByIds } from "@/lib/shopify";
+import { listProductsByIds, getProductMetafieldValues } from "@/lib/shopify";
 import { applyDoctorFix, FIX_FIELDS } from "@/lib/doctor";
+import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { addTab, appendRows } from "@/lib/sheets";
 
 export const maxDuration = 60;
@@ -22,6 +23,7 @@ const CHUNK_FOR = {
   "delete-no-image-products": 10,
   "translate-options": 12,
   "convert-sizes": 12,
+  "fix-size-guides": 10,
   default: 15,
 };
 
@@ -68,6 +70,8 @@ function snapshotFor(fix, p) {
       return { tags: p.tags || "", template_suffix: p.template_suffix || "" };
     case "delete-flagged-images":
       return { images: (p.images || []).map((im) => [im.id, im.src]) };
+    case "fix-size-guides":
+      return { size_guide: p.__sizeGuide || null };
     default:
       return { title: p.title || "", tags: p.tags || "" };
   }
@@ -117,6 +121,12 @@ export async function POST(req) {
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
     const products = r.products || [];
     const pending = slice.map((id) => products.find((p) => String(p.id) === String(id))).filter(Boolean);
+
+    // Maattabel-fix: de huidige metafield erbij halen (voor backup + manual-guard)
+    if (fix === "fix-size-guides" && pending.length) {
+      const mf = await getProductMetafieldValues(store, pending.map((p) => p.id), { namespace: SG_NS, key: SG_KEY });
+      if (mf.ok) for (const p of pending) p.__sizeGuide = mf.values[String(p.id)] || null;
+    }
 
     // 1. EERST de snapshot van deze chunk wegschrijven — vóór elke wijziging
     if (backupOn && pending.length) {

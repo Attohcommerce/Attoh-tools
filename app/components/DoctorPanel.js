@@ -58,6 +58,7 @@ const FIXALL_ORDER = [
   "publish-products",
   "fix-compareat",
   "clean-titles",
+  "fix-size-guides",
 ];
 
 function sfx(kind) {
