@@ -36,7 +36,7 @@ export async function POST(req) {
       }
       return { ...s, sgStatus: guide ? guide.status || "aliexpress" : null, guide };
     });
-    const counts = { total: items.length, withGuide: 0, noSizes: 0, aliexpress: 0, standard: 0, manual: 0 };
+    const counts = { total: items.length, withGuide: 0, noSizes: 0, aliexpress: 0, source: 0, standard: 0, manual: 0 };
     const kinds = {};
     for (const it of items) {
       if (!it.sizes.length) counts.noSizes++;

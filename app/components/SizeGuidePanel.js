@@ -12,6 +12,7 @@ import { MARKETS } from "@/lib/sizes";
 import { formatCell, unitSuffix, checkGuide, KIND_LABEL } from "@/lib/sizeguide";
 
 const LS_LOG = "sa_sizeguide_log";
+const LS_COMP_STORES = "sa_competitor_stores"; // scraper-lijst (zelfde localStorage) → bron-stores voor maattabellen
 const LS_MARKET = "sa_doctor_market::"; // zelfde sleutel als de Store Doctor → één doelmarkt per store
 const WERKBOEK = "1Y3wg8X5ivuwaUTfUapzgUOIMzVqr0KRs6g2FR1COuKE";
 const CUR_MARKET = { USD: "USA", GBP: "UK", AUD: "AUS+NZ", NZD: "AUS+NZ", CAD: "CAN" };
@@ -122,6 +123,8 @@ export default function SizeGuidePanel({ store, since }) {
   const fileTarget = useRef(null);
   // Eén logtabblad per sessie/store — alle writes (batch én handmatig) eronder
   const tabRef = useRef("");
+  // Bron-store-domeinen (concurrenten) — gevuld door indexSources(); gaat met elke build-call mee
+  const srcDomainsRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -176,6 +179,43 @@ export default function SizeGuidePanel({ store, since }) {
     return data;
   }
 
+  /* ---------- Bron-stores (concurrenten) indexeren ----------
+     Scraper-lijst uit localStorage + alle domeinen uit de Geheugen-sheet →
+     per domein een index in Redis (24 u). Snel als alles al gecachet is. */
+  async function indexSources(quiet) {
+    let local = [];
+    try {
+      const v = JSON.parse(localStorage.getItem(LS_COMP_STORES) || "[]");
+      if (Array.isArray(v)) local = v.map((x) => (typeof x === "string" ? x : x && (x.domain || x.url) ? x.domain || x.url : "")).filter(Boolean);
+    } catch {}
+    let cursor = 0;
+    let domains = local;
+    let built = 0;
+    let failed = [];
+    for (let guard = 0; guard < 60; guard++) {
+      const d = await post("/api/size-guide/source-index", { domains: local, cursor });
+      domains = d.domains || domains;
+      for (const r of d.results || []) {
+        if (r.ok && !r.cached) built++;
+        if (!r.ok) failed.push(r.domain);
+      }
+      cursor = d.nextCursor;
+      if (!quiet && !d.done) addLog(`Bron-stores indexeren… ${Math.min(cursor, domains.length)}/${domains.length}`, "muted");
+      if (d.done) break;
+    }
+    srcDomainsRef.current = domains;
+    if (!quiet) addLog(`Bron-stores: ${domains.length} domeinen (${built} nieuw geïndexeerd${failed.length ? `, ${failed.length} niet bereikbaar` : ""})`, "muted");
+    return domains;
+  }
+  async function sourceDomains() {
+    if (srcDomainsRef.current) return srcDomainsRef.current;
+    try {
+      return await indexSources(true);
+    } catch {
+      return [];
+    }
+  }
+
   /* ---------- Probe ---------- */
   async function runProbe() {
     setErr("");
@@ -202,7 +242,7 @@ export default function SizeGuidePanel({ store, since }) {
       setItems(d.items);
       setCounts(d.counts);
       setKindsInfo(d.kinds || null);
-      addLog(`Scan: ${d.counts.total} producten · ${d.counts.withGuide} met maattabel · ${d.counts.noSizes} zonder maten${d.metafieldsReadable ? "" : " · LET OP: metafields niet leesbaar (" + d.metafieldsError + ")"}`, "ok");
+      addLog(`Scan: ${d.counts.total} producten · ${d.counts.withGuide} met maattabel (AliExpress ${d.counts.aliexpress || 0} · bron-store ${d.counts.source || 0} · handmatig ${d.counts.manual || 0} · standaard ${d.counts.standard || 0}) · ${d.counts.noSizes} zonder maten${d.metafieldsReadable ? "" : " · LET OP: metafields niet leesbaar (" + d.metafieldsError + ")"}`, "ok");
       if (d.kinds) addLog(`Productsoorten: ${d.kinds.map((k) => `${k.label} ${k.count}`).join(" · ")}`, "muted");
       runCheck(d.items);
       sfx("done");
@@ -303,6 +343,18 @@ export default function SizeGuidePanel({ store, since }) {
     return { written, failed };
   }
 
+  /* Korte bronvermelding voor het log: waar komt de tabel vandaan (of waarom niet) */
+  function describeSource(r) {
+    if (r.source === "standard") {
+      const why = (r.tried && r.tried.length ? r.tried : [r.fallbackReason]).filter(Boolean).join(" · ");
+      return ` (standaard — ${String(why).slice(0, 220)})`;
+    }
+    const m = r.match || {};
+    if (r.source === "source") return ` · bron: ${m.via === "own-image" ? "eigen maattabel-foto" : m.reason || "bron-store"}`;
+    if (m.via) return ` · AliExpress ${m.via} ${Math.round((m.confidence || 0) * 100)}%${r.chart && r.chart.via ? ` (${r.chart.via})` : ""}`;
+    return "";
+  }
+
   /* ---------- Bouwen (batch) ---------- */
   function selection() {
     return (items || []).filter((it) => it.sizes.length && (!onlyMissing || !it.sgStatus || it.sgStatus === "standard"));
@@ -335,12 +387,18 @@ export default function SizeGuidePanel({ store, since }) {
     stopRef.current = false;
     const p = { done: 0, total: list.length, green: 0, amber: 0, standard: 0, red: 0, usd: 0 };
     setProg({ ...p });
-    addLog(`${customLabel || "Start"}: ${list.length} producten · markt ${market} · image-search ${useSearch ? "aan" : "uit"} · vangnet ${fallbackStandard ? "aan" : "uit"}`, "muted");
+    addLog(`${customLabel || "Start"}: ${list.length} producten · markt ${market} · bron-stores aan · image-search ${useSearch ? "aan" : "uit"} · vangnet ${fallbackStandard ? "aan" : "uit"}`, "muted");
     const toWrite = [];
     let cursor = 0;
     try {
+      let srcDomains = [];
+      try {
+        srcDomains = await indexSources(false);
+      } catch (e) {
+        addLog(`Bron-stores overgeslagen: ${e.message}`, "warn");
+      }
       while (cursor < list.length && !stopRef.current) {
-        const d = await post("/api/size-guide/build", { store: storeBody, market, items: list, cursor, useSearch, fallbackStandard });
+        const d = await post("/api/size-guide/build", { store: storeBody, market, items: list, cursor, useSearch, useSource: true, sourceDomains: srcDomains, fallbackStandard });
         for (const r of d.results) {
           setResults((cur) => ({ ...cur, [r.id]: r }));
           p.done++;
@@ -349,7 +407,7 @@ export default function SizeGuidePanel({ store, since }) {
           if (p[v] != null) p[v]++;
           const t = String(r.title || r.id).slice(0, 48);
           if (r.ok) {
-            addLog(`${t}: ${VERDICT_LABEL[r.verdict]} ${r.score}/10${r.source === "standard" ? ` (standaard — ${r.fallbackReason})` : r.match && r.match.via ? ` · match ${r.match.via} ${Math.round((r.match.confidence || 0) * 100)}%` : ""}${r.missing && r.missing.length ? ` · ontbreekt: ${r.missing.join("/")}` : ""}`, r.verdict === "green" ? "ok" : "warn");
+            addLog(`${t}: ${VERDICT_LABEL[r.verdict]} ${r.score}/10${describeSource(r)}${r.missing && r.missing.length ? ` · ontbreekt: ${r.missing.join("/")}` : ""}`, r.verdict === "green" ? "ok" : "warn");
             if (autoWrite && r.guide && (r.verdict === "green" || r.verdict === "amber" || r.verdict === "standard")) toWrite.push(r);
           } else {
             addLog(`${t}: ${r.verdict === "none" ? "geen maten" : "ROOD"} — ${r.reason}`, r.verdict === "none" ? "muted" : "err");
@@ -392,7 +450,8 @@ export default function SizeGuidePanel({ store, since }) {
     setErr("");
     setRowBusy(it.id);
     try {
-      const d = await post("/api/size-guide/build", { store: storeBody, market, items: [it], cursor: 0, ...opts });
+      const srcDomains = opts.aliInput ? [] : await sourceDomains();
+      const d = await post("/api/size-guide/build", { store: storeBody, market, items: [it], cursor: 0, useSource: !opts.aliInput, sourceDomains: srcDomains, ...opts });
       const r = d.results[0];
       setResults((cur) => ({ ...cur, [r.id]: r }));
       if (r.ok && r.guide) {
@@ -499,7 +558,7 @@ export default function SizeGuidePanel({ store, since }) {
       <div className="field-label">Log-sheet (ID) <span className="opt">— per run een tabblad "SizeGuide &lt;datum&gt;" met herkomst, cijfer en JSON</span></div>
       <input type="text" value={logSheet} onChange={(e) => saveLogSheet(e.target.value)} placeholder="Google Sheet ID" disabled={busy} style={{ width: "100%", marginBottom: 10 }} />
       <div className="toggle-row"><span className={"switch" + (onlyMissing ? " on" : "")} onClick={() => !busy && setOnlyMissing(!onlyMissing)} /> Alleen producten zonder maattabel (of met standaardtabel)</div>
-      <div className="toggle-row"><span className={"switch" + (useSearch ? " on" : "")} onClick={() => !busy && setUseSearch(!useSearch)} /> AliExpress zoeken op foto (Apify + AI-match){envInfo && !envInfo.apify ? <span className="badge" style={{ marginLeft: 8 }}>APIFY_TOKEN ontbreekt in Vercel</span> : null}</div>
+      <div className="toggle-row"><span className={"switch" + (useSearch ? " on" : "")} onClick={() => !busy && setUseSearch(!useSearch)} /> AliExpress zoeken op foto (Apify + AI-match + echte browser) — bron-store van de concurrent gaat altijd vóór{envInfo && !envInfo.apify ? <span className="badge" style={{ marginLeft: 8 }}>APIFY_TOKEN ontbreekt in Vercel</span> : null}</div>
       <div className="toggle-row"><span className={"switch" + (fallbackStandard ? " on" : "")} onClick={() => !busy && setFallbackStandard(!fallbackStandard)} /> Vangnet: standaardtabel als er geen betrouwbare match is</div>
       <div className="toggle-row"><span className={"switch" + (autoWrite ? " on" : "")} onClick={() => !busy && setAutoWrite(!autoWrite)} /> Groen, amber en standaard direct naar Shopify schrijven</div>
 
@@ -516,7 +575,7 @@ export default function SizeGuidePanel({ store, since }) {
       {probe && !probe.busy && (
         <div className={"hint"} style={{ marginTop: 6 }}>
           {probe.ok ? `AliExpress bereikbaar via ${probe.via} (${probe.ms} ms) · ` : `AliExpress: ${probe.blocked ? "GEBLOKKEERD" : "niet gelukt"} — ${probe.message || probe.error || probe.reason} · `}
-          {probe.env ? `Apify ${probe.env.apify ? "✓" : "✗ (APIFY_TOKEN)"} · proxy ${probe.env.proxy ? "✓" : "—"} · cache ${probe.env.redis ? "✓" : "—"}` : ""}
+          {probe.env ? `Apify ${probe.env.apify ? "✓" : "✗ (APIFY_TOKEN)"} · proxy ${probe.env.proxy ? "✓" : "—"} · browser ${probe.env.browser ? "✓" : "—"} · cache ${probe.env.redis ? "✓" : "—"}` : ""}
         </div>
       )}
       {err && <div className="log err" style={{ marginTop: 10 }}>{err}</div>}

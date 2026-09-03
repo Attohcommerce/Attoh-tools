@@ -6,6 +6,8 @@ import {
   kindOf, columnsForKind, checkGuide,
 } from "../lib/sizeguide.js";
 import { parseSizeChartHtml, parseAliProductId, detectBlock } from "../lib/aliexpress.js";
+import { imageStemKey, stemWeight, specificSku } from "../lib/sizeguide.js";
+import { parseHtmlTables, orientTable, looksLikeSizeTable, pickSizeTable, unitHintFrom, imageSrcsFrom } from "../lib/htmltable.js";
 
 let pass = 0;
 let fail = 0;
@@ -260,6 +262,58 @@ eq("format 84 cm → in", formatCell(84, "length", "in"), "33.1");
 eq("format range in", formatCell([84, 88], "length", "in"), "33.1–34.6");
 eq("format cm", formatCell([84, 88], "length", "cm"), "84–88");
 eq("format tekst", formatCell("8/10", "text", "in"), "8/10");
+
+
+/* ---------- bron-store: foto-sleutels ---------- */
+eq("stem: formaat-suffix weg", imageStemKey("https://cdn.shopify.com/s/files/1/0578/1234/products/Sd6b1c2e3f4a5_1024x1024.jpg?v=1"), "sd6b1c2e3f4a5");
+eq("stem: Shopify uuid-suffix weg", imageStemKey("https://cdn.shopify.com/s/files/1/0578/1234/files/Sd6b1c2e3f4a5_2ee5b6e2-7f2c-4b5b-9c7a-1a2b3c4d5e6f.jpg?v=2"), "sd6b1c2e3f4a5");
+eq("stem: zelfde foto op twee stores = zelfde sleutel", imageStemKey("https://cdn.shopify.com/s/files/1/0001/0001/products/H1b2c3d4e5f6.jpg"), imageStemKey("https://cdn.shopify.com/s/files/1/0999/0999/files/H1b2c3d4e5f6_800x.jpg?v=9"));
+eq("stem: te kort → leeg", imageStemKey("https://x.com/a.jpg"), "");
+const summ2 = productSummary({ id: 1, title: "Linen Shirt", product_type: "Shirt", tags: "Men", options: [{ name: "Size", values: ["S", "M"] }], variants: [{ option1: "S", sku: "SHIRT-001-S" }, { option1: "M", sku: "SHIRT-001-M" }], images: [{ src: "https://cdn.shopify.com/s/files/1/0/1/products/Sabc123def456_1024x1024.jpg", alt: "" }, { src: "https://cdn.shopify.com/s/files/1/0/1/products/size-chart-shirt.jpg", alt: "Size chart" }] });
+eq("summary: imageKeys (alleen specifieke namen)", summ2.imageKeys, ["sabc123def456"]);
+eq("stemWeight: AliExpress-naam = 2", stemWeight("sa6217b5cc13d441784517e6f4723b10e1"), 2);
+eq("stemWeight: O1CN-naam = 2", stemWeight(imageStemKey("https://cdn.shopify.com/s/files/1/0/1/files/O1CN01MWNnyd2MSp0ZlmeI0__3307449827-0-cib.jpg")), 2);
+eq("stemWeight: generiek = 0", [stemWeight("original"), stemWeight("black"), stemWeight("img2231"), stemWeight("22")], [0, 0, 0, 0]);
+eq("stemWeight: specifiek = 1", stemWeight("img20240301"), 1);
+eq("sku: AliExpress-optie-ID's niet", [specificSku("14:10#Dark green;5:361386"), specificSku("14:193;5:361386"), specificSku("S")], [false, false, false]);
+eq("sku: echte SKU wel", [specificSku("253-260413-04-Q5H4X3ZADAW-Grey-S"), specificSku("734857653437")], [true, true]);
+eq("summary: skus", summ2.skus, ["SHIRT-001-S", "SHIRT-001-M"]);
+eq("summary: chartImages (bestandsnaam/alt)", summ2.chartImages, ["https://cdn.shopify.com/s/files/1/0/1/products/size-chart-shirt.jpg"]);
+
+/* ---------- bron-store: HTML-tabellen ---------- */
+const HTML_NORMAL = `<p>Fit guide</p><table><thead><tr><th>Size</th><th>Bust (cm)</th><th>Length (cm)</th></tr></thead><tbody><tr><td>S</td><td>88</td><td>60</td></tr><tr><td>M</td><td>92</td><td>62</td></tr><tr><td>L</td><td>96</td><td>64</td></tr></tbody></table>`;
+const HTML_TRANSPOSED = `<table><tr><td>Size</td><td>S</td><td>M</td><td>L</td></tr><tr><td>Bust</td><td>34.6</td><td>36.2</td><td>37.8</td></tr><tr><td>Length</td><td>23.6</td><td>24.4</td><td>25.2</td></tr></table><p>All measurements in inches</p>`;
+const HTML_NOISE = `<table><tr><td>Material</td><td>Cotton</td></tr><tr><td>Care</td><td>Machine wash</td></tr></table>`;
+eq("tables: parse normaal", parseHtmlTables(HTML_NORMAL)[0].headers, ["Size", "Bust (cm)", "Length (cm)"]);
+eq("tables: 3 rijen", parseHtmlTables(HTML_NORMAL)[0].rows.length, 3);
+const tr = orientTable(parseHtmlTables(HTML_TRANSPOSED)[0]);
+eq("tables: transponeren koppen", tr.headers, ["Size", "Bust", "Length"]);
+eq("tables: transponeren rijen", tr.rows, [["S", "34.6", "23.6"], ["M", "36.2", "24.4"], ["L", "37.8", "25.2"]]);
+ok("tables: normaal blijft normaal", orientTable(parseHtmlTables(HTML_NORMAL)[0]).headers[1] === "Bust (cm)");
+ok("tables: ruis is geen maattabel", !looksLikeSizeTable(parseHtmlTables(HTML_NOISE)[0]));
+ok("tables: maattabel herkend", looksLikeSizeTable(parseHtmlTables(HTML_NORMAL)[0]));
+eq("tables: pick kiest maattabel, niet ruis", pickSizeTable(HTML_NOISE + HTML_NORMAL).headers[0], "Size");
+eq("tables: pick geeft null zonder tabel", pickSizeTable("<p>geen tabel</p>"), null);
+eq("tables: unitHint cm", pickSizeTable(HTML_NORMAL).unitHint, "cm");
+eq("tables: unitHint inch (tekst na tabel telt niet, koppen zonder unit)", pickSizeTable(HTML_TRANSPOSED).unitHint, null);
+const HTML_DUAL = `<table class="eight-sc__table"><thead><tr><th>Size</th><th>Length <span>(in)</span></th><th>Bust/Chest <span>(in)</span></th><th>Shoulder <span>(in)</span></th></tr></thead><tbody class="eight-sc__cm" hidden=""><tr><td>S</td><td>68</td><td>103</td><td>44</td></tr><tr><td>M</td><td>70</td><td>108</td><td>46</td></tr><tr><td>L</td><td>72</td><td>113</td><td>47</td></tr></tbody><tbody class="eight-sc__in"><tr><td>S</td><td>26.8</td><td>40.6</td><td>17.3</td></tr><tr><td>M</td><td>27.6</td><td>42.5</td><td>18.1</td></tr><tr><td>L</td><td>28.3</td><td>44.5</td><td>18.5</td></tr></tbody></table>`;
+const dual = pickSizeTable(HTML_DUAL);
+eq("dual-unit: cm-rijen gekozen", dual.rows, [["S", "68", "103", "44"], ["M", "70", "108", "46"], ["L", "72", "113", "47"]]);
+eq("dual-unit: unitHint cm + (in) uit koppen", [dual.unitHint, dual.headers], ["cm", ["Size", "Length", "Bust/Chest", "Shoulder"]]);
+const HTML_DUAL_FLAT = `<table><tr><td>Size</td><td>Bust</td></tr><tr><td>S</td><td>34</td></tr><tr><td>M</td><td>36</td></tr><tr><td>S</td><td>86</td></tr><tr><td>M</td><td>91</td></tr></table>`;
+eq("dual-unit zonder tbody: grootste = cm", pickSizeTable(HTML_DUAL_FLAT).rows, [["S", "86"], ["M", "91"]]);
+const gD = buildGuide({ chart: normalizeChart(dual), product: { title: "Hoodie", family: "men", gender: "men", sizes: ["S", "M", "L"], kind: "top" }, market: "USA", source: "source", confidence: 1 });
+ok("dual-unit → guide ok", gD.ok);
+eq("dual-unit → bust in cm (103 → 40.6 in)", gD.ok && formatCell(gD.guide.rows[0].bust, "length", "in"), "40.6");
+eq("unitHintFrom inches", unitHintFrom("All measurements in inches"), "in");
+eq("unitHintFrom cm", unitHintFrom("Bust (cm) Length (cm)"), "cm");
+eq("imgs uit html", imageSrcsFrom('<p><img src="//cdn.shopify.com/a.jpg"><img src="https://cdn.shopify.com/b.png" alt=""></p>'), ["https://cdn.shopify.com/a.jpg", "https://cdn.shopify.com/b.png"]);
+// getransponeerde bron-tabel → guide via de bestaande motor (websitematen leidend)
+const chartT = normalizeChart({ headers: tr.headers, rows: tr.rows, unitHint: "in" });
+const gT = buildGuide({ chart: chartT, product: { title: "Blouse", family: "women", gender: "women", sizes: ["S", "M", "L"], kind: "top" }, market: "USA", source: "source", confidence: 1 });
+ok("bron-tabel → guide ok", gT.ok);
+eq("bron-tabel → status source", gT.ok && gT.guide.status, "source");
+eq("bron-tabel → 3 rijen", gT.ok && gT.guide.rows.length, 3);
 
 console.log(`\n${pass} groen, ${fail} rood`);
 process.exit(fail ? 1 : 0);
