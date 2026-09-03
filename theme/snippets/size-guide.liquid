@@ -1,5 +1,7 @@
 {% comment %}
-  SIZE GUIDE — Attoh Tools (v2, 03-09-2026, gestyled op Soul Society Boutique / Impulse)
+  SIZE GUIDE — Attoh Tools (v2.1, 03-09-2026, gestyled op Soul Society Boutique / Impulse)
+  v2.1: fit-balk "Runs small · True to size · Runs large" met bolletje; stand
+  uit het metafield-veld `fit` ("small" | "true" | "large"), zonder veld = true.
   Toont de maattabel uit product-metafield custom.size_guide (json, geschreven
   door de Size Guide-module). Geen metafield → er wordt niets gerenderd.
 
@@ -32,6 +34,18 @@
   .sg-units button.on{color:var(--sg-ink);border-bottom-color:var(--sg-accent)}
   .sg-close{background:none;border:0;font:inherit;font-size:1.5rem;line-height:1;cursor:pointer;color:var(--sg-muted);padding:0 0 0 .4rem}
   .sg-close:hover{color:var(--sg-ink)}
+  .sg-fit{margin:.15rem 0 1.15rem;padding:0 .2rem}
+  .sg-fit-track{position:relative;height:2px;background:var(--sg-line);border-radius:2px;margin:0 .35rem}
+  .sg-fit-track::before,.sg-fit-track::after{content:"";position:absolute;top:50%;width:1px;height:8px;background:var(--sg-line);transform:translateY(-50%)}
+  .sg-fit-track::before{left:0}.sg-fit-track::after{right:0}
+  .sg-fit-dot{position:absolute;top:50%;left:50%;width:13px;height:13px;border-radius:50%;background:var(--sg-accent);border:2.5px solid var(--sg-bg);box-shadow:0 0 0 1.5px var(--sg-accent);transform:translate(-50%,-50%);transition:left .3s ease}
+  .sg-fit[data-fit="small"] .sg-fit-dot{left:10%}
+  .sg-fit[data-fit="large"] .sg-fit-dot{left:90%}
+  .sg-fit-labels{display:flex;justify-content:space-between;margin-top:.6rem;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--sg-muted)}
+  .sg-fit-labels span{flex:1}
+  .sg-fit-labels span:nth-child(2){text-align:center}
+  .sg-fit-labels span:nth-child(3){text-align:right}
+  .sg-fit[data-fit="true"] .sg-fit-labels span:nth-child(2),.sg-fit[data-fit="small"] .sg-fit-labels span:nth-child(1),.sg-fit[data-fit="large"] .sg-fit-labels span:nth-child(3){color:var(--sg-ink);font-weight:600}
   .sg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -.25rem}
   .sg-table{width:100%;border-collapse:collapse;font-size:.9rem;min-width:300px}
   .sg-table th,.sg-table td{text-align:left!important;padding:.7rem .8rem;border-bottom:1px solid var(--sg-line);white-space:nowrap;line-height:1.3}
@@ -75,6 +89,11 @@
           <button type="button" data-sg-unit="cm"{% if sg_unit == 'cm' %} class="on"{% endif %}>cm</button>
         </div>
         <button type="button" class="sg-close" aria-label="Close" data-sg-close>&times;</button>
+      </div>
+      {%- assign sg_fit = sg.fit | default: 'true' -%}
+      <div class="sg-fit" data-fit="{{ sg_fit }}" aria-label="Fit: {% if sg_fit == 'small' %}runs small{% elsif sg_fit == 'large' %}runs large{% else %}true to size{% endif %}">
+        <div class="sg-fit-track"><span class="sg-fit-dot"></span></div>
+        <div class="sg-fit-labels"><span>Runs small</span><span>True to size</span><span>Runs large</span></div>
       </div>
       <div class="sg-scroll">
         <table class="sg-table">

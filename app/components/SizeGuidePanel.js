@@ -67,7 +67,9 @@ export function GuidePreview({ guide }) {
           </tbody>
         </table>
       </div>
-      <div className="hint" style={{ marginTop: 6 }}>{guide.note}</div>
+      <div className="hint" style={{ marginTop: 6 }}>
+        Fit: {guide.fit === "small" ? "runs small" : guide.fit === "large" ? "runs large" : "true to size"} · {guide.note}
+      </div>
     </div>
   );
 }
