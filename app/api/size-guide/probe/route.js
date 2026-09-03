@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchSizeChart, resolveAliProductId, parseAliProductId } from "@/lib/aliexpress";
+import { fetchSizeChart, resolveAliProductId, parseAliProductId, apifyProxyConfigured } from "@/lib/aliexpress";
 import { imageSearchConfigured } from "@/lib/imagesearch";
 import { normalizeChart } from "@/lib/sizeguide";
 
@@ -17,7 +17,8 @@ export async function POST(req) {
       ok: true,
       env: {
         apify: imageSearchConfigured(),
-        proxy: String(process.env.SCRAPER_PROXY_URL || "").includes("{url}"),
+        proxy: String(process.env.SCRAPER_PROXY_URL || "").includes("{url}") || apifyProxyConfigured(),
+        apifyProxy: apifyProxyConfigured(),
         redis: !!process.env.REDIS_URL,
       },
     });
@@ -34,7 +35,8 @@ export async function POST(req) {
   const c = await fetchSizeChart(pid);
   const env = {
     apify: imageSearchConfigured(),
-    proxy: String(process.env.SCRAPER_PROXY_URL || "").includes("{url}"),
+    proxy: String(process.env.SCRAPER_PROXY_URL || "").includes("{url}") || apifyProxyConfigured(),
+    apifyProxy: apifyProxyConfigured(),
     redis: !!process.env.REDIS_URL,
   };
   if (!c.ok) {

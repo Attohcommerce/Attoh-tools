@@ -24,6 +24,9 @@ Mobiel: links uitgelijnd, tabel horizontaal scrollbaar. `font-family: inherit` o
 - `APIFY_TOKEN` — search-by-image op AliExpress (Apify, pay-per-result). Zonder token: alleen
   handmatige routes (AliExpress-URL plakken, screenshot → AI) + standaardtabellen.
 - `APIFY_IMAGE_ACTOR` — optioneel, default `freecamp008~aliexpress-search-by-image-actor`.
-- `SCRAPER_PROXY_URL` — optioneel, alleen als de Probe "GEBLOKKEERD" meldt. Sjabloon met `{url}`,
+- `APIFY_PROXY_PASSWORD` — Apify console → Proxy → password. AliExpress stuurt Vercel (datacenter-IP)
+  naar een login-pagina; met dit wachtwoord gaan geblokkeerde requests via Apify's residential proxy
+  (US). Optioneel `APIFY_PROXY_GROUPS` (default RESIDENTIAL) en `APIFY_PROXY_COUNTRY` (default US).
+- `SCRAPER_PROXY_URL` — alternatief voor bovenstaande: sjabloon met `{url}`,
   bv. `https://api.scraperapi.com?api_key=KEY&url={url}`.
 - `REDIS_URL` — bestaat al (To Do-board); wordt gebruikt als match-cache (120 dagen).
