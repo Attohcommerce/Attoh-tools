@@ -9,7 +9,7 @@ export const maxDuration = 60;
 // alles van ná `sinceISO` = de lopende import-run) en draait alle gratis
 // deterministische checks. AI-checks lopen apart via /api/doctor-ai.
 export async function POST(req) {
-  const { store, max, sinceISO, vendorName, market } = await req.json().catch(() => ({}));
+  const { store, max, sinceISO, vendorName, market, bareSystem } = await req.json().catch(() => ({}));
   if (!store || !store.domain) {
     return NextResponse.json({ error: "Geen store opgegeven" }, { status: 400 });
   }
@@ -39,6 +39,7 @@ export async function POST(req) {
       vendorName: vendorName || store.name || "",
       menTemplate: "men",
       market: market || "",
+      bareSystem: bareSystem || "",
       guides,
     });
 

@@ -15,10 +15,11 @@
       beslissing in het verslag. */
 
 import { useEffect, useRef, useState } from "react";
-import { MARKETS, MARKET_SIZE_GUIDE } from "@/lib/sizes";
+import { MARKETS, MARKET_SIZE_GUIDE, BARE_SYSTEMS } from "@/lib/sizes";
 
 const LS_BACKUP = "sa_doctor_backup";
 const LS_MARKET = "sa_doctor_market::"; // + store-domein
+const LS_BARESYS = "sa_doctor_baresys::"; // + store-domein — wat kale maat-nummers zijn (us/uk/au/eu)
 const WERKBOEK = "1Y3wg8X5ivuwaUTfUapzgUOIMzVqr0KRs6g2FR1COuKE"; // Import-werkboek (default)
 
 // Slimme default: de store-valuta verraadt de markt
@@ -109,6 +110,7 @@ export default function DoctorPanel({ store, since }) {
   const [verslag, setVerslag] = useState(null); // eindverslag van FIX ALLES
 
   const [market, setMarket] = useState("");
+  const [bareSystem, setBareSystem] = useState("");
   const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
@@ -128,12 +130,23 @@ export default function DoctorPanel({ store, since }) {
       v = localStorage.getItem(LS_MARKET + store.domain) || "";
     } catch {}
     setMarket(v || CUR_MARKET[String(store.currency || "").toUpperCase()] || "USA");
+    let b = "";
+    try {
+      b = localStorage.getItem(LS_BARESYS + store.domain) || "";
+    } catch {}
+    setBareSystem(b);
   }, [store && store.domain]);
 
   function pickMarket(m) {
     setMarket(m);
     try {
       localStorage.setItem(LS_MARKET + store.domain, m);
+    } catch {}
+  }
+  function pickBareSystem(v) {
+    setBareSystem(v);
+    try {
+      localStorage.setItem(LS_BARESYS + (store && store.domain), v);
     } catch {}
   }
 
@@ -163,6 +176,7 @@ export default function DoctorPanel({ store, since }) {
           sinceISO: since && useSince ? since : null,
           vendorName: store.name || "",
           market,
+          bareSystem,
         }),
       });
       const data = await r.json();
@@ -184,7 +198,7 @@ export default function DoctorPanel({ store, since }) {
   // Standaard-opties die élke fix meekrijgt (markt voor de maten-conversie,
   // storenaam voor de vendor-fix, kortingsmix voor de doorstreepprijzen).
   function fixOptions(extra) {
-    return { vendorName: store.name || "", pcts: [30, 40, 50], menTemplate: "men", market, ...(extra || {}) };
+    return { vendorName: store.name || "", pcts: [30, 40, 50], menTemplate: "men", market, bareSystem, ...(extra || {}) };
   }
 
   function backupPlanFor(fixId) {
@@ -522,6 +536,24 @@ export default function DoctorPanel({ store, since }) {
           ))}
         </div>
       ) : null}
+      <div className="field-label" style={{ marginTop: 8 }}>
+        Kale maat-nummers zijn <span className="opt">(6/10/14, schoenen 5–11, "S(4-6)" — uit het nummer zelf niet te zien; zeg wat de bron is en de fix rekent om naar {market || "de doelmarkt"})</span>
+      </div>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        {BARE_SYSTEMS.map((b) => (
+          <button
+            key={b.key || "auto"}
+            type="button"
+            className="btn-ghost btn-small"
+            title={b.info}
+            onClick={() => pickBareSystem(b.key)}
+            style={bareSystem === b.key ? { borderColor: "var(--ok)", color: "var(--ok)", fontWeight: 700 } : {}}
+          >
+            {b.label}
+          </button>
+        ))}
+        <span className="hint">{(BARE_SYSTEMS.find((b) => b.key === bareSystem) || BARE_SYSTEMS[0]).info}</span>
+      </div>
 
       {since ? (
         <label className="hint" style={{ display: "flex", gap: 6, alignItems: "center", cursor: "pointer" }}>
