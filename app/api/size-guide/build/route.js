@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildForProduct } from "@/lib/sizeguide-run";
+import { buildForProduct, isFastSteps } from "@/lib/sizeguide-run";
 
 export const maxDuration = 60;
 
@@ -11,6 +11,7 @@ export const maxDuration = 60;
    meer past valt op het vangnet terug (standaardtabel) en wordt de volgende
    run gewoon opnieuw geprobeerd. Met aliInput (handmatige URL/ID) 1 product. */
 const CHUNK = 3;
+const FAST_CHUNK = 150; // alleen standaardtabellen = puur rekenwerk → grote stappen
 const BUDGET_MS = 52000;
 
 export async function POST(req) {
@@ -27,10 +28,12 @@ export async function POST(req) {
     fallbackStandard = true,
     force = false,
     aliInput = null,
+    steps = null,
   } = body;
   if (!store || !store.domain) return NextResponse.json({ error: "Geen store opgegeven" }, { status: 400 });
   if (!Array.isArray(items) || !items.length) return NextResponse.json({ error: "items ontbreekt" }, { status: 400 });
-  const slice = items.slice(cursor, cursor + (aliInput ? 1 : CHUNK));
+  const fast = !aliInput && isFastSteps(steps, { useSearch, useSource, fallbackStandard });
+  const slice = items.slice(cursor, cursor + (aliInput ? 1 : fast ? FAST_CHUNK : CHUNK));
   const deadline = started + BUDGET_MS;
   const domains = Array.isArray(sourceDomains) ? sourceDomains.slice(0, 200) : [];
 
@@ -47,6 +50,7 @@ export async function POST(req) {
         force,
         fallbackStandard,
         deadline,
+        steps,
       })
     )
   );
@@ -68,5 +72,5 @@ export async function POST(req) {
   });
   // Bij een fatal: cursor niet voorbij de niet-verwerkte producten zetten
   const nextCursor = fatal ? cursor + results.length : cursor + slice.length;
-  return NextResponse.json({ ok: true, results, nextCursor, done: !fatal && nextCursor >= items.length, fatal, ms: Date.now() - started });
+  return NextResponse.json({ ok: true, results, nextCursor, done: !fatal && nextCursor >= items.length, fatal, fast, ms: Date.now() - started });
 }

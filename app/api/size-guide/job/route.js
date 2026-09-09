@@ -31,6 +31,7 @@ export async function POST(req) {
         useSearch: body.useSearch,
         sourceDomains: body.sourceDomains,
         fallbackStandard: body.fallbackStandard,
+        steps: body.steps || null,
         autoWrite: body.autoWrite,
         backup: backupOn ? body.backup : null,
         baseUrl,

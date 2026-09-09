@@ -9,7 +9,8 @@ export const maxDuration = 60;
    cijfer, JSON — de AliExpress-ID staat ALLEEN hier, nooit in Shopify),
    dan metafieldsSet (guide-JSON + status). Faalt de sheet-write → niets
    geschreven, zelfde regel als de Store Doctor. */
-const CHUNK = 20;
+// 60 producten per call: één sheet-append + 5× metafieldsSet (24 velden) ≈ 4–8 s.
+const CHUNK = 60;
 const DEFS = [
   { namespace: SG_NS, key: SG_KEY, name: "Size guide", type: "json", description: "Maattabel (Attoh Tools Size Guide)" },
   { namespace: SG_NS, key: SG_STATUS_KEY, name: "Size guide status", type: "single_line_text_field", description: "aliexpress | standard | manual" },

@@ -17,6 +17,29 @@ const LS_MARKET = "sa_doctor_market::"; // zelfde sleutel als de Store Doctor �
 const WERKBOEK = "1Y3wg8X5ivuwaUTfUapzgUOIMzVqr0KRs6g2FR1COuKE";
 const CUR_MARKET = { USD: "USA", GBP: "UK", AUD: "AUS+NZ", NZD: "AUS+NZ", CAD: "CAN" };
 
+const LS_OPTS = "sa_sizeguide_opts";
+/* Instellingen-menu: elke stap los aan/uit. rec = aanbeveling ("aan" | "uit" | "optioneel"). */
+const OPTION_DEFS = [
+  { key: "onlyMissing", label: "Alleen producten zonder tabel (of met standaardtabel)", info: "Uit = álle producten met maten opnieuw bouwen, ook die al een leveranciers- of handmatige tabel hebben.", rec: "aan" },
+  { key: "fallbackStandard", label: "Standaardtabel per productsoort", info: "Lichaamsmaten per soort (top, jurk, broek, schoen…) met exact de maten van het product. Uit = product zonder bron krijgt niets.", rec: "aan" },
+  { key: "autoWrite", label: "Direct naar Shopify schrijven", info: "Groen, amber en standaard meteen wegschrijven. Uit = alleen bekijken, niets aangepast.", rec: "aan" },
+  { key: "useLog", label: "Log-sheet bijhouden", info: "Elke write eerst in een tabblad van het werkboek (herkomst, cijfer, JSON). Uit = ±1 s per 60 producten sneller, geen backup om terug te zetten.", rec: "optioneel" },
+  { key: "ownImage", label: "Eigen productfoto's scannen op een maattabel (AI)", info: "Alleen als een productfoto een maattabel is. Kost ±$0,002 en 2–5 s per product.", rec: "uit" },
+  { key: "source", label: "Bron-store van de concurrent doorzoeken", info: "Indexeert eerst alle scraper-stores (minuten), daarna per product 2–10 s. Levert echte leveranciersmaten als het bronproduct gevonden wordt.", rec: "uit" },
+  { key: "ali", label: "AliExpress-maattabel ophalen", info: "Alleen voor producten met een bekend AliExpress-ID (cache of handmatig). Vaak geblokkeerd; 5–20 s per product.", rec: "uit" },
+  { key: "search", label: "AliExpress zoeken op foto (Apify + AI-match)", info: "Search-by-image + AI kiest de match. Kost ±$0,01 en 10–20 s per product; vindt vaak niets. Vereist APIFY_TOKEN.", rec: "uit", needs: "ali" },
+  { key: "browser", label: "Echte browser bij blokkade (Apify Playwright)", info: "Laatste redmiddel als AliExpress blokkeert. Kost ±$0,005–0,01 en 20–40 s per product.", rec: "uit", needs: "ali" },
+];
+const PRESET_FAST = { onlyMissing: true, fallbackStandard: true, autoWrite: true, useLog: true, ownImage: false, source: false, ali: false, search: false, browser: false };
+const PRESET_FULL = { onlyMissing: true, fallbackStandard: true, autoWrite: true, useLog: true, ownImage: true, source: true, ali: true, search: true, browser: true };
+function loadOpts() {
+  try {
+    const v = JSON.parse(localStorage.getItem(LS_OPTS) || "null");
+    if (v && typeof v === "object") return { ...PRESET_FAST, ...v };
+  } catch {}
+  return { ...PRESET_FAST };
+}
+
 const VERDICT_LABEL = { green: "groen", amber: "amber", standard: "standaard", red: "rood", none: "geen maten" };
 const CHECK_LABEL = { ok: "✓ klopt", warn: "let op", error: "past niet", missing: "geen tabel", skip: "n.v.t." };
 
@@ -98,10 +121,34 @@ function fileToDataUrl(file) {
 export default function SizeGuidePanel({ store, since }) {
   const [market, setMarket] = useState("USA");
   const [logSheet, setLogSheet] = useState("");
-  const [onlyMissing, setOnlyMissing] = useState(true);
-  const [useSearch, setUseSearch] = useState(true);
-  const [fallbackStandard, setFallbackStandard] = useState(true);
-  const [autoWrite, setAutoWrite] = useState(true);
+  const [opts, setOpts] = useState(PRESET_FAST);
+  const [optsOpen, setOptsOpen] = useState(false);
+  const onlyMissing = opts.onlyMissing;
+  const useSearch = opts.search && opts.ali;
+  const fallbackStandard = opts.fallbackStandard;
+  const autoWrite = opts.autoWrite;
+  const steps = { ownImage: opts.ownImage, source: opts.source, ali: opts.ali, search: opts.search && opts.ali, browser: opts.browser && opts.ali, fallbackStandard: opts.fallbackStandard };
+  const fastRun = !steps.ownImage && !steps.source && !steps.ali;
+  function setOpt(key, val) {
+    setOpts((cur) => {
+      const next = { ...cur, [key]: val };
+      if (key === "ali" && !val) {
+        next.search = false;
+        next.browser = false;
+      }
+      if ((key === "search" || key === "browser") && val) next.ali = true;
+      try {
+        localStorage.setItem(LS_OPTS, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }
+  function applyPreset(p) {
+    setOpts({ ...p });
+    try {
+      localStorage.setItem(LS_OPTS, JSON.stringify(p));
+    } catch {}
+  }
 
   const [items, setItems] = useState(null);
   const [counts, setCounts] = useState(null);
@@ -130,6 +177,7 @@ export default function SizeGuidePanel({ store, since }) {
   const srcDomainsRef = useRef(null);
 
   useEffect(() => {
+    setOpts(loadOpts());
     try {
       const v = localStorage.getItem(LS_LOG);
       setLogSheet(v != null ? v : WERKBOEK);
@@ -198,7 +246,7 @@ export default function SizeGuidePanel({ store, since }) {
   }
 
   const storeBody = store ? { domain: store.domain, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret, name: store.name } : null;
-  const backup = logSheet ? { sheetId: logSheet.trim(), tab: tabRef.current } : null;
+  const backup = opts.useLog && logSheet ? { sheetId: logSheet.trim(), tab: tabRef.current } : null;
 
   async function post(path, body) {
     const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -371,6 +419,12 @@ export default function SizeGuidePanel({ store, since }) {
     return { written, failed };
   }
 
+  function describeSteps() {
+    if (fastRun) return "SNEL: alleen standaardtabellen (geen AliExpress, geen bron-stores, geen AI)";
+    const on = OPTION_DEFS.filter((d) => !["onlyMissing", "autoWrite", "useLog"].includes(d.key) && opts[d.key] && (!d.needs || opts[d.needs])).map((d) => d.label.split(" (")[0].toLowerCase());
+    return `stappen: ${on.join(" · ")}`;
+  }
+
   /* Korte bronvermelding voor het log: waar komt de tabel vandaan (of waarom niet) */
   function describeSource(r) {
     if (r.source === "standard") {
@@ -394,7 +448,7 @@ export default function SizeGuidePanel({ store, since }) {
       setErr(customList ? "Geen problemen om te herstellen." : "Niets te doen — alle producten met maten hebben al een maattabel (zet 'alleen zonder maattabel' uit om te herbouwen).");
       return;
     }
-    if (!logSheet && !window.confirm("Geen log-sheet ingevuld. Doorgaan zonder log?")) return;
+    if (opts.useLog && !logSheet && !window.confirm("Geen log-sheet ingevuld. Doorgaan zonder log?")) return;
     setErr("");
     // Zonder APIFY_TOKEN kan er niet op foto gezocht worden — dan zou de hele
     // run stilletjes in standaardtabellen eindigen. Eerst hard waarschuwen.
@@ -415,18 +469,20 @@ export default function SizeGuidePanel({ store, since }) {
     stopRef.current = false;
     const p = { done: 0, total: list.length, green: 0, amber: 0, standard: 0, red: 0, usd: 0 };
     setProg({ ...p });
-    addLog(`${customLabel || "Start"}: ${list.length} producten · markt ${market} · bron-stores aan · image-search ${useSearch ? "aan" : "uit"} · vangnet ${fallbackStandard ? "aan" : "uit"}`, "muted");
+    addLog(`${customLabel || "Start"}: ${list.length} producten · markt ${market} · ${describeSteps()}`, "muted");
     const toWrite = [];
     let cursor = 0;
     try {
       let srcDomains = [];
-      try {
-        srcDomains = await indexSources(false);
-      } catch (e) {
-        addLog(`Bron-stores overgeslagen: ${e.message}`, "warn");
+      if (steps.source) {
+        try {
+          srcDomains = await indexSources(false);
+        } catch (e) {
+          addLog(`Bron-stores overgeslagen: ${e.message}`, "warn");
+        }
       }
       while (cursor < list.length && !stopRef.current) {
-        const d = await post("/api/size-guide/build", { store: storeBody, market, items: list, cursor, useSearch, useSource: true, sourceDomains: srcDomains, fallbackStandard });
+        const d = await post("/api/size-guide/build", { store: storeBody, market, items: list, cursor, useSearch, useSource: steps.source, sourceDomains: srcDomains, fallbackStandard, steps });
         for (const r of d.results) {
           setResults((cur) => ({ ...cur, [r.id]: r }));
           p.done++;
@@ -483,15 +539,17 @@ export default function SizeGuidePanel({ store, since }) {
       setErr("Niets te doen — alle producten met maten hebben al een maattabel (zet 'alleen zonder maattabel' uit om te herbouwen).");
       return;
     }
-    if (!logSheet && !window.confirm("Geen log-sheet ingevuld. Doorgaan zonder log?")) return;
+    if (opts.useLog && !logSheet && !window.confirm("Geen log-sheet ingevuld. Doorgaan zonder log?")) return;
     setErr("");
     setCloudBusy(true);
     try {
       let srcDomains = [];
-      try {
-        srcDomains = await indexSources(false);
-      } catch (e) {
-        addLog(`Bron-stores overgeslagen: ${e.message}`, "warn");
+      if (steps.source) {
+        try {
+          srcDomains = await indexSources(false);
+        } catch (e) {
+          addLog(`Bron-stores overgeslagen: ${e.message}`, "warn");
+        }
       }
       const slim = list.map(({ guide, ...it }) => it);
       const d = await post("/api/size-guide/job", {
@@ -500,8 +558,10 @@ export default function SizeGuidePanel({ store, since }) {
         market,
         items: slim,
         useSearch,
+        useSource: steps.source,
         sourceDomains: srcDomains,
         fallbackStandard,
+        steps,
         autoWrite,
         backup,
         skipBackup: !backup,
@@ -545,12 +605,12 @@ export default function SizeGuidePanel({ store, since }) {
   }, [cloud && cloud.id, cloud && cloud.status]);
 
   /* ---------- Handmatige routes per product ---------- */
-  async function rowBuild(it, opts, label) {
+  async function rowBuild(it, o, label) {
     setErr("");
     setRowBusy(it.id);
     try {
-      const srcDomains = opts.aliInput ? [] : await sourceDomains();
-      const d = await post("/api/size-guide/build", { store: storeBody, market, items: [it], cursor: 0, useSource: !opts.aliInput, sourceDomains: srcDomains, ...opts });
+      const srcDomains = o.aliInput || !steps.source ? [] : await sourceDomains();
+      const d = await post("/api/size-guide/build", { store: storeBody, market, items: [it], cursor: 0, useSource: !o.aliInput && steps.source, sourceDomains: srcDomains, steps, ...o });
       const r = d.results[0];
       setResults((cur) => ({ ...cur, [r.id]: r }));
       if (r.ok && r.guide) {
@@ -571,10 +631,10 @@ export default function SizeGuidePanel({ store, since }) {
     rowBuild(it, { aliInput: v.trim(), useSearch: false, fallbackStandard: false }, "AliExpress-URL");
   }
   function rowStandard(it) {
-    rowBuild(it, { useSearch: false, fallbackStandard: true, force: true }, "Standaardtabel");
+    rowBuild(it, { useSearch: false, fallbackStandard: true, force: true, steps: { ownImage: false, source: false, ali: false, search: false, browser: false, fallbackStandard: true } }, "Standaardtabel");
   }
   function rowRetry(it) {
-    rowBuild(it, { useSearch: true, fallbackStandard, force: true }, "Opnieuw gezocht");
+    rowBuild(it, { useSearch: true, fallbackStandard, force: true, steps: { ...steps, ali: true, search: true } }, "Opnieuw gezocht");
   }
   function rowScreenshot(it) {
     fileTarget.current = it;
@@ -656,14 +716,50 @@ export default function SizeGuidePanel({ store, since }) {
       </div>
       <div className="field-label">Log-sheet (ID) <span className="opt">— per run een tabblad "SizeGuide &lt;datum&gt;" met herkomst, cijfer en JSON</span></div>
       <input type="text" value={logSheet} onChange={(e) => saveLogSheet(e.target.value)} placeholder="Google Sheet ID" disabled={busy} style={{ width: "100%", marginBottom: 10 }} />
-      <div className="toggle-row"><span className={"switch" + (onlyMissing ? " on" : "")} onClick={() => !busy && setOnlyMissing(!onlyMissing)} /> Alleen producten zonder maattabel (of met standaardtabel)</div>
-      <div className="toggle-row"><span className={"switch" + (useSearch ? " on" : "")} onClick={() => !busy && setUseSearch(!useSearch)} /> AliExpress zoeken op foto (Apify + AI-match + echte browser) — bron-store van de concurrent gaat altijd vóór{envInfo && !envInfo.apify ? <span className="badge" style={{ marginLeft: 8 }}>APIFY_TOKEN ontbreekt in Vercel</span> : null}</div>
-      <div className="toggle-row"><span className={"switch" + (fallbackStandard ? " on" : "")} onClick={() => !busy && setFallbackStandard(!fallbackStandard)} /> Vangnet: standaardtabel als er geen betrouwbare match is</div>
-      <div className="toggle-row"><span className={"switch" + (autoWrite ? " on" : "")} onClick={() => !busy && setAutoWrite(!autoWrite)} /> Groen, amber en standaard direct naar Shopify schrijven</div>
+      {/* ---------- instellingen-menu: elke stap los aan/uit ---------- */}
+      <div style={{ border: "1px solid var(--line, #e8e4de)", borderRadius: 6, marginBottom: 10 }}>
+        <button
+          type="button"
+          onClick={() => setOptsOpen(!optsOpen)}
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: "none", border: 0, padding: "10px 12px", cursor: "pointer", font: "inherit", textAlign: "left" }}
+        >
+          <span style={{ display: "inline-block", transform: optsOpen ? "rotate(90deg)" : "none", transition: "transform .15s" }}>▸</span>
+          <strong>Instellingen</strong>
+          <span className={fastRun ? "badge badge-green" : "badge badge-amber"}>{fastRun ? "snel — alleen standaardtabellen" : "volledig — met bronnen (traag, kost geld)"}</span>
+          <span className="muted small">{OPTION_DEFS.filter((d) => opts[d.key] && (!d.needs || opts[d.needs])).length}/{OPTION_DEFS.length} aan</span>
+        </button>
+        {optsOpen && (
+          <div style={{ padding: "0 12px 12px" }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+              <button type="button" className="btn-ghost btn-small" onClick={() => applyPreset(PRESET_FAST)} disabled={busy}>Preset: Snel (aanbevolen)</button>
+              <button type="button" className="btn-ghost btn-small" onClick={() => applyPreset(PRESET_FULL)} disabled={busy}>Preset: Volledig (leveranciersmaten)</button>
+            </div>
+            {OPTION_DEFS.map((d) => {
+              const blocked = d.needs && !opts[d.needs];
+              const on = !!opts[d.key] && !blocked;
+              const recCls = d.rec === "aan" ? "badge badge-green" : d.rec === "uit" ? "badge" : "badge badge-amber";
+              return (
+                <div key={d.key} className="toggle-row" style={{ alignItems: "flex-start", opacity: blocked ? 0.5 : 1, padding: "6px 0" }}>
+                  <span className={"switch" + (on ? " on" : "")} onClick={() => !busy && !blocked && setOpt(d.key, !opts[d.key])} style={{ flex: "none", marginTop: 2 }} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+                    <span>
+                      {d.label}
+                      <span className={recCls} style={{ marginLeft: 8 }}>{d.rec === "aan" ? "aan laten" : d.rec === "uit" ? "uit laten" : "optioneel"}</span>
+                      {blocked ? <span className="muted small" style={{ marginLeft: 8 }}>(vereist AliExpress)</span> : null}
+                      {d.key === "search" && envInfo && !envInfo.apify ? <span className="badge" style={{ marginLeft: 8 }}>APIFY_TOKEN ontbreekt in Vercel</span> : null}
+                    </span>
+                    <span className="muted small">{d.info}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12, alignItems: "center" }}>
         <button className="btn" onClick={scan} disabled={busy || !store}>{busy && !items ? <span className="spin" /> : null} Scan store</button>
-        <button className="btn" onClick={() => run()} disabled={busy || !items || !sel}>Bouw maattabellen ({sel})</button>
+        <button className="btn" onClick={() => run()} disabled={busy || !items || !sel}>Bouw maattabellen ({sel}){fastRun ? " — snel" : ""}</button>
         <button className="btn" onClick={() => cloudStart()} disabled={busy || cloudBusy || !items || !sel || (cloud && cloud.status === "running")} title="Draait volledig in Vercel — deze pagina en je pc mogen dicht">
           {cloudBusy ? <span className="spin" /> : null} Bouw in de cloud ({sel}) — pc mag uit
         </button>
