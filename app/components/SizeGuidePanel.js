@@ -118,6 +118,9 @@ export default function SizeGuidePanel({ store, since }) {
   const [openId, setOpenId] = useState(null);
   const [probe, setProbe] = useState(null);
   const [envInfo, setEnvInfo] = useState(null); // {apify, proxy, redis} — bij laden opgehaald
+  const [cloud, setCloud] = useState(null); // publieke job-status van de cloud-run (pc mag uit)
+  const [cloudBusy, setCloudBusy] = useState(false);
+  const cloudSeen = useRef(""); // laatste job-id+status die we in het log hebben gemeld
   const stopRef = useRef(false);
   const fileRef = useRef(null);
   const fileTarget = useRef(null);
@@ -139,6 +142,31 @@ export default function SizeGuidePanel({ store, since }) {
       .then((d) => d && d.env && setEnvInfo(d.env))
       .catch(() => {});
   }, []);
+  // Cloud-run: bij store-keuze de status ophalen en zolang hij loopt elke 8 s
+  // pollen (de status-route start zelf een tick als de keten stil ligt).
+  useEffect(() => {
+    if (!store || !store.domain) return;
+    let stop = false;
+    let timer = null;
+    const poll = async () => {
+      try {
+        const d = await post("/api/size-guide/job", { action: "status", domain: store.domain });
+        if (stop) return;
+        setCloud(d.job || null);
+        const running = d.job && d.job.status === "running";
+        timer = setTimeout(poll, running ? 8000 : 45000);
+      } catch {
+        if (!stop) timer = setTimeout(poll, 30000);
+      }
+    };
+    poll();
+    return () => {
+      stop = true;
+      if (timer) clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store && store.domain]);
+
   useEffect(() => {
     if (!store || !store.domain) return;
     let v = "";
@@ -445,6 +473,77 @@ export default function SizeGuidePanel({ store, since }) {
     }
   }
 
+  /* ---------- Cloud-run: hele batch server-side (pc mag uit) ----------
+     Zelfde selectie/instellingen als "Bouw maattabellen", maar de loop draait
+     in Vercel (Redis-state, ticks van ±45 s die elkaar aanroepen). Deze
+     pagina hoeft niet open te blijven; de status-poll toont de voortgang. */
+  async function cloudStart(customList, customLabel) {
+    const list = customList || selection();
+    if (!list.length) {
+      setErr("Niets te doen — alle producten met maten hebben al een maattabel (zet 'alleen zonder maattabel' uit om te herbouwen).");
+      return;
+    }
+    if (!logSheet && !window.confirm("Geen log-sheet ingevuld. Doorgaan zonder log?")) return;
+    setErr("");
+    setCloudBusy(true);
+    try {
+      let srcDomains = [];
+      try {
+        srcDomains = await indexSources(false);
+      } catch (e) {
+        addLog(`Bron-stores overgeslagen: ${e.message}`, "warn");
+      }
+      const slim = list.map(({ guide, ...it }) => it);
+      const d = await post("/api/size-guide/job", {
+        action: "start",
+        store: storeBody,
+        market,
+        items: slim,
+        useSearch,
+        sourceDomains: srcDomains,
+        fallbackStandard,
+        autoWrite,
+        backup,
+        skipBackup: !backup,
+        label: customLabel || "Cloud-run",
+      });
+      setCloud(d.job);
+      addLog(`Cloud-run gestart: ${list.length} producten · markt ${market}${d.kicked ? "" : " · eerste tick kon niet gestart worden — de status-poll pakt 'm op"}. Je mag deze pagina (en de pc) sluiten; de voortgang staat hier zodra je terugkomt.`, "ok");
+      sfx("done");
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setCloudBusy(false);
+    }
+  }
+  async function cloudAction(action) {
+    if (!store) return;
+    setErr("");
+    setCloudBusy(true);
+    try {
+      const d = await post("/api/size-guide/job", { action, domain: store.domain });
+      setCloud(d.job);
+      if (action === "resume") addLog("Cloud-run hervat.", "muted");
+      if (action === "stop") addLog("Cloud-run: stop gevraagd — stopt na de lopende ronde.", "warn");
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setCloudBusy(false);
+    }
+  }
+  // Klaar/gestopt → één keer melden en de lijst verversen (scan), zodat de
+  // nieuwe tabellen en de check-badges kloppen.
+  useEffect(() => {
+    if (!cloud || cloud.status === "running") return;
+    const key = `${cloud.id}:${cloud.status}`;
+    if (cloudSeen.current === key) return;
+    cloudSeen.current = key;
+    const p = cloud.prog || {};
+    addLog(`Cloud-run ${cloud.status === "done" ? "klaar" : cloud.status === "stopped" ? "gestopt" : "gestopt met fout"}: ${p.done || 0}/${cloud.total} · groen ${p.green || 0} · amber ${p.amber || 0} · standaard ${p.standard || 0} · rood ${p.red || 0} · geschreven ${p.written || 0}${cloud.error ? ` · ${cloud.error}` : ""}`, cloud.status === "done" ? "ok" : "warn");
+    if (items && !busy && cloud.finishedAt && Date.now() - cloud.finishedAt < 10 * 60 * 1000) scan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cloud && cloud.id, cloud && cloud.status]);
+
   /* ---------- Handmatige routes per product ---------- */
   async function rowBuild(it, opts, label) {
     setErr("");
@@ -565,6 +664,9 @@ export default function SizeGuidePanel({ store, since }) {
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12, alignItems: "center" }}>
         <button className="btn" onClick={scan} disabled={busy || !store}>{busy && !items ? <span className="spin" /> : null} Scan store</button>
         <button className="btn" onClick={() => run()} disabled={busy || !items || !sel}>Bouw maattabellen ({sel})</button>
+        <button className="btn" onClick={() => cloudStart()} disabled={busy || cloudBusy || !items || !sel || (cloud && cloud.status === "running")} title="Draait volledig in Vercel — deze pagina en je pc mogen dicht">
+          {cloudBusy ? <span className="spin" /> : null} Bouw in de cloud ({sel}) — pc mag uit
+        </button>
         <button className="btn-ghost" onClick={() => runCheck()} disabled={busy || !items}>Check alles</button>
         {checkSum && problemList().length > 0 && (
           <button className="btn-ghost" onClick={() => run(problemList(), "Herstel problemen")} disabled={busy}>Herstel problemen ({problemList().length})</button>
@@ -596,6 +698,37 @@ export default function SizeGuidePanel({ store, since }) {
           <span className="badge">{checkSum.error} passen niet</span>
           <span className="badge">{checkSum.missing} zonder tabel</span>
           <span className="muted small">{checkSum.standard} standaardtabel · {checkSum.skip} n.v.t. (accessoires / geen maten)</span>
+        </div>
+      )}
+
+      {/* ---------- cloud-run status ---------- */}
+      {cloud && (
+        <div className="prog-card" style={{ marginTop: 12 }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}>
+            <strong>
+              Cloud-run {cloud.status === "running" ? (cloud.stale ? "· keten stil, wordt hervat…" : cloud.stopRequested ? "· stopt…" : "· draait") : cloud.status === "done" ? "· klaar" : cloud.status === "stopped" ? "· gestopt" : "· fout"}
+            </strong>
+            <strong>{(cloud.prog && cloud.prog.done) || 0}/{cloud.total}</strong>
+            <span className="badge badge-green">groen {cloud.prog ? cloud.prog.green : 0}</span>
+            <span className="badge badge-amber">amber {cloud.prog ? cloud.prog.amber : 0}</span>
+            <span className="badge badge-amber">standaard {cloud.prog ? cloud.prog.standard : 0}</span>
+            <span className="badge">rood {cloud.prog ? cloud.prog.red : 0}</span>
+            <span className="muted small">geschreven {cloud.prog ? cloud.prog.written : 0}{cloud.pendingWrites ? ` (+${cloud.pendingWrites} wacht)` : ""} · AI ±${cloud.prog ? Number(cloud.prog.usd || 0).toFixed(2) : "0.00"} · ticks {cloud.ticks || 0}</span>
+            <span style={{ flex: 1 }} />
+            {cloud.status === "running" && <button className="btn-ghost btn-small" onClick={() => cloudAction("stop")} disabled={cloudBusy || cloud.stopRequested}>Stop cloud-run</button>}
+            {cloud.status !== "running" && cloud.status !== "done" && <button className="btn-ghost btn-small" onClick={() => cloudAction("resume")} disabled={cloudBusy}>Hervat</button>}
+            {cloud.status === "running" && cloud.stale && <button className="btn-ghost btn-small" onClick={() => cloudAction("resume")} disabled={cloudBusy}>Hervat nu</button>}
+          </div>
+          <div className="progressbar" style={{ marginTop: 8 }}><div style={{ width: `${Math.round((((cloud.prog && cloud.prog.done) || 0) / Math.max(1, cloud.total)) * 100)}%` }} /></div>
+          {cloud.error && <div className="log err" style={{ marginTop: 8 }}>{cloud.error}</div>}
+          {cloud.log && cloud.log.length > 0 && (
+            <div style={{ marginTop: 8, maxHeight: 180, overflowY: "auto" }}>
+              {cloud.log.slice(-40).reverse().map((l, i) => (
+                <div key={`${l.t}-${i}`} className={"log " + (l.cls || "")}>{l.text}</div>
+              ))}
+            </div>
+          )}
+          <div className="hint" style={{ marginTop: 6 }}>Draait in Vercel — deze pagina en je pc mogen dicht. Gestart {new Date(cloud.startedAt).toLocaleString("nl-NL")}{cloud.finishedAt ? ` · klaar ${new Date(cloud.finishedAt).toLocaleString("nl-NL")}` : ""}.</div>
         </div>
       )}
 
