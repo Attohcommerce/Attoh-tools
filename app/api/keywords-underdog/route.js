@@ -188,7 +188,7 @@ async function prepStep(body) {
       chg3: chg3Idx >= 0 ? raw((cols[chg3Idx] || [])[r]) : "",
       yoy: yoyIdx >= 0 ? raw((cols[yoyIdx] || [])[r]) : "",
       stemCount: canon ? canon.split(" ").length : 1,
-      seasonF: mkt ? seasonFactor(col, windowSeasons) : 1,
+      seasonF: mkt ? seasonFactor(col, windowSeasons, kw) : 1,
       eventF: mkt ? eventFactor(kw, mkt, windowMonths) : 1,
       dying,
     };

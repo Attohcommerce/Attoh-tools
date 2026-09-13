@@ -351,7 +351,7 @@ export async function POST(req) {
        mens sneakers er niet in?" beantwoord wordt. */
     const st = result.stats || {};
     const diag = [["Diagnose", ""]];
-    diag.push(["Trechter", `${st.input || 0} rijen → junk ${st.junk || 0} · te weinig volume ${st.lowSeason || 0} · geen collectie ${st.unmapped || 0} · ander geslacht ${st.genderSkip || 0} · markt-jargon ${st.marketWord || 0} · na dedupe ${st.afterDedupe || 0} · gekozen ${result.rows.length}`]);
+    diag.push(["Trechter", `${st.input || 0} rijen → junk ${st.junk || 0} · te weinig volume ${st.lowSeason || 0} · geen collectie ${st.unmapped || 0} · ander geslacht ${st.genderSkip || 0} · buiten seizoen ${st.offSeason || 0} · markt-jargon ${st.marketWord || 0} · na dedupe ${st.afterDedupe || 0} · gekozen ${result.rows.length}`]);
     for (const w of warnings) diag.push(["Let op", w]);
     for (const d of result.droppedCollections || []) diag.push(["Weggelaten collectie", d]);
     for (const a of aiRemoved) diag.push(["AI verwijderde", a]);
