@@ -342,6 +342,18 @@ export default function ScraperPage() {
         );
       }
 
+      /* Storegeslacht uit de kop van kolom D ("Groep — alleen heren").
+         De Keywords-tool legt het daar één keer vast; vanaf hier hoeft geen
+         enkele vervolgstap het nog te raden. Bij een heren-only blad is élk
+         keyword heren — ook "shoes" of "hoodies" zonder het woord "mens" —
+         zodat de scraper nooit meer vrouwenstukken ophaalt. */
+      const gHead = String(h[3] || "");
+      const storeG = /alleen heren/i.test(gHead)
+        ? "man"
+        : /alleen dames/i.test(gHead)
+        ? "vrouw"
+        : null;
+
       const parsed = [];
       for (const r of values.slice(1)) {
         const k = String(r[1] || "").trim();
@@ -356,7 +368,7 @@ export default function ScraperPage() {
         if (/^keyword$/i.test(k)) continue;
         if (!Number.isFinite(Number(r[0])) && !Number.isFinite(Number(r[7]))) continue;
         const n = Math.max(1, Number(r[7]) || 0);
-        const g = String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw";
+        const g = storeG || (String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw");
         const col = String(r[2] || "").trim(); // C = Collectie — reist mee naar de importlijst
         const type = String(r[8] || "").trim() || "Direct"; // I = Type (Direct/Attribuut/Gelegenheid/Underdog)
         const uitleg = String(r[9] || "").trim(); // J = underdog-uitleg voor de foto-controle
@@ -396,6 +408,18 @@ export default function ScraperPage() {
       };
       setKw(next);
       save(LS.keywords, next);
+
+      if (storeG) {
+        pushLog({
+          strong: true,
+          text: `Dit blad is gemarkeerd als ${storeG === "man" ? "HERENSTORE" : "DAMESZAAK"} (kop van kolom D). Alle ${parsedFiltered.length} keywords worden als ${storeG === "man" ? "Man" : "Vrouw"} gescrapet — ook de keywords zonder geslachtswoord.`,
+        });
+      } else {
+        pushLog({
+          muted: true,
+          text: "Geen storegeslacht in de kop van kolom D — per rij wordt Groep M/V aangehouden. Draai stap 1 opnieuw als dit een heren- of dameszaak is.",
+        });
+      }
 
       const sum = (rows) => rows.reduce((s, r) => s + (Number(r.n) || 0), 0);
       setOrgInfo({ vrouwKw: vrouw.length, vrouwN: sum(vrouw), manKw: man.length, manN: sum(man) });

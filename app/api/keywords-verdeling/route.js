@@ -337,8 +337,19 @@ export async function POST(req) {
     const label = months.join("-");
     // Kolom I = Type: stuurt de werkwijze van de scraper én de titelvorm bij
     // het importeren. A-H blijft ongewijzigd zodat bestaande lezers werken.
+    /* Het storegeslacht hoort ÉÉN keer vastgelegd te worden en daarna
+       automatisch mee te reizen. Het staat daarom in de kop van kolom D:
+       "Groep — alleen heren". De scraper leest die kop al (hij controleert of
+       hij met "groep" begint) en weet zo zonder extra instelling dat elk
+       keyword in dit blad heren is — ook keywords zonder het woord "mens".
+       Zo kan er in geen enkele vervolgstap het verkeerde geslacht op de site
+       belanden. */
+    const gLabel =
+      opts.genders === "M" ? "Groep — alleen heren"
+      : opts.genders === "V" ? "Groep — alleen dames"
+      : "Groep";
     const left = [
-      ["Rank", "Keyword", "Collectie", "Groep", "Avg. volume", `Volume ${label}`, "Piekmaand", "Aantal producten", "Type"],
+      ["Rank", "Keyword", "Collectie", gLabel, "Avg. volume", `Volume ${label}`, "Piekmaand", "Aantal producten", "Type"],
       ...result.rows.map((r) => [r.rank, r.kw, r.col, r.g, r.avg, r.season, r.peak, r.n, keywordType(r.kw)]),
     ];
     const right = [
@@ -351,6 +362,14 @@ export async function POST(req) {
        mens sneakers er niet in?" beantwoord wordt. */
     const st = result.stats || {};
     const diag = [["Diagnose", ""]];
+    diag.push([
+      "Store-geslacht",
+      opts.genders === "M"
+        ? "Alleen heren (M) — elk keyword zonder vrouw-woord telt als heren; scraper en importer nemen dit over uit de kop van kolom D."
+        : opts.genders === "V"
+        ? "Alleen dames (V) — elk keyword zonder heren-woord telt als dames; scraper en importer nemen dit over uit de kop van kolom D."
+        : "Unisex (M+V) — het geslacht wordt per keyword bepaald en staat per rij in kolom D.",
+    ]);
     diag.push(["Trechter", `${st.input || 0} rijen → junk ${st.junk || 0} · te weinig volume ${st.lowSeason || 0} · geen collectie ${st.unmapped || 0} · ander geslacht ${st.genderSkip || 0} · buiten seizoen ${st.offSeason || 0} · markt-jargon ${st.marketWord || 0} · na dedupe ${st.afterDedupe || 0} · gekozen ${result.rows.length}`]);
     for (const w of warnings) diag.push(["Let op", w]);
     for (const d of result.droppedCollections || []) diag.push(["Weggelaten collectie", d]);

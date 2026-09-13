@@ -36,6 +36,10 @@ async function prepStep(body) {
   if (!statsSheetId || !String(statsTab || "").trim()) throw httpErr(400, "All-batch-stats-sheet of bladnaam ontbreekt");
   if (!Array.isArray(months) || months.length !== 4) throw httpErr(400, "Kies precies 4 maanden");
 
+  /* Zelfde storegeslacht als stap 1. In een heren-only run is een keyword
+     zónder "mens" ook gewoon heren — anders kwamen de underdogs in de
+     damescollecties terecht en scrapete de scraper vrouwenstukken. */
+  const storeGenders = genders === "M" || genders === "V" ? genders : "MV";
   const budget = Math.max(20, Math.min(900, Number(productTarget) || 250));
   const target = Math.min(300, Math.floor(budget / 2));
   const warnings = [];
@@ -63,7 +67,7 @@ async function prepStep(body) {
     if (r.join(" ").toUpperCase().includes("UNDERDOG KEYWORDS")) hasUnderdogBlock = true;
     if (!kw) continue;
     if (oType >= 0 && String(r[oType] || "").toLowerCase() === "underdog") hasUnderdogBlock = true;
-    const c = canonKey(kw);
+    const c = canonKey(kw, { storeGenders });
     if (c) existingCanons.add(c);
     const col = String(r[oCol] || "").trim();
     const n = Number(r[oN]) || 0;
@@ -121,7 +125,7 @@ async function prepStep(body) {
   const windowSeasons = mkt ? windowMonths.map((m) => seasonOf(m, hemisphere)).filter(Boolean) : [];
   const profile = storeProfile(storeUrl);
   const blocked = new Set((profile && profile.block) || []);
-  const wantG = genders === "M" ? "M" : "V";
+  const wantG = storeGenders === "M" ? "M" : "V";
 
   /* -- Kandidaten (volume-filter eerst — goedkoop) -- */
   const MIN_SEASON = 1200;
@@ -139,9 +143,9 @@ async function prepStep(body) {
     const windowVol = mm.reduce((s, v) => s + v, 0);
     if (windowVol < MIN_SEASON) { stat.low++; continue; }
     if (isVerdelingJunk(kw)) { stat.junk++; continue; }
-    const canon = canonKey(kw);
+    const canon = canonKey(kw, { storeGenders });
     if (isFamilyOfExisting(canon, prepped)) { stat.family++; continue; }
-    let { col, g } = collectionFor(kw);
+    let { col, g } = collectionFor(kw, { storeGenders });
     col = consistentCollection(kw, col);
     if (!col) { stat.unmapped++; continue; }
     if (blocked.has(col)) { stat.blocked++; continue; }
@@ -320,8 +324,11 @@ async function writeStep(body) {
   const stamp = new Date().toISOString().slice(0, 10);
   const EMPTY10 = ["", "", "", "", "", "", "", "", "", ""];
   const banner = [`UNDERDOG KEYWORDS — niche kansen (${stamp})`, "", "", "", "", "", "", "", "", ""];
+  /* Het underdog-blok erft de geslachtskop van het blad zelf, zodat beide
+     blokken hetzelfde zeggen en de scraper één antwoord krijgt. */
+  const gLabel = String((orgRows[0] || [])[3] || "Groep").trim() || "Groep";
   const header = [
-    "Rank", "Keyword", "Collectie", "Groep", "Avg. volume", "Venster-volume",
+    "Rank", "Keyword", "Collectie", gLabel, "Avg. volume", "Venster-volume",
     "Piekmaand", "Aantal producten", "Type", "Uitleg voor de scraper (wat is het + hoe herken je het)",
   ];
   const dataRows = final.map((c, i) => [

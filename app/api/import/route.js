@@ -253,11 +253,20 @@ export async function POST(req) {
      maakt (eenmalig) de smart collection met tag-regel aan, waardoor
      het product er automatisch in valt.
   ---------------------------------------------------------------- */
+  /* Storegeslacht: komt mee uit de verdeling (kop van kolom D) of uit de
+     Alleen-heren-schakelaar van de importer. Met "M" hoeft er geen "mens"
+     meer vóór het keyword geplakt te worden — dan landt "shoes" vanzelf in
+     Men's Shoes, precies zoals in stap 1. */
+  const storeGenders =
+    s.storeGenders === "M" || s.storeGenders === "V"
+      ? s.storeGenders
+      : s.forceMens
+      ? "M"
+      : "MV";
   let collectionTitle = String(s.collection || "").trim();
   if (!collectionTitle && s.keyword) {
     const kw = String(s.keyword).toLowerCase().trim();
-    const probe = s.forceMens ? `mens ${kw}` : kw;
-    const hit = collectionFor(probe);
+    const hit = collectionFor(kw, { storeGenders });
     if (hit && hit.col) collectionTitle = hit.col;
   }
 
@@ -266,6 +275,7 @@ export async function POST(req) {
      thema-template op. */
   const genderRaw = String(s.gender || "").toLowerCase();
   const isMen =
+    storeGenders === "M" ||
     Boolean(s.forceMens) ||
     genderRaw === "man" ||
     genderRaw === "men" ||
