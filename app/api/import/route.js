@@ -83,12 +83,32 @@ const TYPE_TAXONOMY = {
   set: "Outfit Sets", suit: "Suits",
 };
 
-function bandFor(keyword) {
+/* De banden hierboven zijn USD. Een AUD-store (LGB, EMC) kreeg tot 15-9
+   dezelfde getallen — shorts voor AUD 39,95 terwijl dat USD 39,95 hoort te
+   zijn (≈ AUD 59,95). De band wordt nu eerst naar de store-valuta omgerekend
+   (USD → store-valuta, live koers uit de importer; anders dit vangnet) en
+   dan op het X4,95/X9,95-rooster gezet. */
+const USD_TO = { USD: 1, AUD: 1.5, NZD: 1.65, CAD: 1.37, GBP: 0.78, EUR: 0.9 };
+
+function bandFor(keyword, storeCurrency, usdRate) {
+  let band = DEFAULT_BAND;
+  let type = "onbekend";
   try {
     const a = analyzeKeyword(String(keyword || "").toLowerCase());
-    if (a && a.typeId && PRICE_BANDS[a.typeId]) return { band: PRICE_BANDS[a.typeId], type: a.typeId };
+    if (a && a.typeId && PRICE_BANDS[a.typeId]) {
+      band = PRICE_BANDS[a.typeId];
+      type = a.typeId;
+    }
   } catch {}
-  return { band: DEFAULT_BAND, type: "onbekend" };
+  const cur = String(storeCurrency || "USD").toUpperCase();
+  const k = Number(usdRate) > 0 ? Number(usdRate) : USD_TO[cur] || 1;
+  if (cur === "USD" || !(k > 0) || Math.abs(k - 1) < 0.005) {
+    return { band, type, currency: cur, bandRate: 1 };
+  }
+  // Ondergrens en bovengrens apart op het rooster; nooit een lege band.
+  const lo = roundTo95(band[0] * k);
+  const hi = Math.max(lo, roundTo95(band[1] * k));
+  return { band: [lo, hi], type, currency: cur, bandRate: k, usdBand: band };
 }
 
 /**
@@ -172,7 +192,9 @@ export async function POST(req) {
     return nv;
   });
 
-  const { band, type: priceType } = bandFor(s.keyword);
+  // fx.usdRate = USD → store-valuta (voor de prijsband); store.currency = store-valuta
+  const storeCurrency = String((store && store.currency) || (fx && fx.storeCurrency) || "USD").toUpperCase();
+  const { band, type: priceType, bandRate, usdBand } = bandFor(s.keyword, storeCurrency, fx && fx.usdRate);
   let clampedCount = 0;
   const variants = tVariants.map((v) => {
     // 1. Omrekenen  2. Op het rooster  3. Binnen de band van de productsoort
@@ -511,7 +533,9 @@ export async function POST(req) {
       sourcePrice: srcPrice ? srcPrice.toFixed(2) : "",
       rate: rate ? Number(rate).toFixed(4) : "1",
       finalPrice: variants.length ? variants[0].price : "",
-      band: `${priceType} $${band[0]}–$${band[1]}`,
+      band: `${priceType} ${storeCurrency} ${band[0]}–${band[1]}${usdBand ? ` (USD-band ${usdBand[0]}–${usdBand[1]} × ${bandRate.toFixed(2)})` : ""}`,
+      currency: storeCurrency,
+      bandRate,
       clamped: clampedCount,
     },
     product: {

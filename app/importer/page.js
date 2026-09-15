@@ -435,6 +435,14 @@ export default function ImporterPage() {
         if (data.ok) rates = data.rates;
       } catch {}
     }
+    // Eén keer per run laten zien in welke valuta de prijsband landt.
+    if (selectedStore.currency && selectedStore.currency !== "USD") {
+      const k = rates && rates.USD && rates[selectedStore.currency] ? rates[selectedStore.currency] / rates.USD : null;
+      pushLog({
+        info: true,
+        text: `Prijsbanden: USD-banden × ${k ? k.toFixed(2) : "vaste factor"} → ${selectedStore.currency}, daarna op het X4,95/X9,95-rooster (bijv. shorts USD 34,95–44,95 → ${selectedStore.currency} ${k ? `${Math.max(4.95, Math.round((34.95 * k) / 5) * 5 - 0.05).toFixed(2)}–${Math.max(4.95, Math.round((44.95 * k) / 5) * 5 - 0.05).toFixed(2)}` : "omgerekend"}).`,
+      });
+    }
 
     /* Korting-briefing: één keer omzetten in regels, dan de rest van de run
        deterministisch. Lukt het niet, dan stoppen we — liever geen import dan
@@ -532,6 +540,13 @@ export default function ImporterPage() {
           const to = rates[selectedStore.currency];
           if (from && to) rate = to / from;
         }
+        /* USD → store-valuta, los van de bronkoers: daarmee rekent de server
+           de prijsband (die in USD staat) om naar de store-valuta. Zonder dit
+           kreeg een AUD-store USD-getallen als prijs. */
+        let usdRate = null;
+        if (rates && selectedStore.currency && rates.USD && rates[selectedStore.currency]) {
+          usdRate = rates[selectedStore.currency] / rates.USD;
+        }
 
         /* Briefing-korting pas hier bepalen: de regels mogen op PRIJS matchen
            ("alles onder de 25 geen korting"), en die prijs kennen we pas als
@@ -551,10 +566,11 @@ export default function ImporterPage() {
               token: selectedStore.token,
               clientId: selectedStore.clientId,
               clientSecret: selectedStore.clientSecret,
+              currency: selectedStore.currency,
             },
             product,
             listing: gData.listing,
-            fx: { rate },
+            fx: { rate, usdRate, storeCurrency: selectedStore.currency },
             settings: {
               discountPct: rowDiscount,
               status,
