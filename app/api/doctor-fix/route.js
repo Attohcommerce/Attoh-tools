@@ -16,10 +16,21 @@ export const maxDuration = 60;
    faalt die write, dan stopt de chunk zonder één wijziging. Zonder
    backup-sheet draait de run alleen met een expliciete skipBackup. */
 
+/* TIJDBUDGET (fix van "Unexpected token 'A', "An error o…" is not valid JSON"):
+   die tekst is Vercel's HTML-foutpagina "An error occurred with your deployment"
+   (FUNCTION_INVOCATION_TIMEOUT) in plaats van onze JSON. Een chunk van 8
+   producten met elk meerdere Shopify-PUT's + rate-limit-wachttijden + de
+   backup-write haalde de 60 s niet. Daarom: (1) de server stopt zelf na
+   BUDGET_MS en geeft een nextCursor halverwege de chunk terug, (2) de client
+   mag een kleinere chunk meesturen (body.chunk) en doet dat automatisch na
+   een niet-JSON-antwoord. Gevolg: nooit meer een dode run, alleen een
+   kortere stap. */
+const BUDGET_MS = 38000;
+
 const CHUNK_FOR = {
-  "relink-photos": 8,
-  "delete-orphan-variants": 8,
-  "delete-flagged-images": 6,
+  "relink-photos": 6,
+  "delete-orphan-variants": 6,
+  "delete-flagged-images": 5,
   "delete-no-image-products": 10,
   "translate-options": 12,
   "convert-sizes": 12,
@@ -100,7 +111,10 @@ export async function POST(req) {
     );
   }
 
-  const CHUNK = CHUNK_FOR[fix] || CHUNK_FOR.default;
+  const t0 = Date.now();
+  const CHUNK_MAX = CHUNK_FOR[fix] || CHUNK_FOR.default;
+  const chunkReq = Number(body.chunk) || CHUNK_MAX;
+  const CHUNK = Math.max(1, Math.min(chunkReq, CHUNK_MAX));
   const slice = ids.slice(cursor, cursor + CHUNK);
 
   try {
@@ -154,12 +168,28 @@ export async function POST(req) {
       }
     }
 
-    // 2. Dan pas fixen — per product, netjes na elkaar (rate limits)
+    // 2. Dan pas fixen — per product, netjes na elkaar (rate limits), in
+    //    slice-volgorde zodat de cursor exact klopt als het budget op is.
+    //    Producten die door het budget níet meer aan de beurt komen, worden
+    //    in de volgende stap opnieuw gesnapshot (dubbele backup-rij, geen kwaad).
     let fixed = 0;
     let skipped = 0;
     let failed = 0;
+    let missing = 0;
+    let consumed = 0;
+    let budgetHit = false;
     const notes = [];
-    for (const p of pending) {
+    for (const id of slice) {
+      if (consumed > 0 && Date.now() - t0 > BUDGET_MS) {
+        budgetHit = true;
+        break;
+      }
+      const p = pending.find((x) => String(x.id) === String(id));
+      consumed++;
+      if (!p) {
+        missing++;
+        continue;
+      }
       try {
         const res = await applyDoctorFix(store, fix, p, options);
         if (res.changed) fixed++;
@@ -170,15 +200,18 @@ export async function POST(req) {
         notes.push(`${String(p.title || p.id).slice(0, 50)}: MISLUKT — ${String(e.message || e).slice(0, 140)}`);
       }
     }
-    const missing = slice.length - pending.length;
     if (missing > 0) notes.push(`${missing} product(en) niet meer gevonden (al verwijderd?)`);
+    if (budgetHit) notes.push(`tijdbudget bereikt na ${consumed}/${slice.length} — rest volgt in de volgende stap`);
 
-    const nextCursor = cursor + slice.length;
+    const nextCursor = cursor + consumed;
     return NextResponse.json({
       ok: true,
       done: nextCursor >= ids.length,
       nextCursor,
-      processed: slice.length,
+      processed: consumed,
+      chunk: CHUNK,
+      budgetHit,
+      ms: Date.now() - t0,
       fixed,
       skipped,
       failed,

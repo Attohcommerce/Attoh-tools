@@ -221,21 +221,62 @@ export default function DoctorPanel({ store, since }) {
   }
 
   // Kern: één fix over een id-lijst, in chunks tot done. Gooit bij een fout.
+  //
+  // Vercel-timeout-guard: als de server géén JSON teruggeeft (Vercel's
+  // "An error occurred with your deployment"-pagina bij een timeout, of een
+  // 502/504 van de gateway) is de chunk te zwaar. Dan: zelfde cursor opnieuw
+  // met een half zo grote chunk; bij chunk 1 nog steeds mis → dat ene
+  // product overslaan (telt als mislukt) en doorgaan. Nooit meer een run die
+  // halverwege dood valt op "Unexpected token 'A' … is not valid JSON".
   async function execFix(fix, ids, options, skipBackup) {
     const backup = skipBackup ? null : backupPlanFor(fix.id);
     const blockId = newBlock(fix.label, ids.length);
     const tot = { done: 0, total: ids.length, fixed: 0, failed: 0, skipped: 0, label: fix.label };
     setFixProg({ ...tot });
     let cursor = 0;
+    let chunk = null; // null = server-standaard
+    let gatewayFails = 0;
     try {
       for (;;) {
         if (stopRef.current) break;
-        const r = await fetch("/api/doctor-fix", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ store: storeBody, fix: fix.id, ids, options, cursor, backup, skipBackup }),
-        });
-        const data = await r.json();
+        let r;
+        let data = null;
+        try {
+          r = await fetch("/api/doctor-fix", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ store: storeBody, fix: fix.id, ids, options, cursor, backup, skipBackup, chunk }),
+          });
+          const text = await r.text();
+          try {
+            data = JSON.parse(text);
+          } catch {
+            data = null;
+          }
+        } catch (e) {
+          data = null; // netwerkfout → zelfde pad als gateway-fout
+        }
+
+        const gatewayError = !data || (!r.ok && [502, 503, 504].includes(r.status));
+        if (gatewayError) {
+          gatewayFails++;
+          if (gatewayFails > 12) throw new Error("server blijft time-outen — probeer later opnieuw of kies een kleinere selectie");
+          const current = chunk || (data && data.chunk) || 8;
+          if (current > 1) {
+            chunk = Math.max(1, Math.floor(current / 2));
+            blockDetail(blockId, [`server-timeout (Vercel) — chunk verkleind naar ${chunk}, zelfde positie opnieuw`]);
+            continue;
+          }
+          // chunk 1 en nog steeds mis: dit ene product overslaan
+          tot.failed += 1;
+          tot.done = cursor + 1;
+          setFixProg({ ...tot });
+          blockDetail(blockId, [`product ${ids[cursor]}: server-timeout ook als losse stap — overgeslagen`]);
+          cursor += 1;
+          if (cursor >= ids.length) break;
+          continue;
+        }
+
         if (!r.ok) throw new Error(data.error || r.status);
         tot.done = data.nextCursor != null ? data.nextCursor : tot.total;
         tot.fixed += data.fixed || 0;
