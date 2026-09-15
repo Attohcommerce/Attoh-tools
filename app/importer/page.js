@@ -216,6 +216,10 @@ export default function ImporterPage() {
         domain: domain.replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase(),
         ...creds,
         currency: data.shop.currency,
+        // Publiek domein (evermanclothing.com) — daarop staan de STORE_PROFILES
+        // (markt/geslacht) en daarmee vindt het batch-geheugen zijn markt. Het
+        // myshopify-domein hierboven matcht daar nooit op.
+        publicDomain: String(data.shop.domain || "").replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase(),
       };
       const next = [...stores.filter((s) => s.domain !== store.domain), store];
       setStores(next);
@@ -321,18 +325,45 @@ export default function ImporterPage() {
   const boomTokens = (text) =>
     String(text || "").toLowerCase().split(/[^a-z0-9]+/).map(boomStem).filter((t) => t && t.length > 2 && !BOOM_SKIP.has(t));
 
+  /* Markt van de store vinden voor het batch-geheugen. Volgorde op de server:
+     publiek domein → STORE_PROFILES; anders myshopify-domein; anders de
+     store-valuta (AUD→AUS, CAD→CAN, GBP→UK, USD→USA). Stores die vóór deze
+     fix zijn toegevoegd hebben nog geen publicDomain — de valuta vangt die op. */
+  const boomMissRef = useRef(null); // reden waarom er geen geheugen was (voor de log)
   async function loadBoom() {
     if (boomMode === "uit" || !selectedStore) return null;
+    boomMissRef.current = null;
     try {
       const res = await fetch("/api/keywords-memory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "top", domain: selectedStore.domain }),
+        body: JSON.stringify({
+          action: "top",
+          domain: selectedStore.publicDomain || selectedStore.domain,
+          altDomain: selectedStore.domain,
+          currency: selectedStore.currency,
+        }),
       });
       const data = await res.json();
-      if (!res.ok || !data.market || !(data.rows || []).length) return null;
-      return { market: data.market, window: data.window, rows: data.rows.map((r) => ({ ...r, toks: boomTokens(r.kw) })) };
-    } catch {
+      if (!res.ok) {
+        boomMissRef.current = `geheugen-API gaf ${data.error || res.status}`;
+        return null;
+      }
+      if (!data.market) {
+        boomMissRef.current = `markt onbekend voor ${selectedStore.publicDomain || selectedStore.domain} (valuta ${selectedStore.currency || "?"}) — voeg de store opnieuw toe in de importer of zet het domein in STORE_PROFILES`;
+        return null;
+      }
+      if (data.notConfigured) {
+        boomMissRef.current = `markt ${data.market} herkend, maar er is geen geheugen-sheet gekoppeld (Keywords → Geheugen → ${data.market})`;
+        return null;
+      }
+      if (!(data.rows || []).length) {
+        boomMissRef.current = `markt ${data.market} herkend, maar het TOP-tabblad in de geheugen-sheet is leeg — draai een stap 1-run met markt ${data.market}`;
+        return null;
+      }
+      return { market: data.market, via: data.via, window: data.window, rows: data.rows.map((r) => ({ ...r, toks: boomTokens(r.kw) })) };
+    } catch (e) {
+      boomMissRef.current = `geheugen niet bereikbaar (${e.message})`;
       return null;
     }
   }
@@ -372,9 +403,10 @@ export default function ImporterPage() {
     if (boomMode !== "uit") {
       boomRef.current = await loadBoom();
       if (boomRef.current) {
-        pushLog({ info: true, text: `Trend-keywords aan: geheugen ${boomRef.current.market}, venster ${boomRef.current.window || "?"} (${boomRef.current.rows.length} booming zoektermen) — waar passend verwerkt de AI ze in de omschrijving.` });
+        const via = boomRef.current.via ? ` (markt via ${boomRef.current.via})` : "";
+        pushLog({ info: true, text: `Trend-keywords aan: geheugen ${boomRef.current.market}${via}, venster ${boomRef.current.window || "?"} (${boomRef.current.rows.length} booming zoektermen) — waar passend verwerkt de AI ze in de omschrijving.` });
       } else {
-        pushLog({ muted: true, text: "Trend-keywords: geen geheugen voor deze store gevonden (markt onbekend of geheugen leeg) — omschrijvingen draaien gewoon zonder." });
+        pushLog({ muted: true, text: `Trend-keywords: geen geheugen gebruikt — ${boomMissRef.current || "markt onbekend of geheugen leeg"}. Omschrijvingen draaien gewoon zonder.` });
       }
     }
 
@@ -559,6 +591,18 @@ export default function ImporterPage() {
           pushLog({
             info: true,
             text: `${nr} · ${iData.brandingRemoved} foto('s) verwijderd wegens concurrent-branding (${(iData.brandingReasons || []).join(", ")}).`,
+          });
+        }
+        if (iData.brandingRecheck) {
+          pushLog({
+            info: true,
+            text: `${nr} · Strenge branding-check keurde alle foto's af → herkansing gedraaid; ${iData.brandingRemoved ? `${iData.brandingRemoved} echt geflagd` : "niets echt identificerends gevonden, foto's behouden"}.`,
+          });
+        }
+        if (iData.brandingSoft && iData.brandingSoft.length) {
+          pushLog({
+            muted: true,
+            text: `${nr} · Foto's behouden met klein kenmerk (${iData.brandingSoft.join(", ")}) — hanger-monogram of labeltje, geen concurrent-branding. Even nakijken als je twijfelt.`,
           });
         }
         if (iData.imageCheckFailed) {

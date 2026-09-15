@@ -209,6 +209,8 @@ export async function POST(req) {
   const allImages = product.images || [];
   let keptImages = allImages;
   let brandingRemoved = [];
+  let brandingSoft = []; // gebleven foto's met een klein labeltje/hanger-monogram (alleen melden)
+  let brandingRecheck = false; // herkansing gedraaid omdat de strenge ronde ALLES afkeurde
   let imageCheckFailed = false;
   let brandingAi = null; // token-/kostenverbruik van de branding-check (voor de log)
   try {
@@ -217,9 +219,31 @@ export async function POST(req) {
       .filter((x) => typeof x.url === "string" && /^https?:\/\//.test(x.url))
       .slice(0, 20);
     if (items.length) {
-      const check = await flagBrandedImages(items);
+      let check = await flagBrandedImages(items);
       brandingAi = check.ai;
-      const flags = check.remove;
+      let flags = check.remove;
+      brandingSoft = (check.soft || []).map((f) => f.reason || "tag");
+
+      /* Herkansing: keurt de strenge ronde ÁLLE foto's hard af, dan is dat
+         vrijwel altijd één terugkerend kenmerk (leveranciers-hanger, hem-
+         labeltje, zelfde achtergrond) en geen concurrent-materiaal. Eén
+         mildere ronde die alleen nog op écht identificerende dingen let
+         (store-naam, URL, watermerk, verpakking). Blijft ook die alles
+         afkeuren, dan is de weigering terecht. */
+      const checkable = new Set(items.map((x) => x.index));
+      const allHard = flags.length && [...checkable].every((i) => flags.some((f) => f.index === i));
+      if (allHard) {
+        brandingRecheck = true;
+        const again = await flagBrandedImages(items, { mode: "lenient" });
+        if (brandingAi && again.ai) {
+          for (const k of Object.keys(again.ai)) {
+            if (typeof again.ai[k] === "number") brandingAi[k] = (brandingAi[k] || 0) + again.ai[k];
+          }
+        }
+        flags = again.remove;
+        brandingSoft = [...new Set([...brandingSoft, ...(again.soft || []).map((f) => f.reason || "tag")])];
+      }
+
       if (flags.length) {
         const bad = new Set(flags.map((f) => f.index));
         const kept = allImages.filter((_, i) => !bad.has(i));
@@ -228,7 +252,7 @@ export async function POST(req) {
           return NextResponse.json(
             {
               error:
-                "Alle foto's van dit product bevatten concurrent-branding (logo's/watermerk/verpakking) — niet geïmporteerd, GMC-risico.",
+                `Alle foto's van dit product bevatten concurrent-branding (${[...new Set(brandingRemoved)].join(", ")}) — ook na herkansing. Niet geïmporteerd, GMC-risico.`,
             },
             { status: 422 }
           );
@@ -509,6 +533,8 @@ export async function POST(req) {
     templateSuffix: payload.template_suffix || null,
     brandingRemoved: brandingRemoved.length,
     brandingReasons: [...new Set(brandingRemoved)],
+    brandingSoft: [...new Set(brandingSoft)], // gebleven: hanger-monogram / klein labeltje — handmatig even kijken
+    brandingRecheck,
     brandingAi,
     imageCheckFailed,
   });

@@ -42,7 +42,7 @@ export async function POST(req) {
       return NextResponse.json(r);
     }
     if (action === "top") {
-      const r = await getTopKeywords({ market: body.market, domain: body.domain });
+      const r = await getTopKeywords({ market: body.market, domain: body.domain, altDomain: body.altDomain, currency: body.currency });
       return NextResponse.json({ ok: true, ...r });
     }
     return NextResponse.json({ error: "Onbekende actie" }, { status: 400 });
