@@ -3136,3 +3136,30 @@ select:focus {
   color: var(--accent-hi);
   box-shadow: 0 0 18px -10px var(--accent-glow);
 }
+
+/* ---------- Bills: instellingen per store (Edit onder het store-blokje) ---------- */
+.store-config {
+  margin: -2px 0 12px;
+  padding: 12px 14px 4px;
+  border: 1px solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.store-config input {
+  width: 100%;
+}
+.card-warn {
+  border-color: var(--warn) !important;
+  background: var(--warn-dim);
+}
+.card-warn h2 {
+  color: var(--warn);
+}
+.miss-list {
+  margin: 8px 0 12px;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--warn);
+}

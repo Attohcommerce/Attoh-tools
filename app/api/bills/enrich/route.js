@@ -105,8 +105,20 @@ export async function POST(req) {
   if (!store || !store.domain) {
     return NextResponse.json({ error: "Geen store geselecteerd" }, { status: 400 });
   }
+  if (!store.token && !(store.clientId && store.clientSecret)) {
+    return NextResponse.json(
+      {
+        error:
+          "Deze store heeft geen Orders-app-sleutels. Vul Client ID en Client secret in bij de store (Edit) — zonder die sleutels kan de orderdatum niet opgehaald worden.",
+      },
+      { status: 400 }
+    );
+  }
   if (!sheetId) {
-    return NextResponse.json({ error: "Geen sheet opgegeven" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Deze store heeft nog geen P&L-sheet. Vul de sheet-link in bij de store (Edit)." },
+      { status: 400 }
+    );
   }
   if (!Array.isArray(rows) || !rows.length) {
     return NextResponse.json({ error: "Geen orderregels om te verwerken" }, { status: 400 });

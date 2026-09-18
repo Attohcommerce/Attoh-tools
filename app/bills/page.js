@@ -18,6 +18,7 @@ const LS_SELECTED = "sa_selected_store";
 const LS_SHEET = "sa_bills_sheet";
 const LS_CODES = "sa_bill_codes";
 const LS_ORDERS_APP = "sa_orders_app::"; // + store-domein → { clientId, clientSecret }
+const LS_SHEET_STORE = "sa_bills_sheet::"; // + store-domein → sheet-link/ID
 const DEFAULT_SHEET = "1hwv6MnKzOFlGhxe5vWSApglqwZDTYp-boT0fqGgoFiM"; // P&L Sheet SSB
 
 function load(key, fallback) {
@@ -42,13 +43,13 @@ const money = (n, cur = "£") =>
 export default function BillsPage() {
   const [stores, setStores] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [sheetId, setSheetId] = useState("");
   const [codes, setCodes] = useState({}); // storecode → { name, domain }
-  // Orders-app: aparte Dev Dashboard-app (bijv. "P&L Sync") met read_orders /
-  // read_all_orders. De Importer-koppeling houdt z'n producten-app; alleen
-  // de order-lookup hier gebruikt deze sleutels. Leeg = terugvallen op de
-  // store-koppeling zelf.
-  const [ordersApp, setOrdersApp] = useState({ clientId: "", clientSecret: "" });
+  // Per store één setje instellingen: de Orders-app (aparte Dev Dashboard-app
+  // met read_orders / read_all_orders) én de P&L-sheet waar de COGS in landt.
+  // Zonder die drie velden kan deze tool voor die store niets doen — er is
+  // geen terugval op de producten-koppeling uit de Importer.
+  const [configs, setConfigs] = useState({}); // domein → { clientId, clientSecret, sheetId }
+  const [editing, setEditing] = useState(null); // domein waarvan de instellingen open staan
   const [ordersTest, setOrdersTest] = useState(null); // resultaat "Test koppeling"
 
   const [bills, setBills] = useState([]); // geparste PDF's
@@ -61,48 +62,83 @@ export default function BillsPage() {
   const fileRef = useRef(null);
 
   useEffect(() => {
-    setStores(load(LS_STORES, []));
+    const list = load(LS_STORES, []);
+    setStores(list);
     setSelected(load(LS_SELECTED, null));
     setCodes(load(LS_CODES, {}));
-    const s = load(LS_SHEET, "");
-    setSheetId(s || DEFAULT_SHEET);
+    // Instellingen per store inlezen. Migratie van de oude opzet: de store die
+    // al Orders-sleutels had (SSB) erft de sheet die eerst voor álle stores gold.
+    const legacySheet = load(LS_SHEET, "");
+    const next = {};
+    for (const s of list) {
+      const keys = load(LS_ORDERS_APP + s.domain, null) || {};
+      let sheet = load(LS_SHEET_STORE + s.domain, "");
+      const hasKeys = Boolean(keys.clientId && keys.clientSecret);
+      if (!sheet && hasKeys) sheet = legacySheet || DEFAULT_SHEET;
+      next[s.domain] = {
+        clientId: keys.clientId || "",
+        clientSecret: keys.clientSecret || "",
+        sheetId: sheet || "",
+      };
+      if (!load(LS_SHEET_STORE + s.domain, "") && sheet) save(LS_SHEET_STORE + s.domain, sheet);
+    }
+    setConfigs(next);
   }, []);
 
   const store = stores.find((s) => s.domain === selected) || null;
 
-  // Orders-app-sleutels per store laden
-  useEffect(() => {
-    if (!store || !store.domain) return;
-    const v = load(LS_ORDERS_APP + store.domain, null);
-    setOrdersApp(v && typeof v === "object" ? { clientId: v.clientId || "", clientSecret: v.clientSecret || "" } : { clientId: "", clientSecret: "" });
-    setOrdersTest(null);
-  }, [store && store.domain]);
+  const EMPTY_CFG = { clientId: "", clientSecret: "", sheetId: "" };
+  const cfg = (selected && configs[selected]) || EMPTY_CFG;
+  const cfgOf = (domain) => configs[domain] || EMPTY_CFG;
+  const isComplete = (c) =>
+    Boolean(c && c.clientId.trim() && c.clientSecret.trim() && c.sheetId.trim());
+  const hasKeys = (c) => Boolean(c && c.clientId.trim() && c.clientSecret.trim());
+  const storeReady = isComplete(cfg);
+  const sheetId = cfg.sheetId;
 
-  function changeOrdersApp(patch) {
-    const next = { ...ordersApp, ...patch };
-    setOrdersApp(next);
+  useEffect(() => {
     setOrdersTest(null);
-    if (store && store.domain) save(LS_ORDERS_APP + store.domain, next);
+  }, [selected]);
+
+  function changeCfg(domain, patch) {
+    if (!domain) return;
+    setOrdersTest(null);
+    setConfigs((prev) => {
+      const cur = prev[domain] || EMPTY_CFG;
+      const next = { ...cur, ...patch };
+      save(LS_ORDERS_APP + domain, { clientId: next.clientId, clientSecret: next.clientSecret });
+      save(LS_SHEET_STORE + domain, next.sheetId);
+      return { ...prev, [domain]: next };
+    });
   }
 
-  // Het store-object voor alles wat ORDERS leest: Orders-app-sleutels als
-  // die ingevuld zijn, anders de gewone koppeling (oude gedrag).
+  // Het store-object voor alles wat ORDERS leest. Alleen de Orders-app van
+  // déze store; zonder sleutels geen lookup (en dus geen bills).
   function ordersStoreBody() {
     if (!store) return null;
-    const useOrdersApp = ordersApp.clientId.trim() && ordersApp.clientSecret.trim();
-    return useOrdersApp
-      ? { name: store.name, domain: store.domain, clientId: ordersApp.clientId.trim(), clientSecret: ordersApp.clientSecret.trim() }
-      : { name: store.name, domain: store.domain, clientId: store.clientId, clientSecret: store.clientSecret, token: store.token };
+    const c = cfgOf(store.domain);
+    if (!hasKeys(c)) return null;
+    return {
+      name: store.name,
+      domain: store.domain,
+      clientId: c.clientId.trim(),
+      clientSecret: c.clientSecret.trim(),
+    };
   }
 
   async function testOrders() {
     if (!store) return;
+    const body = ordersStoreBody();
+    if (!body) {
+      setOrdersTest({ ok: false, error: "Vul eerst Client ID en Client secret in voor deze store." });
+      return;
+    }
     setOrdersTest({ busy: true });
     try {
       const res = await fetch("/api/bills/test-orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ store: ordersStoreBody() }),
+        body: JSON.stringify({ store: body }),
       });
       const data = await res.json().catch(() => ({}));
       setOrdersTest(data);
@@ -124,10 +160,7 @@ export default function BillsPage() {
     setSelected(domain);
     save(LS_SELECTED, domain);
   }
-  function changeSheet(v) {
-    setSheetId(v);
-    save(LS_SHEET, v);
-  }
+
 
   /* ---------- Upload & parse ---------- */
 
@@ -208,7 +241,12 @@ export default function BillsPage() {
   /* ---------- Analyse (Shopify + koers + dupe-check) ---------- */
 
   async function analyse() {
-    if (!store || !sheetId.trim() || !eligibleRows.length) return;
+    if (!store || !storeReady || !eligibleRows.length) return;
+    const body = ordersStoreBody();
+    if (!body) {
+      pushLog({ err: true, text: `${store.name} heeft nog geen Orders-app-sleutels — vul die eerst in bij de store.` });
+      return;
+    }
     setBusy("analyse");
     setEnriched(null);
     setCommitted(null);
@@ -222,7 +260,7 @@ export default function BillsPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            store: ordersStoreBody(),
+            store: body,
             sheetId: sheetId.trim(),
             rows: chunk,
           }),
@@ -330,7 +368,7 @@ export default function BillsPage() {
   const dates = Object.keys(perDate).sort();
   const totalGbp = okRows.reduce((a, r) => a + (r.gbp || 0), 0);
 
-  const canAnalyse = Boolean(store && sheetId.trim() && eligibleRows.length && !busy);
+  const canAnalyse = Boolean(store && storeReady && eligibleRows.length && !busy);
   const canCommit = Boolean(okRows.length && !busy && !committed);
 
   return (
@@ -343,76 +381,115 @@ export default function BillsPage() {
             {stores.length === 0 && (
               <div className="center-note">Koppel eerst een store in de Importer.</div>
             )}
-            {stores.map((s) => (
-              <div
-                key={s.domain}
-                className={"store-item" + (selected === s.domain ? " selected" : "")}
-                onClick={() => pickStore(s.domain)}
-              >
-                <div>
-                  <strong>{s.name}</strong> <span className="muted small">({s.currency})</span>
+            {stores.map((s) => {
+              const c = cfgOf(s.domain);
+              const done = isComplete(c);
+              const open = editing === s.domain;
+              return (
+                <div key={s.domain}>
+                  <div
+                    className={"store-item" + (selected === s.domain ? " selected" : "")}
+                    onClick={() => pickStore(s.domain)}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <strong>{s.name}</strong>
+                      <span className="muted small">({s.currency})</span>
+                      <span className={"badge " + (done ? "badge-green" : "badge-amber")}>
+                        {done ? "compleet" : "invullen"}
+                      </span>
+                      <button
+                        className="btn-ghost btn-small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          pickStore(s.domain);
+                          setEditing(open ? null : s.domain);
+                        }}
+                      >
+                        {open ? "Sluiten" : "Edit"}
+                      </button>
+                    </div>
+                    <div className="dom">{s.domain}</div>
+                  </div>
+
+                  {open && (
+                    <div className="store-config">
+                      <div className="field-label">Client ID — Orders-app (Dev Dashboard)</div>
+                      <input
+                        type="text"
+                        value={c.clientId}
+                        onChange={(e) => changeCfg(s.domain, { clientId: e.target.value })}
+                        placeholder="Client ID van bijv. P&L Sync"
+                      />
+                      <div className="field-label" style={{ marginTop: 8 }}>Client secret</div>
+                      <input
+                        type="password"
+                        value={c.clientSecret}
+                        onChange={(e) => changeCfg(s.domain, { clientSecret: e.target.value })}
+                        placeholder="Client secret"
+                      />
+                      <div className="field-label" style={{ marginTop: 8 }}>P&amp;L Sheet — link of ID</div>
+                      <input
+                        type="text"
+                        value={c.sheetId}
+                        onChange={(e) => changeCfg(s.domain, { sheetId: e.target.value })}
+                        placeholder="https://docs.google.com/spreadsheets/d/…"
+                      />
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
+                        <button
+                          className="btn-ghost btn-small"
+                          onClick={testOrders}
+                          disabled={selected !== s.domain || !hasKeys(c) || (ordersTest && ordersTest.busy)}
+                        >
+                          {ordersTest && ordersTest.busy ? <span className="spin" /> : null} Test koppeling
+                        </button>
+                        {selected === s.domain && ordersTest && !ordersTest.busy && (
+                          <span
+                            className="small"
+                            style={ordersTest.ok ? { color: "var(--ok)" } : { color: "var(--err)" }}
+                          >
+                            {ordersTest.ok
+                              ? `✓ ${ordersTest.shop} · ${ordersTest.count} orders leesbaar`
+                              : `✗ ${ordersTest.error}`}
+                          </span>
+                        )}
+                      </div>
+                      <div className="hint">
+                        Deze drie velden horen bij <strong>{s.name}</strong> en worden alleen in deze
+                        browser bewaard. Vereist in het Dev Dashboard: app geïnstalleerd op deze
+                        store, scopes <strong>read_orders</strong> (+ <strong>read_all_orders</strong>{" "}
+                        voor bills ouder dan 60 dagen) en <strong>Protected customer data access</strong>{" "}
+                        aangezet. Deel de sheet één keer met het service account (Bewerker).
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="dom">{s.domain}</div>
+              );
+            })}
+            <div className="hint">
+              Elke store heeft zijn eigen Orders-app en eigen P&amp;L-sheet. Klik op{" "}
+              <strong>Edit</strong> bij een store om die in te vullen of te wijzigen. Zonder die
+              gegevens kan deze tool voor die store geen bills verwerken — er is geen terugval op de
+              producten-koppeling uit de Importer.
+            </div>
+          </div>
+
+          {store && !storeReady && (
+            <div className="card card-warn" style={{ marginTop: 14 }}>
+              <h2>{store.name} is nog niet ingesteld</h2>
+              <div className="small">
+                Bills verwerken kan pas als deze store een eigen Orders-app én P&amp;L-sheet heeft.
+                Wat er nog mist:
               </div>
-            ))}
-            <div className="hint">
-              De orderdatum komt per ordernummer uit Shopify van deze store. De Importer-koppeling
-              blijft voor producten; voor orders vul je hieronder de aparte Orders-app in.
-            </div>
-          </div>
-
-          <div className="card" style={{ marginTop: 14 }}>
-            <h2>Orders-app <span className="opt">— Dev Dashboard-app met read_orders</span></h2>
-            <div className="field-label">Client ID</div>
-            <input
-              type="text"
-              value={ordersApp.clientId}
-              onChange={(e) => changeOrdersApp({ clientId: e.target.value })}
-              placeholder="Client ID van bijv. P&L Sync"
-              disabled={!store}
-            />
-            <div className="field-label" style={{ marginTop: 8 }}>Client secret</div>
-            <input
-              type="password"
-              value={ordersApp.clientSecret}
-              onChange={(e) => changeOrdersApp({ clientSecret: e.target.value })}
-              placeholder="Client secret"
-              disabled={!store}
-            />
-            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
-              <button className="btn-ghost btn-small" onClick={testOrders} disabled={!store || (ordersTest && ordersTest.busy)}>
-                {ordersTest && ordersTest.busy ? <span className="spin" /> : null} Test koppeling
+              <ul className="miss-list">
+                {!cfg.clientId.trim() && <li>Client ID van de Orders-app</li>}
+                {!cfg.clientSecret.trim() && <li>Client secret van de Orders-app</li>}
+                {!cfg.sheetId.trim() && <li>Link of ID van de P&amp;L-sheet</li>}
+              </ul>
+              <button className="btn-ghost btn-small" onClick={() => setEditing(store.domain)}>
+                Nu invullen
               </button>
-              {ordersTest && !ordersTest.busy && (
-                <span className={"small " + (ordersTest.ok ? "" : "muted")} style={ordersTest.ok ? { color: "var(--ok)" } : { color: "var(--err)" }}>
-                  {ordersTest.ok ? `✓ ${ordersTest.shop} · ${ordersTest.count} orders leesbaar` : `✗ ${ordersTest.error}`}
-                </span>
-              )}
             </div>
-            <div className="hint">
-              Sleutels worden per store in deze browser bewaard en alleen voor de order-lookup
-              gebruikt. Leeg = de gewone store-koppeling. Vereist in het Dev Dashboard: app
-              geïnstalleerd op deze store, scopes <strong>read_orders</strong> (+{" "}
-              <strong>read_all_orders</strong> voor bills ouder dan 60 dagen) en{" "}
-              <strong>Protected customer data access</strong> aangezet.
-            </div>
-          </div>
-
-          <div className="card" style={{ marginTop: 14 }}>
-            <h2>P&amp;L Sheet</h2>
-            <div className="field-label">Sheet-link of ID</div>
-            <input
-              type="text"
-              value={sheetId}
-              onChange={(e) => changeSheet(e.target.value)}
-              placeholder="https://docs.google.com/spreadsheets/d/…"
-            />
-            <div className="hint">
-              Deel de sheet één keer met het service account (Bewerker). De regels landen in het
-              tabblad <strong>COGS Log</strong>; kolom V van de maandtab wordt per datum de som van
-              dat log — handmatige V-waarden voor die datums worden dus overschreven.
-            </div>
-          </div>
+          )}
 
           <div className="card" style={{ marginTop: 14 }}>
             <h2>Storecodes</h2>
