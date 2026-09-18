@@ -1,7 +1,8 @@
 "use client";
 
 // KUNGFUBUY BILLS → COGS. Upload de dagelijkse Kungfubuy-bills (PDF, ook
-// een backlog van oude bills tegelijk), en de tool doet de rest:
+// een backlog van oude bills tegelijk, en door elkaar van meerdere stores),
+// en de tool doet de rest:
 //   parse (ordernummers, aantallen, bedragen, storecode) →
 //   Shopify-lookup (echte orderdatum, dag in Londen) →
 //   EUR→£ met de ECB-dagkoers van de orderdatum →
@@ -9,6 +10,10 @@
 //   naar kolom V van de juiste maandtab. Dupes kunnen nooit dubbel tellen.
 // De storecode op de bill (bijv. "xi1vf0-h1") koppel je één keer aan een
 // gekoppelde store; daarna herkent de tool elke volgende bill vanzelf.
+// Elke store heeft z’n eigen Orders-app (Client ID + secret) en eigen
+// P&L-sheet, in te vullen via Edit bij de store. Eén upload van tien bills
+// van vier stores wordt dus automatisch over vier sheets verdeeld; regels van
+// een store zonder instellingen blijven buiten de analyse.
 
 import { useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
@@ -94,7 +99,6 @@ export default function BillsPage() {
     Boolean(c && c.clientId.trim() && c.clientSecret.trim() && c.sheetId.trim());
   const hasKeys = (c) => Boolean(c && c.clientId.trim() && c.clientSecret.trim());
   const storeReady = isComplete(cfg);
-  const sheetId = cfg.sheetId;
 
   useEffect(() => {
     setOrdersTest(null);
@@ -217,12 +221,42 @@ export default function BillsPage() {
     codeGroups[c].count++;
   }
   const unknownCodes = Object.keys(codeGroups).filter((c) => c !== "?" && !codes[c]);
-  const eligibleRows = allRows.filter(
-    (r) => store && codes[r.store] && codes[r.store].domain === store.domain
-  );
-  const foreignRows = allRows.filter(
-    (r) => store && codes[r.store] && codes[r.store].domain !== store.domain
-  );
+
+  // Elke orderregel hoort bij de store van z’n storecode, dus 10 bills van
+  // verschillende stores kunnen in één keer mee. Per store draait de analyse met
+  // de eigen Orders-app en landen de regels in de eigen P&L-sheet.
+  const rowsByDomain = {};
+  for (const r of allRows) {
+    const link = codes[r.store];
+    if (!link) continue;
+    if (!rowsByDomain[link.domain]) rowsByDomain[link.domain] = [];
+    rowsByDomain[link.domain].push(r);
+  }
+  const groups = Object.keys(rowsByDomain).map((domain) => {
+    const st = stores.find((x) => x.domain === domain) || null;
+    const c = cfgOf(domain);
+    const linkName = Object.values(codes).find((v) => v.domain === domain);
+    return {
+      domain,
+      name: (st && st.name) || (linkName && linkName.name) || domain,
+      store: st,
+      cfg: c,
+      rows: rowsByDomain[domain],
+      ready: Boolean(st) && isComplete(c),
+      missing: !st
+        ? ["store niet meer gekoppeld in de Importer"]
+        : [
+            !c.clientId.trim() ? "Client ID" : null,
+            !c.clientSecret.trim() ? "Client secret" : null,
+            !c.sheetId.trim() ? "P&L-sheet" : null,
+          ].filter(Boolean),
+    };
+  });
+  groups.sort((a, b) => b.rows.length - a.rows.length);
+  const readyGroups = groups.filter((g) => g.ready);
+  const blockedGroups = groups.filter((g) => !g.ready);
+  const eligibleRows = readyGroups.flatMap((g) => g.rows);
+  const unlinkedRows = allRows.filter((r) => !codes[r.store]);
 
   function linkCode(code) {
     if (!store) return;
@@ -241,34 +275,50 @@ export default function BillsPage() {
   /* ---------- Analyse (Shopify + koers + dupe-check) ---------- */
 
   async function analyse() {
-    if (!store || !storeReady || !eligibleRows.length) return;
-    const body = ordersStoreBody();
-    if (!body) {
-      pushLog({ err: true, text: `${store.name} heeft nog geen Orders-app-sleutels — vul die eerst in bij de store.` });
-      return;
-    }
+    if (!readyGroups.length || busy) return;
     setBusy("analyse");
     setEnriched(null);
     setCommitted(null);
-    const chunks = [];
-    for (let i = 0; i < eligibleRows.length; i += 100) chunks.push(eligibleRows.slice(i, i + 100));
-    setProgress({ done: 0, total: eligibleRows.length });
+    const total = eligibleRows.length;
+    setProgress({ done: 0, total });
     const out = [];
+    const failed = [];
     try {
-      for (const chunk of chunks) {
-        const res = await fetch("/api/bills/enrich", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            store: body,
-            sheetId: sheetId.trim(),
-            rows: chunk,
-          }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
-        out.push(...data.rows);
-        setProgress({ done: out.length, total: eligibleRows.length });
+      for (const g of readyGroups) {
+        const body = {
+          name: g.store.name,
+          domain: g.domain,
+          clientId: g.cfg.clientId.trim(),
+          clientSecret: g.cfg.clientSecret.trim(),
+        };
+        const chunks = [];
+        for (let i = 0; i < g.rows.length; i += 100) chunks.push(g.rows.slice(i, i + 100));
+        try {
+          for (const chunk of chunks) {
+            const res = await fetch("/api/bills/enrich", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                store: body,
+                sheetId: g.cfg.sheetId.trim(),
+                rows: chunk,
+              }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+            out.push(
+              ...data.rows.map((r) => ({ ...r, _domain: g.domain, _storeName: g.store.name }))
+            );
+            setProgress({ done: out.length, total });
+          }
+          pushLog({
+            ok: true,
+            text: `${g.store.name}: ${g.rows.length} orderregel${g.rows.length === 1 ? "" : "s"} geanalyseerd.`,
+          });
+        } catch (e) {
+          failed.push(g.store.name);
+          pushLog({ err: true, text: `${g.store.name}: ${e.message}` });
+        }
       }
       setEnriched(out);
       const ok = out.filter((r) => r.status === "ok");
@@ -277,9 +327,9 @@ export default function BillsPage() {
       const today = out.filter((r) => r.status === "vandaag");
       pushLog({
         strong: true,
-        text: `Analyse klaar: ${ok.length} nieuw · ${dupes.length} al gelogd · ${missing.length} niet gevonden in Shopify${
+        text: `Analyse klaar over ${readyGroups.length} store${readyGroups.length === 1 ? "" : "s"}: ${ok.length} nieuw · ${dupes.length} al gelogd · ${missing.length} niet gevonden in Shopify${
           today.length ? ` · ${today.length} van vandaag (wacht tot morgen)` : ""
-        }.`,
+        }${failed.length ? ` · ${failed.length} store${failed.length === 1 ? "" : "s"} mislukt (${failed.join(", ")})` : ""}.`,
       });
       if (today.length) {
         pushLog({
@@ -289,9 +339,10 @@ export default function BillsPage() {
       }
       for (const r of out) {
         if (r.status === "vandaag") continue;
-        if (r.status === "niet_gevonden") pushLog({ err: true, text: `Order ${r.order}: ${r.note}` });
-        else if (r.status === "koers_mislukt") pushLog({ err: true, text: `Order ${r.order}: ${r.note}` });
-        else if (r.note) pushLog({ warn: true, text: `Order ${r.order}: ${r.note}` });
+        const who = r._storeName ? `${r._storeName} · ` : "";
+        if (r.status === "niet_gevonden") pushLog({ err: true, text: `${who}Order ${r.order}: ${r.note}` });
+        else if (r.status === "koers_mislukt") pushLog({ err: true, text: `${who}Order ${r.order}: ${r.note}` });
+        else if (r.note) pushLog({ warn: true, text: `${who}Order ${r.order}: ${r.note}` });
       }
     } catch (e) {
       pushLog({ err: true, text: `Analyse gestopt: ${e.message}` });
@@ -304,43 +355,69 @@ export default function BillsPage() {
   const okRows = (enriched || []).filter((r) => r.status === "ok");
 
   async function commit() {
-    if (!okRows.length || !sheetId.trim()) return;
+    if (!okRows.length || busy) return;
     setBusy("commit");
-    try {
-      const res = await fetch("/api/bills/commit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sheetId: sheetId.trim(), rows: okRows }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      if (data.logCreated) pushLog({ ok: true, text: `Tabblad "COGS Log" aangemaakt.` });
-      if (data.tooEarlySkipped) {
-        pushLog({
-          warn: true,
-          text: `${data.tooEarlySkipped} order${data.tooEarlySkipped === 1 ? "" : "s"} van vandaag overgeslagen — vandaag wordt nooit ingevuld, morgen uploaden.`,
-        });
-      }
-      for (const r of data.results || []) {
-        if (r.written) {
-          pushLog({
-            ok: true,
-            text: `${r.date} → ${money(r.sum)} in ${r.tab}!V${r.row}${r.note ? ` (${r.note})` : ""}`,
-          });
-        } else {
-          pushLog({ warn: true, text: `${r.date}: ${r.note}` });
-        }
-      }
-      pushLog({
-        strong: true,
-        text: `Klaar: ${data.appended} regel${data.appended === 1 ? "" : "s"} naar het COGS Log geschreven${
-          data.dupesSkipped ? `, ${data.dupesSkipped} dupe${data.dupesSkipped === 1 ? "" : "s"} overgeslagen` : ""
-        }.`,
-      });
-      setCommitted(data);
-    } catch (e) {
-      pushLog({ err: true, text: `Schrijven mislukt: ${e.message}` });
+    // Per store naar de eigen sheet schrijven — één upload kan dus meerdere
+    // sheets vullen zonder dat er iets bij de verkeerde store belandt.
+    const byDomain = {};
+    for (const r of okRows) {
+      const d = r._domain || "?";
+      if (!byDomain[d]) byDomain[d] = [];
+      byDomain[d].push(r);
     }
+    let appended = 0;
+    let dupes = 0;
+    let sheetsDone = 0;
+    const failed = [];
+    for (const domain of Object.keys(byDomain)) {
+      const rows = byDomain[domain];
+      const name = rows[0]._storeName || domain;
+      const target = cfgOf(domain).sheetId.trim();
+      if (!target) {
+        failed.push(name);
+        pushLog({ err: true, text: `${name}: geen P&L-sheet ingesteld — deze regels zijn niet geschreven.` });
+        continue;
+      }
+      try {
+        const res = await fetch("/api/bills/commit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sheetId: target, rows }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        sheetsDone++;
+        appended += data.appended || 0;
+        dupes += data.dupesSkipped || 0;
+        if (data.logCreated) pushLog({ ok: true, text: `${name}: tabblad "COGS Log" aangemaakt.` });
+        if (data.tooEarlySkipped) {
+          pushLog({
+            warn: true,
+            text: `${name}: ${data.tooEarlySkipped} order${data.tooEarlySkipped === 1 ? "" : "s"} van vandaag overgeslagen — vandaag wordt nooit ingevuld, morgen uploaden.`,
+          });
+        }
+        for (const r of data.results || []) {
+          if (r.written) {
+            pushLog({
+              ok: true,
+              text: `${name} · ${r.date} → ${money(r.sum)} in ${r.tab}!V${r.row}${r.note ? ` (${r.note})` : ""}`,
+            });
+          } else {
+            pushLog({ warn: true, text: `${name} · ${r.date}: ${r.note}` });
+          }
+        }
+      } catch (e) {
+        failed.push(name);
+        pushLog({ err: true, text: `${name}: schrijven mislukt — ${e.message}` });
+      }
+    }
+    pushLog({
+      strong: true,
+      text: `Klaar: ${appended} regel${appended === 1 ? "" : "s"} geschreven in ${sheetsDone} sheet${sheetsDone === 1 ? "" : "s"}${
+        dupes ? `, ${dupes} dupe${dupes === 1 ? "" : "s"} overgeslagen` : ""
+      }${failed.length ? ` · mislukt: ${failed.join(", ")}` : ""}.`,
+    });
+    if (!failed.length) setCommitted({ appended, sheetsDone });
     setBusy("");
   }
 
@@ -355,20 +432,30 @@ export default function BillsPage() {
   /* ---------- Overzicht per datum ---------- */
 
   const vandaagRows = (enriched || []).filter((r) => r.status === "vandaag");
-  const perDate = {};
+
+  // Overzicht per store, en daarbinnen per orderdag.
+  const perStore = {};
   for (const r of okRows) {
-    if (!perDate[r.date]) perDate[r.date] = { dateNL: r.dateNL, orders: 0, stuks: 0, orig: 0, cur: r.currency, gbp: 0, tabMissing: !r.tabExists };
-    const d = perDate[r.date];
+    const key = r._domain || "?";
+    if (!perStore[key])
+      perStore[key] = { name: r._storeName || key, dates: {}, orders: 0, stuks: 0, gbp: 0 };
+    const ps = perStore[key];
+    if (!ps.dates[r.date])
+      ps.dates[r.date] = { dateNL: r.dateNL, orders: 0, stuks: 0, orig: 0, cur: r.currency, gbp: 0, tabMissing: !r.tabExists };
+    const d = ps.dates[r.date];
     d.orders++;
     d.stuks += r.stuks || 0;
     d.orig += r.cost || 0;
     d.gbp += r.gbp || 0;
     if (!r.tabExists) d.tabMissing = true;
+    ps.orders++;
+    ps.stuks += r.stuks || 0;
+    ps.gbp += r.gbp || 0;
   }
-  const dates = Object.keys(perDate).sort();
+  const storeKeys = Object.keys(perStore).sort((a, b) => perStore[b].gbp - perStore[a].gbp);
   const totalGbp = okRows.reduce((a, r) => a + (r.gbp || 0), 0);
 
-  const canAnalyse = Boolean(store && storeReady && eligibleRows.length && !busy);
+  const canAnalyse = Boolean(readyGroups.length && !busy);
   const canCommit = Boolean(okRows.length && !busy && !committed);
 
   return (
@@ -610,23 +697,47 @@ export default function BillsPage() {
                     })}
                   </tbody>
                 </table>
-                {foreignRows.length > 0 && (
-                  <div className="hint">
-                    {foreignRows.length} regel{foreignRows.length === 1 ? "" : "s"} van een andere
-                    gekoppelde store — die blijven hier buiten.
+                {groups.length > 0 && (
+                  <div className="route-box">
+                    <div className="field-label">Verdeling over je stores</div>
+                    {groups.map((g) => (
+                      <div className="toggle-row" key={g.domain}>
+                        <span>
+                          <strong>{g.name}</strong>{" "}
+                          <span className="muted small">
+                            {g.rows.length} orderregel{g.rows.length === 1 ? "" : "s"}
+                          </span>
+                        </span>
+                        {g.ready ? (
+                          <span className="badge badge-green">naar eigen sheet</span>
+                        ) : (
+                          <span className="badge badge-amber">{g.missing.join(" + ")} ontbreekt</span>
+                        )}
+                      </div>
+                    ))}
+                    {blockedGroups.length > 0 && (
+                      <div className="hint" style={{ color: "var(--warn)" }}>
+                        De regels van {blockedGroups.map((g) => g.name).join(", ")} blijven buiten de
+                        analyse tot die store links een eigen Orders-app en P&amp;L-sheet heeft
+                        (Edit).
+                      </div>
+                    )}
                   </div>
                 )}
-                {unknownCodes.length > 0 && (
+                {unlinkedRows.length > 0 && (
                   <div className="hint" style={{ color: "var(--warn)" }}>
-                    Eerst de nieuwe storecode koppelen (links) — anders weet de tool niet zeker dat
-                    deze bill bij {store ? store.name : "de gekozen store"} hoort.
+                    {unlinkedRows.length} regel{unlinkedRows.length === 1 ? "" : "s"} met een nog
+                    onbekende storecode — kies links de juiste store en koppel de code één keer.
+                    Daarna weet de tool voor elke volgende bill zelf waar hij hoort.
                   </div>
                 )}
                 <div style={{ marginTop: 12 }}>
                   <button className="btn" disabled={!canAnalyse} onClick={analyse}>
                     {busy === "analyse"
                       ? `Analyseren… ${progress.done}/${progress.total}`
-                      : `Analyseer ${eligibleRows.length} orderregel${eligibleRows.length === 1 ? "" : "s"}`}
+                      : `Analyseer ${eligibleRows.length} orderregel${eligibleRows.length === 1 ? "" : "s"}${
+                          readyGroups.length > 1 ? ` · ${readyGroups.length} stores` : ""
+                        }`}
                   </button>
                 </div>
               </div>
@@ -636,48 +747,66 @@ export default function BillsPage() {
           {enriched && (
             <div className="card" style={{ marginTop: 14 }}>
               <h2>Controle vooraf</h2>
-              {dates.length > 0 ? (
+              {storeKeys.length > 0 ? (
                 <>
-                  <table className="mini-table">
-                    <tbody>
-                      <tr>
-                        <td>Datum (orderdag)</td>
-                        <td>Orders</td>
-                        <td>Stuks</td>
-                        <td>Origineel</td>
-                        <td>COGS £</td>
-                      </tr>
-                      {dates.map((d) => (
-                        <tr key={d}>
-                          <td>
-                            {perDate[d].dateNL}
-                            {perDate[d].tabMissing ? " ⚠" : ""}
-                          </td>
-                          <td>{perDate[d].orders}</td>
-                          <td>{perDate[d].stuks}</td>
-                          <td>
-                            {perDate[d].orig.toFixed(2)} {perDate[d].cur}
-                          </td>
-                          <td>{money(perDate[d].gbp)}</td>
-                        </tr>
-                      ))}
-                      <tr>
-                        <td>
-                          <strong>Totaal</strong>
-                        </td>
-                        <td>
-                          <strong>{okRows.length}</strong>
-                        </td>
-                        <td>
-                          <strong>{okRows.reduce((a, r) => a + (r.stuks || 0), 0)}</strong>
-                        </td>
-                        <td />
-                        <td>
-                          <strong>{money(totalGbp)}</strong>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  {storeKeys.map((k) => {
+                    const ps = perStore[k];
+                    const ds = Object.keys(ps.dates).sort();
+                    return (
+                      <div key={k} style={{ marginBottom: 14 }}>
+                        <div className="field-label">
+                          {ps.name} <span className="muted small">→ eigen P&amp;L-sheet</span>
+                        </div>
+                        <table className="mini-table">
+                          <tbody>
+                            <tr>
+                              <td>Datum (orderdag)</td>
+                              <td>Orders</td>
+                              <td>Stuks</td>
+                              <td>Origineel</td>
+                              <td>COGS £</td>
+                            </tr>
+                            {ds.map((d) => (
+                              <tr key={d}>
+                                <td>
+                                  {ps.dates[d].dateNL}
+                                  {ps.dates[d].tabMissing ? " ⚠" : ""}
+                                </td>
+                                <td>{ps.dates[d].orders}</td>
+                                <td>{ps.dates[d].stuks}</td>
+                                <td>
+                                  {ps.dates[d].orig.toFixed(2)} {ps.dates[d].cur}
+                                </td>
+                                <td>{money(ps.dates[d].gbp)}</td>
+                              </tr>
+                            ))}
+                            <tr>
+                              <td>
+                                <strong>Subtotaal</strong>
+                              </td>
+                              <td>
+                                <strong>{ps.orders}</strong>
+                              </td>
+                              <td>
+                                <strong>{ps.stuks}</strong>
+                              </td>
+                              <td />
+                              <td>
+                                <strong>{money(ps.gbp)}</strong>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })}
+                  {storeKeys.length > 1 && (
+                    <div className="hint">
+                      Totaal over {storeKeys.length} stores: {okRows.length} order
+                      {okRows.length === 1 ? "" : "s"} · {money(totalGbp)}. Elke store gaat naar zijn
+                      eigen sheet.
+                    </div>
+                  )}
                   <div className="hint">
                     Koers: ECB-dagkoers van de orderdatum zelf (weekend = laatste bankdag ervoor) —
                     zo klopt ook een backlog van oude bills per dag. Kolom V wordt de som van het
@@ -696,7 +825,7 @@ export default function BillsPage() {
                         ? "Schrijven…"
                         : committed
                         ? "In sheet gezet ✓"
-                        : `Zet in sheet — ${okRows.length} order${okRows.length === 1 ? "" : "s"} · ${money(totalGbp)}`}
+                        : `Zet in ${storeKeys.length === 1 ? "sheet" : `${storeKeys.length} sheets`} — ${okRows.length} order${okRows.length === 1 ? "" : "s"} · ${money(totalGbp)}`}
                     </button>
                   </div>
                 </>

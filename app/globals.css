@@ -3163,3 +3163,10 @@ select:focus {
   line-height: 1.7;
   color: var(--warn);
 }
+.route-box {
+  margin-top: 12px;
+  padding: 10px 12px 2px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
