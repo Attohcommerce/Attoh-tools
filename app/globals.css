@@ -3170,3 +3170,27 @@ select:focus {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.02);
 }
+.code-new {
+  margin-top: 10px;
+  padding: 10px 12px 4px;
+  border: 1px solid var(--warn);
+  border-radius: 10px;
+  background: var(--warn-dim);
+}
+.code-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.code-row:last-child {
+  border-bottom: 0;
+}
+.code-select {
+  min-width: 150px;
+  padding: 6px 8px;
+  font-size: 12px;
+}

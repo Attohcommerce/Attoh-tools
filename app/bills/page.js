@@ -26,6 +26,20 @@ const LS_ORDERS_APP = "sa_orders_app::"; // + store-domein → { clientId, clien
 const LS_SHEET_STORE = "sa_bills_sheet::"; // + store-domein → sheet-link/ID
 const DEFAULT_SHEET = "1hwv6MnKzOFlGhxe5vWSApglqwZDTYp-boT0fqGgoFiM"; // P&L Sheet SSB
 
+// Dezelfde opschoning als in de parser: een storecode die per productregel
+// herhaald is ("abcabcabc") is één code. Zo blijven oude, dubbel opgeslagen
+// koppelingen ook werken.
+function normCode(raw) {
+  const v = String(raw || "").replace(/\s+/g, "");
+  if (!v) return "";
+  for (let len = 1; len <= Math.floor(v.length / 2); len++) {
+    if (v.length % len) continue;
+    const unit = v.slice(0, len);
+    if (unit.repeat(v.length / len) === v) return unit;
+  }
+  return v;
+}
+
 function load(key, fallback) {
   try {
     const v = localStorage.getItem(key);
@@ -70,7 +84,17 @@ export default function BillsPage() {
     const list = load(LS_STORES, []);
     setStores(list);
     setSelected(load(LS_SELECTED, null));
-    setCodes(load(LS_CODES, {}));
+    // Oude koppelingen met een dubbel opgeslagen code samenvoegen.
+    const rawCodes = load(LS_CODES, {});
+    const clean = {};
+    let fixed = false;
+    for (const [k, v] of Object.entries(rawCodes)) {
+      const n = normCode(k);
+      if (n !== k) fixed = true;
+      if (!clean[n]) clean[n] = v;
+    }
+    setCodes(clean);
+    if (fixed) save(LS_CODES, clean);
     // Instellingen per store inlezen. Migratie van de oude opzet: de store die
     // al Orders-sleutels had (SSB) erft de sheet die eerst voor álle stores gold.
     const legacySheet = load(LS_SHEET, "");
@@ -216,7 +240,7 @@ export default function BillsPage() {
 
   const codeGroups = {};
   for (const r of allRows) {
-    const c = r.store || "?";
+    const c = normCode(r.store) || "?";
     if (!codeGroups[c]) codeGroups[c] = { count: 0 };
     codeGroups[c].count++;
   }
@@ -227,7 +251,7 @@ export default function BillsPage() {
   // de eigen Orders-app en landen de regels in de eigen P&L-sheet.
   const rowsByDomain = {};
   for (const r of allRows) {
-    const link = codes[r.store];
+    const link = codes[normCode(r.store)];
     if (!link) continue;
     if (!rowsByDomain[link.domain]) rowsByDomain[link.domain] = [];
     rowsByDomain[link.domain].push(r);
@@ -256,14 +280,16 @@ export default function BillsPage() {
   const readyGroups = groups.filter((g) => g.ready);
   const blockedGroups = groups.filter((g) => !g.ready);
   const eligibleRows = readyGroups.flatMap((g) => g.rows);
-  const unlinkedRows = allRows.filter((r) => !codes[r.store]);
+  const unlinkedRows = allRows.filter((r) => !codes[normCode(r.store)]);
 
-  function linkCode(code) {
-    if (!store) return;
-    const next = { ...codes, [code]: { name: store.name, domain: store.domain } };
+  function linkCode(code, domain) {
+    const target = stores.find((x) => x.domain === domain);
+    if (!target) return;
+    const key = normCode(code);
+    const next = { ...codes, [key]: { name: target.name, domain: target.domain } };
     setCodes(next);
     save(LS_CODES, next);
-    pushLog({ ok: true, text: `Storecode ${code} gekoppeld aan ${store.name}.` });
+    pushLog({ ok: true, text: `Storecode ${key} hoort bij ${target.name}.` });
   }
   function unlinkCode(code) {
     const next = { ...codes };
@@ -579,43 +605,89 @@ export default function BillsPage() {
           )}
 
           <div className="card" style={{ marginTop: 14 }}>
-            <h2>Storecodes</h2>
-            {Object.keys(codes).length === 0 && unknownCodes.length === 0 && (
-              <div className="center-note">
-                Nog geen codes gekoppeld. Upload een bill; de code uit de Store-kolom verschijnt
-                hier en koppel je één keer.
+            <h2>Storecodes <span className="opt">— welke code is welke store</span></h2>
+            <div className="hint" style={{ marginTop: 0 }}>
+              Kungfubuy zet geen storenaam op de bill, alleen een code. Kies per nieuwe code zelf de
+              store uit het lijstje. Dat is één keer werk: daarna weet de tool het voor elke
+              volgende bill.
+            </div>
+
+            {unknownCodes.length > 0 && (
+              <div className="code-new">
+                <div className="field-label">Nieuw — kies de store</div>
+                {unknownCodes.map((code) => (
+                  <div className="code-row" key={code}>
+                    <div>
+                      <strong>{code}</strong>{" "}
+                      <span className="muted small">
+                        {codeGroups[code].count} regel{codeGroups[code].count === 1 ? "" : "s"} in
+                        deze upload
+                      </span>
+                    </div>
+                    <select
+                      className="code-select"
+                      defaultValue=""
+                      onChange={(e) => {
+                        if (e.target.value) linkCode(code, e.target.value);
+                      }}
+                    >
+                      <option value="">Kies store…</option>
+                      {stores.map((x) => (
+                        <option key={x.domain} value={x.domain}>
+                          {x.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
               </div>
             )}
-            {Object.entries(codes).map(([code, v]) => (
-              <div className="toggle-row" key={code}>
-                <span>
-                  <strong>{code}</strong> <span className="muted small">→ {v.name}</span>
-                </span>
-                <button className="btn-ghost btn-small" onClick={() => unlinkCode(code)}>
-                  ✕
-                </button>
+
+            {Object.keys(codes).length === 0 && unknownCodes.length === 0 && (
+              <div className="center-note">
+                Nog geen codes bekend. Upload een bill: de code uit de Store-kolom komt hier te
+                staan en je kiest er één keer de juiste store bij.
               </div>
-            ))}
-            {unknownCodes.map((code) => (
-              <div className="toggle-row" key={code}>
-                <span>
-                  <span className="badge badge-amber">nieuw</span> <strong>{code}</strong>{" "}
-                  <span className="muted small">({codeGroups[code].count} regels)</span>
-                </span>
-                <button
-                  className="btn-ghost btn-small"
-                  disabled={!store}
-                  onClick={() => linkCode(code)}
-                >
-                  Koppel aan {store ? store.name : "…"}
-                </button>
-              </div>
-            ))}
-            <div className="hint">
-              Kungfubuy zet geen storenaam maar een code op de bill. Eén keer koppelen is genoeg —
-              daarna herkent de tool elke volgende bill vanzelf, en regels van een ándere store
-              worden nooit in deze sheet gezet.
-            </div>
+            )}
+
+            {Object.keys(codes).length > 0 && (
+              <>
+                <div className="field-label" style={{ marginTop: 12 }}>Bekend</div>
+                {Object.entries(codes).map(([code, v]) => {
+                  const known = stores.some((x) => x.domain === v.domain);
+                  return (
+                    <div className="code-row" key={code}>
+                      <div>
+                        <strong>{code}</strong>{" "}
+                        <span className="muted small">→ {v.name}</span>
+                        {!known && <span className="badge badge-amber">store weg</span>}
+                      </div>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <select
+                          className="code-select"
+                          value={v.domain}
+                          onChange={(e) => linkCode(code, e.target.value)}
+                        >
+                          {stores.map((x) => (
+                            <option key={x.domain} value={x.domain}>
+                              {x.name}
+                            </option>
+                          ))}
+                          {!known && <option value={v.domain}>{v.name} (niet gekoppeld)</option>}
+                        </select>
+                        <button
+                          className="btn-ghost btn-small"
+                          title="Koppeling verwijderen"
+                          onClick={() => unlinkCode(code)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </div>
         </div>
 
