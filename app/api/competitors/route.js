@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readRange } from "@/lib/sheets";
 import { selectCompetitors, translateKeywordsForMarket } from "@/lib/ai";
+import { auditStore } from "@/lib/scrape";
 
 export const maxDuration = 60;
 
@@ -189,6 +190,65 @@ export async function POST(req) {
         /* AI niet beschikbaar → deterministische ranking */
       }
       return NextResponse.json({ ok: true, picks: baseline, ai: false });
+    }
+
+
+    /* AUDIT — echte feiten per store i.p.v. alleen bezoekers uit de sheet.
+       Levert per domein een score 0–100 en de zoekvolgorde (hoogste eerst):
+         bezoek (sheet)        0–35  log-schaal, 1M/mnd = max
+         best-selling geldig   +30   (onbekend +10, genegeerd 0)
+         dekking producttypes  0–25  35% van de catalogus over jouw types = max
+         valuta = doelmarkt    +10
+         geslacht past niet    −20   (heren-run bij een winkel met <10% heren)
+       Winkels die offline zijn of geen Shopify draaien krijgen 0. */
+    if (action === "audit") {
+      const { domains, types, targetMarket, genders, meta } = body;
+      if (!Array.isArray(domains) || !domains.length) {
+        return NextResponse.json({ error: "Geen stores om te checken" }, { status: 400 });
+      }
+      const CUR = { USA: "USD", UK: "GBP", AUS: "AUD", NZ: "NZD", CANADA: "CAD", "NL/BE": "EUR", FR: "EUR", DE: "EUR", PL: "PLN" };
+      const wantCur = CUR[String(targetMarket || "").toUpperCase()] || null;
+      const list = [...new Set(domains.map(cleanDomain).filter(Boolean))].slice(0, 60);
+      const results = [];
+      const queue = [...list];
+      async function worker() {
+        while (queue.length) {
+          const d = queue.shift();
+          let a;
+          try {
+            a = await auditStore(d, { types: types || [] });
+          } catch (e) {
+            a = { domain: d, ok: false, note: String(e.message || e) };
+          }
+          const m = (meta && meta[d]) || {};
+          const visits = Number(m.visits) || 0;
+          let score = 0;
+          const why = [];
+          if (a.ok) {
+            const v = visits > 0 ? Math.min(35, Math.round((Math.log10(visits) / 6) * 35)) : 0;
+            score += v;
+            if (visits) why.push(`${Math.round(visits / 1000)}k/mnd`);
+            if (a.bestSelling === "geldig") { score += 30; why.push(`best-selling geldig (${a.rankTotal})`); }
+            else if (a.bestSelling === "onbekend") { score += 10; why.push("best-selling onbekend"); }
+            else why.push("best-selling genegeerd door thema");
+            const cov = Math.min(25, Math.round((a.coverage / 0.35) * 25));
+            score += cov;
+            why.push(`${Math.round(a.coverage * 100)}% dekking`);
+            if (wantCur && a.currency === wantCur) { score += 10; why.push(a.currency); }
+            else if (a.currency) why.push(a.currency);
+            const g = Array.isArray(genders) ? genders : [];
+            if (g.length === 1 && g[0] === "Man" && a.men < 0.1) { score -= 20; why.push("bijna geen heren"); }
+            if (g.length === 1 && g[0] === "Vrouw" && a.women < 0.1) { score -= 20; why.push("bijna geen dames"); }
+            score = Math.max(0, Math.min(100, score));
+          } else {
+            why.push(a.note || "onbereikbaar");
+          }
+          results.push({ ...a, visits, score, why: why.join(" · ") });
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(6, queue.length) }, worker));
+      results.sort((x, y) => y.score - x.score || (y.visits || 0) - (x.visits || 0));
+      return NextResponse.json({ ok: true, audits: results });
     }
 
     if (action === "translate") {

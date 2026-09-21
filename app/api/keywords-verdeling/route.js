@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readRange, readColumnsBatch, addTab, appendRows, formatVerdelingTab, parseSheetId, a1Tab } from "@/lib/sheets";
-import { buildVerdeling, keywordType } from "@/lib/verdeling";
+import { buildVerdeling, keywordType, orderWindow, storeProfile } from "@/lib/verdeling";
 import { classifyJunkKeywordsBatch, reviewVerdelingFinal, classifyUnknownTokens } from "@/lib/ai";
 import { unknownFashionTokens } from "@/lib/brands";
 import { getTabMarket } from "@/lib/kw-memory";
@@ -28,7 +28,13 @@ function colLetter(i) {
 
 export async function POST(req) {
   const body = await req.json().catch(() => ({}));
-  const { sourceSheetId, sourceTab, targetSheetId, targetTab, months, genders, total, mode, market, storeUrl } = body;
+  const { sourceSheetId, sourceTab, targetSheetId, targetTab, genders: gendersIn, total, mode, storeUrl } = body;
+  /* Venster altijd in TIJDSVOLGORDE (okt-nov-dec-jan, niet jan-okt-nov-dec)
+     en markt/geslacht automatisch uit het store-profiel als ze ontbreken. */
+  const months = orderWindow(body.months || []);
+  const prof = storeProfile(storeUrl);
+  const market = body.market || (prof && prof.market) || "";
+  const genders = gendersIn || (prof && prof.genders) || "MV";
 
   if (!sourceSheetId || !String(sourceTab || "").trim()) {
     return NextResponse.json({ error: "Bron-sheet of bron-tabblad ontbreekt" }, { status: 400 });
@@ -91,10 +97,22 @@ export async function POST(req) {
     const afterTok = MONTH_TOKEN[afterKey] || afterKey;
     const nextIdx = header.findIndex((h) => h.replace(/^searches:\s*/, "").startsWith(afterTok));
 
+    /* Alle maandkolommen (max de laatste 12) voor de AUTOMATISCHE
+       seizoensherkenning: vraag in het venster t.o.v. het jaargemiddelde.
+       Ontbreken ze, dan rekent de engine alleen met het woordenboek. */
+    const MONTH_TOKS = Object.values(MONTH_TOKEN);
+    const yearIdx = header
+      .map((h, i) => ({ h: h.replace(/^searches:\s*/, ""), i }))
+      .filter(({ h }) => MONTH_TOKS.some((t) => h.startsWith(t)))
+      .map(({ i }) => i)
+      .slice(-12);
+
     /* ---- 2. alleen de nodige kolommen lezen (bron kan tienduizenden rijen zijn) ---- */
     // Alle kolommen in ÉÉN batchGet-verzoek — minder roundtrips dan parallel
     // losse reads, en voorspelbaarder onder de Vercel-tijdslimiet.
-    const columns = await readColumnsBatch(sourceSheetId, src, [kwIdx, avgIdx, ...monthIdx, nextIdx]);
+    const useYear = yearIdx.length >= 6;
+    const readIdx = [...new Set([kwIdx, avgIdx, ...monthIdx, nextIdx, ...(useYear ? yearIdx : [])].filter((i) => i >= 0))];
+    const columns = await readColumnsBatch(sourceSheetId, src, readIdx);
     const nRows = columns[kwIdx].length;
     const num = (v) => {
       const n = Number(String(v ?? "").replace(/[^\d.-]/g, ""));
@@ -109,6 +127,7 @@ export async function POST(req) {
         avg: avgIdx >= 0 ? num(columns[avgIdx][r]) : 0,
         months: monthIdx.map((i) => num(columns[i][r])),
         next: nextIdx >= 0 ? num(columns[nextIdx][r]) : null,
+        year: useYear ? yearIdx.map((i) => num((columns[i] || [])[r])) : null,
       });
     }
 
@@ -328,6 +347,20 @@ export async function POST(req) {
       if (vKws > 0 && vKws < 3) {
         warnings.push(`Damenkant rust op maar ${vKws} keyword(s) — bron-data dekt vrouwen amper.`);
       }
+      const mProd = result.rows.filter((r) => r.g === "M").reduce((a, r) => a + r.n, 0);
+      const share = result.totalProducts ? Math.round((mProd / result.totalProducts) * 100) : 0;
+      const tgt = (result.stats && result.stats.menTarget) || 40;
+      if (share < tgt - 5) {
+        warnings.push(
+          `Heren ${share}% van de producten (doel ${tgt}%) — er zijn te weinig bruikbare heren-keywords in dit tabblad. Draai in Keyword Planner een extra heren-batch (mens shorts, mens linen shirt, board shorts, mens slides …) en voeg die toe aan de all-batch.`
+        );
+      }
+    }
+    if (!body.market && market) {
+      warnings.push(`Markt automatisch op ${market} gezet vanuit het store-profiel.`);
+    }
+    if (Array.isArray(body.months) && body.months.join("-") !== months.join("-")) {
+      warnings.push(`Venster in tijdsvolgorde gezet: ${months.join("-")} (was ${body.months.join("-")}).`);
     }
 
     /* ---- 5. wegschrijven: tabel (A-H) + collectie-overzicht (J-M) ---- */
@@ -370,6 +403,17 @@ export async function POST(req) {
         ? "Alleen dames (V) — elk keyword zonder heren-woord telt als dames; scraper en importer nemen dit over uit de kop van kolom D."
         : "Unisex (M+V) — het geslacht wordt per keyword bepaald en staat per rij in kolom D.",
     ]);
+    if (st.colSeason && Object.keys(st.colSeason).length) {
+      const top = Object.entries(st.colSeason).sort((a, b) => b[1] - a[1]);
+      diag.push([
+        "Seizoen (auto)",
+        `${months.join("-")}${st.season && st.season !== "n.v.t." ? ` = ${st.season}` : ""} · ${st.dataSeason ? `${st.dataSeason} keywords met jaardata` : "geen jaardata — alleen woordenboek"} · in seizoen: ${top.filter((x) => x[1] >= 0.72).map((x) => x[0]).join(", ") || "—"} · uit seizoen: ${top.filter((x) => x[1] < 0.45).map((x) => x[0]).join(", ") || "—"}`,
+      ]);
+    }
+    if (opts.genders === "MV") {
+      const mProd = result.rows.filter((r) => r.g === "M").reduce((a, r) => a + r.n, 0);
+      diag.push(["Man/vrouw", `heren ${mProd} · dames ${result.totalProducts - mProd} producten (doel heren ${st.menTarget || 40}%)`]);
+    }
     diag.push(["Trechter", `${st.input || 0} rijen → junk ${st.junk || 0} · te weinig volume ${st.lowSeason || 0} · geen collectie ${st.unmapped || 0} · ander geslacht ${st.genderSkip || 0} · buiten seizoen ${st.offSeason || 0} · markt-jargon ${st.marketWord || 0} · na dedupe ${st.afterDedupe || 0} · gekozen ${result.rows.length}`]);
     for (const w of warnings) diag.push(["Let op", w]);
     for (const d of result.droppedCollections || []) diag.push(["Weggelaten collectie", d]);

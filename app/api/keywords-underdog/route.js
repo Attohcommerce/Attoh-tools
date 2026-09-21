@@ -5,7 +5,7 @@ import {
 } from "@/lib/sheets";
 import {
   canonKey, isVerdelingJunk, collectionFor, consistentCollection,
-  MARKETS, seasonOf, seasonFactor, eventFactor, storeProfile,
+  MARKETS, seasonOf, seasonFactor, eventFactor, storeProfile, orderWindow,
 } from "@/lib/verdeling";
 import {
   underdogScore, isFamilyOfExisting, prepFamilies, allocateUnderdogs, growthFactor,
@@ -30,7 +30,9 @@ const KEYS = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "ok
 /* ---------- Stap 1: PREP — sheets lezen, algoritme, pool bouwen ---------- */
 
 async function prepStep(body) {
-  const { orgSheetId, orgTab, statsSheetId, statsTab, months, genders, market, storeUrl, productTarget } = body;
+  const { orgSheetId, orgTab, statsSheetId, statsTab, genders, market, storeUrl, productTarget } = body;
+  // Venster in tijdsvolgorde (okt-nov-dec-jan), net als de verdeling
+  const months = orderWindow(body.months || []);
 
   if (!orgSheetId || !String(orgTab || "").trim()) throw httpErr(400, "Organization-sheet of bladnaam ontbreekt");
   if (!statsSheetId || !String(statsTab || "").trim()) throw httpErr(400, "All-batch-stats-sheet of bladnaam ontbreekt");
@@ -135,7 +137,9 @@ async function prepStep(body) {
   const allKws = [];
   const stat = { junk: 0, family: 0, low: 0, unmapped: 0, gender: 0, artefact: 0, blocked: 0 };
   for (let r = 0; r < nRows; r++) {
-    const kw = String((cols[kwIdx] || [])[r] || "").toLowerCase().trim().replace(/\s+(uk|united kingdom)$/, "");
+    const kw = String((cols[kwIdx] || [])[r] || "").toLowerCase().trim()
+      .replace(/\s+(uk|united kingdom|au|aus|australia|nz|new zealand)$/, "")
+      .replace(/^(uk|au|aus|australia|nz|new zealand)\s+/, "");
     if (!kw || seen.has(kw)) continue;
     seen.add(kw);
     allKws.push(kw);
@@ -149,7 +153,8 @@ async function prepStep(body) {
     col = consistentCollection(kw, col);
     if (!col) { stat.unmapped++; continue; }
     if (blocked.has(col)) { stat.blocked++; continue; }
-    if (g !== wantG) { stat.gender++; continue; }
+    // Man + vrouw-store: beide geslachten zijn welkom (kolom D per rij)
+    if (storeGenders !== "MV" && g !== wantG) { stat.gender++; continue; }
     pre.push({ kw, canon, col, g, mm, windowVol, row: r });
   }
 

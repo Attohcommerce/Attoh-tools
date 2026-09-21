@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
+import { orderWindow, storeProfile } from "@/lib/verdeling";
 
 const LS_SHEET = "attoh_kw_sheet";
 const LS_VSHEET = "attoh_kw_vsheet"; // doel-sheet van de verdeling
@@ -196,6 +197,14 @@ export default function KeywordsPage() {
   const [vChoice, setVChoice] = useState(false); // keuze-paneel bij lage aantallen
   const [vStore, setVStore] = useState(""); // store-URL/naam — context voor AI + log
   const [vMarket, setVMarket] = useState("USA"); // USA | UK | AUS | CAN
+  /* Bekende store ingevuld → markt en man/vrouw automatisch goed zetten.
+     Voorkomt runs op het verkeerde halfrond of met het verkeerde geslacht. */
+  useEffect(() => {
+    const p = storeProfile(vStore);
+    if (!p) return;
+    if (p.market) setVMarket(p.market);
+    if (p.genders) setVGenders(p.genders);
+  }, [vStore]);
   // Sessies + chat
   const [sessions, setSessions] = useState([]);
   const [activeId, setActiveId] = useState(null); // null = nieuwe run
@@ -673,8 +682,11 @@ export default function KeywordsPage() {
     });
   }
 
-  // Gekozen maanden in kalendervolgorde tonen/versturen
-  const orderedMonths = MONTHS.filter((m) => vMonths.includes(m.key)).map((m) => m.key);
+  /* Gekozen maanden in TIJDSVOLGORDE (21-9-2026): okt-nov-dec-jan, niet de
+     kalendervolgorde jan-okt-nov-dec. De engine laat de laatste maand het
+     zwaarst wegen en kijkt naar de maand ná het venster — in kalender-
+     volgorde was dat bij een jaargrens-venster precies verkeerd om. */
+  const orderedMonths = orderWindow(vMonths);
 
   const canVerdeling =
     !vRunning && !running && step1Done &&
@@ -853,7 +865,7 @@ export default function KeywordsPage() {
         statsSheetId: uStatsSheet.trim(),
         statsTab: uStatsTab.trim(),
         months: orderedMonths,
-        genders: vGenders === "M" ? "M" : "V",
+        genders: vGenders,
         market: vMarket,
         storeUrl: vStore.trim(),
         productTarget: budget,

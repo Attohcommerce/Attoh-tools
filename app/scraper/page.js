@@ -32,7 +32,15 @@ function save(key, val) {
 const HEADER_ROW = [
   "LINK", "TITEL", "KEYWORD", "GEVONDEN VIA", "MATCH", "GESLACHT",
   "DUBBELE FOTO", "LITERAL-TWIJFEL", "COLLECTIE", "TYPE", "TITELVORM",
+  "VRAAG", "VRAAG-SCORE", "SIGNALEN",
 ];
+
+/* Vraag-bewijs per product (lib/demand.js). "bewezen" = alleen producten
+   met score ≥ 50 (gevalideerde bestseller-top, reviews, uitverkochte
+   varianten); "kansrijk" = score ≥ 25; "alles" = geen filter (oud gedrag).
+   Producten waarvan de winkel géén enkel signaal geeft blijven altijd staan
+   en heten "Onbekend" in kolom L. */
+const LS_PROOF = "sa_proof_mode";
 
 // Stores verlopen automatisch na 14 dagen zonder gebruik van de tool
 const STORE_TTL_DAYS = 14;
@@ -165,6 +173,8 @@ export default function ScraperPage() {
   const [compMarket, setCompMarket] = useState("USA");
   const [compMax, setCompMax] = useState("25");
   const [compBusy, setCompBusy] = useState("");
+  const [proofMode, setProofMode] = useState("bewezen"); // bewezen | kansrijk | alles
+  const [auditBusy, setAuditBusy] = useState(false);
   const [kw, setKw] = useState({ vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] });
   const [workSheet, setWorkSheet] = useState("");
   const [memSheet, setMemSheet] = useState("");
@@ -217,6 +227,7 @@ export default function ScraperPage() {
     setCompSheet(load(LS_COMP_SHEET, "") || DEFAULT_COMP_SHEET);
     setCompTab(load(LS_COMP_TAB, ""));
     setCompMeta(load(LS_COMP_META, {}));
+    setProofMode(load(LS_PROOF, "bewezen"));
     setOrgTab(load(LS.orgTab, "Collection & Product organization"));
     fetch("/api/sheets", {
       method: "POST",
@@ -841,7 +852,9 @@ export default function ScraperPage() {
               let foundThisStore = 0;
               let scanned = 0;
               let bestSelling = false;
-              const skips = { gender: 0, foreign: 0 };
+              let bsStatus = "";
+              let bsTotal = 0;
+              const skips = { gender: 0, foreign: 0, vraag: 0 };
               /* Buitenlandse store? Dan éérst de vertaalde termen ("laarzen",
                  "robe de cocktail"), daarna alsnog de Engelse — veel
                  NL/PL-shops titelen deels in het Engels. */
@@ -875,6 +888,7 @@ export default function ScraperPage() {
                       // Nooit het hele quotum uit één winkel: pak van elke
                       // winkel de bovenkant in plaats van de staart van één.
                       maxPerStore: Math.max(2, Math.ceil(target / 3)),
+                      proof: proofMode,
                     }),
                   });
                   const data = await res.json();
@@ -897,6 +911,8 @@ export default function ScraperPage() {
                   }
                   scanned = Math.max(scanned, data.total || 0);
                   bestSelling = bestSelling || !!data.usedBestSelling;
+                  if (data.bestSellingStatus) bsStatus = data.bestSellingStatus;
+                  if (data.rankTotal) bsTotal = data.rankTotal;
                   // Elke zoekterm scant dezelfde catalogus en telt dezelfde
                   // overgeslagen producten opnieuw — max i.p.v. som, anders
                   // staat er "964 te weinig foto's" waar het er 241 zijn.
@@ -1008,8 +1024,11 @@ export default function ScraperPage() {
                       col || "",
                       kwType,
                       (kwBrief && kwBrief.titleForm) || "",
+                      m.demandLabel || "",
+                      m.demand === null || m.demand === undefined ? "" : m.demand,
+                      m.signals || "",
                     ]);
-                    await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:K`, rows: newRows });
+                    await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:N`, rows: newRows });
                     if (memSheet.trim()) {
                       await sheetsCall({
                         action: "append",
@@ -1037,7 +1056,7 @@ export default function ScraperPage() {
               pushLog({
                 ok: true,
                 text:
-                  `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bestSelling ? ", best-selling volgorde" : ", ⚠ GEEN best-selling volgorde — catalogusvolgorde gebruikt"}) — nog ${Math.max(needed, 0)} nodig` +
+                  `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bsStatus === "geldig" ? `, best-selling geldig · ${bsTotal} gerangschikt` : bsStatus === "genegeerd" ? ", ⚠ thema negeert best-selling — geen bestseller-signaal" : ", ⚠ GEEN best-selling volgorde — catalogusvolgorde gebruikt"}${skips.vraag ? ` · ${skips.vraag} te weinig vraag-bewijs` : ""}) — nog ${Math.max(needed, 0)} nodig` +
                   (skips.gender || skips.foreign
                     ? ` · overgeslagen: ${[
                         skips.gender ? `${skips.gender} verkeerd geslacht` : "",
@@ -1257,6 +1276,74 @@ export default function ScraperPage() {
     }
   }
 
+
+  /* STORE-AUDIT: echte feiten per winkel (Shopify? best-selling geldig?
+     dekking van jouw producttypes? valuta? geslacht?) → score 0–100 →
+     zoekvolgorde. Draait automatisch na "Beste competitors kiezen" en
+     handmatig via "Stores checken" (voor stores die je zelf hebt geplakt). */
+  function runTypes() {
+    const all = [...kw.vrouw, ...kw.man].map((r) => String(r.k || "").trim()).filter(Boolean);
+    return [...new Set(all.map((k) => k.toLowerCase().split(/\s+/).pop()).filter((w) => w && w.length > 2))];
+  }
+  function runGenders() {
+    const g = [];
+    if (kw.vrouw.some((r) => String(r.k || "").trim())) g.push("Vrouw");
+    if (kw.man.some((r) => String(r.k || "").trim())) g.push("Man");
+    return g;
+  }
+  async function auditStores(domains, metaIn) {
+    const list = (domains || []).filter(Boolean);
+    if (!list.length) return null;
+    setAuditBusy(true);
+    try {
+      pushLog({ strong: true, text: `— Stores checken: Shopify · best-selling · dekking · valuta (${list.length} stores)` });
+      const res = await fetch("/api/competitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "audit",
+          domains: list,
+          types: runTypes(),
+          targetMarket: compMarket,
+          genders: runGenders(),
+          meta: metaIn || compMeta,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      const audits = data.audits || [];
+      const meta = { ...(metaIn || compMeta) };
+      for (const a of audits) {
+        meta[a.domain] = {
+          ...(meta[a.domain] || {}),
+          score: a.score,
+          bestSelling: a.bestSelling,
+          coverage: Math.round((a.coverage || 0) * 100),
+          currency: a.currency || "",
+          ok: !!a.ok,
+        };
+      }
+      setCompMeta(meta);
+      save(LS_COMP_META, meta);
+      const order = audits.map((a) => a.domain);
+      setStoreList(order);
+      save(LS.stores, order);
+      const dead = audits.filter((a) => !a.ok);
+      const ignored = audits.filter((a) => a.ok && a.bestSelling === "genegeerd");
+      pushLog({ ok: true, text: `Zoekvolgorde op score: ${audits.slice(0, 3).map((a) => `${a.domain} (${a.score})`).join(" · ")}${audits.length > 3 ? " · …" : ""}` });
+      for (const a of audits.slice(0, 10)) pushLog({ muted: true, text: `${a.score.toString().padStart(3, " ")} · ${a.domain} — ${a.why}` });
+      if (audits.length > 10) pushLog({ muted: true, text: `… en ${audits.length - 10} meer (score staat achter elke store links).` });
+      if (ignored.length) pushLog({ muted: true, text: `${ignored.length} winkels negeren sort_by=best-selling — daar is geen bestseller-bewijs, ze staan onderaan.` });
+      if (dead.length) pushLog({ err: true, text: `${dead.length} winkels offline/geen Shopify: ${dead.map((a) => a.domain).join(", ")} — verwijder ze uit de lijst.` });
+      return audits;
+    } catch (e) {
+      pushLog({ err: true, text: "Stores checken mislukt: " + (e.message || e) });
+      return null;
+    } finally {
+      setAuditBusy(false);
+    }
+  }
+
   async function compSelect() {
     if (compBusy || !compStores.length) return;
     setCompBusy("select");
@@ -1300,6 +1387,10 @@ export default function ScraperPage() {
       if (foreign.length) {
         pushLog({ muted: true, text: `${foreign.length} buitenlandse stores — keywords worden bij de run automatisch vertaald (${[...new Set(foreign.map((p) => p.lang))].join(", ")}).` });
       }
+      // Sheet-bezoek is een gok; nu de feiten: is het Shopify, werkt
+      // best-selling, past de catalogus bij deze keywords? Die score bepaalt
+      // de definitieve zoekvolgorde.
+      await auditStores(picks.map((p) => p.domain), meta);
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     } catch (e) {
       pushLog({ err: true, text: "Selectie mislukt: " + (e.message || e) });
@@ -1523,8 +1614,12 @@ export default function ScraperPage() {
                     {s}
                     {compMeta[s] && (
                       <span className="muted">
-                        {" "}· {compMeta[s].market}
+                        {compMeta[s].score !== undefined ? ` · score ${compMeta[s].score}` : ""}
+                        {compMeta[s].market ? ` · ${compMeta[s].market}` : ""}
                         {compMeta[s].visits ? ` · ${Math.round(compMeta[s].visits / 1000)}k/mnd` : ""}
+                        {compMeta[s].bestSelling === "geldig" ? " · best-selling ✓" : compMeta[s].bestSelling === "genegeerd" ? " · best-selling ✗" : ""}
+                        {compMeta[s].coverage !== undefined ? ` · ${compMeta[s].coverage}% dekking` : ""}
+                        {compMeta[s].ok === false ? " · ⚠ offline" : ""}
                         {compMeta[s].lang && compMeta[s].lang !== "en" ? ` · ${compMeta[s].lang.toUpperCase()}` : ""}
                       </span>
                     )}
@@ -1537,10 +1632,18 @@ export default function ScraperPage() {
               {storeList.length > 0 && (
                 <>
                   <div className="hint">{storeList.length} stores — volgorde = zoekvolgorde (beste eerst)</div>
-                  <div style={{ marginTop: 10 }}>
+                  <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button className="btn-ghost btn-small" onClick={() => auditStores(storeList)} disabled={auditBusy || !!busy}>
+                      {auditBusy ? "Checken…" : "🔎 Stores checken & sorteren"}
+                    </button>
                     <button className="btn-ghost btn-small" onClick={clearAllStores}>
                       ✕ Alles wissen
                     </button>
+                  </div>
+                  <div className="hint">
+                    Checken = per winkel: Shopify, werkt sort_by=best-selling écht, hoeveel % van de
+                    catalogus gaat over jouw producttypes, valuta en geslacht. Score 0–100 bepaalt de
+                    zoekvolgorde. Winkels die best-selling negeren kunnen geen "bewezen" producten leveren.
                   </div>
                   <div className="hint">
                     Stores verdwijnen ook vanzelf na {STORE_TTL_DAYS} dagen zonder gebruik van de tool.
@@ -1767,6 +1870,27 @@ export default function ScraperPage() {
               <button className="btn-ghost" onClick={runLiteralCheck} disabled={!workSheet.trim() || !!busy}>
                 {checkBusy === "literal" ? "Bezig…" : "Literal-check"}
               </button>
+            </div>
+
+            <div style={{ marginTop: 14 }}>
+              <div className="field-label">Vraag-bewijs per product</div>
+              <select
+                value={proofMode}
+                onChange={(e) => {
+                  setProofMode(e.target.value);
+                  save(LS_PROOF, e.target.value);
+                }}
+                disabled={!!busy}
+              >
+                <option value="bewezen">Alleen bewezen verkopers (score ≥ 50)</option>
+                <option value="kansrijk">Bewezen + kansrijk (score ≥ 25)</option>
+                <option value="alles">Alles wat matcht (geen vraag-filter)</option>
+              </select>
+              <div className="hint">
+                Score = gevalideerde bestseller-positie + reviews + uitverkochte varianten + fotoset.
+                Staat per product in kolom L–N van de importlijst. "Onbekend" = de winkel geeft geen
+                enkel signaal; die blijven staan, zodat je ze zelf kunt beoordelen.
+              </div>
             </div>
 
             <div style={{ marginTop: 16 }}>
