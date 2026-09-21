@@ -1,0 +1,56 @@
+{%- comment -%} SW — USP strip onder de hero (glazen balk met 4 vakjes · op telefoon een trage ticker) {%- endcomment -%}
+{%- capture sw_usp_items -%}
+    <div class="sw-usp__item"><span class="sw-usp__ico"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17.5" cy="17.5" r="1.6"/></svg></span><span class="sw-usp__txt"><span class="sw-usp__t">Free shipping</span><span class="sw-usp__d">Tracked, across Australia &amp; New Zealand</span></span></div>
+    <div class="sw-usp__item"><span class="sw-usp__ico"><svg viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.4"/></svg></span><span class="sw-usp__txt"><span class="sw-usp__t">Extra 20% off</span><span class="sw-usp__d">When you buy 4 or more pieces</span></span></div>
+    <div class="sw-usp__item"><span class="sw-usp__ico"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg></span><span class="sw-usp__txt"><span class="sw-usp__t">30-day returns</span><span class="sw-usp__d">Simple, by email</span></span></div>
+    <div class="sw-usp__item"><span class="sw-usp__ico"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span><span class="sw-usp__txt"><span class="sw-usp__t">Secure checkout</span><span class="sw-usp__d">Visa, Mastercard, Apple &amp; Google Pay</span></span></div>
+{%- endcapture -%}
+<div class="sw-usp">
+  <div class="sw-usp__bar">
+    <div class="sw-usp__track">{{ sw_usp_items }}</div>
+    <div class="sw-usp__track sw-usp__track--clone" aria-hidden="true">{{ sw_usp_items }}</div>
+  </div>
+</div>
+<style>
+  .sw-usp{--ink:#1C1D1D;--sage:#4F5D45;--mute:#7C8277;--hair:rgba(28,29,29,.08);font-family:inherit;padding:28px 24px 24px;margin:0}
+  .sw-usp__bar{max-width:1320px;margin:0 auto;border:1px solid var(--hair);border-radius:20px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(255,255,255,.82));
+    -webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 18px 40px -30px rgba(28,29,29,.4)}
+  .sw-usp__track{display:grid;grid-template-columns:repeat(4,1fr)}
+  .sw-usp__track--clone{display:none}
+  .sw-usp__item{display:flex;align-items:center;gap:14px;padding:22px 26px;min-width:0;transition:background .25s ease}
+  .sw-usp__item+.sw-usp__item{border-left:1px solid var(--hair)}
+  .sw-usp__item:hover{background:rgba(79,93,69,.035)}
+  .sw-usp__ico{display:inline-flex;align-items:center;justify-content:center;flex:0 0 38px;width:38px;height:38px;border-radius:12px;
+    background:linear-gradient(135deg,rgba(79,93,69,.14),rgba(79,93,69,.06));border:1px solid rgba(79,93,69,.16);color:var(--sage)}
+  .sw-usp__ico svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .sw-usp__txt{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .sw-usp__t{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);line-height:1.2;white-space:nowrap}
+  .sw-usp__d{font-size:13.5px;color:var(--mute);line-height:1.4}
+  @media(max-width:1199px){.sw-usp__item{padding:20px 20px;gap:12px}.sw-usp__d{font-size:13px}}
+  @media(max-width:989px){
+    .sw-usp{padding:24px 20px 20px}
+    .sw-usp__track{grid-template-columns:1fr 1fr}
+    .sw-usp__item:nth-child(3){border-left:0}
+    .sw-usp__item:nth-child(n+3){border-top:1px solid var(--hair)}
+  }
+  @media(max-width:600px){
+    /* phone: slow, quiet ticker — same look, full width */
+    .sw-usp{padding:0}
+    .sw-usp__bar{max-width:none;display:flex;border-radius:0;border-left:0;border-right:0;box-shadow:none;background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
+    .sw-usp__track,.sw-usp__track--clone{display:flex;flex:0 0 auto;animation:swTicker 48s linear infinite}
+    .sw-usp__item{padding:13px 22px;border:0!important;gap:10px;background:transparent!important}
+    .sw-usp__ico{flex-basis:30px;width:30px;height:30px;border-radius:9px}
+    .sw-usp__ico svg{width:14px;height:14px}
+    .sw-usp__t{font-size:10.5px;letter-spacing:.14em}
+    .sw-usp__d{font-size:12px;white-space:nowrap}
+    .sw-usp__bar:active .sw-usp__track,.sw-usp__bar:active .sw-usp__track--clone{animation-play-state:paused}
+  }
+  @keyframes swTicker{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+  @media(prefers-reduced-motion:reduce){
+    .sw-usp__track,.sw-usp__track--clone{animation:none}
+    .sw-usp__bar{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .sw-usp__track--clone{display:none}
+  }
+</style>

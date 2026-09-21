@@ -1,0 +1,98 @@
+{%- comment -%} SW — buy box: ship strip + payment row + Stack & Save (één blok) {%- endcomment -%}
+{%- assign sw_pay_types = 'visa,master,american_express,shopify_pay,apple_pay,google_pay' | split: ',' -%}
+<div class="sw-buybox">
+<div class="sw-ship" role="list">
+  <div class="sw-ship__cell" role="listitem">
+    <span class="sw-ship__k"><i class="sw-ship__dot" aria-hidden="true"></i>Order today</span>
+    <span class="sw-ship__v">Ships by <span id="sw-ship-date">—</span></span>
+  </div>
+  <div class="sw-ship__cell" role="listitem">
+    <span class="sw-ship__k"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17.5" cy="17.5" r="1.6"/></svg>Delivery</span>
+    <span class="sw-ship__v">Free &amp; tracked <span class="sw-ship__geo">AU &amp; NZ</span></span>
+  </div>
+</div>
+<div class="sw-pay">
+  <div class="sw-pay__icons" aria-label="Accepted payment methods">
+    {%- for t in sw_pay_types -%}{{ t | payment_type_svg_tag: class: 'sw-pay__icon' }}{%- endfor -%}
+  </div>
+  <span class="sw-pay__secure" aria-label="Secure checkout"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg><span class="sw-pay__secure-t">Secure checkout</span></span>
+</div>
+<div class="sw-stack">
+  <div class="sw-stack__head">
+    <p class="sw-stack__title">Stack &amp; Save</p>
+    <span class="sw-stack__auto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Auto-applied<span class="sw-stack__auto-t"> at checkout</span></span>
+  </div>
+  <p class="sw-stack__sub">Mix and match — no code needed.</p>
+  <div class="sw-stack__rail" role="list">
+    <div class="sw-stack__tier" role="listitem"><span class="sw-stack__pct">10<sup>%</sup></span><span class="sw-stack__qty">2 pieces</span></div>
+    <div class="sw-stack__tier" role="listitem"><span class="sw-stack__pct">15<sup>%</sup></span><span class="sw-stack__qty">3 pieces</span></div>
+    <div class="sw-stack__tier sw-stack__tier--best" role="listitem"><span class="sw-stack__flag">Best value</span><span class="sw-stack__pct">20<sup>%</sup></span><span class="sw-stack__qty">4+ pieces</span></div>
+  </div>
+</div>
+</div>
+<style>
+  .sw-buybox{display:flex;flex-direction:column;gap:14px;margin:0;font-family:inherit}
+
+  .sw-ship{--ink:#1C1D1D;--sage:#4F5D45;--mute:#7C8277;--hair:rgba(28,29,29,.08);
+    display:grid;grid-template-columns:1fr 1fr;margin:0;font-family:inherit;
+    border:1px solid var(--hair);border-radius:16px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.72));
+    -webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 10px 30px -22px rgba(28,29,29,.35)}
+  .sw-ship__cell{display:flex;flex-direction:column;gap:5px;padding:13px 16px 12px;min-width:0}
+  .sw-ship__cell+.sw-ship__cell{border-left:1px solid var(--hair)}
+  .sw-ship__k{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);line-height:1}
+  .sw-ship__k svg{width:15px;height:15px;fill:none;stroke:var(--sage);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .sw-ship__dot{width:7px;height:7px;border-radius:50%;background:var(--sage);box-shadow:0 0 0 0 rgba(79,93,69,.45);animation:swPulse 2.4s ease-out infinite}
+  @keyframes swPulse{0%{box-shadow:0 0 0 0 rgba(79,93,69,.45)}70%{box-shadow:0 0 0 7px rgba(79,93,69,0)}100%{box-shadow:0 0 0 0 rgba(79,93,69,0)}}
+  .sw-ship__v{font-size:14px;font-weight:500;letter-spacing:-.005em;color:var(--ink);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sw-ship__geo{color:var(--mute);font-weight:400}
+  @media(prefers-reduced-motion:reduce){.sw-ship__dot{animation:none}}
+  @media(max-width:749px){.sw-ship__cell{padding:12px 13px 11px;gap:4px}.sw-ship__k{font-size:10px;letter-spacing:.12em}.sw-ship__v{font-size:13.5px}}
+  @media(max-width:420px){.sw-ship__geo{display:none}}
+
+  .sw-pay{--mute:#7C8277;--hair:rgba(28,29,29,.08);display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:0 2px;font-family:inherit}
+  .sw-pay__icons{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+  .sw-pay__icon{display:block;width:34px;height:22px;border-radius:4px;opacity:.9;transition:opacity .2s ease}
+  .sw-pay:hover .sw-pay__icon{opacity:1}
+  .sw-pay__secure{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+  .sw-pay__secure svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  @media(max-width:749px){.sw-pay{gap:8px}.sw-pay__icons{flex-wrap:nowrap;gap:4px}.sw-pay__icon{width:30px;height:19px}.sw-pay__secure-t{display:none}.sw-pay__secure svg{width:14px;height:14px}}
+
+  .sw-stack{--ink:#1C1D1D;--sage:#4F5D45;--moss:#3F4A3A;--mute:#7C8277;--hair:rgba(28,29,29,.08);
+    font-family:inherit;margin:0;padding:18px 18px 16px;border:1px solid var(--hair);border-radius:20px;
+    background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(247,247,244,.8));
+    -webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 34px -26px rgba(28,29,29,.4)}
+  .sw-stack__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 6px}
+  .sw-stack__title{margin:0;font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ink)}
+  .sw-stack__auto{display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;border-radius:999px;background:rgba(79,93,69,.1);color:var(--sage);font-size:10.5px;font-weight:500;letter-spacing:.06em;white-space:nowrap}
+  .sw-stack__auto svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .sw-stack__sub{margin:0 0 14px;font-size:13px;line-height:1.5;color:var(--mute);letter-spacing:-.002em}
+  .sw-stack__rail{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.7)}
+  .sw-stack__tier{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:16px 8px 13px;text-align:center;transition:background .25s ease}
+  .sw-stack__tier+.sw-stack__tier{border-left:1px solid var(--hair)}
+  .sw-stack__tier:hover{background:rgba(79,93,69,.05)}
+  .sw-stack__pct{font-size:26px;font-weight:500;letter-spacing:-.03em;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+  .sw-stack__pct sup{font-size:12px;font-weight:500;vertical-align:top;position:relative;top:2px;margin-left:1px;letter-spacing:0}
+  .sw-stack__qty{font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+  .sw-stack__tier--best{background:linear-gradient(135deg,var(--sage),var(--moss));border-left-color:transparent!important;overflow:hidden;padding-top:24px}
+  .sw-stack__tier--best:hover{background:linear-gradient(135deg,var(--sage),var(--moss))}
+  .sw-stack__tier--best .sw-stack__pct,.sw-stack__tier--best .sw-stack__qty{color:#fff}
+  .sw-stack__tier--best .sw-stack__qty{color:rgba(255,255,255,.75)}
+  .sw-stack__tier--best::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);transform:translateX(-120%);animation:swSheen 7s ease-in-out infinite}
+  @keyframes swSheen{0%,55%{transform:translateX(-120%)}75%,100%{transform:translateX(120%)}}
+  .sw-stack__flag{position:absolute;top:7px;left:50%;transform:translateX(-50%);padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font-size:8.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;line-height:1;white-space:nowrap;backdrop-filter:blur(4px)}
+  @media(prefers-reduced-motion:reduce){.sw-stack__tier--best::after{animation:none}}
+  @media(max-width:749px){.sw-stack{padding:16px 14px 14px}.sw-stack__sub{margin-bottom:12px}.sw-stack__pct{font-size:22px}.sw-stack__qty{font-size:10px;letter-spacing:.1em}.sw-stack__tier{padding:14px 4px 11px}.sw-stack__tier--best{padding-top:24px}.sw-stack__auto{padding:4px 8px 4px 7px}.sw-stack__auto-t{display:none}
+    .sw-stack__flag{top:0;left:0;right:0;transform:none;border-radius:0;padding:4px 0 3px;font-size:7.5px;letter-spacing:.12em;background:rgba(255,255,255,.16)}}
+</style>
+<script>
+  (function(){
+    var d=new Date(),added=0;
+    while(added<2){d.setDate(d.getDate()+1);var day=d.getDay();if(day!==0&&day!==6){added++;}}
+    var el=document.getElementById('sw-ship-date');
+    var o=window.innerWidth<420?{day:'numeric',month:'short'}:{weekday:'short',day:'numeric',month:'short'};
+    if(el) el.textContent=d.toLocaleDateString('en-AU',o);
+  })();
+</script>

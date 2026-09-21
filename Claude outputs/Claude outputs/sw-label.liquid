@@ -1,0 +1,28 @@
+{%- comment -%} SW — label boven de producttitel {%- endcomment -%}
+{%- assign label_text = 'Season Sale' -%}
+{%- assign only_on_sale = true -%}   {%- comment -%} true = alleen tonen bij een doorstreepprijs {%- endcomment -%}
+{%- assign show_saving = true -%}    {%- comment -%} toont "Save 32%" naast het label {%- endcomment -%}
+{%- assign v = product.selected_or_first_available_variant -%}
+{%- assign on_sale = false -%}
+{%- if v.compare_at_price > v.price -%}{%- assign on_sale = true -%}{%- endif -%}
+{%- if only_on_sale == false or on_sale -%}
+<div class="sw-label">
+  <span class="sw-label__pill">
+    <i class="sw-label__dot" aria-hidden="true"></i>{{ label_text }}
+    {%- if show_saving and on_sale -%}
+      {%- assign pct = v.compare_at_price | minus: v.price | times: 100.0 | divided_by: v.compare_at_price | round -%}
+      <span class="sw-label__sep" aria-hidden="true"></span><strong>Save {{ pct }}%</strong>
+    {%- endif -%}
+  </span>
+</div>
+<style>
+  .sw-label{display:flex;margin:0 0 10px;font-family:inherit}
+  .sw-label__pill{display:inline-flex;align-items:center;gap:8px;padding:5px 10px 5px 9px;border-radius:999px;
+    background:linear-gradient(135deg,rgba(79,93,69,.13),rgba(79,93,69,.06));border:1px solid rgba(79,93,69,.2);
+    color:#3F4A3A;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;line-height:1;white-space:nowrap;
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+  .sw-label__dot{width:6px;height:6px;border-radius:50%;background:#4F5D45;box-shadow:0 0 0 3px rgba(79,93,69,.14)}
+  .sw-label__sep{width:1px;height:10px;background:rgba(79,93,69,.3)}
+  .sw-label__pill strong{font-weight:700;color:#1C1D1D;letter-spacing:.12em}
+</style>
+{%- endif -%}
