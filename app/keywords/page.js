@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 import { orderWindow, storeProfile } from "@/lib/verdeling";
 
@@ -230,6 +230,20 @@ export default function KeywordsPage() {
   const [uElapsed, setUElapsed] = useState(0);
   const [uPhase, setUPhase] = useState("");
 
+  /* ---- Tabblad 4: Bijvullen (aanvulling op een bestaande organization) ---- */
+  const [bOrgTab, setBOrgTab] = useState("");
+  const [bStatsSheet, setBStatsSheet] = useState("");
+  const [bStatsTab, setBStatsTab] = useState("");
+  const [bTargetSheet, setBTargetSheet] = useState("");
+  const [bTargetTab, setBTargetTab] = useState("");
+  const [bInstruction, setBInstruction] = useState("");
+  const [bProducts, setBProducts] = useState(""); // leeg = AI kiest
+  const [bBusy, setBBusy] = useState(""); // "" | "plan" | "prep" | "write"
+  const [bPlan, setBPlan] = useState(null); // antwoord van stap 1
+  const [bPrep, setBPrep] = useState(null); // antwoord van stap 2
+  const [bLogs, setBLogs] = useState([]);
+  const [bDoneUrl, setBDoneUrl] = useState("");
+
   const fileInput = useRef(null);
   const chatEnd = useRef(null);
 
@@ -252,6 +266,14 @@ export default function KeywordsPage() {
       if (us) setUStatsTab(us);
       const usl = localStorage.getItem("kw_u_statssheet");
       if (usl) setUStatsSheet(usl);
+      const bo = localStorage.getItem("kw_b_orgtab");
+      if (bo) setBOrgTab(bo);
+      const bss = localStorage.getItem("kw_b_statssheet");
+      if (bss) setBStatsSheet(bss);
+      const bst = localStorage.getItem("kw_b_statstab");
+      if (bst) setBStatsTab(bst);
+      const bts = localStorage.getItem("kw_b_targetsheet");
+      if (bts) setBTargetSheet(bts);
     } catch {}
     setSessions(loadSessions());
   }, []);
@@ -819,6 +841,158 @@ export default function KeywordsPage() {
     !uRunning && uOrgSheet.trim() && uOrgTab.trim() && uStatsSheet.trim() &&
     uStatsTab.trim() && orderedMonths.length === 4;
 
+  /* ---------- Bijvullen ---------- */
+  const bPush = (e) =>
+    setBLogs((l) => {
+      if (e.key) {
+        const i = l.findIndex((x) => x.key === e.key);
+        if (i >= 0) {
+          const copy = [...l];
+          copy[i] = e;
+          return copy;
+        }
+      }
+      return [...l, e];
+    });
+  const canBijvulPlan = !bBusy && uOrgSheet.trim() && bOrgTab.trim() && bInstruction.trim();
+  const canBijvulPrep = !bBusy && bPlan && bStatsSheet.trim() && bStatsTab.trim() && orderedMonths.length === 4;
+  const canBijvulWrite = !bBusy && bPrep && bTargetSheet.trim() && bTargetTab.trim();
+
+  function bRemember() {
+    try {
+      localStorage.setItem("kw_b_orgtab", bOrgTab.trim());
+      localStorage.setItem("kw_b_statssheet", bStatsSheet.trim());
+      localStorage.setItem("kw_b_statstab", bStatsTab.trim());
+      localStorage.setItem("kw_b_targetsheet", bTargetSheet.trim());
+      localStorage.setItem("kw_store", vStore.trim());
+      localStorage.setItem("kw_market", vMarket);
+    } catch {}
+  }
+
+  /* Stap 1: de organization inlezen + de instructie omzetten in een plan.
+     Zet ook het venster klaar: het originele venster één maand opgeschoven
+     (de aanvulling gaat later live dan de eerste import). */
+  async function bijvulPlan() {
+    if (!canBijvulPlan) return;
+    setBBusy("plan");
+    setBPlan(null);
+    setBPrep(null);
+    setBDoneUrl("");
+    setBLogs([]);
+    bRemember();
+    try {
+      bPush({ strong: true, text: `— Bijvullen: ${vStore.trim() || "store ?"} · markt ${vMarket} · origineel "${bOrgTab.trim()}"` });
+      bPush({ text: "Stap 1/3 · Originele organization inlezen en je instructie omzetten in een plan…", key: "b-step" });
+      const r = await api("/api/keywords-bijvullen", {
+        action: "plan",
+        orgSheetId: uOrgSheet.trim(),
+        orgTab: bOrgTab.trim(),
+        instruction: bInstruction.trim(),
+        storeUrl: vStore.trim(),
+        market: vMarket,
+        genders: vGenders,
+        productTarget: Number(bProducts) > 0 ? Number(bProducts) : null,
+        months: orderedMonths.length === 4 ? orderedMonths : null,
+      });
+      setBPlan(r);
+      if (r.org && r.org.genders && r.org.genders !== vGenders) setVGenders(r.org.genders);
+      if (orderedMonths.length !== 4 && r.suggestedMonths && r.suggestedMonths.length === 4) setVMonths(r.suggestedMonths);
+      bPush({
+        ok: true,
+        key: "b-step",
+        text: `Stap 1/3 · Origineel: ${r.org.products} producten in ${r.org.keywords} keywords (${(r.org.origMonths || []).join("-") || "venster onbekend"}${r.org.underdogs ? `, ${r.org.underdogs} underdogs` : ""}). Plan: ${r.plan.target} extra producten.`,
+      });
+      if (r.plan.summary) bPush({ text: `Plan (AI): ${r.plan.summary}` });
+      for (const f of r.plan.focus || []) bPush({ text: `• ${f.label} — ${Math.round(f.share * 100)}% van het budget${f.gender ? ` · ${f.gender === "M" ? "heren" : f.gender === "V" ? "dames" : "heren + dames"}` : ""}${f.collection ? ` · nieuwe collectie "${f.collection}"` : ""} · termen: ${f.terms.join(", ")}` });
+      if (!(r.plan.focus || []).length) bPush({ text: "Geen specifieke productsoorten gevraagd — de engine vult aan met de beste seizoens-keywords die nog niet in de organization staan." });
+      for (const n of r.plan.notes || []) bPush({ text: `Aanname: ${n}` });
+      if (orderedMonths.length !== 4 && r.suggestedMonths) bPush({ text: `Venster gezet op ${r.suggestedMonths.join("-")} (origineel + 1 maand). Pas aan als je wilt.` });
+      bPush({ text: "Klopt het plan? Pas anders je instructie aan en draai stap 1 opnieuw. Anders: stap 2." });
+    } catch (e) {
+      bPush({ err: true, text: `Mislukt: ${e.message || e}` });
+    } finally {
+      setBBusy("");
+    }
+  }
+
+  /* Stap 2: verse keyword-data inlezen en de bijvul-verdeling berekenen. */
+  async function bijvulPrep() {
+    if (!canBijvulPrep) return;
+    setBBusy("prep");
+    setBPrep(null);
+    setBDoneUrl("");
+    bRemember();
+    try {
+      bPush({ text: `Stap 2/3 · Keyword-data "${bStatsTab.trim()}" inlezen, bijvul-verdeling berekenen (${orderedMonths.join("-")}) en AI-eindcontrole…`, key: "b-step" });
+      const r = await api("/api/keywords-bijvullen", {
+        action: "prep",
+        orgSheetId: uOrgSheet.trim(),
+        orgTab: bOrgTab.trim(),
+        statsSheetId: bStatsSheet.trim(),
+        statsTab: bStatsTab.trim(),
+        months: orderedMonths,
+        market: vMarket,
+        genders: bPlan && bPlan.org ? bPlan.org.genders : vGenders,
+        storeUrl: vStore.trim(),
+        plan: bPlan.plan,
+      });
+      setBPrep(r);
+      bPush({ ok: true, key: "b-step", text: `Stap 2/3 · ${r.totalProducts} producten · ${r.rows.length} keywords · ${r.collections.length} collecties (doel ${r.target}) uit ${r.statsRows} keywords in de batch.` });
+      for (const f of r.focusReport || []) bPush({ text: `• ${f.label}: gevraagd ±${f.wanted}, gevuld ${f.got}` });
+      const top = r.collections.slice(0, 8).map((c) => `${c.col}${c.nieuw ? " (NIEUW)" : ""} ${c.products}p`).join(" · ");
+      if (top) bPush({ text: `Spreiding: ${top}${r.collections.length > 8 ? " · …" : ""}` });
+      if (r.nieuweCollecties && r.nieuweCollecties.length) bPush({ text: `Nieuwe collecties (bestaan nog niet in de store): ${r.nieuweCollecties.join(", ")}` });
+      if (r.aiRemoved && r.aiRemoved.length) bPush({ text: `AI-eindcontrole schrapte ${r.aiRemoved.length}: ${r.aiRemoved.slice(0, 6).join(", ")}${r.aiRemoved.length > 6 ? " …" : ""}` });
+      for (const w of r.warnings || []) bPush({ err: true, text: `Let op: ${w}` });
+      bPush({ text: "Bekijk het voorbeeld rechts. Goed? Stap 3 schrijft het naar je aanvul-sheet." });
+    } catch (e) {
+      bPush({ err: true, text: `Mislukt: ${e.message || e}` });
+    } finally {
+      setBBusy("");
+    }
+  }
+
+  /* Stap 3: nieuw tabblad in de aanvul-sheet. */
+  async function bijvulWrite() {
+    if (!canBijvulWrite) return;
+    setBBusy("write");
+    bRemember();
+    try {
+      bPush({ text: `Stap 3/3 · Tabblad "${bTargetTab.trim()}" aanmaken en wegschrijven…`, key: "b-step" });
+      const r = await api("/api/keywords-bijvullen", {
+        action: "write",
+        targetSheetId: bTargetSheet.trim(),
+        targetTab: bTargetTab.trim(),
+        rows: bPrep.rows,
+        collections: bPrep.collections,
+        meta: {
+          months: bPrep.months,
+          genders: bPrep.org.genders,
+          gLabel: bPrep.org.gLabel,
+          maxRank: bPrep.org.maxRank,
+          orgTab: bPrep.org.tab,
+          orgProducts: bPrep.org.products,
+          orgKeywords: bPrep.org.keywords,
+          origMonths: bPlan && bPlan.org ? bPlan.org.origMonths : [],
+          instruction: bInstruction.trim(),
+          planSummary: bPlan && bPlan.plan ? bPlan.plan.summary : "",
+          planNotes: bPlan && bPlan.plan ? bPlan.plan.notes : [],
+          focusReport: bPrep.focusReport,
+          target: bPrep.target,
+          warnings: bPrep.warnings,
+          aiRemoved: bPrep.aiRemoved,
+        },
+      });
+      setBDoneUrl(r.url);
+      bPush({ ok: true, key: "b-step", text: `✓ Klaar: "${r.title}" — ${r.totalProducts} producten · ${r.keywordCount} keywords. Rank loopt door op het origineel; kolom J zegt per keyword waarom hij erin zit.` });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+    } catch (e) {
+      bPush({ err: true, text: `Mislukt: ${e.message || e}` });
+    } finally {
+      setBBusy("");
+    }
+  }
+
   async function runUnderdog() {
     if (!canUnderdog) return;
     setURunning(true);
@@ -1030,6 +1204,9 @@ export default function KeywordsPage() {
           <button className={"srctab" + (view === "geheugen" ? " on" : "")} onClick={() => { setView("geheugen"); loadMemStatus(); }}>
             Geheugen
           </button>
+          <button className={"srctab" + (view === "bijvullen" ? " on" : "")} onClick={() => setView("bijvullen")}>
+            Bijvullen
+          </button>
         </div>
 
         {/* -------- Tabblad 2: Underdog keywords -------- */}
@@ -1100,6 +1277,146 @@ export default function KeywordsPage() {
                   komende 4 maanden, verwerkt in de omschrijvingen (TOP-tabblad, automatisch bijgewerkt).
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {view === "bijvullen" && (
+          <div className="layout-scraper">
+            <div>
+              <div className="card">
+                <h2>Bijvullen <span className="opt">(aanvulling op een bestaande organization)</span></h2>
+                <div className="hint" style={{ marginBottom: 12 }}>
+                  Een store start met 200–400 producten en groeit daarna. Plak de originele
+                  organization, vertel wat erbij moet (de productsoorten van de mediabuyer, een
+                  aantal — of laat de AI kiezen) en wijs een verse Keyword Planner-batch aan. De
+                  tool kiest alleen keywords die nog NIET in de organization staan, rekent op het
+                  venster van nu (origineel + 1 maand) en schrijft een apart aanvul-blad.
+                </div>
+
+                <div className="field-label">Originele organization — sheet</div>
+                <input type="text" value={uOrgSheet} onChange={(e) => setUOrgSheet(e.target.value)} />
+                <div className="field-label">Bladnaam van de originele organization</div>
+                <input type="text" placeholder='bv. "LGB - 16/08/2026"' value={bOrgTab} onChange={(e) => setBOrgTab(e.target.value)} />
+
+                <div className="field-label">Store</div>
+                <input type="text" placeholder="bv. ladyglamboutique.com" value={vStore} onChange={(e) => setVStore(e.target.value)} />
+                <div className="field-label">Markt</div>
+                <div className="seg">
+                  {[["USA", "USA"], ["UK", "UK"], ["AUS", "AUS + NZ"], ["CAN", "CAN"]].map(([val, label]) => (
+                    <button key={val} className={vMarket === val ? "on" : ""} onClick={() => setVMarket(val)} type="button">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="field-label">Wat moet erbij? <span className="opt">(instructie van de mediabuyer, gewone taal)</span></div>
+                <textarea
+                  rows={4}
+                  placeholder={'bv. "loafers heren en dames, meer men\'s shoes en ankle boots, 300 producten. Geen sportschoenen."'}
+                  value={bInstruction}
+                  onChange={(e) => setBInstruction(e.target.value)}
+                  style={{ width: "100%", resize: "vertical" }}
+                />
+                <div className="field-label">Aantal producten <span className="opt">(leeg = AI kiest)</span></div>
+                <input type="number" style={{ width: 110 }} min={20} max={900} placeholder="AI" value={bProducts} onChange={(e) => setBProducts(e.target.value)} />
+
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn" onClick={bijvulPlan} disabled={!canBijvulPlan}>
+                    {bBusy === "plan" ? "Bezig…" : "1 · Plan maken"}
+                  </button>
+                </div>
+
+                <div className="field-label" style={{ marginTop: 18 }}>
+                  Maanden <span className="opt">(venster van de aanvulling — {orderedMonths.length}/4; stap 1 zet origineel + 1 maand)</span>
+                </div>
+                <div className="mcal">
+                  {MONTHS.map((m) => {
+                    const on = vMonths.includes(m.key);
+                    const full = !on && vMonths.length >= 4;
+                    return (
+                      <button key={m.key} type="button" className={"mcal-m" + (on ? " on" : "") + (full ? " dim" : "")} onClick={() => toggleMonth(m.key)}>
+                        {m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="field-label">Verse keyword-data — sheet <span className="opt">(stap 1 van de verdeling met nieuwe batches, of het Geheugen van de markt)</span></div>
+                <input type="text" placeholder="https://docs.google.com/spreadsheets/d/…" value={bStatsSheet} onChange={(e) => setBStatsSheet(e.target.value)} />
+                <div className="field-label">Bladnaam van dat keyword-tabblad</div>
+                <input type="text" placeholder='bv. "LGB bijvul okt" of "MEM AUS"' value={bStatsTab} onChange={(e) => setBStatsTab(e.target.value)} />
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn" onClick={bijvulPrep} disabled={!canBijvulPrep}>
+                    {bBusy === "prep" ? "Bezig…" : "2 · Bijvul berekenen"}
+                  </button>
+                </div>
+
+                <div className="field-label" style={{ marginTop: 18 }}>Aanvul-sheet — link <span className="opt">(gedeeld met de service account)</span></div>
+                <input type="text" placeholder="https://docs.google.com/spreadsheets/d/…" value={bTargetSheet} onChange={(e) => setBTargetSheet(e.target.value)} />
+                <div className="field-label">Naam van het nieuwe blad</div>
+                <input type="text" placeholder='bv. "LGB bijvul 1 - okt 2026"' value={bTargetTab} onChange={(e) => setBTargetTab(e.target.value)} />
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn" onClick={bijvulWrite} disabled={!canBijvulWrite}>
+                    {bBusy === "write" ? "Bezig…" : "3 · Wegschrijven naar aanvul-sheet"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="card">
+                <h2>
+                  Bijvul-log
+                  {bBusy && <span className="opt"> — bezig: stap {bBusy === "plan" ? "1" : bBusy === "prep" ? "2" : "3"}</span>}
+                  {!bBusy && bDoneUrl && <span className="opt"> — klaar</span>}
+                </h2>
+                {bLogs.length === 0 && !bBusy && (
+                  <div className="center-note" style={{ padding: "18px 8px" }}>
+                    Vul het origineel en je instructie in en druk op "1 · Plan maken". Elke stap
+                    laat zien wat hij gaat doen voordat er iets wordt weggeschreven.
+                  </div>
+                )}
+                <div className="logpanel">
+                  {bLogs.map((l, i) => (
+                    <div key={i} className={"logline" + (l.err ? " err" : l.ok ? " ok" : l.strong ? " strong" : "")}>
+                      {l.text}
+                    </div>
+                  ))}
+                </div>
+                {bDoneUrl && (
+                  <div style={{ marginTop: 10 }}>
+                    <a className="btn" href={bDoneUrl} target="_blank" rel="noreferrer">
+                      ↗ Open het aanvul-blad
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {bPrep && (
+                <div className="card" style={{ marginTop: 18 }}>
+                  <h2>Voorbeeld <span className="opt">({bPrep.totalProducts} producten · {bPrep.rows.length} keywords)</span></h2>
+                  <div className="hint" style={{ marginBottom: 8 }}>Per collectie: bestaand in het origineel → erbij in deze aanvulling.</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "4px 14px", fontSize: 13 }}>
+                    <div className="opt">Collectie</div><div className="opt">Bestaand</div><div className="opt">Erbij</div>
+                    {bPrep.collections.map((c) => (
+                      <React.Fragment key={c.col}>
+                        <div>{c.col}{c.nieuw ? <span className="opt"> (NIEUW)</span> : null}</div>
+                        <div style={{ textAlign: "right" }}>{c.bestaand || 0}</div>
+                        <div style={{ textAlign: "right" }}>+{c.products}</div>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <div className="hint" style={{ marginTop: 12 }}>Eerste keywords:</div>
+                  <div className="logpanel" style={{ maxHeight: 260, overflow: "auto" }}>
+                    {bPrep.rows.slice(0, 40).map((r) => (
+                      <div key={r.kw} className="logline">
+                        {r.n}× {r.kw} <span className="opt">— {r.col} · {r.g} · {r.bron}</span>
+                      </div>
+                    ))}
+                    {bPrep.rows.length > 40 && <div className="logline muted">… en nog {bPrep.rows.length - 40} keywords (staan allemaal in het blad)</div>}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
