@@ -336,6 +336,34 @@ export async function POST(req) {
         `Cap per keyword bij ${opts.total} producten: ${result.caps.perKeyword} (kale kop-termen zoals "mens shoes": ${result.caps.headTerm}).`
       );
     }
+    /* GAT IN DE BRONDATA. Een collectie die volgens het seizoen juist NU aan
+       de beurt is maar nul keywords kreeg, is bijna altijd een ontbrekende
+       Keyword Planner-batch — geen rekenfout. In de Shapes-run van 25-9 zat
+       zo 0 schoeisel en 5 stuks zwemkleding in een Australische zomerstore,
+       en dat zag je nergens terug. */
+    if (result.stats && result.stats.colSeason) {
+      const got = new Set((result.collections || []).map((c) => c.col));
+      const blockedSet = new Set([
+        ...(body.blockCollections || []),
+        ...((result.storeProfile && result.storeProfile.block) || []),
+      ]);
+      const missing = Object.entries(result.stats.colSeason)
+        .filter(([c, v]) => v >= 0.72 && !got.has(c) && !blockedSet.has(c))
+        .map(([c]) => c);
+      if (missing.length) {
+        warnings.push(
+          `GAT IN DE BRONDATA — deze collecties zijn in dit venster juist in seizoen maar kregen NUL keywords: ${missing.join(", ")}. Dat is geen rekenfout: er zitten geen zoektermen voor in je bron-tabblad. Draai er een extra Keyword Planner-batch op en voeg die toe aan de all-batch.`
+        );
+      }
+      const thin = (result.collections || [])
+        .filter((c) => (result.stats.colSeason[c.col] || 0) >= 0.72 && c.kws <= 1)
+        .map((c) => `${c.col} (${c.kws} keyword, ${c.products} producten)`);
+      if (thin.length) {
+        warnings.push(
+          `Dun in seizoen — deze collecties staan op één zoekterm terwijl ze nu wél aan de beurt zijn: ${thin.join(", ")}. De cap per keyword is hier automatisch gehalveerd; meer zoektermen geeft pas echt assortiment.`
+        );
+      }
+    }
     if (opts.genders === "MV") {
       const mKws = result.rows.filter((r) => r.g === "M").length;
       const vKws = result.rows.filter((r) => r.g === "V").length;
