@@ -347,9 +347,15 @@ export async function POST(req) {
         ...(body.blockCollections || []),
         ...((result.storeProfile && result.storeProfile.block) || []),
       ]);
-      const missing = Object.entries(result.stats.colSeason)
-        .filter(([c, v]) => v >= 0.72 && !got.has(c) && !blockedSet.has(c))
-        .map(([c]) => c);
+      const missing = [
+        ...Object.entries(result.stats.colSeason)
+          .filter(([c, v]) => v >= 0.72 && !got.has(c) && !blockedSet.has(c))
+          .map(([c]) => c),
+        /* Collecties die niet één keyword haalden staan niet in colSeason —
+           de engine levert ze apart aan, anders blijft juist het grootste
+           gat onzichtbaar (Shapes 25-9: geen enkele sandaal of schoen). */
+        ...(result.stats.missingCore || []).filter((c) => !got.has(c) && !blockedSet.has(c)),
+      ].filter((c, i, a) => a.indexOf(c) === i);
       if (missing.length) {
         warnings.push(
           `GAT IN DE BRONDATA — deze collecties zijn in dit venster juist in seizoen maar kregen NUL keywords: ${missing.join(", ")}. Dat is geen rekenfout: er zitten geen zoektermen voor in je bron-tabblad. Draai er een extra Keyword Planner-batch op en voeg die toe aan de all-batch.`
