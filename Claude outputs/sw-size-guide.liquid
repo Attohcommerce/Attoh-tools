@@ -1,0 +1,135 @@
+{%- liquid
+  assign sw_t = product.title | append: ' ' | append: product.type | downcase
+  assign sw_tab = 'women'
+  if sw_t contains 'women'
+    assign sw_tab = 'women'
+  elsif sw_t contains 'men'
+    assign sw_tab = 'men'
+  endif
+-%}
+
+<div class="sw-sg-src" hidden>
+  <div class="sw-sg-row">
+    <button type="button" class="sw-sg-btn" data-sw-sg-open aria-haspopup="dialog">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="8" width="20" height="8" rx="1.5"/><path d="M6 8v3M10 8v4M14 8v3M18 8v4"/></svg>
+      <span>Size guide</span>
+    </button>
+  </div>
+</div>
+
+<div class="sw-sg-modal" id="sw-sg-modal" role="dialog" aria-modal="true" aria-labelledby="sw-sg-title" hidden>
+  <div class="sw-sg-backdrop" data-sw-sg-close></div>
+  <div class="sw-sg-panel">
+    <button type="button" class="sw-sg-x" data-sw-sg-close aria-label="Close">&times;</button>
+    <p class="sw-sg-eyebrow">Find your fit</p>
+    <h2 class="sw-sg-title" id="sw-sg-title">Size guide</h2>
+
+    <div class="sw-sg-tabs" role="tablist">
+      <button type="button" role="tab" class="sw-sg-tab" data-sw-sg-tab="women" aria-selected="{% if sw_tab == 'women' %}true{% else %}false{% endif %}">Women</button>
+      <button type="button" role="tab" class="sw-sg-tab" data-sw-sg-tab="men" aria-selected="{% if sw_tab == 'men' %}true{% else %}false{% endif %}">Men</button>
+    </div>
+
+    <div class="sw-sg-table" data-sw-sg-pane="women" {% unless sw_tab == 'women' %}hidden{% endunless %}>
+      <table>
+        <thead><tr><th>Size</th><th>AU / NZ</th><th>Bust (cm)</th><th>Waist (cm)</th><th>Hips (cm)</th></tr></thead>
+        <tbody>
+          <tr><td>XS</td><td>6</td><td>80</td><td>62</td><td>88</td></tr>
+          <tr><td>S</td><td>8</td><td>84</td><td>66</td><td>92</td></tr>
+          <tr><td>M</td><td>10</td><td>88</td><td>70</td><td>96</td></tr>
+          <tr><td>L</td><td>12</td><td>93</td><td>75</td><td>101</td></tr>
+          <tr><td>XL</td><td>14</td><td>98</td><td>80</td><td>106</td></tr>
+          <tr><td>2XL</td><td>16</td><td>104</td><td>86</td><td>112</td></tr>
+          <tr><td>3XL</td><td>18</td><td>110</td><td>92</td><td>118</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sw-sg-table" data-sw-sg-pane="men" {% unless sw_tab == 'men' %}hidden{% endunless %}>
+      <table>
+        <thead><tr><th>Size</th><th>Chest (cm)</th><th>Waist (cm)</th></tr></thead>
+        <tbody>
+          <tr><td>S</td><td>88–94</td><td>74–80</td></tr>
+          <tr><td>M</td><td>96–102</td><td>82–88</td></tr>
+          <tr><td>L</td><td>104–110</td><td>90–96</td></tr>
+          <tr><td>XL</td><td>112–118</td><td>98–104</td></tr>
+          <tr><td>2XL</td><td>120–126</td><td>106–112</td></tr>
+          <tr><td>3XL</td><td>128–134</td><td>114–120</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="sw-sg-note">Measurements are body measurements. Between sizes? We recommend sizing up for a relaxed fit.</p>
+  </div>
+</div>
+
+<style>
+  .sw-sg-row{display:flex;justify-content:flex-end;margin:14px 0 -6px;}
+  .sw-sg-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:4px 0;cursor:pointer;
+    font:inherit;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#1C1D1D;
+    text-decoration:underline;text-underline-offset:4px;text-decoration-color:rgba(28,29,29,.35);transition:color .2s;}
+  .sw-sg-btn:hover{color:#4F5D45;text-decoration-color:#4F5D45;}
+  .sw-sg-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;}
+  .sw-sg-modal[hidden]{display:none;}
+  .sw-sg-backdrop{position:absolute;inset:0;background:rgba(28,29,29,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+  .sw-sg-panel{position:relative;width:100%;max-width:560px;max-height:88vh;overflow:auto;background:rgba(255,255,255,.96);
+    border:1px solid rgba(28,29,29,.08);border-radius:20px;padding:28px 24px 22px;color:#1C1D1D;box-shadow:0 20px 60px rgba(28,29,29,.18);}
+  .sw-sg-x{position:absolute;top:12px;right:14px;background:none;border:0;font-size:26px;line-height:1;cursor:pointer;color:#1C1D1D;}
+  .sw-sg-eyebrow{margin:0 0 4px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#4F5D45;}
+  .sw-sg-title{margin:0 0 18px;font-size:22px;}
+  .sw-sg-tabs{display:inline-flex;gap:4px;padding:4px;border:1px solid rgba(28,29,29,.08);border-radius:999px;background:#F2F2F2;margin-bottom:16px;}
+  .sw-sg-tab{border:0;background:none;border-radius:999px;padding:7px 18px;font:inherit;font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;color:#4A4F45;}
+  .sw-sg-tab[aria-selected="true"]{background:#4F5D45;color:#fff;}
+  .sw-sg-table{overflow-x:auto;}
+  .sw-sg-table table{width:100%;border-collapse:collapse;font-size:14px;}
+  .sw-sg-table th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;color:#4A4F45;text-align:left;padding:10px 8px;border-bottom:1px solid #E8E8E1;}
+  .sw-sg-table td{padding:10px 8px;border-bottom:1px solid #E8E8E1;}
+  .sw-sg-table tbody tr:nth-child(odd){background:#F7F7F4;}
+  .sw-sg-note{margin:14px 0 0;font-size:12px;color:#4A4F45;}
+  body.sw-sg-lock{overflow:hidden;}
+</style>
+
+<script>
+(function(){
+  var src = document.querySelector('.sw-sg-src .sw-sg-row');
+  var modal = document.getElementById('sw-sg-modal');
+  if (!src || !modal) return;
+  if (modal.parentNode !== document.body) document.body.appendChild(modal);
+
+  function findSizeLabel(){
+    var els = document.querySelectorAll('variant-selects legend, variant-selects label, variant-radios legend, .product-form__input legend, .product-form__input label, .product-form__input .form__label');
+    for (var i = 0; i < els.length; i++){
+      var t = (els[i].textContent || '').trim().toLowerCase();
+      if (t === 'size' || t.indexOf('size') === 0) return els[i];
+    }
+    return null;
+  }
+
+  function place(){
+    if (document.querySelector('.sw-sg-row.is-placed')) return;
+    var label = findSizeLabel();
+    if (!label) return;
+    var box = label.closest('.product-form__input') || label;
+    var row = src.cloneNode(true);
+    row.classList.add('is-placed');
+    box.parentNode.insertBefore(row, box);
+  }
+
+  function open(){ modal.hidden = false; document.body.classList.add('sw-sg-lock'); }
+  function close(){ modal.hidden = true; document.body.classList.remove('sw-sg-lock'); }
+
+  document.addEventListener('click', function(e){
+    if (e.target.closest('[data-sw-sg-open]')) { e.preventDefault(); open(); return; }
+    if (e.target.closest('[data-sw-sg-close]')) { close(); return; }
+    var tab = e.target.closest('[data-sw-sg-tab]');
+    if (tab){
+      var key = tab.getAttribute('data-sw-sg-tab');
+      modal.querySelectorAll('[data-sw-sg-tab]').forEach(function(b){ b.setAttribute('aria-selected', b === tab ? 'true' : 'false'); });
+      modal.querySelectorAll('[data-sw-sg-pane]').forEach(function(p){ p.hidden = p.getAttribute('data-sw-sg-pane') !== key; });
+    }
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !modal.hidden) close(); });
+
+  place();
+  new MutationObserver(place).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
