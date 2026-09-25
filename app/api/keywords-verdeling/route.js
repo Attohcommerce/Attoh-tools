@@ -415,9 +415,30 @@ export async function POST(req) {
       opts.genders === "M" ? "Groep — alleen heren"
       : opts.genders === "V" ? "Groep — alleen dames"
       : "Groep";
+    /* Kolom J = WAAROM. De vraag "waarom staat dit in deze collectie / bij dit
+       geslacht?" kostte tot nu toe een duik in de engine. Nu staat het antwoord
+       naast de rij: waar het geslacht vandaan komt (woord / type / store /
+       default), de canonieke vorm (waarom twee rijen wél of niet samenvielen)
+       en de seizoensscore. "default" betekent: er zat géén geslachtssignaal in
+       het keyword — dat zijn de rijen om als eerste na te lopen. */
+    const GSRC = {
+      woord: "geslacht uit het keyword",
+      type: "geslacht uit het artikel",
+      store: "geslacht uit de store",
+      default: "GEEN geslachtssignaal — standaard",
+    };
+    const why = (r) =>
+      [
+        `${GSRC[r.gSrc] || "geslacht onbekend"} → ${r.g}`,
+        r.canon ? `canon: ${r.canon}` : null,
+        r.head ? "kop-term (lagere cap)" : null,
+        Number.isFinite(r.seasonScore) ? `seizoen ${Math.round(r.seasonScore * 100) / 100}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ");
     const left = [
-      ["Rank", "Keyword", "Collectie", gLabel, "Avg. volume", `Volume ${label}`, "Piekmaand", "Aantal producten", "Type"],
-      ...result.rows.map((r) => [r.rank, r.kw, r.col, r.g, r.avg, r.season, r.peak, r.n, keywordType(r.kw)]),
+      ["Rank", "Keyword", "Collectie", gLabel, "Avg. volume", `Volume ${label}`, "Piekmaand", "Aantal producten", "Type", "Waarom"],
+      ...result.rows.map((r) => [r.rank, r.kw, r.col, r.g, r.avg, r.season, r.peak, r.n, keywordType(r.kw), why(r)]),
     ];
     const right = [
       ["Collectie", "Aantal keywords", "Aantal producten", "Top keywords"],
@@ -448,19 +469,37 @@ export async function POST(req) {
       const mProd = result.rows.filter((r) => r.g === "M").reduce((a, r) => a + r.n, 0);
       diag.push(["Man/vrouw", `heren ${mProd} · dames ${result.totalProducts - mProd} producten (doel heren ${st.menTarget || 40}%)`]);
     }
+    /* Hoeveel rijen kregen hun geslacht zonder signaal? Dat getal zegt hoe
+       betrouwbaar de man/vrouw-verdeling is; bij de Shapes-bron was dat een
+       derde van alle keywords. */
+    {
+      const n = result.rows.filter((r) => r.gSrc === "default").length;
+      if (n) {
+        diag.push([
+          "Geslacht geschat",
+          `${n} van de ${result.rows.length} keywords hadden GEEN geslachtssignaal en volgden de standaard (zie kolom J). Loop die na als de man/vrouw-verhouding scheef voelt; zet "neutralGender" in het store-profiel om de standaard te draaien.`,
+        ]);
+      }
+    }
+    if (st.attrCapped && st.attrCapped.length) {
+      diag.push([
+        "Eigenschap afgetopt",
+        `${st.attrCapped.join(" · ")} — één stof of kleur mag nooit een groot deel van het assortiment bepalen; de zwakste keywords zijn geschrapt.`,
+      ]);
+    }
     diag.push(["Trechter", `${st.input || 0} rijen → junk ${st.junk || 0} · te weinig volume ${st.lowSeason || 0} · geen collectie ${st.unmapped || 0} · ander geslacht ${st.genderSkip || 0} · buiten seizoen ${st.offSeason || 0} · markt-jargon ${st.marketWord || 0} · na dedupe ${st.afterDedupe || 0} · gekozen ${result.rows.length}`]);
     for (const w of warnings) diag.push(["Let op", w]);
     for (const d of result.droppedCollections || []) diag.push(["Weggelaten collectie", d]);
     for (const a of aiRemoved) diag.push(["AI verwijderde", a]);
     const nOut = Math.max(left.length, right.length, diag.length);
     const values = [];
-    const padLeft = ["", "", "", "", "", "", "", "", ""];
+    const padLeft = ["", "", "", "", "", "", "", "", "", ""];
     const padRight = ["", "", "", ""];
     for (let i = 0; i < nOut; i++) {
       values.push([...(left[i] || padLeft), "", ...(right[i] || padRight), "", ...(diag[i] || [])]);
     }
     await appendRows(targetSheetId, `${a1Tab(t.title)}!A1`, values, "RAW");
-    await formatVerdelingTab(targetSheetId, t.tabId, left.length, 9, 17);
+    await formatVerdelingTab(targetSheetId, t.tabId, left.length, 10, 19);
 
     const id = parseSheetId(targetSheetId);
     return NextResponse.json({

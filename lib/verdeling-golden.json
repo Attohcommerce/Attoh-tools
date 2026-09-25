@@ -1,0 +1,4092 @@
+{
+ "note": "Gouden testset voor lib/verdeling.js. Bijwerken met: node scripts/verdeling-test.mjs --update (pas nadat je de verschillen hebt gelezen).",
+ "updated": "2026-09-25",
+ "cases": [
+  {
+   "kw": "&denim jeans",
+   "title": "&denim jeans",
+   "junk": "merkfragment",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "au dresses",
+   "title": "dresses",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress"
+  },
+  {
+   "kw": "baggy cargo shorts",
+   "title": "baggy cargo shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "type",
+   "canon": "baggy cargo men short"
+  },
+  {
+   "kw": "baggy jeans",
+   "title": "baggy jeans",
+   "junk": null,
+   "col": "Jeans",
+   "g": "V",
+   "src": "default",
+   "canon": "baggy denim"
+  },
+  {
+   "kw": "baggy jeans men",
+   "title": "mens baggy jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "baggy denim men"
+  },
+  {
+   "kw": "ballet flats",
+   "title": "ballet flats",
+   "junk": null,
+   "col": "Flats & Loafers",
+   "g": "V",
+   "src": "default",
+   "canon": "ballet flat"
+  },
+  {
+   "kw": "bandeau bikini",
+   "title": "bandeau bikini",
+   "junk": null,
+   "col": "Swimwear",
+   "g": "V",
+   "src": "type",
+   "canon": "bandeau bikini"
+  },
+  {
+   "kw": "barrel jeans",
+   "title": "barrel jeans",
+   "junk": null,
+   "col": "Jeans",
+   "g": "V",
+   "src": "default",
+   "canon": "barrel denim"
+  },
+  {
+   "kw": "beach shorts",
+   "title": "beach shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "beach short"
+  },
+  {
+   "kw": "beach shorts women",
+   "title": "womens beach shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "woord",
+   "canon": "beach short"
+  },
+  {
+   "kw": "bikini",
+   "title": "bikini",
+   "junk": null,
+   "col": "Swimwear",
+   "g": "V",
+   "src": "type",
+   "canon": "bikini"
+  },
+  {
+   "kw": "bikini cover up",
+   "title": "bikini cover up",
+   "junk": null,
+   "col": "Swimwear",
+   "g": "V",
+   "src": "type",
+   "canon": "bikini cover up"
+  },
+  {
+   "kw": "bikini sets",
+   "title": "bikini sets",
+   "junk": null,
+   "col": "Swimwear",
+   "g": "V",
+   "src": "type",
+   "canon": "bikini set"
+  },
+  {
+   "kw": "black bodysuit",
+   "title": "black bodysuit",
+   "junk": null,
+   "col": "Tank Tops",
+   "g": "V",
+   "src": "type",
+   "canon": "black bodysuit"
+  },
+  {
+   "kw": "black boots",
+   "title": "black boots",
+   "junk": null,
+   "col": "Boots",
+   "g": "V",
+   "src": "default",
+   "canon": "black boot"
+  },
+  {
+   "kw": "black cargo shorts",
+   "title": "black cargo shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "type",
+   "canon": "black cargo men short"
+  },
+  {
+   "kw": "black dress",
+   "title": "black dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "black dress"
+  },
+  {
+   "kw": "black heels",
+   "title": "black heels",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "type",
+   "canon": "black heel"
+  },
+  {
+   "kw": "black jeans",
+   "title": "black jeans",
+   "junk": null,
+   "col": "Jeans",
+   "g": "V",
+   "src": "default",
+   "canon": "black denim"
+  },
+  {
+   "kw": "black lace top",
+   "title": "black lace top",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "black lace top"
+  },
+  {
+   "kw": "black leather jackets",
+   "title": "black leather jackets",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "black jacket leather"
+  },
+  {
+   "kw": "black loafer",
+   "title": "black loafer",
+   "junk": null,
+   "col": "Flats & Loafers",
+   "g": "V",
+   "src": "default",
+   "canon": "black loafer"
+  },
+  {
+   "kw": "black midi skirt",
+   "title": "black midi skirt",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "black midi skirt"
+  },
+  {
+   "kw": "black pants",
+   "title": "black pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "black pant"
+  },
+  {
+   "kw": "black polo shirt",
+   "title": "black polo shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "black men polo"
+  },
+  {
+   "kw": "black polo top",
+   "title": "black polo top",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "black men polo"
+  },
+  {
+   "kw": "black sandals",
+   "title": "black sandals",
+   "junk": null,
+   "col": "Sandals",
+   "g": "V",
+   "src": "default",
+   "canon": "black sandal"
+  },
+  {
+   "kw": "black shirt",
+   "title": "black shirt",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "black shirt"
+  },
+  {
+   "kw": "black short cargo pants",
+   "title": "black short cargo pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "type",
+   "canon": "black cargo men pant short"
+  },
+  {
+   "kw": "blazer",
+   "title": "blazer",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "blazer"
+  },
+  {
+   "kw": "blouse",
+   "title": "blouse",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "type",
+   "canon": "blouse"
+  },
+  {
+   "kw": "board shorts",
+   "title": "board shorts",
+   "junk": null,
+   "col": "Men's Swimwear",
+   "g": "M",
+   "src": "type",
+   "canon": "men short swim"
+  },
+  {
+   "kw": "body con mini dress",
+   "title": "body con mini dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "body con dress mini"
+  },
+  {
+   "kw": "bodysuit",
+   "title": "bodysuit",
+   "junk": null,
+   "col": "Tank Tops",
+   "g": "V",
+   "src": "type",
+   "canon": "bodysuit"
+  },
+  {
+   "kw": "bomber jacket",
+   "title": "bomber jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "type",
+   "canon": "bomber jacket men"
+  },
+  {
+   "kw": "bomber jackets",
+   "title": "bomber jackets",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "type",
+   "canon": "bomber jacket men"
+  },
+  {
+   "kw": "boots",
+   "title": "boots",
+   "junk": null,
+   "col": "Boots",
+   "g": "V",
+   "src": "default",
+   "canon": "boot"
+  },
+  {
+   "kw": "booty shorts",
+   "title": "booty shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "booty short"
+  },
+  {
+   "kw": "boxer shoes",
+   "title": "boxer shoes",
+   "junk": "geen producttype",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "bridesmaid",
+   "title": "bridesmaid",
+   "junk": null,
+   "col": "Wedding Guest & Bridesmaid Dresses",
+   "g": "V",
+   "src": "woord",
+   "canon": "bridesmaid"
+  },
+  {
+   "kw": "brown boots",
+   "title": "brown boots",
+   "junk": null,
+   "col": "Boots",
+   "g": "V",
+   "src": "default",
+   "canon": "boot brown"
+  },
+  {
+   "kw": "brown sneaker",
+   "title": "brown sneaker",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "brown sneaker"
+  },
+  {
+   "kw": "button shirt",
+   "title": "button shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "button men shirt"
+  },
+  {
+   "kw": "button up shirts",
+   "title": "button up shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "button men shirt"
+  },
+  {
+   "kw": "camo cargo shorts",
+   "title": "camo cargo shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "type",
+   "canon": "camo cargo men short"
+  },
+  {
+   "kw": "camo hoodie",
+   "title": "camo hoodie",
+   "junk": null,
+   "col": "Hoodies",
+   "g": "V",
+   "src": "default",
+   "canon": "camo hoodie"
+  },
+  {
+   "kw": "camo pants",
+   "title": "camo pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "camo pant"
+  },
+  {
+   "kw": "camouflage pants",
+   "title": "camouflage pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "camouflage pant"
+  },
+  {
+   "kw": "capri pants",
+   "title": "capri pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "capri pant"
+  },
+  {
+   "kw": "cardigan",
+   "title": "cardigan",
+   "junk": null,
+   "col": "Sweaters",
+   "g": "V",
+   "src": "default",
+   "canon": "cardigan"
+  },
+  {
+   "kw": "cargo pants",
+   "title": "cargo pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "type",
+   "canon": "cargo men pant"
+  },
+  {
+   "kw": "cargo shorts",
+   "title": "cargo shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "type",
+   "canon": "cargo men short"
+  },
+  {
+   "kw": "cashmere sweater",
+   "title": "cashmere sweater",
+   "junk": null,
+   "col": "Sweaters",
+   "g": "V",
+   "src": "default",
+   "canon": "cashmere sweater"
+  },
+  {
+   "kw": "casual maxi dress",
+   "title": "casual maxi dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress maxi"
+  },
+  {
+   "kw": "chelsea boots",
+   "title": "chelsea boots",
+   "junk": null,
+   "col": "Boots",
+   "g": "V",
+   "src": "default",
+   "canon": "boot chelsea"
+  },
+  {
+   "kw": "chino pants",
+   "title": "chino pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "type",
+   "canon": "chino men pant"
+  },
+  {
+   "kw": "chino shorts",
+   "title": "chino shorts",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "type",
+   "canon": "chino men short"
+  },
+  {
+   "kw": "chino's",
+   "title": "chinos",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "type",
+   "canon": "chino men"
+  },
+  {
+   "kw": "christmas dress",
+   "title": "christmas dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "christma dress"
+  },
+  {
+   "kw": "christmas party dress",
+   "title": "christmas party dress",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "christma dress party"
+  },
+  {
+   "kw": "christmas sweaters",
+   "title": "christmas sweaters",
+   "junk": "novelty",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "clogs",
+   "title": "clogs",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "clog"
+  },
+  {
+   "kw": "closed toe sandals",
+   "title": "closed toe sandals",
+   "junk": null,
+   "col": "Sandals",
+   "g": "V",
+   "src": "default",
+   "canon": "closed sandal toe"
+  },
+  {
+   "kw": "coat",
+   "title": "coat",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "jacket"
+  },
+  {
+   "kw": "cocktail dress",
+   "title": "cocktail dress",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "cocktail dress"
+  },
+  {
+   "kw": "cocktail dresses",
+   "title": "cocktail dresses",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "cocktail dress"
+  },
+  {
+   "kw": "cocktail dresses aus",
+   "title": "cocktail dresses",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "cocktail dress"
+  },
+  {
+   "kw": "collared shirts",
+   "title": "collared shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "collared men shirt"
+  },
+  {
+   "kw": "comfortable sneakers",
+   "title": "comfortable sneakers",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "comfortable sneaker"
+  },
+  {
+   "kw": "comfy hoodie",
+   "title": "comfy hoodie",
+   "junk": null,
+   "col": "Hoodies",
+   "g": "V",
+   "src": "default",
+   "canon": "comfy hoodie"
+  },
+  {
+   "kw": "compression shirt",
+   "title": "compression shirt",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "compression shirt"
+  },
+  {
+   "kw": "corporate polo shirts",
+   "title": "corporate polo shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "corporate men polo"
+  },
+  {
+   "kw": "corset top",
+   "title": "corset top",
+   "junk": null,
+   "col": "Tank Tops",
+   "g": "V",
+   "src": "type",
+   "canon": "corset top"
+  },
+  {
+   "kw": "cotton on bikini",
+   "title": "cotton on bikini",
+   "junk": "merkenlijst",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "cotton tank tops",
+   "title": "cotton tank tops",
+   "junk": null,
+   "col": "Tank Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "cotton tank"
+  },
+  {
+   "kw": "cowboy boots",
+   "title": "cowboy boots",
+   "junk": null,
+   "col": "Boots",
+   "g": "V",
+   "src": "default",
+   "canon": "boot cowboy"
+  },
+  {
+   "kw": "crop top",
+   "title": "crop top",
+   "junk": null,
+   "col": "Tank Tops",
+   "g": "V",
+   "src": "type",
+   "canon": "crop top"
+  },
+  {
+   "kw": "denim dress",
+   "title": "denim dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "denim dress"
+  },
+  {
+   "kw": "denim jacket",
+   "title": "denim jacket",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "denim jacket"
+  },
+  {
+   "kw": "denim midi skirt",
+   "title": "denim midi skirt",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "denim midi skirt"
+  },
+  {
+   "kw": "denim shirt",
+   "title": "denim shirt",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "denim shirt"
+  },
+  {
+   "kw": "denim shorts",
+   "title": "denim shorts",
+   "junk": null,
+   "col": "Jeans",
+   "g": "V",
+   "src": "default",
+   "canon": "denim short"
+  },
+  {
+   "kw": "denim skirt",
+   "title": "denim skirt",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "denim skirt"
+  },
+  {
+   "kw": "dress pants",
+   "title": "dress pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "dress pant"
+  },
+  {
+   "kw": "dresses",
+   "title": "dresses",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress"
+  },
+  {
+   "kw": "evening dress au",
+   "title": "evening dress",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress evening"
+  },
+  {
+   "kw": "fall wedding guest gowns",
+   "title": "fall wedding guest gowns",
+   "junk": null,
+   "col": "Wedding Guest & Bridesmaid Dresses",
+   "g": "V",
+   "src": "default",
+   "canon": "fall gown guest wedding"
+  },
+  {
+   "kw": "fish shirts",
+   "title": "fish shirts",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "fish shirt"
+  },
+  {
+   "kw": "flannel shirt",
+   "title": "flannel shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "flannel men shirt"
+  },
+  {
+   "kw": "flannel shirts",
+   "title": "flannel shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "flannel men shirt"
+  },
+  {
+   "kw": "flare jeans men",
+   "title": "mens flare jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "denim flare men"
+  },
+  {
+   "kw": "flats",
+   "title": "flats",
+   "junk": null,
+   "col": "Flats & Loafers",
+   "g": "V",
+   "src": "default",
+   "canon": "flat"
+  },
+  {
+   "kw": "floral maxi dress",
+   "title": "floral maxi dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress floral maxi"
+  },
+  {
+   "kw": "formal dresses",
+   "title": "formal dresses",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress formal"
+  },
+  {
+   "kw": "formal dresses aus",
+   "title": "formal dresses",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress formal"
+  },
+  {
+   "kw": "gold heels",
+   "title": "gold heels",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "type",
+   "canon": "gold heel"
+  },
+  {
+   "kw": "grad dress",
+   "title": "grad dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress grad"
+  },
+  {
+   "kw": "graduation dress",
+   "title": "graduation dress",
+   "junk": null,
+   "col": "Graduation Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress graduation"
+  },
+  {
+   "kw": "graphic oversized tees",
+   "title": "graphic oversized tees",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "graphic oversized shirt"
+  },
+  {
+   "kw": "gray jeans",
+   "title": "gray jeans",
+   "junk": null,
+   "col": "Jeans",
+   "g": "V",
+   "src": "default",
+   "canon": "denim grey"
+  },
+  {
+   "kw": "green sundress",
+   "title": "green sundress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "default",
+   "canon": "green sundress"
+  },
+  {
+   "kw": "gymnastic shorts",
+   "title": "gymnastic shorts",
+   "junk": "geen producttype",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "halter neck top",
+   "title": "halter neck top",
+   "junk": null,
+   "col": "Tank Tops",
+   "g": "V",
+   "src": "type",
+   "canon": "halter neck top"
+  },
+  {
+   "kw": "hawaiian shirts",
+   "title": "hawaiian shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "hawaiian men shirt"
+  },
+  {
+   "kw": "heels",
+   "title": "heels",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "type",
+   "canon": "heel"
+  },
+  {
+   "kw": "henleys",
+   "title": "henleys",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "henley men"
+  },
+  {
+   "kw": "henleys tops",
+   "title": "henleys tops",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "henley men"
+  },
+  {
+   "kw": "hiking pants",
+   "title": "hiking pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "hiking pant"
+  },
+  {
+   "kw": "hoodie",
+   "title": "hoodie",
+   "junk": null,
+   "col": "Hoodies",
+   "g": "V",
+   "src": "default",
+   "canon": "hoodie"
+  },
+  {
+   "kw": "hoodie men streetwear",
+   "title": "mens streetwear hoodie",
+   "junk": null,
+   "col": "Men's Hoodies",
+   "g": "M",
+   "src": "woord",
+   "canon": "hoodie men streetwear"
+  },
+  {
+   "kw": "hoodies",
+   "title": "hoodies",
+   "junk": null,
+   "col": "Hoodies",
+   "g": "V",
+   "src": "default",
+   "canon": "hoodie"
+  },
+  {
+   "kw": "jacket",
+   "title": "jacket",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "jacket"
+  },
+  {
+   "kw": "jackets",
+   "title": "jackets",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "jacket"
+  },
+  {
+   "kw": "jean shorts",
+   "title": "jean shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "denim short"
+  },
+  {
+   "kw": "jeans",
+   "title": "jeans",
+   "junk": null,
+   "col": "Jeans",
+   "g": "V",
+   "src": "default",
+   "canon": "denim"
+  },
+  {
+   "kw": "joggers",
+   "title": "joggers",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "jogger"
+  },
+  {
+   "kw": "kitten heels",
+   "title": "kitten heels",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "type",
+   "canon": "heel kitten"
+  },
+  {
+   "kw": "knee high boots",
+   "title": "knee high boots",
+   "junk": null,
+   "col": "Boots",
+   "g": "V",
+   "src": "default",
+   "canon": "boot high knee"
+  },
+  {
+   "kw": "knee length cocktail dress",
+   "title": "knee length cocktail dress",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "cocktail dress knee length"
+  },
+  {
+   "kw": "knitted polo shirt mens",
+   "title": "mens knitted polo shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "knitted men polo"
+  },
+  {
+   "kw": "lace cami",
+   "title": "lace cami",
+   "junk": null,
+   "col": "Tank Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "cami lace"
+  },
+  {
+   "kw": "lace top",
+   "title": "lace top",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "lace top"
+  },
+  {
+   "kw": "leather jacket",
+   "title": "leather jacket",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "jacket leather"
+  },
+  {
+   "kw": "leather short shorts",
+   "title": "leather short shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "leather short"
+  },
+  {
+   "kw": "leggings",
+   "title": "leggings",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "type",
+   "canon": "legging"
+  },
+  {
+   "kw": "letterman jackets",
+   "title": "letterman jackets",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "jacket letterman"
+  },
+  {
+   "kw": "linen dress",
+   "title": "linen dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress linen"
+  },
+  {
+   "kw": "linen maxi dress",
+   "title": "linen maxi dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress linen maxi"
+  },
+  {
+   "kw": "linen mens shorts",
+   "title": "mens linen shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "woord",
+   "canon": "linen men short"
+  },
+  {
+   "kw": "linen pants",
+   "title": "linen pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "linen pant"
+  },
+  {
+   "kw": "linen shirt",
+   "title": "linen shirt",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "linen shirt"
+  },
+  {
+   "kw": "linen shirt male",
+   "title": "mens linen shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "linen men shirt"
+  },
+  {
+   "kw": "linen shorts white",
+   "title": "linen white shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "linen short white"
+  },
+  {
+   "kw": "linen tops",
+   "title": "linen tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "linen top"
+  },
+  {
+   "kw": "linen white shorts",
+   "title": "linen white shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "linen short white"
+  },
+  {
+   "kw": "little black dress",
+   "title": "little black dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "black dress little"
+  },
+  {
+   "kw": "loafers",
+   "title": "loafers",
+   "junk": null,
+   "col": "Flats & Loafers",
+   "g": "V",
+   "src": "default",
+   "canon": "loafer"
+  },
+  {
+   "kw": "long denim shorts",
+   "title": "long denim shorts",
+   "junk": null,
+   "col": "Jeans",
+   "g": "V",
+   "src": "default",
+   "canon": "denim long short"
+  },
+  {
+   "kw": "long dresses",
+   "title": "long dresses",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress maxi"
+  },
+  {
+   "kw": "long formal dresses with sleeves",
+   "title": "long formal dresses with sleeves",
+   "junk": "plakzin",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "long sleeve",
+   "title": "long sleeve",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "long sleeve"
+  },
+  {
+   "kw": "long sleeve dress",
+   "title": "long sleeve dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress long sleeve"
+  },
+  {
+   "kw": "long sleeve henley",
+   "title": "long sleeve henley",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "henley long men sleeve"
+  },
+  {
+   "kw": "long sleeve mini",
+   "title": "long sleeve mini",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "long mini sleeve"
+  },
+  {
+   "kw": "long sleeve shirts",
+   "title": "long sleeve shirts",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "long shirt sleeve"
+  },
+  {
+   "kw": "long sleeve top",
+   "title": "long sleeve top",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "long sleeve top"
+  },
+  {
+   "kw": "long sleeve tops",
+   "title": "long sleeve tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "long sleeve top"
+  },
+  {
+   "kw": "long surf shorts",
+   "title": "long surf shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "long short surf"
+  },
+  {
+   "kw": "mary jane shoes",
+   "title": "mary jane shoes",
+   "junk": null,
+   "col": "Flats & Loafers",
+   "g": "V",
+   "src": "default",
+   "canon": "jane mary shoe"
+  },
+  {
+   "kw": "mary janes",
+   "title": "mary janes",
+   "junk": null,
+   "col": "Flats & Loafers",
+   "g": "V",
+   "src": "default",
+   "canon": "jane mary"
+  },
+  {
+   "kw": "maxi dress",
+   "title": "maxi dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress maxi"
+  },
+  {
+   "kw": "maxi skirt",
+   "title": "maxi skirt",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "maxi skirt"
+  },
+  {
+   "kw": "men dress shoes",
+   "title": "men dress shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "dress men shoe"
+  },
+  {
+   "kw": "men polo boots",
+   "title": "men polo boots",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "boot men polo"
+  },
+  {
+   "kw": "men shoes black",
+   "title": "men shoes black",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "black men shoe"
+  },
+  {
+   "kw": "men's button down short sleeve",
+   "title": "mens button down short sleeve",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "button men short sleeve"
+  },
+  {
+   "kw": "men's dress shoes",
+   "title": "mens dress shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "dress men shoe"
+  },
+  {
+   "kw": "men's flare jeans",
+   "title": "mens flare jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "denim flare men"
+  },
+  {
+   "kw": "men's pants size",
+   "title": "mens pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "men pant"
+  },
+  {
+   "kw": "men's v neck sweater",
+   "title": "mens v neck sweater",
+   "junk": null,
+   "col": "Men's Sweaters",
+   "g": "M",
+   "src": "woord",
+   "canon": "men neck sweater v"
+  },
+  {
+   "kw": "mens ankle boots",
+   "title": "mens ankle boots",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "ankle boot men"
+  },
+  {
+   "kw": "mens baggy jeans",
+   "title": "mens baggy jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "baggy denim men"
+  },
+  {
+   "kw": "mens barn jacket",
+   "title": "mens barn jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "barn jacket men"
+  },
+  {
+   "kw": "mens beach shorts",
+   "title": "mens beach shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "woord",
+   "canon": "beach men short"
+  },
+  {
+   "kw": "mens bell bottom jeans",
+   "title": "mens bell bottom jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "bell bottom denim men"
+  },
+  {
+   "kw": "mens black cargo shorts",
+   "title": "mens black cargo shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "woord",
+   "canon": "black cargo men short"
+  },
+  {
+   "kw": "mens black casual shoes",
+   "title": "mens black casual shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "black men shoe"
+  },
+  {
+   "kw": "mens black chelsea boots",
+   "title": "mens black chelsea boots",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "black boot chelsea men"
+  },
+  {
+   "kw": "mens black cowboy boots",
+   "title": "mens black cowboy boots",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "black boot cowboy men"
+  },
+  {
+   "kw": "mens black jacket",
+   "title": "mens black jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "black jacket men"
+  },
+  {
+   "kw": "mens black skinny jeans",
+   "title": "mens black skinny jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "black denim men skinny"
+  },
+  {
+   "kw": "mens black sliders",
+   "title": "mens black sliders",
+   "junk": null,
+   "col": "Men's Sandals",
+   "g": "M",
+   "src": "woord",
+   "canon": "black men slide"
+  },
+  {
+   "kw": "mens black slip on loafers",
+   "title": "mens black slip on loafers",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "black loafer men on slip"
+  },
+  {
+   "kw": "mens black sweater",
+   "title": "mens black sweater",
+   "junk": null,
+   "col": "Men's Sweaters",
+   "g": "M",
+   "src": "woord",
+   "canon": "black men sweater"
+  },
+  {
+   "kw": "mens black trousers",
+   "title": "mens black trousers",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "black men pant"
+  },
+  {
+   "kw": "mens board shorts",
+   "title": "mens board shorts",
+   "junk": null,
+   "col": "Men's Swimwear",
+   "g": "M",
+   "src": "woord",
+   "canon": "men short swim"
+  },
+  {
+   "kw": "mens boardshorts",
+   "title": "mens boardshorts",
+   "junk": null,
+   "col": "Men's Swimwear",
+   "g": "M",
+   "src": "woord",
+   "canon": "men short swim"
+  },
+  {
+   "kw": "mens boat shoes",
+   "title": "mens boat shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "boat men shoe"
+  },
+  {
+   "kw": "mens bomber jacket",
+   "title": "mens bomber jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "bomber jacket men"
+  },
+  {
+   "kw": "mens bootcut jeans",
+   "title": "mens bootcut jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "bootcut denim men"
+  },
+  {
+   "kw": "mens boots",
+   "title": "mens boots",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "boot men"
+  },
+  {
+   "kw": "mens brown coat",
+   "title": "mens brown coat",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "brown jacket men"
+  },
+  {
+   "kw": "mens brown slip on shoes",
+   "title": "mens brown slip on shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "brown men on shoe slip"
+  },
+  {
+   "kw": "mens bucket hat",
+   "title": "mens bucket hat",
+   "junk": null,
+   "col": "Men's Hats",
+   "g": "M",
+   "src": "woord",
+   "canon": "bucket hat men"
+  },
+  {
+   "kw": "mens button shirt",
+   "title": "mens button shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "button men shirt"
+  },
+  {
+   "kw": "mens cardigan",
+   "title": "mens cardigan",
+   "junk": null,
+   "col": "Men's Sweaters",
+   "g": "M",
+   "src": "woord",
+   "canon": "cardigan men"
+  },
+  {
+   "kw": "mens cargo pants",
+   "title": "mens cargo pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "cargo men pant"
+  },
+  {
+   "kw": "mens cargo shorts",
+   "title": "mens cargo shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "woord",
+   "canon": "cargo men short"
+  },
+  {
+   "kw": "mens carpenter jeans",
+   "title": "mens carpenter jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "carpenter denim men"
+  },
+  {
+   "kw": "mens casual boots",
+   "title": "mens casual boots",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "boot men"
+  },
+  {
+   "kw": "mens casual coats",
+   "title": "mens casual coats",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men"
+  },
+  {
+   "kw": "mens casual dress boot",
+   "title": "mens casual dress boot",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "boot dress men"
+  },
+  {
+   "kw": "mens casual penny loafers",
+   "title": "mens casual penny loafers",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "loafer men penny"
+  },
+  {
+   "kw": "mens casual shoes",
+   "title": "mens casual shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shoe"
+  },
+  {
+   "kw": "mens chino pants",
+   "title": "mens chino pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "chino men pant"
+  },
+  {
+   "kw": "mens chino shorts",
+   "title": "mens chino shorts",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "chino men short"
+  },
+  {
+   "kw": "mens chinos",
+   "title": "mens chinos",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "chino men"
+  },
+  {
+   "kw": "mens christmas shirts",
+   "title": "mens christmas shirts",
+   "junk": "novelty",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "mens coats",
+   "title": "mens coats",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men"
+  },
+  {
+   "kw": "mens combat boots",
+   "title": "mens combat boots",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "boot combat men"
+  },
+  {
+   "kw": "mens cross body bag",
+   "title": "mens cross body bag",
+   "junk": null,
+   "col": "Men's Bags",
+   "g": "M",
+   "src": "woord",
+   "canon": "bag body cross men"
+  },
+  {
+   "kw": "mens denim shorts",
+   "title": "mens denim shorts",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "denim men short"
+  },
+  {
+   "kw": "mens derby shoes",
+   "title": "mens derby shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "derby men"
+  },
+  {
+   "kw": "mens exercise shirts",
+   "title": "mens exercise shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "exercise men shirt"
+  },
+  {
+   "kw": "mens fashion sweaters",
+   "title": "mens fashion sweaters",
+   "junk": null,
+   "col": "Men's Sweaters",
+   "g": "M",
+   "src": "woord",
+   "canon": "men sweater"
+  },
+  {
+   "kw": "mens flannel",
+   "title": "mens flannel",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "flannel men"
+  },
+  {
+   "kw": "mens flannel shirt",
+   "title": "mens flannel shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "flannel men shirt"
+  },
+  {
+   "kw": "mens flare pants",
+   "title": "mens flare pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "flare men pant"
+  },
+  {
+   "kw": "mens fleece pants",
+   "title": "mens fleece pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "fleece men pant"
+  },
+  {
+   "kw": "mens fur jacket",
+   "title": "mens fur jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "fur jacket men"
+  },
+  {
+   "kw": "mens grey jeans",
+   "title": "mens grey jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "denim grey men"
+  },
+  {
+   "kw": "mens henley",
+   "title": "mens henley",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "henley men"
+  },
+  {
+   "kw": "mens high waisted pants",
+   "title": "mens high waisted pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "high men pant waisted"
+  },
+  {
+   "kw": "mens hoodies",
+   "title": "mens hoodies",
+   "junk": null,
+   "col": "Men's Hoodies",
+   "g": "M",
+   "src": "woord",
+   "canon": "hoodie men"
+  },
+  {
+   "kw": "mens hunting hoodies",
+   "title": "mens hunting hoodies",
+   "junk": "sport-functie",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "mens jackets",
+   "title": "mens jackets",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men"
+  },
+  {
+   "kw": "mens jeans",
+   "title": "mens jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "denim men"
+  },
+  {
+   "kw": "mens lace up boots",
+   "title": "mens lace up boots",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "boot lace men"
+  },
+  {
+   "kw": "mens leather aviator jacket",
+   "title": "mens leather aviator jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "aviator jacket leather men"
+  },
+  {
+   "kw": "mens leather jackets",
+   "title": "mens leather jackets",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket leather men"
+  },
+  {
+   "kw": "mens leather pants",
+   "title": "mens leather pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "leather men pant"
+  },
+  {
+   "kw": "mens leather sandals",
+   "title": "mens leather sandals",
+   "junk": null,
+   "col": "Men's Sandals",
+   "g": "M",
+   "src": "woord",
+   "canon": "leather men sandal"
+  },
+  {
+   "kw": "mens leather shoes for",
+   "title": "mens leather shoes for",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "leather men shoe"
+  },
+  {
+   "kw": "mens leather slippers",
+   "title": "mens leather slippers",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "leather men slipper"
+  },
+  {
+   "kw": "mens leather sneakers",
+   "title": "mens leather sneakers",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "leather men sneaker"
+  },
+  {
+   "kw": "mens linen pants",
+   "title": "mens linen pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "linen men pant"
+  },
+  {
+   "kw": "mens linen shirt",
+   "title": "mens linen shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "linen men shirt"
+  },
+  {
+   "kw": "mens linen shorts",
+   "title": "mens linen shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "woord",
+   "canon": "linen men short"
+  },
+  {
+   "kw": "mens linen slacks",
+   "title": "mens linen slacks",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "linen men pant"
+  },
+  {
+   "kw": "mens loose fit jeans",
+   "title": "mens loose fit jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "denim fit loose men"
+  },
+  {
+   "kw": "mens lounge pants",
+   "title": "mens lounge pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "lounge men pant"
+  },
+  {
+   "kw": "mens over shirt",
+   "title": "mens over shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men over shirt"
+  },
+  {
+   "kw": "mens overcoat",
+   "title": "mens overcoat",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "men overcoat"
+  },
+  {
+   "kw": "mens oxford shirts",
+   "title": "mens oxford shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men oxford shirt"
+  },
+  {
+   "kw": "mens pants",
+   "title": "mens pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "men pant"
+  },
+  {
+   "kw": "mens pants cargo",
+   "title": "mens cargo pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "cargo men pant"
+  },
+  {
+   "kw": "mens parka",
+   "title": "mens parka",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "men parka"
+  },
+  {
+   "kw": "mens pea coat",
+   "title": "mens pea coat",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men pea"
+  },
+  {
+   "kw": "mens pink shoes for",
+   "title": "mens pink shoes for",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "men pink shoe"
+  },
+  {
+   "kw": "mens polo tops",
+   "title": "mens polo tops",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men polo"
+  },
+  {
+   "kw": "mens puffer jacket",
+   "title": "mens puffer jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men puffer"
+  },
+  {
+   "kw": "mens quilted coat",
+   "title": "mens quilted coat",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men quilted"
+  },
+  {
+   "kw": "mens rain boots",
+   "title": "mens rain boots",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "boot men rain"
+  },
+  {
+   "kw": "mens rain jacket",
+   "title": "mens rain jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men rain"
+  },
+  {
+   "kw": "mens red shirt",
+   "title": "mens red shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men red shirt"
+  },
+  {
+   "kw": "mens ripped jeans",
+   "title": "mens ripped jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "denim men ripped"
+  },
+  {
+   "kw": "mens rugby shirts",
+   "title": "mens rugby shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men rugby shirt"
+  },
+  {
+   "kw": "mens sandals",
+   "title": "mens sandals",
+   "junk": null,
+   "col": "Men's Sandals",
+   "g": "M",
+   "src": "woord",
+   "canon": "men sandal"
+  },
+  {
+   "kw": "mens sherpa jacket",
+   "title": "mens sherpa jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men sherpa"
+  },
+  {
+   "kw": "mens shirt jacket",
+   "title": "mens shirt jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men shirt"
+  },
+  {
+   "kw": "mens shirts",
+   "title": "mens shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shirt"
+  },
+  {
+   "kw": "mens shoes",
+   "title": "mens shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shoe"
+  },
+  {
+   "kw": "mens short chino pants",
+   "title": "mens short chino pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "chino men pant short"
+  },
+  {
+   "kw": "mens short sleeve shirts",
+   "title": "mens short sleeve shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shirt short sleeve"
+  },
+  {
+   "kw": "mens shorts",
+   "title": "mens shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men short"
+  },
+  {
+   "kw": "mens singlet tops",
+   "title": "mens singlet tops",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men singlet"
+  },
+  {
+   "kw": "mens skate shoes",
+   "title": "mens skate shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shoe skate"
+  },
+  {
+   "kw": "mens skinny jeans",
+   "title": "mens skinny jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "denim men skinny"
+  },
+  {
+   "kw": "mens slides",
+   "title": "mens slides",
+   "junk": null,
+   "col": "Men's Sandals",
+   "g": "M",
+   "src": "woord",
+   "canon": "men slide"
+  },
+  {
+   "kw": "mens slip on sneakers",
+   "title": "mens slip on sneakers",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "men on slip sneaker"
+  },
+  {
+   "kw": "mens slipper socks",
+   "title": "mens slipper socks",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "men slipper sock"
+  },
+  {
+   "kw": "mens sneakers",
+   "title": "mens sneakers",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "men sneaker"
+  },
+  {
+   "kw": "mens square toe boots",
+   "title": "mens square toe boots",
+   "junk": null,
+   "col": "Men's Boots",
+   "g": "M",
+   "src": "woord",
+   "canon": "boot men square toe"
+  },
+  {
+   "kw": "mens straight leg jeans",
+   "title": "mens straight leg jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "denim leg men straight"
+  },
+  {
+   "kw": "mens stretch jeans",
+   "title": "mens stretch jeans",
+   "junk": null,
+   "col": "Men's Jeans",
+   "g": "M",
+   "src": "woord",
+   "canon": "denim men stretch"
+  },
+  {
+   "kw": "mens sweat pants",
+   "title": "mens sweat pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "men pant sweat"
+  },
+  {
+   "kw": "mens sweater business casual",
+   "title": "mens business casual sweater",
+   "junk": null,
+   "col": "Men's Sweaters",
+   "g": "M",
+   "src": "woord",
+   "canon": "business men sweater"
+  },
+  {
+   "kw": "mens sweater vest",
+   "title": "mens sweater vest",
+   "junk": null,
+   "col": "Men's Sweaters",
+   "g": "M",
+   "src": "woord",
+   "canon": "men sweater vest"
+  },
+  {
+   "kw": "mens sweaters",
+   "title": "mens sweaters",
+   "junk": null,
+   "col": "Men's Sweaters",
+   "g": "M",
+   "src": "woord",
+   "canon": "men sweater"
+  },
+  {
+   "kw": "mens swim briefs",
+   "title": "mens swim briefs",
+   "junk": null,
+   "col": "Men's Swimwear",
+   "g": "M",
+   "src": "woord",
+   "canon": "brief men swim"
+  },
+  {
+   "kw": "mens t shirts",
+   "title": "mens t shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shirt t"
+  },
+  {
+   "kw": "mens tank top shirts",
+   "title": "mens tank top shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shirt tank"
+  },
+  {
+   "kw": "mens thermal shirt",
+   "title": "mens thermal shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shirt thermal"
+  },
+  {
+   "kw": "mens thong",
+   "title": "mens thong",
+   "junk": null,
+   "col": "Men's Sandals",
+   "g": "M",
+   "src": "woord",
+   "canon": "men thong"
+  },
+  {
+   "kw": "mens tracksuit pants",
+   "title": "mens tracksuit pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "men pant tracksuit"
+  },
+  {
+   "kw": "mens trench coat",
+   "title": "mens trench coat",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men trench"
+  },
+  {
+   "kw": "mens turtleneck sweater",
+   "title": "mens turtleneck sweater",
+   "junk": null,
+   "col": "Men's Sweaters",
+   "g": "M",
+   "src": "woord",
+   "canon": "men sweater turtleneck"
+  },
+  {
+   "kw": "mens tuxedo shirt",
+   "title": "mens tuxedo shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shirt tuxedo"
+  },
+  {
+   "kw": "mens varsity jacket",
+   "title": "mens varsity jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men varsity"
+  },
+  {
+   "kw": "mens waffle knit long sleeve",
+   "title": "mens waffle knit long sleeve",
+   "junk": null,
+   "col": "Men's Sweaters",
+   "g": "M",
+   "src": "woord",
+   "canon": "knit long men sleeve waffle"
+  },
+  {
+   "kw": "mens white linen slacks",
+   "title": "mens white linen slacks",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "linen men pant white"
+  },
+  {
+   "kw": "mens white pants",
+   "title": "mens white pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "men pant white"
+  },
+  {
+   "kw": "mens white sweater",
+   "title": "mens white sweater",
+   "junk": null,
+   "col": "Men's Sweaters",
+   "g": "M",
+   "src": "woord",
+   "canon": "men sweater white"
+  },
+  {
+   "kw": "mens white sweatshirt",
+   "title": "mens white sweatshirt",
+   "junk": null,
+   "col": "Men's Hoodies",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shirt sweat white"
+  },
+  {
+   "kw": "mens wide leg pants",
+   "title": "mens wide leg pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "leg men pant wide"
+  },
+  {
+   "kw": "mens winter coat",
+   "title": "mens winter coat",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men winter"
+  },
+  {
+   "kw": "mens winter hoodie",
+   "title": "mens winter hoodie",
+   "junk": null,
+   "col": "Men's Hoodies",
+   "g": "M",
+   "src": "woord",
+   "canon": "hoodie men winter"
+  },
+  {
+   "kw": "mens winter jackets",
+   "title": "mens winter jackets",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men winter"
+  },
+  {
+   "kw": "mens winter pants",
+   "title": "mens winter pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "men pant winter"
+  },
+  {
+   "kw": "mens winter shoes",
+   "title": "mens winter shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shoe winter"
+  },
+  {
+   "kw": "mens wool jacket",
+   "title": "mens wool jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men wool"
+  },
+  {
+   "kw": "mens wool pants",
+   "title": "mens wool pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "men pant wool"
+  },
+  {
+   "kw": "mens work shorts",
+   "title": "mens work shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men short work"
+  },
+  {
+   "kw": "mens workman jacket",
+   "title": "mens workman jacket",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men workman"
+  },
+  {
+   "kw": "mens workwear shirts",
+   "title": "mens workwear shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shirt workwear"
+  },
+  {
+   "kw": "midi dress",
+   "title": "midi dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress midi"
+  },
+  {
+   "kw": "midi skirt",
+   "title": "midi skirt",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "midi skirt"
+  },
+  {
+   "kw": "mini dress",
+   "title": "mini dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress mini"
+  },
+  {
+   "kw": "mini shorts",
+   "title": "mini shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "mini short"
+  },
+  {
+   "kw": "mini skirt",
+   "title": "mini skirt",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "mini skirt"
+  },
+  {
+   "kw": "mother of the bride dresses",
+   "title": "mother of the bride dresses",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "bride dress mother"
+  },
+  {
+   "kw": "mules",
+   "title": "mules",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "mule"
+  },
+  {
+   "kw": "new year dress",
+   "title": "new year dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress new year"
+  },
+  {
+   "kw": "no sleeve shirt",
+   "title": "no sleeve shirt",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "no shirt sleeve"
+  },
+  {
+   "kw": "off the shoulder tops",
+   "title": "off the shoulder tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "off shoulder top"
+  },
+  {
+   "kw": "one piece swimsuit",
+   "title": "one piece swimsuit",
+   "junk": null,
+   "col": "Swimwear",
+   "g": "V",
+   "src": "default",
+   "canon": "one piece swimsuit"
+  },
+  {
+   "kw": "over 50 wedding guest outfits",
+   "title": "over 50 wedding guest outfits",
+   "junk": null,
+   "col": "Wedding Guest & Bridesmaid Dresses",
+   "g": "V",
+   "src": "default",
+   "canon": "50 guest over wedding"
+  },
+  {
+   "kw": "oxford shoes",
+   "title": "oxford shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "type",
+   "canon": "men oxford"
+  },
+  {
+   "kw": "pajama pants men's",
+   "title": "mens pajama pants",
+   "junk": null,
+   "col": null,
+   "g": "M",
+   "src": "woord",
+   "canon": "men pajama pant"
+  },
+  {
+   "kw": "palazzo clothing",
+   "title": "palazzo pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "palazzo pant"
+  },
+  {
+   "kw": "pants",
+   "title": "pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "pant"
+  },
+  {
+   "kw": "pants dress",
+   "title": "pants dress",
+   "junk": "tegenstrijdig",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "pants for men white",
+   "title": "mens white pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "men pant white"
+  },
+  {
+   "kw": "party dress",
+   "title": "party dress",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress party"
+  },
+  {
+   "kw": "party dress au",
+   "title": "party dress",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress party"
+  },
+  {
+   "kw": "penny loafers",
+   "title": "penny loafers",
+   "junk": null,
+   "col": "Flats & Loafers",
+   "g": "V",
+   "src": "default",
+   "canon": "loafer penny"
+  },
+  {
+   "kw": "penny loafers with penny",
+   "title": "loafers with penny",
+   "junk": "plakzin",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "peplum tops",
+   "title": "peplum tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "peplum top"
+  },
+  {
+   "kw": "pink maxi dress",
+   "title": "pink maxi dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress maxi pink"
+  },
+  {
+   "kw": "pj pants",
+   "title": "pj pants",
+   "junk": null,
+   "col": null,
+   "g": "V",
+   "src": "default",
+   "canon": "pant pj"
+  },
+  {
+   "kw": "platform sandals",
+   "title": "platform sandals",
+   "junk": null,
+   "col": "Sandals",
+   "g": "V",
+   "src": "default",
+   "canon": "platform sandal"
+  },
+  {
+   "kw": "plus size dresses",
+   "title": "plus size dresses",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress plu size"
+  },
+  {
+   "kw": "polka dot top",
+   "title": "polka dot top",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "dot polka top"
+  },
+  {
+   "kw": "polo jersey shirt",
+   "title": "polo jersey shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "jersey men polo"
+  },
+  {
+   "kw": "polo shirts",
+   "title": "polo shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "men polo"
+  },
+  {
+   "kw": "polo top",
+   "title": "polo top",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "men polo"
+  },
+  {
+   "kw": "polo tshirt",
+   "title": "polo tshirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "men polo"
+  },
+  {
+   "kw": "puffer jacket",
+   "title": "puffer jacket",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "jacket puffer"
+  },
+  {
+   "kw": "quarter zip sweater",
+   "title": "quarter zip sweater",
+   "junk": null,
+   "col": "Sweaters",
+   "g": "V",
+   "src": "default",
+   "canon": "quarter sweater zip"
+  },
+  {
+   "kw": "rain jacket",
+   "title": "rain jacket",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "jacket rain"
+  },
+  {
+   "kw": "red dress",
+   "title": "red dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress red"
+  },
+  {
+   "kw": "red maxi dress",
+   "title": "red maxi dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress maxi red"
+  },
+  {
+   "kw": "red tops",
+   "title": "red tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "red top"
+  },
+  {
+   "kw": "rl polo shirts",
+   "title": "rl polo shirts",
+   "junk": "merkfragment",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "rugby shirts",
+   "title": "rugby shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "men rugby shirt"
+  },
+  {
+   "kw": "sandals",
+   "title": "sandals",
+   "junk": null,
+   "col": "Sandals",
+   "g": "V",
+   "src": "default",
+   "canon": "sandal"
+  },
+  {
+   "kw": "selvedge denim",
+   "title": "selvedge denim",
+   "junk": null,
+   "col": "Jeans",
+   "g": "V",
+   "src": "default",
+   "canon": "denim selvedge"
+  },
+  {
+   "kw": "sequin dress",
+   "title": "sequin dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress sequin"
+  },
+  {
+   "kw": "sequin top",
+   "title": "sequin top",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "sequin top"
+  },
+  {
+   "kw": "sheer tops",
+   "title": "sheer tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "sheer top"
+  },
+  {
+   "kw": "shirt dress",
+   "title": "shirt dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress shirt"
+  },
+  {
+   "kw": "shirts",
+   "title": "shirts",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "shirt"
+  },
+  {
+   "kw": "shoes",
+   "title": "shoes",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "shoe"
+  },
+  {
+   "kw": "shoes dress",
+   "title": "shoes dress",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "type",
+   "canon": "dress shoe"
+  },
+  {
+   "kw": "shoes loafer",
+   "title": "shoes loafer",
+   "junk": null,
+   "col": "Flats & Loafers",
+   "g": "V",
+   "src": "default",
+   "canon": "loafer"
+  },
+  {
+   "kw": "short sleeve shirts",
+   "title": "short sleeve shirts",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "shirt short sleeve"
+  },
+  {
+   "kw": "shoulder bag",
+   "title": "shoulder bag",
+   "junk": null,
+   "col": "Bags",
+   "g": "V",
+   "src": "default",
+   "canon": "bag shoulder"
+  },
+  {
+   "kw": "size 15 mens shoes",
+   "title": "mens size 15 shoes",
+   "junk": "maatspecifiek",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "skating shoes for men",
+   "title": "mens skating shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shoe skating"
+  },
+  {
+   "kw": "skirts",
+   "title": "skirts",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "skirt"
+  },
+  {
+   "kw": "skort",
+   "title": "skort",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "skort"
+  },
+  {
+   "kw": "slider shoes",
+   "title": "slider shoes",
+   "junk": null,
+   "col": "Sandals",
+   "g": "V",
+   "src": "default",
+   "canon": "slide"
+  },
+  {
+   "kw": "sneakers",
+   "title": "sneakers",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "sneaker"
+  },
+  {
+   "kw": "sneakers high top",
+   "title": "sneakers high top",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "high sneaker top"
+  },
+  {
+   "kw": "sparkly tops",
+   "title": "sparkly tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "sparkly top"
+  },
+  {
+   "kw": "sport shorts",
+   "title": "sport shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "short sport"
+  },
+  {
+   "kw": "stilettos",
+   "title": "stilettos",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "stiletto"
+  },
+  {
+   "kw": "straw cowboy hat",
+   "title": "straw cowboy hat",
+   "junk": null,
+   "col": "Hats",
+   "g": "V",
+   "src": "default",
+   "canon": "cowboy hat straw"
+  },
+  {
+   "kw": "sublimated polo shirts",
+   "title": "sublimated polo shirts",
+   "junk": "zakelijk/bedrukking",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "summer dress",
+   "title": "summer dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress summer"
+  },
+  {
+   "kw": "summer dresses",
+   "title": "summer dresses",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress summer"
+  },
+  {
+   "kw": "summer dresses au",
+   "title": "summer dresses",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress summer"
+  },
+  {
+   "kw": "summer maxi dress",
+   "title": "summer maxi dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress maxi"
+  },
+  {
+   "kw": "summer tops",
+   "title": "summer tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "summer top"
+  },
+  {
+   "kw": "sun hats",
+   "title": "sun hats",
+   "junk": null,
+   "col": "Hats",
+   "g": "V",
+   "src": "default",
+   "canon": "hat sun"
+  },
+  {
+   "kw": "sweater",
+   "title": "sweater",
+   "junk": null,
+   "col": "Sweaters",
+   "g": "V",
+   "src": "default",
+   "canon": "sweater"
+  },
+  {
+   "kw": "sweater dress",
+   "title": "sweater dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress sweater"
+  },
+  {
+   "kw": "sweater vests",
+   "title": "sweater vests",
+   "junk": null,
+   "col": "Sweaters",
+   "g": "V",
+   "src": "default",
+   "canon": "sweater vest"
+  },
+  {
+   "kw": "sweaters",
+   "title": "sweaters",
+   "junk": null,
+   "col": "Sweaters",
+   "g": "V",
+   "src": "default",
+   "canon": "sweater"
+  },
+  {
+   "kw": "sweatshirt",
+   "title": "sweatshirt",
+   "junk": null,
+   "col": "Hoodies",
+   "g": "V",
+   "src": "default",
+   "canon": "shirt sweat"
+  },
+  {
+   "kw": "sweatshirts",
+   "title": "sweatshirts",
+   "junk": null,
+   "col": "Hoodies",
+   "g": "V",
+   "src": "default",
+   "canon": "shirt sweat"
+  },
+  {
+   "kw": "swim shorts",
+   "title": "swim shorts",
+   "junk": null,
+   "col": "Men's Swimwear",
+   "g": "M",
+   "src": "type",
+   "canon": "men short swim"
+  },
+  {
+   "kw": "swim trunks",
+   "title": "swim trunks",
+   "junk": null,
+   "col": "Men's Swimwear",
+   "g": "M",
+   "src": "type",
+   "canon": "men short swim"
+  },
+  {
+   "kw": "swimwear",
+   "title": "swimwear",
+   "junk": null,
+   "col": "Swimwear",
+   "g": "V",
+   "src": "default",
+   "canon": "swimwear"
+  },
+  {
+   "kw": "t shirt",
+   "title": "t shirt",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "shirt t"
+  },
+  {
+   "kw": "tactical trousers",
+   "title": "tactical trousers",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "pant tactical"
+  },
+  {
+   "kw": "tailored dress shorts",
+   "title": "tailored dress shorts",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress short tailored"
+  },
+  {
+   "kw": "tailored shorts",
+   "title": "tailored shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "short tailored"
+  },
+  {
+   "kw": "tank top",
+   "title": "tank top",
+   "junk": null,
+   "col": "Tank Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "tank"
+  },
+  {
+   "kw": "tankini",
+   "title": "tankini",
+   "junk": null,
+   "col": "Swimwear",
+   "g": "V",
+   "src": "type",
+   "canon": "tankini"
+  },
+  {
+   "kw": "tote bag",
+   "title": "tote bag",
+   "junk": null,
+   "col": "Bags",
+   "g": "V",
+   "src": "default",
+   "canon": "bag tote"
+  },
+  {
+   "kw": "trail shoes men",
+   "title": "mens trail shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "men shoe trail"
+  },
+  {
+   "kw": "trench coat",
+   "title": "trench coat",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "jacket trench"
+  },
+  {
+   "kw": "trousers",
+   "title": "trousers",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "pant"
+  },
+  {
+   "kw": "tube top",
+   "title": "tube top",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "top tube"
+  },
+  {
+   "kw": "underwire bikini",
+   "title": "underwire bikini",
+   "junk": null,
+   "col": "Swimwear",
+   "g": "V",
+   "src": "type",
+   "canon": "bikini underwire"
+  },
+  {
+   "kw": "waterproof boots",
+   "title": "waterproof boots",
+   "junk": null,
+   "col": "Boots",
+   "g": "V",
+   "src": "default",
+   "canon": "boot waterproof"
+  },
+  {
+   "kw": "waterproof jacket",
+   "title": "waterproof jacket",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "jacket waterproof"
+  },
+  {
+   "kw": "wedding guest",
+   "title": "wedding guest",
+   "junk": null,
+   "col": "Wedding Guest & Bridesmaid Dresses",
+   "g": "V",
+   "src": "default",
+   "canon": "guest wedding"
+  },
+  {
+   "kw": "wedding guest dresses",
+   "title": "wedding guest dresses",
+   "junk": null,
+   "col": "Wedding Guest & Bridesmaid Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress guest wedding"
+  },
+  {
+   "kw": "wedge heels",
+   "title": "wedge heels",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "type",
+   "canon": "heel wedge"
+  },
+  {
+   "kw": "white blouse",
+   "title": "white blouse",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "type",
+   "canon": "blouse white"
+  },
+  {
+   "kw": "white button up shirt",
+   "title": "white button up shirt",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "button men shirt white"
+  },
+  {
+   "kw": "white dress",
+   "title": "white dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress white"
+  },
+  {
+   "kw": "white heels",
+   "title": "white heels",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "type",
+   "canon": "heel white"
+  },
+  {
+   "kw": "white jeans",
+   "title": "white jeans",
+   "junk": null,
+   "col": "Jeans",
+   "g": "V",
+   "src": "default",
+   "canon": "denim white"
+  },
+  {
+   "kw": "white linen dress",
+   "title": "white linen dress",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress linen white"
+  },
+  {
+   "kw": "white linen gown",
+   "title": "white linen gown",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "default",
+   "canon": "gown linen white"
+  },
+  {
+   "kw": "white linen pants",
+   "title": "white linen pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "linen pant white"
+  },
+  {
+   "kw": "white linen shirt",
+   "title": "white linen shirt",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "linen shirt white"
+  },
+  {
+   "kw": "white linen shorts",
+   "title": "white linen shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "default",
+   "canon": "linen short white"
+  },
+  {
+   "kw": "white midi skirt",
+   "title": "white midi skirt",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "midi skirt white"
+  },
+  {
+   "kw": "white sandals",
+   "title": "white sandals",
+   "junk": null,
+   "col": "Sandals",
+   "g": "V",
+   "src": "default",
+   "canon": "sandal white"
+  },
+  {
+   "kw": "white shirt",
+   "title": "white shirt",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "shirt white"
+  },
+  {
+   "kw": "white shoes",
+   "title": "white shoes",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "shoe white"
+  },
+  {
+   "kw": "white skirt",
+   "title": "white skirt",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "skirt white"
+  },
+  {
+   "kw": "white sneakers",
+   "title": "white sneakers",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "sneaker white"
+  },
+  {
+   "kw": "white top",
+   "title": "white top",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "top white"
+  },
+  {
+   "kw": "wide leg jeans",
+   "title": "wide leg jeans",
+   "junk": null,
+   "col": "Jeans",
+   "g": "V",
+   "src": "default",
+   "canon": "denim leg wide"
+  },
+  {
+   "kw": "wide leg pants",
+   "title": "wide leg pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "leg pant wide"
+  },
+  {
+   "kw": "wide leg sweats",
+   "title": "wide leg sweats",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "leg sweat wide"
+  },
+  {
+   "kw": "womens christmas shirts",
+   "title": "womens christmas shirts",
+   "junk": "novelty",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "womens christmas tops",
+   "title": "womens christmas tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "woord",
+   "canon": "christma top"
+  },
+  {
+   "kw": "womens linen pants",
+   "title": "womens linen pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "woord",
+   "canon": "linen pant"
+  },
+  {
+   "kw": "womens puffer jacket",
+   "title": "womens puffer jacket",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "woord",
+   "canon": "jacket puffer"
+  },
+  {
+   "kw": "womens red tops",
+   "title": "womens red tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "woord",
+   "canon": "red top"
+  },
+  {
+   "kw": "womens shorts",
+   "title": "womens shorts",
+   "junk": null,
+   "col": "Shorts",
+   "g": "V",
+   "src": "woord",
+   "canon": "short"
+  },
+  {
+   "kw": "womens t shirt",
+   "title": "womens t shirt",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "woord",
+   "canon": "shirt t"
+  },
+  {
+   "kw": "womens tops",
+   "title": "womens tops",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "woord",
+   "canon": "top"
+  },
+  {
+   "kw": "womens white shirts",
+   "title": "womens white shirts",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "woord",
+   "canon": "shirt white"
+  },
+  {
+   "kw": "work boots",
+   "title": "work boots",
+   "junk": null,
+   "col": "Boots",
+   "g": "V",
+   "src": "default",
+   "canon": "boot work"
+  },
+  {
+   "kw": "work polo shirts",
+   "title": "work polo shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "men polo work"
+  },
+  {
+   "kw": "work shorts",
+   "title": "work shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "type",
+   "canon": "men short work"
+  },
+  {
+   "kw": "worker shirt",
+   "title": "worker shirt",
+   "junk": null,
+   "col": "Blouses",
+   "g": "V",
+   "src": "default",
+   "canon": "shirt worker"
+  },
+  {
+   "kw": "black shorts cargo",
+   "title": "black cargo shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "type",
+   "canon": "black cargo men short"
+  },
+  {
+   "kw": "cargo baggy shorts",
+   "title": "cargo baggy shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "type",
+   "canon": "baggy cargo men short"
+  },
+  {
+   "kw": "skirt maxi",
+   "title": "maxi skirt",
+   "junk": null,
+   "col": "Skirts",
+   "g": "V",
+   "src": "type",
+   "canon": "maxi skirt"
+  },
+  {
+   "kw": "loafers for men",
+   "title": "mens loafers",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "woord",
+   "canon": "loafer men"
+  },
+  {
+   "kw": "dress shoes",
+   "title": "dress shoes",
+   "junk": null,
+   "col": "Men's Shoes",
+   "g": "M",
+   "src": "type",
+   "canon": "dress men shoe"
+  },
+  {
+   "kw": "mens dress shirts",
+   "title": "mens dress shirts",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "dress men shirt"
+  },
+  {
+   "kw": "suede coat mens",
+   "title": "mens suede coat",
+   "junk": null,
+   "col": "Men's Jackets & Coats",
+   "g": "M",
+   "src": "woord",
+   "canon": "jacket men suede"
+  },
+  {
+   "kw": "top ladies",
+   "title": "womens top",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "woord",
+   "canon": "top"
+  },
+  {
+   "kw": "shorts for guys",
+   "title": "mens shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "woord",
+   "canon": "men short"
+  },
+  {
+   "kw": "polo tops",
+   "title": "polo tops",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "type",
+   "canon": "men polo"
+  },
+  {
+   "kw": "formal gown",
+   "title": "formal gown",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "default",
+   "canon": "formal gown"
+  },
+  {
+   "kw": "evening gowns",
+   "title": "evening gowns",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "default",
+   "canon": "evening gown"
+  },
+  {
+   "kw": "gowns for women",
+   "title": "womens gowns",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "woord",
+   "canon": "gown"
+  },
+  {
+   "kw": "dressing gown",
+   "title": "dressing gown",
+   "junk": null,
+   "col": null,
+   "g": "V",
+   "src": "default",
+   "canon": "dressing gown"
+  },
+  {
+   "kw": "maxi gowns",
+   "title": "maxi gowns",
+   "junk": null,
+   "col": "Formal & Occasion Dresses",
+   "g": "V",
+   "src": "default",
+   "canon": "gown maxi"
+  },
+  {
+   "kw": "mens lino pants",
+   "title": "mens linen pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "linen men pant"
+  },
+  {
+   "kw": "mens trouser pants",
+   "title": "mens pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "men pant"
+  },
+  {
+   "kw": "cotton on shorts",
+   "title": "cotton on shorts",
+   "junk": "merkenlijst",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "pants shorts",
+   "title": "pants shorts",
+   "junk": "tegenstrijdig",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "linen pants womens dress",
+   "title": "womens linen pants dress",
+   "junk": "tegenstrijdig",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "short sleeve button up with shorts",
+   "title": "short sleeve button up with shorts",
+   "junk": "plakzin",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "kw": "down jacket",
+   "title": "down jacket",
+   "junk": null,
+   "col": "Jackets & Coats",
+   "g": "V",
+   "src": "default",
+   "canon": "down jacket"
+  },
+  {
+   "kw": "zip up hoodie",
+   "title": "zip up hoodie",
+   "junk": null,
+   "col": "Hoodies",
+   "g": "V",
+   "src": "default",
+   "canon": "hoodie zip"
+  },
+  {
+   "kw": "dresses with sleeves",
+   "title": "dresses with sleeves",
+   "junk": null,
+   "col": "Casual Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "dress sleeve with"
+  },
+  {
+   "kw": "pajama pants mens",
+   "title": "mens pajama pants",
+   "junk": null,
+   "col": null,
+   "g": "M",
+   "src": "woord",
+   "canon": "men pajama pant"
+  },
+  {
+   "kw": "tops short sleeve knit",
+   "title": "tops short sleeve knit",
+   "junk": null,
+   "col": "Other Tops",
+   "g": "V",
+   "src": "default",
+   "canon": "knit short sleeve top"
+  },
+  {
+   "kw": "bathing suit shorts",
+   "title": "bathing suit shorts",
+   "junk": null,
+   "col": "Men's Swimwear",
+   "g": "M",
+   "src": "type",
+   "canon": "bathing men short suit"
+  },
+  {
+   "kw": "wedding guest dresses over 50",
+   "title": "wedding guest dresses over 50",
+   "junk": null,
+   "col": "Wedding Guest & Bridesmaid Dresses",
+   "g": "V",
+   "src": "type",
+   "canon": "50 dress guest over wedding"
+  },
+  {
+   "kw": "thongs",
+   "title": "thongs",
+   "junk": null,
+   "col": "Sandals",
+   "g": "V",
+   "src": "default",
+   "canon": "thong"
+  },
+  {
+   "kw": "mens thongs",
+   "title": "mens thongs",
+   "junk": null,
+   "col": "Men's Sandals",
+   "g": "M",
+   "src": "woord",
+   "canon": "men thong"
+  }
+ ]
+}
