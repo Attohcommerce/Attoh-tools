@@ -10,6 +10,7 @@ const NAV = [
   { href: "/importer", label: "Importer" },
   { href: "/scraper", label: "Product Scraper" },
   { href: "/keywords", label: "Keywords" },
+  { href: "/niches", label: "Niche kiezen" },
   { href: "/qa", label: "Store Doctor" },
   { href: "/size-guide", label: "Size Guide" },
   { href: "/gmc-checklist", label: "GMC Checklist" },
@@ -48,6 +49,8 @@ export default function Header({ icon, title, subtitle }) {
       "sa_url_queue", "sa_importlog_sheet", "sa_selected_store",
       // Keywords
       "attoh_kw_sheet", "attoh_kw_vsheet", "attoh_kw_sessions",
+      // Niche kiezen
+      "attoh_niche_sheet",
     ];
     try {
       for (const k of KEYS) localStorage.removeItem(k);

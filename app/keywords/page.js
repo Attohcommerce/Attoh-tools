@@ -84,8 +84,9 @@ async function parseKeywordCsv(file) {
   const compIdxIdx = findCol(/^Competition \(indexed/i);
   const bidLowIdx = findCol(/bid \(low/i);
   const bidHighIdx = findCol(/bid \(high/i);
-  const chg3Idx = findCol(/^Three month change/i);
-  const yoyIdx = findCol(/^YoY change/i);
+  // Engelse én Nederlandse Keyword Planner-exports
+  const chg3Idx = findCol(/^Three month change/i, /^Wijziging over 3 maanden/i);
+  const yoyIdx = findCol(/^YoY change/i, /^Wijziging jaar op jaar/i);
 
   const clean = (v) => String(v || "").trim().replace(/^"|"$/g, "");
   const num = (v) => {
@@ -95,7 +96,9 @@ async function parseKeywordCsv(file) {
   // Decimalen (biedingen) en percentages (trend). Planner schrijft "25%",
   // "-100%" en "∞" (nieuw keyword zonder historie) — ∞ wordt 9999.
   const dec = (v) => {
-    const s = clean(v).replace(/,/g, "");
+    // NL-export schrijft "0,27": komma als decimaal (was: komma weg → 27)
+    const raw = clean(v);
+    const s = /,\d{1,2}$/.test(raw) ? raw.replace(/\./g, "").replace(",", ".") : raw.replace(/,/g, "");
     const n = Number(s);
     return Number.isFinite(n) && s !== "" ? n : "";
   };
@@ -103,7 +106,8 @@ async function parseKeywordCsv(file) {
     const s = clean(v);
     if (!s || s === "-") return "";
     if (s.includes("∞")) return 9999;
-    const n = Number(s.replace(/%/g, "").replace(/,/g, ""));
+    const t = s.replace(/%/g, "");
+    const n = Number(t.includes(",") ? t.replace(/\./g, "").replace(",", ".") : t);
     return Number.isFinite(n) ? n : "";
   };
 
