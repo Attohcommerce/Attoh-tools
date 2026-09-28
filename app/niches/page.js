@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Header from "../components/Header";
 import {
   parsePlannerText, mergeBatches, keywordTrend, windowShare, nicheScorecard, windowFromKeys,
+  markVariants, isNicheBrand,
 } from "@/lib/niche";
 import { isJunkKeyword } from "@/lib/brands";
 
@@ -117,8 +118,11 @@ export default function NichesPage() {
       for (const r of rows) {
         r.t = keywordTrend(r.months, monthNames);
         r.win = windowShare(r.months, monthNames, windowIdx);
-        r.junk = isJunkKeyword(r.kw);
+        r.junk = isJunkKeyword(r.kw) || isNicheBrand(r.kw);
       }
+      markVariants(rows);
+      const nVar = rows.filter((r) => r.variantOf).length;
+      pushLog({ ok: true, text: `${nVar} spelvarianten herkend (zelfde maandreeks als een ander keyword) — die tellen één keer mee in de scorecard` });
       const total = good.reduce((s, f) => s + f.rows.length, 0);
       pushLog({ ok: true, text: `${total} rijen gelezen → ${rows.length} unieke keywords · ${monthNames.length} maanden historie (${monthNames[0]} – ${monthNames.at(-1)})` });
       if (monthNames.length < 36) pushLog({ err: true, text: `Maar ${monthNames.length} maanden historie: de trendlabels (stijger/hype) hebben er 36+ nodig. Zet in Keyword Planner de periode op 4 jaar.` });
@@ -137,7 +141,7 @@ export default function NichesPage() {
         "Competition", "Comp. index", `Top bid low ${cur}`.trim(), `Top bid high ${cur}`.trim(),
         "3-mnd verandering %", "YoY verandering %",
         "Laatste 12 mnd", "12 mnd ervoor", "Groei 1 jaar %", "Groei 2 jaar %",
-        "Trend", "Piekmaand", `% in venster ${win.join("-")}`, "Merk/rommel",
+        "Trend", "Piekmaand", `% in venster ${win.join("-")}`, "Merk/rommel", "Variant van",
       ];
       const created = await api("/api/keywords-sheet", {
         action: "create", sheetId, tabName: tabName.trim(), header, rowCount: keep.length, colCount: header.length,
@@ -145,7 +149,7 @@ export default function NichesPage() {
       const values = keep.map((r) => [
         r.kw, r.niche, r.alsoIn.join(", "), r.avg, ...r.months,
         r.comp ?? "", r.compIdx ?? "", r.bidLow ?? "", r.bidHigh ?? "", r.chg3 ?? "", r.yoy ?? "",
-        r.t.L12, r.t.P12, pct(r.t.g1), pct(r.t.g2), r.t.label, r.t.peak, pct(r.win), r.junk ? "ja" : "",
+        r.t.L12, r.t.P12, pct(r.t.g1), pct(r.t.g2), r.t.label, r.t.peak, pct(r.win), r.junk ? "ja" : "", r.variantOf || "",
       ]);
       const CHUNK = 3000;
       for (let i = 0; i < values.length; i += CHUNK) {
@@ -164,13 +168,14 @@ export default function NichesPage() {
       /* ---- 4. scorecard-tabblad ---- */
       pushLog({ strong: true, text: "— Stap 3: scorecard-tabblad" });
       const sHeader = [
-        "Niche", "Kansscore (0-100)", "Vraag (gem./mnd)", "Breedte (kw ≥100/mnd)", "Keywords",
-        "Groei 1 jaar %", "Groei 2 jaar %", `Gem. bod ${cur}`.trim(), "Comp. index",
+        "Niche", "Kansscore (0-100)", "Vraag (gem./mnd, zonder varianten/merken)", "Breedte (kw ≥100/mnd)", "Keywords",
+        "Groei 1 jaar %", "Groei 2 jaar %", "Groei 1 jaar t.o.v. markt %", "Groei 2 jaar t.o.v. markt %",
+        `Gem. bod ${cur}`.trim(), "Comp. index",
         `% volume in venster ${win.join("-")}`, "Seizoensfit (1 = vlak)", "% volume stijger/nieuwe piek",
         "% volume hype", "Merkaandeel %", "Signalen", "Top keywords", "Grootste stijgers",
       ];
       const sRows = sc.map((c) => [
-        c.niche, c.kans, c.vraag, c.breedte, c.keywords, pct(c.g1), pct(c.g2),
+        c.niche, c.kans, c.vraag, c.breedte, c.keywords, pct(c.g1), pct(c.g2), pct(c.g1rel), pct(c.g2rel),
         Math.round(c.bod * 100) / 100, Math.round(c.comp), pct(c.winShare), Math.round(c.seizoen * 100) / 100,
         pct(c.trendAandeel), pct(c.hypeAandeel), pct(c.merkaandeel), c.flags.join("; "),
         c.top.join(", "), c.stijgers.join(", "),
@@ -182,8 +187,8 @@ export default function NichesPage() {
       await api("/api/keywords-sheet", { action: "append", sheetId, tabName: created2.title, rows: sRows });
       const fmt2 = await api("/api/niche-sheet", {
         action: "format", sheetId, tabId: created2.tabId, rowCount: sRows.length + 1, colCount: sHeader.length,
-        decimalCols: [7, 10],
-        wideCols: [{ col: 0, px: 170 }, { col: 14, px: 260 }, { col: 15, px: 320 }, { col: 16, px: 320 }],
+        decimalCols: [9, 12],
+        wideCols: [{ col: 0, px: 170 }, { col: 16, px: 260 }, { col: 17, px: 320 }, { col: 18, px: 320 }],
       });
       setLinks((l) => ({ ...l, score: fmt2.url }));
       pushLog({ ok: true, text: `"${created2.title}" staat klaar — kies 1-2 niches uit de top 3 en draai daar de diepe batches op.` });
@@ -282,7 +287,7 @@ export default function NichesPage() {
               <div className="card">
                 <h2>Scorecard <span className="opt">(venster {win.join("-")})</span></h2>
                 <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto auto auto", gap: "6px 12px", fontSize: 13, alignItems: "baseline" }}>
-                  <b>Kans</b><b>Niche</b><b>Vraag/mnd</b><b>Groei 1j</b><b>Venster</b><b>Bod</b>
+                  <b>Kans</b><b>Niche</b><b>Vraag/mnd</b><b>Groei t.o.v. markt</b><b>Venster</b><b>Bod</b>
                   {cards.map((c) => (
                     <React.Fragment key={c.niche}>
                       <span style={{ fontWeight: 600 }}>{c.kans}</span>
@@ -291,15 +296,16 @@ export default function NichesPage() {
                         {c.flags.length > 0 && <span className="opt"> · {c.flags.join(" · ")}</span>}
                       </span>
                       <span>{c.vraag.toLocaleString("nl-NL")}</span>
-                      <span>{pct(c.g1)}%</span>
+                      <span>{pct(c.g1rel) > 0 ? "+" : ""}{pct(c.g1rel)}%</span>
                       <span>{pct(c.winShare)}%</span>
                       <span>{c.bod.toFixed(2)}</span>
                     </React.Fragment>
                   ))}
                 </div>
                 <div className="hint" style={{ marginTop: 12 }}>
-                  Kansscore = vraag × groei (1 en 2 jaar) × seizoensfit × aandeel stijgers ÷ gemiddeld bod,
-                  met aftrek voor hype en merk-zoekopdrachten. Te smalle niches (minder dan 25 keywords met
+                  Kansscore = vraag × groei t.o.v. de markt (1 en 2 jaar) × seizoensfit × aandeel stijgers ÷
+                  gemiddeld bod, met aftrek voor hype en merk-zoekopdrachten. Spelvarianten (zelfde maandreeks)
+                  tellen één keer mee. Te smalle niches (minder dan 25 keywords met
                   ≥100 zoekopdrachten/mnd) krijgen 0. Het bod is het Search-bod uit Keyword Planner: goed om
                   niches te vergelijken, geen exacte Shopping-kostprijs.
                 </div>
