@@ -1,6 +1,6 @@
 {
  "note": "Gouden testset voor lib/verdeling.js. Bijwerken met: node scripts/verdeling-test.mjs --update (pas nadat je de verschillen hebt gelezen).",
- "updated": "2026-09-25",
+ "updated": "2026-10-02",
  "cases": [
   {
    "kw": "&denim jeans",
@@ -342,7 +342,7 @@
    "col": "Shorts",
    "g": "V",
    "src": "default",
-   "canon": "booty short"
+   "canon": "mini short"
   },
   {
    "kw": "boxer shoes",
@@ -4087,6 +4087,151 @@
    "g": "M",
    "src": "woord",
    "canon": "men thong"
+  },
+  {
+   "storeGenders": "M",
+   "kw": "mens g thong",
+   "title": "mens g thong",
+   "junk": null,
+   "col": null,
+   "g": "M",
+   "src": "woord",
+   "canon": "g thong"
+  },
+  {
+   "kw": "g string",
+   "title": "g string",
+   "junk": null,
+   "col": null,
+   "g": "V",
+   "src": "default",
+   "canon": "g string"
+  },
+  {
+   "storeGenders": "M",
+   "kw": "boxer shorts",
+   "title": "boxer shorts",
+   "junk": null,
+   "col": null,
+   "g": "M",
+   "src": "store",
+   "canon": "boxer short"
+  },
+  {
+   "kw": "wedges",
+   "title": "wedges",
+   "junk": null,
+   "col": "Shoes",
+   "g": "V",
+   "src": "default",
+   "canon": "wedge"
+  },
+  {
+   "storeGenders": "M",
+   "kw": "mens tank tops",
+   "title": "mens tank tops",
+   "junk": null,
+   "col": "Men's Shirts",
+   "g": "M",
+   "src": "woord",
+   "canon": "tank"
+  },
+  {
+   "kw": "track pants",
+   "title": "track pants",
+   "junk": null,
+   "col": "Trousers",
+   "g": "V",
+   "src": "default",
+   "canon": "pant track"
+  },
+  {
+   "storeGenders": "M",
+   "kw": "mens track pants",
+   "title": "mens track pants",
+   "junk": null,
+   "col": "Men's Trousers",
+   "g": "M",
+   "src": "woord",
+   "canon": "pant track"
+  },
+  {
+   "kw": "running track pants",
+   "title": "running track pants",
+   "junk": "sport-functie",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "storeGenders": "M",
+   "kw": "swimming shorts",
+   "title": "swimming shorts",
+   "junk": null,
+   "col": "Men's Swimwear",
+   "g": "M",
+   "src": "store",
+   "canon": "short swim"
+  },
+  {
+   "storeGenders": "M",
+   "kw": "boardwalk shorts mens",
+   "title": "mens boardwalk shorts",
+   "junk": null,
+   "col": "Men's Shorts",
+   "g": "M",
+   "src": "woord",
+   "canon": "short swim"
+  },
+  {
+   "kw": "kmart swimwear",
+   "title": "kmart swimwear",
+   "junk": "merkenlijst",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "storeGenders": "M",
+   "kw": "ralph polo shirt",
+   "title": "ralph polo shirt",
+   "junk": "merkenlijst",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "storeGenders": "M",
+   "kw": "ksubis jeans",
+   "title": "ksubis jeans",
+   "junk": "merkenlijst",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "storeGenders": "V",
+   "kw": "sussan dresses",
+   "title": "sussan dresses",
+   "junk": "merkenlijst",
+   "col": null,
+   "g": null,
+   "src": null,
+   "canon": null
+  },
+  {
+   "storeGenders": "V",
+   "kw": "womens slides",
+   "title": "womens slides",
+   "junk": null,
+   "col": "Sandals",
+   "g": "V",
+   "src": "woord",
+   "canon": "slide"
   }
  ]
 }

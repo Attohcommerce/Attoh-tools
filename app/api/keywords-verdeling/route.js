@@ -361,6 +361,15 @@ export async function POST(req) {
           `GAT IN DE BRONDATA — deze collecties zijn in dit venster juist in seizoen maar kregen NUL keywords: ${missing.join(", ")}. Dat is geen rekenfout: er zitten geen zoektermen voor in je bron-tabblad. Draai er een extra Keyword Planner-batch op en voeg die toe aan de all-batch.`
         );
       }
+      /* KERNTERM ONTBREEKT: de collectie heeft wel keywords, maar de
+         belangrijkste term van die categorie staat nergens in de bron
+         (Shapes-dames 2-10: Swimwear zonder één bikini-keyword). */
+      for (const m of result.stats.missingTerms || []) {
+        if (blockedSet.has(m.col)) continue;
+        warnings.push(
+          `KERNTERM ONTBREEKT IN JE BRON — ${m.col}: geen enkel keyword met "${m.term}" (met genoeg volume) in dit tabblad, terwijl het nu in seizoen is. Draai een extra Keyword Planner-batch met deze seeds en voeg hem toe aan de all-batch: ${m.seeds}`
+        );
+      }
       const thin = (result.collections || [])
         .filter((c) => (result.stats.colSeason[c.col] || 0) >= 0.72 && c.kws <= 1)
         .map((c) => `${c.col} (${c.kws} keyword, ${c.products} producten)`);
