@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 import { orderWindow, storeProfile } from "@/lib/verdeling";
+import { seasonCheck, genderCheck, parseMonthLabel } from "@/lib/market-season";
 
 const LS_SHEET = "attoh_kw_sheet";
 const LS_VSHEET = "attoh_kw_vsheet"; // doel-sheet van de verdeling
@@ -132,6 +133,53 @@ async function parseKeywordCsv(file) {
   return { rows: out, monthNames };
 }
 
+/* ---------- All keywords (geheugen v2): CSV's samenvoegen ----------
+   Zelfde regel als stap 1 (hoogste gemiddelde wint, lege extra-velden
+   aanvullen), maar de maanden worden op LABEL uitgelijnd in plaats van op
+   positie: CSV's die op verschillende dagen zijn geëxporteerd hebben soms
+   een andere maandreeks, en dan schoof sep onder okt. Laatste 12 maanden. */
+function mergeKeywordFiles(list) {
+  const monthMap = new Map(); // "2025-08" → "Aug 2025"
+  for (const f of list) {
+    for (const name of f.monthNames || []) {
+      const p = parseMonthLabel(name);
+      if (p) monthMap.set(p.key, String(name).trim());
+    }
+  }
+  const axis = [...monthMap.keys()].sort().slice(-12);
+  const labels = axis.map((k) => monthMap.get(k));
+  const EXTRA = ["comp", "compIdx", "bidLow", "bidHigh", "chg3", "yoy"];
+  const merged = new Map();
+  for (const f of list) {
+    if (!f.rows) continue;
+    const keys = (f.monthNames || []).map((n) => {
+      const p = parseMonthLabel(n);
+      return p ? p.key : null;
+    });
+    const pos = axis.map((k) => keys.indexOf(k));
+    for (const r of f.rows) {
+      const k = String(r.kw || "").toLowerCase().trim();
+      if (!k) continue;
+      const row = { ...r, kw: k, months: pos.map((i) => (i >= 0 ? r.months[i] : "")) };
+      const cur = merged.get(k);
+      if (!cur) {
+        merged.set(k, row);
+        continue;
+      }
+      const win = row.avg > cur.avg ? row : cur;
+      const lose = win === row ? cur : row;
+      win.months = win.months.map((v, i) => (v === "" || v == null ? lose.months[i] : v));
+      for (const fld of EXTRA) if (win[fld] === "" || win[fld] == null) win[fld] = lose[fld];
+      merged.set(k, win);
+    }
+  }
+  const rows = [...merged.values()].sort((a, b) => b.avg - a.avg);
+  return { rows, labels };
+}
+
+const CURRENCY_MARKET = { USD: "USA", GBP: "UK", AUD: "AUS", NZD: "AUS", CAD: "CAN" };
+const MARKET_SEG = [["USA", "USA"], ["UK", "UK"], ["AUS", "AUS + NZ"], ["CAN", "CAN"]];
+
 /* ---------- Sessies (max 2 in localStorage) ---------- */
 
 function loadSessions() {
@@ -247,6 +295,25 @@ export default function KeywordsPage() {
   const [bPrep, setBPrep] = useState(null); // antwoord van stap 2
   const [bLogs, setBLogs] = useState([]);
   const [bDoneUrl, setBDoneUrl] = useState("");
+
+  // ----- Geheugen v2: All keywords per markt (man/vrouw apart) + store-geheugen -----
+  const [gStatus, setGStatus] = useState(null); // { all: [...], stores: [...] }
+  const [gLogs, setGLogs] = useState([]);
+  const [allMarket, setAllMarket] = useState("AUS");
+  const [allGender, setAllGender] = useState("V"); // V | M
+  const [allMode, setAllMode] = useState("csv"); // csv | link
+  const [allFiles, setAllFiles] = useState([]);
+  const [allSheetInput, setAllSheetInput] = useState("");
+  const [allLinkSheet, setAllLinkSheet] = useState("");
+  const [allLinkTab, setAllLinkTab] = useState("");
+  const [allBusy, setAllBusy] = useState(""); // "" | sheet | csv | link
+  const [allNeedsForce, setAllNeedsForce] = useState(null); // { kind, season, genderChk }
+  const [allDrag, setAllDrag] = useState(false);
+  const allFileInput = useRef(null);
+  const [shopStores, setShopStores] = useState([]); // zelfde lijst als de Importer (sa_stores)
+  const [stSel, setStSel] = useState("");
+  const [stForm, setStForm] = useState({ market: "", genders: "MV", aanvul: "", orgSheet: "", orgTab: "" });
+  const [stBusy, setStBusy] = useState(""); // "" | save | snap
 
   const fileInput = useRef(null);
   const chatEnd = useRef(null);
@@ -513,6 +580,244 @@ export default function KeywordsPage() {
     setSrcReady(true);
     setVMarket(market);
     pushLog({ ok: true, text: `Geheugen ${market} staat klaar als bron ("MEM ${market}") — markt in de verdeling is op ${market} gezet.` });
+  }
+
+  /* ----- geheugen v2: All keywords per markt + store-geheugen ----- */
+
+  function gLog(entry) {
+    setGLogs((l) => {
+      if (entry.key) {
+        const i = l.findIndex((x) => x.key === entry.key);
+        if (i >= 0) {
+          const next = [...l];
+          next[i] = entry;
+          return next;
+        }
+      }
+      return [...l, entry];
+    });
+  }
+  const sfx = (kind) => window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: kind }));
+
+  async function loadGeheugen() {
+    try {
+      setShopStores(JSON.parse(localStorage.getItem("sa_stores") || "[]") || []);
+    } catch {
+      setShopStores([]);
+    }
+    try {
+      const r = await api("/api/geheugen", { action: "status" });
+      setGStatus({ all: r.all || [], stores: r.stores || [] });
+    } catch (e) {
+      setGStatus({ all: [], stores: [] });
+      gLog({ err: true, text: "Geheugen laden mislukt: " + (e.message || e) });
+    }
+  }
+
+  const curAll = (gStatus && (gStatus.all || []).find((x) => x.market === allMarket)) || null;
+  const gWord = allGender === "M" ? "MAN" : "VROUW";
+
+  // Sheet-link van de gekozen markt in het invulveld zetten
+  useEffect(() => {
+    setAllSheetInput(curAll && curAll.sheetUrl ? curAll.sheetUrl : "");
+    setAllNeedsForce(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allMarket, gStatus]);
+
+  async function allSaveSheet() {
+    setAllBusy("sheet");
+    try {
+      await api("/api/geheugen", { action: "allSheet", market: allMarket, link: allSheetInput });
+      gLog({ ok: true, text: `All keywords-sheet voor ${allMarket} gekoppeld.` });
+      await loadGeheugen();
+    } catch (e) {
+      gLog({ err: true, text: `Koppelen mislukt: ${e.message || e}` });
+    } finally {
+      setAllBusy("");
+    }
+  }
+
+  async function addAllFiles(fileList) {
+    const list = Array.from(fileList || []).filter((f) => /\.csv$/i.test(f.name));
+    const parsed = [];
+    for (const f of list) {
+      try {
+        parsed.push({ name: f.name, ...(await parseKeywordCsv(f)) });
+      } catch (err) {
+        parsed.push({ name: f.name, error: String(err.message || err) });
+      }
+    }
+    setAllFiles((prev) => {
+      const names = new Set(prev.map((p) => p.name));
+      return [...prev, ...parsed.filter((p) => !names.has(p.name))].slice(0, 10);
+    });
+    setAllNeedsForce(null);
+  }
+
+  async function allRunCsv(force) {
+    const good = allFiles.filter((f) => f.rows);
+    if (!good.length || allBusy) return;
+    setAllBusy("csv");
+    try {
+      gLog({ strong: true, text: `— All keywords ${allMarket} ${gWord}: ${good.length} CSV's samenvoegen` });
+      const { rows, labels } = mergeKeywordFiles(good);
+      const total = good.reduce((s, f) => s + f.rows.length, 0);
+      gLog({ ok: true, text: `${total.toLocaleString("nl-NL")} rijen → ${rows.length.toLocaleString("nl-NL")} unieke keywords · ${labels.length} maanden (${labels[0] || "?"} … ${labels[labels.length - 1] || "?"})` });
+      if (labels.length < 12) {
+        gLog({ err: true, text: `Maar ${labels.length} maandkolommen — exporteer in Keyword Planner de laatste 12 maanden.` });
+      }
+      const season = seasonCheck(rows, labels, allMarket);
+      const gchk = genderCheck(rows, allGender);
+      gLog({ ok: season.ok && !season.inconclusive, err: !season.ok, muted: season.inconclusive, text: season.text });
+      gLog({ ok: gchk.ok && !gchk.inconclusive, err: !gchk.ok, muted: gchk.inconclusive, text: gchk.text });
+      if ((!season.ok || !gchk.ok) && !force) {
+        setAllNeedsForce({ kind: "csv", season, genderChk: gchk });
+        gLog({ err: true, text: 'Niet opgeslagen. Weet je zeker dat markt en vak kloppen? Klik dan links op "Toch opslaan".' });
+        sfx("error");
+        return;
+      }
+      setAllNeedsForce(null);
+      const header = [
+        "Keyword", "Avg. monthly search", ...labels,
+        "Competition", "Comp. index", "Top bid low", "Top bid high", "3-mnd verandering %", "YoY verandering %",
+      ];
+      gLog({ strong: true, text: "— Tab klaarzetten in de All keywords-sheet" });
+      const prep = await api("/api/geheugen", {
+        action: "allPrepare", market: allMarket, gender: allGender, header, rowCount: rows.length,
+      });
+      gLog({ ok: true, text: `"${prep.tab}" ${prep.replaced ? "vervangen (vorige batch is weg)" : "aangemaakt"}` });
+      const values = rows.map((r) => [
+        r.kw, r.avg, ...r.months,
+        r.comp ?? "", r.compIdx ?? "", r.bidLow ?? "", r.bidHigh ?? "", r.chg3 ?? "", r.yoy ?? "",
+      ]);
+      const CHUNK = 4000;
+      for (let i = 0; i < values.length; i += CHUNK) {
+        await api("/api/keywords-sheet", { action: "append", sheetId: prep.sheetId, tabName: prep.tab, rows: values.slice(i, i + CHUNK) });
+        gLog({ key: "all-up", text: `Uploaden… ${Math.min(i + CHUNK, values.length).toLocaleString("nl-NL")} / ${values.length.toLocaleString("nl-NL")}` });
+      }
+      await api("/api/keywords-sheet", {
+        action: "format", sheetId: prep.sheetId, tabId: prep.tabId, rowCount: values.length + 1, colCount: header.length,
+      });
+      const c = await api("/api/geheugen", {
+        action: "allCommit", market: allMarket, gender: allGender, tab: prep.tab, tabId: prep.tabId,
+        rows: rows.length, months: labels, files: good.map((f) => f.name), season, genderChk: gchk, forced: !!force,
+      });
+      gLog({ ok: true, text: `In het geheugen: ${prep.tab} · ${rows.length.toLocaleString("nl-NL")} keywords. Staat vast tot de volgende seizoenswissel (±3 maanden).`, href: c.meta && c.meta.url });
+      setAllFiles([]);
+      sfx("success");
+      await loadGeheugen();
+    } catch (e) {
+      gLog({ err: true, text: String(e.message || e) });
+      sfx("error");
+    } finally {
+      setAllBusy("");
+    }
+  }
+
+  async function allRunLink(force) {
+    if (allBusy || !allLinkSheet.trim() || !allLinkTab.trim()) return;
+    setAllBusy("link");
+    try {
+      gLog({ strong: true, text: `— "${allLinkTab.trim()}" koppelen als All keywords ${allMarket} ${gWord}` });
+      gLog({ key: "all-link", muted: true, text: "Hele tabblad lezen voor de seizoens- en geslachtscheck… (bij 100k rijen ±30 sec)" });
+      const r = await api("/api/geheugen", {
+        action: "allLink", market: allMarket, gender: allGender, link: allLinkSheet.trim(), tab: allLinkTab.trim(), force: !!force,
+      });
+      const season = r.needsForce ? r.season : r.meta.season;
+      const gchk = r.needsForce ? r.genderChk : r.meta.genderChk;
+      gLog({ key: "all-link", ok: true, text: `${(r.needsForce ? r.rows : r.meta.rows).toLocaleString("nl-NL")} keywords gelezen` });
+      gLog({ ok: season.ok && !season.inconclusive, err: !season.ok, muted: season.inconclusive, text: season.text });
+      gLog({ ok: gchk.ok && !gchk.inconclusive, err: !gchk.ok, muted: gchk.inconclusive, text: gchk.text });
+      if (r.needsForce) {
+        setAllNeedsForce({ kind: "link", season, genderChk: gchk });
+        gLog({ err: true, text: 'Niet gekoppeld. Weet je zeker dat markt en vak kloppen? Klik dan links op "Toch opslaan".' });
+        sfx("error");
+        return;
+      }
+      setAllNeedsForce(null);
+      gLog({ ok: true, text: `In het geheugen: ALL ${allMarket} ${gWord} → "${r.meta.tab}" · ${(r.meta.months || [])[0]} – ${(r.meta.months || []).slice(-1)[0]}`, href: r.meta.url });
+      sfx("success");
+      await loadGeheugen();
+    } catch (e) {
+      gLog({ key: "all-link", err: true, text: String(e.message || e) });
+      sfx("error");
+    } finally {
+      setAllBusy("");
+    }
+  }
+
+  const savedStores = (gStatus && gStatus.stores) || [];
+  const stStore = shopStores.find((s) => s.domain === stSel) || null;
+  const stSaved = savedStores.find((s) => s.domain === stSel) || null;
+
+  function stSelect(domain) {
+    setStSel(domain);
+    const s = shopStores.find((x) => x.domain === domain);
+    const saved = savedStores.find((x) => x.domain === domain);
+    if (!s) return;
+    const prof = storeProfile(s.publicDomain) || storeProfile(s.domain);
+    setStForm({
+      market: (saved && saved.market) || (prof && prof.market) || CURRENCY_MARKET[String(s.currency || "").toUpperCase()] || "",
+      genders: (saved && saved.genders) || (prof && prof.genders) || "MV",
+      aanvul: (saved && saved.aanvulUrl) || "",
+      orgSheet: saved && saved.orgSheetId ? `https://docs.google.com/spreadsheets/d/${saved.orgSheetId}/edit` : DEFAULT_ORG_SHEET,
+      orgTab: (saved && saved.orgTab) || "",
+    });
+  }
+
+  async function stSave(quiet) {
+    if (!stStore) return null;
+    const r = await api("/api/geheugen", {
+      action: "storeSave",
+      // alleen publieke velden — credentials blijven in de browser
+      store: { name: stStore.name, domain: stStore.domain, publicDomain: stStore.publicDomain, currency: stStore.currency },
+      market: stForm.market,
+      genders: stForm.genders,
+      aanvul: stForm.aanvul,
+      orgSheet: stForm.orgSheet,
+      orgTab: stForm.orgTab,
+    });
+    if (!quiet) gLog({ ok: true, text: `Store-geheugen ${r.entry.name || r.entry.domain} opgeslagen (${r.entry.market} · ${r.entry.genders}).`, href: r.entry.aanvulUrl });
+    return r.entry;
+  }
+
+  async function stSaveClick() {
+    setStBusy("save");
+    try {
+      await stSave(false);
+      await loadGeheugen();
+    } catch (e) {
+      gLog({ err: true, text: `Opslaan mislukt: ${e.message || e}` });
+    } finally {
+      setStBusy("");
+    }
+  }
+
+  async function stSnapshot() {
+    if (!stStore || stBusy) return;
+    setStBusy("snap");
+    try {
+      await stSave(true);
+      gLog({ strong: true, text: `— Store-geheugen bijwerken: ${stStore.name || stStore.domain}` });
+      gLog({ key: "st-snap", muted: true, text: "Shopify uitlezen (producten + collecties) en de originele organization erbij…" });
+      const r = await api("/api/geheugen", { action: "storeSnapshot", store: stStore });
+      const s = r.snapshot || {};
+      gLog({ key: "st-snap", ok: true, text: `${s.products} producten op de store · vrouw ${s.vrouw.keywords} keywords (${s.vrouw.products} producten) · man ${s.man.keywords} keywords (${s.man.products} producten)` });
+      gLog({ text: `${s.collections} collecties · ${s.noCollection} producten zonder collectie${(r.topColls || []).length ? ` · grootste: ${r.topColls.join(" · ")}` : ""}` });
+      if (s.origRows) gLog({ ok: true, text: `Originele organization: ${s.origRows} keywords meegenomen (kolom "Gepland in origineel")` });
+      for (const w of s.warnings || []) gLog({ err: true, text: `Let op: ${w}` });
+      if (!r.allV || !r.allM) {
+        gLog({ err: true, text: `All keywords voor deze markt nog niet compleet (${r.allV ? "" : "vrouw "}${r.allM ? "" : "man"}ontbreekt) — zet die in blok 1.` });
+      }
+      gLog({ ok: true, text: `Geschreven in de aanvul-sheet: ${(r.written || []).join(", ")}`, href: r.url });
+      sfx("success");
+      await loadGeheugen();
+    } catch (e) {
+      gLog({ key: "st-snap", err: true, text: String(e.message || e) });
+      sfx("error");
+    } finally {
+      setStBusy("");
+    }
   }
 
   /* ----- stap 1: samenvoegen & opmaken ----- */
@@ -1205,7 +1510,7 @@ export default function KeywordsPage() {
           <button className={"srctab" + (view === "underdog" ? " on" : "")} onClick={() => setView("underdog")}>
             Underdog keywords
           </button>
-          <button className={"srctab" + (view === "geheugen" ? " on" : "")} onClick={() => { setView("geheugen"); loadMemStatus(); }}>
+          <button className={"srctab" + (view === "geheugen" ? " on" : "")} onClick={() => { setView("geheugen"); loadMemStatus(); loadGeheugen(); }}>
             Geheugen
           </button>
           <button className={"srctab" + (view === "bijvullen" ? " on" : "")} onClick={() => setView("bijvullen")}>
@@ -1214,12 +1519,334 @@ export default function KeywordsPage() {
         </div>
 
         {/* -------- Tabblad 2: Underdog keywords -------- */}
-        {/* -------- Tabblad 3: Geheugen (batch-geheugen per markt) -------- */}
+        {/* -------- Tabblad 3: Geheugen — All keywords per markt, store-geheugen, batch-geheugen -------- */}
         {view === "geheugen" && (
           <div className="layout-scraper">
             <div>
+              {/* ---- 1 · All keywords per markt (man en vrouw apart) ---- */}
               <div className="card">
-                <h2>Batch-geheugen <span className="opt">(per markt, blijvend in Google Sheets)</span></h2>
+                <h2>1 · All keywords per markt <span className="opt">(man en vrouw apart)</span></h2>
+                <div className="hint" style={{ marginBottom: 12 }}>
+                  De basis van het bijvullen: per markt één batch voor vrouw en één voor man, elk
+                  samengevoegd uit 5–10 Keyword Planner-CSV's (laatste 12 maanden). Staat vast voor ±3
+                  maanden; na een seizoenswissel zet je een verse batch. De tool controleert of het
+                  seizoen bij de markt past (AUS: swim piekt dec–jan, jassen mei–jul) en of de batch in
+                  het juiste vak zit.
+                </div>
+                <div className="field-label">Markt</div>
+                <div className="seg">
+                  {MARKET_SEG.map(([val, label]) => (
+                    <button key={val} className={allMarket === val ? "on" : ""} onClick={() => setAllMarket(val)} type="button">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
+                  {["V", "M"].map((g) => {
+                    const meta = curAll ? curAll[g] : null;
+                    return (
+                      <div key={g} style={{ border: "1px solid var(--line)", borderRadius: 10, padding: 10, background: allGender === g ? "var(--accent-dim)" : "transparent" }}>
+                        <div className="field-label" style={{ marginTop: 0 }}>
+                          {g === "V" ? "Vrouw" : "Man"}
+                        </div>
+                        {meta ? (
+                          <div className="hint" style={{ marginTop: 4 }}>
+                            <span style={{ color: "var(--ok)" }}>✓</span> {Number(meta.rows || 0).toLocaleString("nl-NL")} keywords ·{" "}
+                            {(meta.months || [])[0]} – {(meta.months || []).slice(-1)[0]}
+                            <br />
+                            {meta.source === "link" ? "gekoppeld tabblad" : `${(meta.files || []).length} CSV's`} ·{" "}
+                            {String(meta.savedAt || "").slice(0, 10)} ({meta.ageDays} dagen)
+                            {meta.stale && (
+                              <>
+                                <br />
+                                <span style={{ color: "var(--warn)" }}>Ouder dan 90 dagen — verse batch (seizoenswissel)</span>
+                              </>
+                            )}
+                            {meta.forced && (
+                              <>
+                                <br />
+                                <span style={{ color: "var(--warn)" }}>Opgeslagen ondanks een waarschuwing</span>
+                              </>
+                            )}
+                            <br />
+                            <a className="linklike" href={meta.url} target="_blank" rel="noreferrer noopener">
+                              {meta.tab} ↗
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="hint" style={{ marginTop: 4 }}>{gStatus === null ? "Laden…" : "Nog leeg"}</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="field-label">Welk vak vul je nu?</div>
+                <div className="seg">
+                  {[["V", "Vrouw"], ["M", "Man"]].map(([val, label]) => (
+                    <button key={val} className={allGender === val ? "on" : ""} onClick={() => { setAllGender(val); setAllNeedsForce(null); }} type="button">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="field-label">Bron</div>
+                <div className="seg">
+                  {[["csv", "CSV's slepen"], ["link", "Bestaand tabblad koppelen"]].map(([val, label]) => (
+                    <button key={val} className={allMode === val ? "on" : ""} onClick={() => { setAllMode(val); setAllNeedsForce(null); }} type="button">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {allMode === "csv" ? (
+                  <>
+                    <div className="field-label">
+                      All keywords-sheet voor {allMarket} <span className="opt">(hier schrijft de tool de ALL-tabs)</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="https://docs.google.com/spreadsheets/d/…"
+                      value={allSheetInput}
+                      onChange={(e) => setAllSheetInput(e.target.value)}
+                    />
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
+                      <button className="btn-ghost btn-small" onClick={allSaveSheet} disabled={!!allBusy || !allSheetInput.trim()}>
+                        {allBusy === "sheet" ? "Koppelen…" : curAll && curAll.sheetUrl ? "Sheet-link bijwerken" : "Koppelen"}
+                      </button>
+                      {curAll && curAll.sheetUrl && (
+                        <a className="linklike" href={curAll.sheetUrl} target="_blank" rel="noreferrer noopener">
+                          Sheet openen ↗
+                        </a>
+                      )}
+                    </div>
+                    <div className="hint">
+                      Eén eigen, lege sheet per markt (vrouw + man samen ±4M van de 10M cellen). Deel hem als
+                      Bewerker met attoh-sheets@attoh-tools.iam.gserviceaccount.com.
+                    </div>
+
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setAllDrag(true);
+                      }}
+                      onDragLeave={() => setAllDrag(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setAllDrag(false);
+                        addAllFiles(e.dataTransfer.files);
+                      }}
+                      onClick={() => allFileInput.current && allFileInput.current.click()}
+                      style={{
+                        marginTop: 14,
+                        border: `2px dashed ${allDrag ? "var(--accent)" : "var(--line-hi)"}`,
+                        background: allDrag ? "var(--accent-dim)" : "transparent",
+                        borderRadius: 12,
+                        padding: "22px 12px",
+                        textAlign: "center",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ fontWeight: 600 }}>Sleep hier de {gWord}-CSV's in</div>
+                      <div className="hint" style={{ marginTop: 4 }}>of klik om te kiezen · 1–10 Keyword Planner-exports voor {allMarket}</div>
+                    </div>
+                    <input
+                      ref={allFileInput}
+                      type="file"
+                      accept=".csv"
+                      multiple
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        addAllFiles(e.target.files);
+                        e.target.value = "";
+                      }}
+                    />
+                    {allFiles.length > 0 && (
+                      <div style={{ marginTop: 10 }}>
+                        {allFiles.map((f, i) => (
+                          <div className="log" key={f.name + i}>
+                            {f.error ? (
+                              <span className="err" style={{ flex: 1 }}>✗ {f.name} — {f.error}</span>
+                            ) : (
+                              <>
+                                <span className="ok">✓</span>
+                                <span style={{ flex: 1 }}>{f.name}</span>
+                                <span className="muted small">{f.rows.length.toLocaleString("nl-NL")} rijen</span>
+                              </>
+                            )}
+                            <button className="kw-x" onClick={() => setAllFiles((l) => l.filter((_, j) => j !== i))}>×</button>
+                          </div>
+                        ))}
+                        <div className="hint">
+                          Samen {allFiles.reduce((s, f) => s + (f.rows ? f.rows.length : 0), 0).toLocaleString("nl-NL")} rijen —
+                          dubbelingen worden samengevoegd (hoogste gemiddelde wint).
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ marginTop: 12 }}>
+                      <button className="btn" onClick={() => allRunCsv(false)} disabled={!!allBusy || !allFiles.some((f) => f.rows) || !(curAll && curAll.sheetUrl)}>
+                        {allBusy === "csv" ? "Bezig…" : `⌕ Samenvoegen → ALL ${allMarket} ${gWord}`}
+                      </button>
+                    </div>
+                    {!(curAll && curAll.sheetUrl) && (
+                      <div className="hint" style={{ color: "var(--warn)" }}>Koppel eerst hierboven de All keywords-sheet voor {allMarket}.</div>
+                    )}
+                    {curAll && curAll[allGender] && (
+                      <div className="hint">Dit vervangt de huidige {gWord.toLowerCase()}-batch van {allMarket}.</div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="field-label">Sheet met de batch</div>
+                    <input
+                      type="text"
+                      placeholder="https://docs.google.com/spreadsheets/d/…"
+                      value={allLinkSheet}
+                      onChange={(e) => setAllLinkSheet(e.target.value)}
+                    />
+                    <div className="field-label">Exacte bladnaam</div>
+                    <input
+                      type="text"
+                      placeholder={`bv. SHAPES WARDROBE - 02/10 - ${gWord}`}
+                      value={allLinkTab}
+                      onChange={(e) => setAllLinkTab(e.target.value)}
+                    />
+                    <div className="hint">
+                      Een tabblad dat al met stap 1 is gemaakt (Keyword · Avg · 12 maanden · …). Het blijft
+                      staan waar het staat; het geheugen wijst ernaar. Deel de sheet met
+                      attoh-sheets@attoh-tools.iam.gserviceaccount.com.
+                    </div>
+                    <div style={{ marginTop: 12 }}>
+                      <button className="btn" onClick={() => allRunLink(false)} disabled={!!allBusy || !allLinkSheet.trim() || !allLinkTab.trim()}>
+                        {allBusy === "link" ? "Controleren…" : `⌕ Koppelen als ALL ${allMarket} ${gWord}`}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {allNeedsForce && (
+                  <div style={{ marginTop: 14, border: "1px solid var(--warn)", background: "var(--warn-dim)", borderRadius: 10, padding: 12 }}>
+                    <div style={{ fontWeight: 600 }}>Controle niet geslaagd — niets opgeslagen</div>
+                    <div className="hint" style={{ marginTop: 6 }}>
+                      {allNeedsForce.season && allNeedsForce.season.text}
+                      <br />
+                      {allNeedsForce.genderChk && allNeedsForce.genderChk.text}
+                    </div>
+                    <button
+                      className="btn-ghost btn-small"
+                      style={{ marginTop: 10 }}
+                      disabled={!!allBusy}
+                      onClick={() => (allNeedsForce.kind === "link" ? allRunLink(true) : allRunCsv(true))}
+                    >
+                      Toch opslaan — markt en vak kloppen
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* ---- 2 · Store-geheugen (aanvul-sheet per store) ---- */}
+              <div className="card" style={{ marginTop: 18 }}>
+                <h2>2 · Store-geheugen <span className="opt">(aanvul-sheet per store)</span></h2>
+                <div className="hint" style={{ marginBottom: 12 }}>
+                  Per store één aanvul-sheet. De tool zet daarin wat er nu op de store staat (live uit
+                  Shopify) plus de originele product organization — man en vrouw apart — en alle
+                  collecties. In dezelfde sheet komen straks de week-tabs van de planning; die zijn de bron
+                  voor de scraper.
+                </div>
+                <div className="field-label">Store</div>
+                {shopStores.length === 0 ? (
+                  <div className="hint">Nog geen stores gevonden — voeg ze eerst toe in de Importer (zelfde lijst).</div>
+                ) : (
+                  <select value={stSel} onChange={(e) => stSelect(e.target.value)} style={{ width: "100%" }}>
+                    <option value="">— kies een store —</option>
+                    {shopStores.map((s) => (
+                      <option key={s.domain} value={s.domain}>
+                        {s.name || s.domain}
+                        {s.publicDomain ? ` (${s.publicDomain})` : ""}
+                        {savedStores.some((x) => x.domain === s.domain) ? "  ✓" : ""}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {stStore && (
+                  <>
+                    <div className="field-label">Markt</div>
+                    <div className="seg">
+                      {MARKET_SEG.map(([val, label]) => (
+                        <button key={val} className={stForm.market === val ? "on" : ""} onClick={() => setStForm((f) => ({ ...f, market: val }))} type="button">
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="field-label">Geslacht store</div>
+                    <div className="seg">
+                      {[["MV", "Man + vrouw"], ["V", "Alleen dames"], ["M", "Alleen heren"]].map(([val, label]) => (
+                        <button key={val} className={stForm.genders === val ? "on" : ""} onClick={() => setStForm((f) => ({ ...f, genders: val }))} type="button">
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="field-label">Aanvul-sheet van deze store</div>
+                    <input
+                      type="text"
+                      placeholder="https://docs.google.com/spreadsheets/d/…"
+                      value={stForm.aanvul}
+                      onChange={(e) => setStForm((f) => ({ ...f, aanvul: e.target.value }))}
+                    />
+                    <div className="hint">
+                      Maak een nieuwe, lege Google Sheet (bv. "{(stStore.name || "Store").split(" ")[0]} Aanvullen"), deel hem als
+                      Bewerker met attoh-sheets@attoh-tools.iam.gserviceaccount.com en plak de link. Hierin
+                      komen ORG VROUW, ORG MAN, COLLECTIES, INFO en straks de weekplanning.
+                    </div>
+                    <div className="field-label">
+                      Originele product organization <span className="opt">(sheet + bladnaam)</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="https://docs.google.com/spreadsheets/d/…"
+                      value={stForm.orgSheet}
+                      onChange={(e) => setStForm((f) => ({ ...f, orgSheet: e.target.value }))}
+                    />
+                    <input
+                      type="text"
+                      style={{ marginTop: 8 }}
+                      placeholder="Exacte bladnaam van de originele organization"
+                      value={stForm.orgTab}
+                      onChange={(e) => setStForm((f) => ({ ...f, orgTab: e.target.value }))}
+                    />
+                    <div className="hint">
+                      Het organization-tabblad uit de verdeling waarmee de store gevuld is. Leeg laten mag: dan
+                      telt alleen wat er nu op de store staat.
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
+                      <button className="btn-ghost btn-small" onClick={stSaveClick} disabled={!!stBusy || !stForm.aanvul.trim()}>
+                        {stBusy === "save" ? "Opslaan…" : "Opslaan"}
+                      </button>
+                      <button className="btn" onClick={stSnapshot} disabled={!!stBusy || !stForm.aanvul.trim() || !stForm.market}>
+                        {stBusy === "snap" ? "Shopify uitlezen…" : "⟳ Store-geheugen bijwerken"}
+                      </button>
+                      {stSaved && stSaved.aanvulUrl && (
+                        <a className="linklike" href={stSaved.aanvulUrl} target="_blank" rel="noreferrer noopener">
+                          Aanvul-sheet openen ↗
+                        </a>
+                      )}
+                    </div>
+                    {stSaved && stSaved.snapshot && (
+                      <div className="hint" style={{ marginTop: 10 }}>
+                        Laatste snapshot {String(stSaved.snapshot.at).slice(0, 10)} · {stSaved.snapshot.products} producten · vrouw{" "}
+                        {stSaved.snapshot.vrouw.keywords} keywords · man {stSaved.snapshot.man.keywords} keywords ·{" "}
+                        {stSaved.snapshot.collections} collecties
+                        {stSaved.snapshot.origRows ? ` · origineel ${stSaved.snapshot.origRows} keywords` : " · zonder origineel"}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* ---- Batch-geheugen voor de importer (bestond al) ---- */}
+              <div className="card" style={{ marginTop: 18 }}>
+                <h2>Batch-geheugen importer <span className="opt">(MEM/TOP per markt — booming zoektermen)</span></h2>
                 <div className="hint" style={{ marginBottom: 12 }}>
                   Elke stap 1-run wordt hier per markt samengevoegd en onthouden. Kwijt of kapot?
                   Eén klik op "Maak all-batch-tabblad" en je hebt de volledige batch terug — nooit
@@ -1268,17 +1895,59 @@ export default function KeywordsPage() {
             </div>
             <div>
               <div className="card">
+                <h2>
+                  Geheugen-log
+                  {(allBusy || stBusy) && <span className="opt"> — bezig</span>}
+                </h2>
+                {gLogs.length === 0 && (
+                  <div className="center-note" style={{ padding: "18px 8px" }}>
+                    Kies links een markt of een store. Elke stap laat hier zien wat hij doet en wat hij
+                    controleert.
+                  </div>
+                )}
+                <div className="logpanel">
+                  {gLogs.map((l, i) => (
+                    <div className="log" key={i}>
+                      {l.ok ? <span className="ok">✓</span> : l.err ? <span className="err">✗</span> : null}
+                      <span style={{ flex: 1, fontWeight: l.strong ? 600 : 400, opacity: l.muted ? 0.7 : 1 }}>
+                        {l.text}
+                        {l.href ? (
+                          <>
+                            {" · "}
+                            <a className="linklike" href={l.href} target="_blank" rel="noreferrer noopener">
+                              openen ↗
+                            </a>
+                          </>
+                        ) : null}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="card" style={{ marginTop: 18 }}>
                 <h2>Zo werkt het</h2>
                 <div className="hint">
-                  1. Stap 1 draaien mét markt-knop → de batch wordt automatisch in het geheugen van die
-                  markt samengevoegd (hoogste volume wint, maandkolommen schuiven netjes mee).<br /><br />
-                  2. "⚡ Maak all-batch-tabblad" zet een verse kopie ("ALL USA 21-08") in de geheugen-sheet —
-                  direct bruikbaar als bron. "→ Gebruik als bron" slaat zelfs dat over en zet het
-                  geheugen-tabblad meteen klaar voor de merken-check en de verdeling.<br /><br />
-                  3. De markt is heilig: elk tabblad wordt geregistreerd, en de verdeling WEIGERT een
-                  tabblad waarvan de markt niet klopt met je keuze.<br /><br />
-                  4. De importer gebruikt hetzelfde geheugen: per markt de booming zoektermen van de
-                  komende 4 maanden, verwerkt in de omschrijvingen (TOP-tabblad, automatisch bijgewerkt).
+                  1. <strong>All keywords per markt</strong> — vrouw en man elk in een eigen vak: CSV's slepen
+                  of een bestaand tabblad koppelen. Een batch waarvan het seizoen niet bij de markt past,
+                  of die in het verkeerde vak zit, wordt pas opgeslagen als jij dat bevestigt.
+                  <br />
+                  <br />
+                  2. <strong>Store-geheugen</strong> — per store de aanvul-sheet + originele organization
+                  koppelen en "Store-geheugen bijwerken". De tool leest de store live uit en schrijft ORG
+                  VROUW, ORG MAN, COLLECTIES en INFO in de aanvul-sheet.
+                  <br />
+                  <br />
+                  3. <strong>Planning</strong> — op basis van All keywords (markt) + de ORG-tabs (store)
+                  komt de weekplanning (25–50 producten per week, kern + rotatie) als week-tabs in dezelfde
+                  aanvul-sheet.
+                  <br />
+                  <br />
+                  4. <strong>Scraper</strong> — kies de bijvul-optie, controleer aanvul-sheet + weektab,
+                  scrape → import-lijst of aanvul-import-sheet → Importer.
+                  <br />
+                  <br />
+                  Het batch-geheugen van de importer (onderaan links) werkt zoals altijd: het voedt de
+                  booming zoektermen in de omschrijvingen.
                 </div>
               </div>
             </div>
