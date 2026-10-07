@@ -3194,3 +3194,360 @@ select:focus {
   padding: 6px 8px;
   font-size: 12px;
 }
+
+/* ============================================================
+   Geheugen v2 (Keywords → Geheugen) — brede blokken, weinig scrollen
+   ============================================================ */
+.gh {
+  display: grid;
+  gap: 18px;
+}
+.gh-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.gh-step {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+}
+.gh-step.done {
+  border-color: rgba(62, 207, 142, 0.35);
+}
+.gh-step-n {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--accent-dim);
+  color: var(--accent-hi);
+}
+.gh-step.done .gh-step-n {
+  background: var(--ok-dim);
+  color: var(--ok);
+}
+.gh-step-t {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.gh-step-s {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.gh-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  align-items: start;
+}
+.gh-col > .card + .card,
+.gh-col > .card + details {
+  margin-top: 18px;
+}
+.gh-side {
+  position: sticky;
+  top: 86px;
+}
+.gh-side .logpanel {
+  max-height: calc(100vh - 190px);
+  min-height: 0;
+}
+
+/* matrix markt × geslacht */
+.gh-matrix {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr) minmax(0, 1fr) 64px;
+  gap: 8px;
+  align-items: stretch;
+}
+.gh-mh {
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding: 0 4px;
+}
+.gh-mk {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.gh-mlink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gh-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ink-2);
+  font-family: inherit;
+  cursor: pointer;
+  min-width: 0;
+  transition: all 0.18s var(--ease);
+}
+.gh-tile:hover {
+  border-color: var(--line-hi);
+  background: var(--panel-hi);
+}
+.gh-tile.on {
+  border-color: rgba(201, 162, 39, 0.7);
+  background: var(--accent-dim);
+  box-shadow: 0 0 18px -8px var(--accent-glow);
+}
+.gh-tile-big {
+  font-size: 13px;
+  font-weight: 600;
+}
+.gh-tile.ok .gh-tile-big {
+  color: var(--ok);
+}
+.gh-tile.stale .gh-tile-big {
+  color: var(--warn);
+}
+.gh-tile.empty .gh-tile-big {
+  color: var(--faint);
+}
+.gh-tile-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* actiepaneel onder matrix / tabel */
+.gh-panel {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.gh-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  font-size: 13.5px;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.gh-panel-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+.gh-sub {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+.gh-drop {
+  border: 2px dashed var(--line-hi);
+  border-radius: 10px;
+  padding: 15px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+}
+.gh-drop:hover,
+.gh-drop.over {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.gh-files {
+  margin-top: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+.gh-files .log {
+  padding: 5px 2px;
+  font-size: 12.5px;
+}
+.gh-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.gh-row input {
+  flex: 1;
+  min-width: 160px;
+  width: auto;
+}
+.gh-btn {
+  width: auto;
+  padding: 9px 16px;
+  font-size: 13px;
+}
+.gh-sheetline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.gh-sheetline .gh-sub {
+  margin: 0;
+}
+.gh-sheetline input {
+  flex: 1;
+  min-width: 200px;
+  width: auto;
+  padding: 8px 11px;
+  font-size: 12.5px;
+}
+.gh-warn {
+  margin-top: 12px;
+  border: 1px solid var(--warn);
+  background: var(--warn-dim);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+/* stores-tabel */
+.gh-table {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.gh-tr {
+  display: grid;
+  grid-template-columns: 1.7fr 0.6fr 0.9fr 0.9fr 1.1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.15s var(--ease);
+}
+.gh-tr:first-child {
+  border-top: none;
+}
+.gh-tr:hover {
+  background: var(--panel-hi);
+}
+.gh-tr.on {
+  background: var(--accent-dim);
+}
+.gh-th,
+.gh-th:hover {
+  cursor: default;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: rgba(255, 255, 255, 0.02);
+}
+.gh-ellip {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gh-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px 16px;
+}
+.gh-span2 {
+  grid-column: 1 / -1;
+}
+
+/* ingeklapt importer-geheugen */
+.gh-details > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.gh-details > summary::-webkit-details-marker {
+  display: none;
+}
+.gh-details > summary h2 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.gh-details[open] > summary h2 {
+  margin-bottom: 14px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--line);
+}
+.gh-memgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+.gh-memcell {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 11px;
+}
+
+@media (max-width: 1080px) {
+  .gh-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* smal scherm: log bovenaan, compact */
+  .gh-side {
+    position: static;
+    order: -1;
+  }
+  .gh-side .logpanel {
+    max-height: 220px;
+  }
+}
+@media (max-width: 760px) {
+  .gh-steps {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .gh-panel-grid,
+  .gh-form,
+  .gh-memgrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gh-matrix {
+    grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .gh-matrix .gh-mlink,
+  .gh-matrix .gh-mh-link {
+    display: none;
+  }
+  .gh-tr {
+    grid-template-columns: 1.5fr 0.6fr 1fr;
+  }
+  .gh-tr > :nth-child(3),
+  .gh-tr > :nth-child(4) {
+    display: none;
+  }
+}

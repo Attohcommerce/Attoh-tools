@@ -301,7 +301,6 @@ export default function KeywordsPage() {
   const [gLogs, setGLogs] = useState([]);
   const [allMarket, setAllMarket] = useState("AUS");
   const [allGender, setAllGender] = useState("V"); // V | M
-  const [allMode, setAllMode] = useState("csv"); // csv | link
   const [allFiles, setAllFiles] = useState([]);
   const [allSheetInput, setAllSheetInput] = useState("");
   const [allLinkSheet, setAllLinkSheet] = useState("");
@@ -1520,439 +1519,468 @@ export default function KeywordsPage() {
 
         {/* -------- Tabblad 2: Underdog keywords -------- */}
         {/* -------- Tabblad 3: Geheugen — All keywords per markt, store-geheugen, batch-geheugen -------- */}
-        {view === "geheugen" && (
-          <div className="layout-scraper">
-            <div>
-              {/* ---- 1 · All keywords per markt (man en vrouw apart) ---- */}
-              <div className="card">
-                <h2>1 · All keywords per markt <span className="opt">(man en vrouw apart)</span></h2>
-                <div className="hint" style={{ marginBottom: 12 }}>
-                  De basis van het bijvullen: per markt één batch voor vrouw en één voor man, elk
-                  samengevoegd uit 5–10 Keyword Planner-CSV's (laatste 12 maanden). Staat vast voor ±3
-                  maanden; na een seizoenswissel zet je een verse batch. De tool controleert of het
-                  seizoen bij de markt past (AUS: swim piekt dec–jan, jassen mei–jul) en of de batch in
-                  het juiste vak zit.
+        {view === "geheugen" && (() => {
+          const fmtN = (n) => Number(n || 0).toLocaleString("nl-NL");
+          const allRows = (gStatus && gStatus.all) || [];
+          const filled = allRows.reduce((s, r) => s + (r.V ? 1 : 0) + (r.M ? 1 : 0), 0);
+          const marketsDone = allRows.filter((r) => r.V && r.M).length;
+          const snapCount = savedStores.filter((s) => s.snapshot).length;
+          const curMeta = curAll ? curAll[allGender] : null;
+          const GLABEL = { MV: "man + vrouw", V: "alleen dames", M: "alleen heren" };
+          return (
+          <div className="gh">
+            {/* ---- de keten in één oogopslag ---- */}
+            <div className="gh-steps">
+              <div className={"gh-step" + (marketsDone ? " done" : "")}>
+                <div className="gh-step-n">{marketsDone ? "✓" : "1"}</div>
+                <div>
+                  <div className="gh-step-t">All keywords</div>
+                  <div className="gh-step-s">{filled}/8 vakken · {marketsDone} markt{marketsDone === 1 ? "" : "en"} compleet</div>
                 </div>
-                <div className="field-label">Markt</div>
-                <div className="seg">
-                  {MARKET_SEG.map(([val, label]) => (
-                    <button key={val} className={allMarket === val ? "on" : ""} onClick={() => setAllMarket(val)} type="button">
-                      {label}
-                    </button>
-                  ))}
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
-                  {["V", "M"].map((g) => {
-                    const meta = curAll ? curAll[g] : null;
-                    return (
-                      <div key={g} style={{ border: "1px solid var(--line)", borderRadius: 10, padding: 10, background: allGender === g ? "var(--accent-dim)" : "transparent" }}>
-                        <div className="field-label" style={{ marginTop: 0 }}>
-                          {g === "V" ? "Vrouw" : "Man"}
-                        </div>
-                        {meta ? (
-                          <div className="hint" style={{ marginTop: 4 }}>
-                            <span style={{ color: "var(--ok)" }}>✓</span> {Number(meta.rows || 0).toLocaleString("nl-NL")} keywords ·{" "}
-                            {(meta.months || [])[0]} – {(meta.months || []).slice(-1)[0]}
-                            <br />
-                            {meta.source === "link" ? "gekoppeld tabblad" : `${(meta.files || []).length} CSV's`} ·{" "}
-                            {String(meta.savedAt || "").slice(0, 10)} ({meta.ageDays} dagen)
-                            {meta.stale && (
-                              <>
-                                <br />
-                                <span style={{ color: "var(--warn)" }}>Ouder dan 90 dagen — verse batch (seizoenswissel)</span>
-                              </>
-                            )}
-                            {meta.forced && (
-                              <>
-                                <br />
-                                <span style={{ color: "var(--warn)" }}>Opgeslagen ondanks een waarschuwing</span>
-                              </>
-                            )}
-                            <br />
-                            <a className="linklike" href={meta.url} target="_blank" rel="noreferrer noopener">
-                              {meta.tab} ↗
-                            </a>
-                          </div>
-                        ) : (
-                          <div className="hint" style={{ marginTop: 4 }}>{gStatus === null ? "Laden…" : "Nog leeg"}</div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="field-label">Welk vak vul je nu?</div>
-                <div className="seg">
-                  {[["V", "Vrouw"], ["M", "Man"]].map(([val, label]) => (
-                    <button key={val} className={allGender === val ? "on" : ""} onClick={() => { setAllGender(val); setAllNeedsForce(null); }} type="button">
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <div className="field-label">Bron</div>
-                <div className="seg">
-                  {[["csv", "CSV's slepen"], ["link", "Bestaand tabblad koppelen"]].map(([val, label]) => (
-                    <button key={val} className={allMode === val ? "on" : ""} onClick={() => { setAllMode(val); setAllNeedsForce(null); }} type="button">
-                      {label}
-                    </button>
-                  ))}
-                </div>
-
-                {allMode === "csv" ? (
-                  <>
-                    <div className="field-label">
-                      All keywords-sheet voor {allMarket} <span className="opt">(hier schrijft de tool de ALL-tabs)</span>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="https://docs.google.com/spreadsheets/d/…"
-                      value={allSheetInput}
-                      onChange={(e) => setAllSheetInput(e.target.value)}
-                    />
-                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
-                      <button className="btn-ghost btn-small" onClick={allSaveSheet} disabled={!!allBusy || !allSheetInput.trim()}>
-                        {allBusy === "sheet" ? "Koppelen…" : curAll && curAll.sheetUrl ? "Sheet-link bijwerken" : "Koppelen"}
-                      </button>
-                      {curAll && curAll.sheetUrl && (
-                        <a className="linklike" href={curAll.sheetUrl} target="_blank" rel="noreferrer noopener">
-                          Sheet openen ↗
-                        </a>
-                      )}
-                    </div>
-                    <div className="hint">
-                      Eén eigen, lege sheet per markt (vrouw + man samen ±4M van de 10M cellen). Deel hem als
-                      Bewerker met attoh-sheets@attoh-tools.iam.gserviceaccount.com.
-                    </div>
-
-                    <div
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setAllDrag(true);
-                      }}
-                      onDragLeave={() => setAllDrag(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setAllDrag(false);
-                        addAllFiles(e.dataTransfer.files);
-                      }}
-                      onClick={() => allFileInput.current && allFileInput.current.click()}
-                      style={{
-                        marginTop: 14,
-                        border: `2px dashed ${allDrag ? "var(--accent)" : "var(--line-hi)"}`,
-                        background: allDrag ? "var(--accent-dim)" : "transparent",
-                        borderRadius: 12,
-                        padding: "22px 12px",
-                        textAlign: "center",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <div style={{ fontWeight: 600 }}>Sleep hier de {gWord}-CSV's in</div>
-                      <div className="hint" style={{ marginTop: 4 }}>of klik om te kiezen · 1–10 Keyword Planner-exports voor {allMarket}</div>
-                    </div>
-                    <input
-                      ref={allFileInput}
-                      type="file"
-                      accept=".csv"
-                      multiple
-                      style={{ display: "none" }}
-                      onChange={(e) => {
-                        addAllFiles(e.target.files);
-                        e.target.value = "";
-                      }}
-                    />
-                    {allFiles.length > 0 && (
-                      <div style={{ marginTop: 10 }}>
-                        {allFiles.map((f, i) => (
-                          <div className="log" key={f.name + i}>
-                            {f.error ? (
-                              <span className="err" style={{ flex: 1 }}>✗ {f.name} — {f.error}</span>
-                            ) : (
-                              <>
-                                <span className="ok">✓</span>
-                                <span style={{ flex: 1 }}>{f.name}</span>
-                                <span className="muted small">{f.rows.length.toLocaleString("nl-NL")} rijen</span>
-                              </>
-                            )}
-                            <button className="kw-x" onClick={() => setAllFiles((l) => l.filter((_, j) => j !== i))}>×</button>
-                          </div>
-                        ))}
-                        <div className="hint">
-                          Samen {allFiles.reduce((s, f) => s + (f.rows ? f.rows.length : 0), 0).toLocaleString("nl-NL")} rijen —
-                          dubbelingen worden samengevoegd (hoogste gemiddelde wint).
-                        </div>
-                      </div>
-                    )}
-                    <div style={{ marginTop: 12 }}>
-                      <button className="btn" onClick={() => allRunCsv(false)} disabled={!!allBusy || !allFiles.some((f) => f.rows) || !(curAll && curAll.sheetUrl)}>
-                        {allBusy === "csv" ? "Bezig…" : `⌕ Samenvoegen → ALL ${allMarket} ${gWord}`}
-                      </button>
-                    </div>
-                    {!(curAll && curAll.sheetUrl) && (
-                      <div className="hint" style={{ color: "var(--warn)" }}>Koppel eerst hierboven de All keywords-sheet voor {allMarket}.</div>
-                    )}
-                    {curAll && curAll[allGender] && (
-                      <div className="hint">Dit vervangt de huidige {gWord.toLowerCase()}-batch van {allMarket}.</div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="field-label">Sheet met de batch</div>
-                    <input
-                      type="text"
-                      placeholder="https://docs.google.com/spreadsheets/d/…"
-                      value={allLinkSheet}
-                      onChange={(e) => setAllLinkSheet(e.target.value)}
-                    />
-                    <div className="field-label">Exacte bladnaam</div>
-                    <input
-                      type="text"
-                      placeholder={`bv. SHAPES WARDROBE - 02/10 - ${gWord}`}
-                      value={allLinkTab}
-                      onChange={(e) => setAllLinkTab(e.target.value)}
-                    />
-                    <div className="hint">
-                      Een tabblad dat al met stap 1 is gemaakt (Keyword · Avg · 12 maanden · …). Het blijft
-                      staan waar het staat; het geheugen wijst ernaar. Deel de sheet met
-                      attoh-sheets@attoh-tools.iam.gserviceaccount.com.
-                    </div>
-                    <div style={{ marginTop: 12 }}>
-                      <button className="btn" onClick={() => allRunLink(false)} disabled={!!allBusy || !allLinkSheet.trim() || !allLinkTab.trim()}>
-                        {allBusy === "link" ? "Controleren…" : `⌕ Koppelen als ALL ${allMarket} ${gWord}`}
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {allNeedsForce && (
-                  <div style={{ marginTop: 14, border: "1px solid var(--warn)", background: "var(--warn-dim)", borderRadius: 10, padding: 12 }}>
-                    <div style={{ fontWeight: 600 }}>Controle niet geslaagd — niets opgeslagen</div>
-                    <div className="hint" style={{ marginTop: 6 }}>
-                      {allNeedsForce.season && allNeedsForce.season.text}
-                      <br />
-                      {allNeedsForce.genderChk && allNeedsForce.genderChk.text}
-                    </div>
-                    <button
-                      className="btn-ghost btn-small"
-                      style={{ marginTop: 10 }}
-                      disabled={!!allBusy}
-                      onClick={() => (allNeedsForce.kind === "link" ? allRunLink(true) : allRunCsv(true))}
-                    >
-                      Toch opslaan — markt en vak kloppen
-                    </button>
-                  </div>
-                )}
               </div>
-
-              {/* ---- 2 · Store-geheugen (aanvul-sheet per store) ---- */}
-              <div className="card" style={{ marginTop: 18 }}>
-                <h2>2 · Store-geheugen <span className="opt">(aanvul-sheet per store)</span></h2>
-                <div className="hint" style={{ marginBottom: 12 }}>
-                  Per store één aanvul-sheet. De tool zet daarin wat er nu op de store staat (live uit
-                  Shopify) plus de originele product organization — man en vrouw apart — en alle
-                  collecties. In dezelfde sheet komen straks de week-tabs van de planning; die zijn de bron
-                  voor de scraper.
+              <div className={"gh-step" + (snapCount ? " done" : "")}>
+                <div className="gh-step-n">{snapCount ? "✓" : "2"}</div>
+                <div>
+                  <div className="gh-step-t">Store-geheugen</div>
+                  <div className="gh-step-s">{snapCount}/{shopStores.length || 0} stores bijgewerkt</div>
                 </div>
-                <div className="field-label">Store</div>
-                {shopStores.length === 0 ? (
-                  <div className="hint">Nog geen stores gevonden — voeg ze eerst toe in de Importer (zelfde lijst).</div>
-                ) : (
-                  <select value={stSel} onChange={(e) => stSelect(e.target.value)} style={{ width: "100%" }}>
-                    <option value="">— kies een store —</option>
-                    {shopStores.map((s) => (
-                      <option key={s.domain} value={s.domain}>
-                        {s.name || s.domain}
-                        {s.publicDomain ? ` (${s.publicDomain})` : ""}
-                        {savedStores.some((x) => x.domain === s.domain) ? "  ✓" : ""}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {stStore && (
-                  <>
-                    <div className="field-label">Markt</div>
-                    <div className="seg">
-                      {MARKET_SEG.map(([val, label]) => (
-                        <button key={val} className={stForm.market === val ? "on" : ""} onClick={() => setStForm((f) => ({ ...f, market: val }))} type="button">
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="field-label">Geslacht store</div>
-                    <div className="seg">
-                      {[["MV", "Man + vrouw"], ["V", "Alleen dames"], ["M", "Alleen heren"]].map(([val, label]) => (
-                        <button key={val} className={stForm.genders === val ? "on" : ""} onClick={() => setStForm((f) => ({ ...f, genders: val }))} type="button">
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="field-label">Aanvul-sheet van deze store</div>
-                    <input
-                      type="text"
-                      placeholder="https://docs.google.com/spreadsheets/d/…"
-                      value={stForm.aanvul}
-                      onChange={(e) => setStForm((f) => ({ ...f, aanvul: e.target.value }))}
-                    />
-                    <div className="hint">
-                      Maak een nieuwe, lege Google Sheet (bv. "{(stStore.name || "Store").split(" ")[0]} Aanvullen"), deel hem als
-                      Bewerker met attoh-sheets@attoh-tools.iam.gserviceaccount.com en plak de link. Hierin
-                      komen ORG VROUW, ORG MAN, COLLECTIES, INFO en straks de weekplanning.
-                    </div>
-                    <div className="field-label">
-                      Originele product organization <span className="opt">(sheet + bladnaam)</span>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="https://docs.google.com/spreadsheets/d/…"
-                      value={stForm.orgSheet}
-                      onChange={(e) => setStForm((f) => ({ ...f, orgSheet: e.target.value }))}
-                    />
-                    <input
-                      type="text"
-                      style={{ marginTop: 8 }}
-                      placeholder="Exacte bladnaam van de originele organization"
-                      value={stForm.orgTab}
-                      onChange={(e) => setStForm((f) => ({ ...f, orgTab: e.target.value }))}
-                    />
-                    <div className="hint">
-                      Het organization-tabblad uit de verdeling waarmee de store gevuld is. Leeg laten mag: dan
-                      telt alleen wat er nu op de store staat.
-                    </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
-                      <button className="btn-ghost btn-small" onClick={stSaveClick} disabled={!!stBusy || !stForm.aanvul.trim()}>
-                        {stBusy === "save" ? "Opslaan…" : "Opslaan"}
-                      </button>
-                      <button className="btn" onClick={stSnapshot} disabled={!!stBusy || !stForm.aanvul.trim() || !stForm.market}>
-                        {stBusy === "snap" ? "Shopify uitlezen…" : "⟳ Store-geheugen bijwerken"}
-                      </button>
-                      {stSaved && stSaved.aanvulUrl && (
-                        <a className="linklike" href={stSaved.aanvulUrl} target="_blank" rel="noreferrer noopener">
-                          Aanvul-sheet openen ↗
-                        </a>
-                      )}
-                    </div>
-                    {stSaved && stSaved.snapshot && (
-                      <div className="hint" style={{ marginTop: 10 }}>
-                        Laatste snapshot {String(stSaved.snapshot.at).slice(0, 10)} · {stSaved.snapshot.products} producten · vrouw{" "}
-                        {stSaved.snapshot.vrouw.keywords} keywords · man {stSaved.snapshot.man.keywords} keywords ·{" "}
-                        {stSaved.snapshot.collections} collecties
-                        {stSaved.snapshot.origRows ? ` · origineel ${stSaved.snapshot.origRows} keywords` : " · zonder origineel"}
-                      </div>
-                    )}
-                  </>
-                )}
               </div>
-
-              {/* ---- Batch-geheugen voor de importer (bestond al) ---- */}
-              <div className="card" style={{ marginTop: 18 }}>
-                <h2>Batch-geheugen importer <span className="opt">(MEM/TOP per markt — booming zoektermen)</span></h2>
-                <div className="hint" style={{ marginBottom: 12 }}>
-                  Elke stap 1-run wordt hier per markt samengevoegd en onthouden. Kwijt of kapot?
-                  Eén klik op "Maak all-batch-tabblad" en je hebt de volledige batch terug — nooit
-                  meer CSV's opnieuw uit Google Ads vissen. Koppel per markt één (lege) Google Sheet
-                  en deel die met attoh-sheets@attoh-tools.iam.gserviceaccount.com. Advies: één eigen
-                  sheet per markt (de 10M-cellenlimiet geldt per bestand).
+              <div className="gh-step">
+                <div className="gh-step-n">3</div>
+                <div>
+                  <div className="gh-step-t">Weekplanning</div>
+                  <div className="gh-step-s">week-tabs in de aanvul-sheet</div>
                 </div>
-                {(memStatus || []).map((row) => (
-                  <div key={row.market} style={{ borderTop: "1px solid #2a2a2a", paddingTop: 12, marginTop: 12 }}>
-                    <div className="field-label">
-                      {row.market}
-                      {row.meta ? (
-                        <span className="opt">
-                          {" "}· {row.meta.rows} keywords · bijgewerkt {String(row.meta.updatedAt || "").slice(0, 10)} · laatste batch "{row.meta.lastBatch}" · booming-venster {row.meta.window || "-"}
-                        </span>
-                      ) : (
-                        <span className="opt"> · nog leeg</span>
-                      )}
-                    </div>
-                    <input
-                      type="text"
-                      placeholder={`Google Sheet-link voor het ${row.market}-geheugen`}
-                      value={memLinks[row.market] || ""}
-                      onChange={(e) => setMemLinks((l) => ({ ...l, [row.market]: e.target.value }))}
-                    />
-                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-                      <button className="btn" onClick={() => memSaveLink(row.market)} disabled={!!memBusy || !(memLinks[row.market] || "").trim()}>
-                        {memBusy === row.market + ":save" ? "Opslaan…" : row.sheetUrl ? "Sheet-link bijwerken" : "Sheet koppelen"}
-                      </button>
-                      <button className="btn" onClick={() => memMake(row.market)} disabled={!!memBusy || !row.sheetUrl || !row.meta}>
-                        {memBusy === row.market + ":make" ? "Bezig…" : "⚡ Maak all-batch-tabblad"}
-                      </button>
-                      <button className="btn" onClick={() => memUseAsSource(row.market)} disabled={!!memBusy || !row.sheetUrl || !row.meta}>
-                        → Gebruik als bron
-                      </button>
-                      {row.sheetUrl && (
-                        <a className="linklike" href={row.sheetUrl} target="_blank" rel="noreferrer noopener" style={{ alignSelf: "center" }}>
-                          Sheet openen ↗
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {memStatus === null && <div className="hint">Status laden…</div>}
+              </div>
+              <div className="gh-step">
+                <div className="gh-step-n">4</div>
+                <div>
+                  <div className="gh-step-t">Scraper → Importer</div>
+                  <div className="gh-step-s">aanvul-sheet + weektab kiezen</div>
+                </div>
               </div>
             </div>
-            <div>
-              <div className="card">
-                <h2>
-                  Geheugen-log
-                  {(allBusy || stBusy) && <span className="opt"> — bezig</span>}
-                </h2>
-                {gLogs.length === 0 && (
-                  <div className="center-note" style={{ padding: "18px 8px" }}>
-                    Kies links een markt of een store. Elke stap laat hier zien wat hij doet en wat hij
-                    controleert.
+
+            <div className="gh-main">
+              <div className="gh-col">
+                {/* ---- 1 · All keywords per markt ---- */}
+                <div className="card">
+                  <h2>
+                    1 · All keywords per markt <span className="opt">man en vrouw apart · klik een vak</span>
+                  </h2>
+                  <div className="gh-matrix">
+                    <div className="gh-mh" />
+                    <div className="gh-mh">Vrouw</div>
+                    <div className="gh-mh">Man</div>
+                    <div className="gh-mh gh-mh-link">Sheet</div>
+                    {MARKET_SEG.map(([m, label]) => {
+                      const row = allRows.find((x) => x.market === m) || {};
+                      return (
+                        <React.Fragment key={m}>
+                          <div className="gh-mk">{label}</div>
+                          {["V", "M"].map((g) => {
+                            const meta = row[g];
+                            const on = allMarket === m && allGender === g;
+                            const state = meta ? (meta.stale || meta.forced ? " stale" : " ok") : " empty";
+                            return (
+                              <button
+                                key={g}
+                                type="button"
+                                className={"gh-tile" + state + (on ? " on" : "")}
+                                onClick={() => {
+                                  setAllMarket(m);
+                                  setAllGender(g);
+                                  setAllNeedsForce(null);
+                                }}
+                              >
+                                {meta ? (
+                                  <>
+                                    <span className="gh-tile-big">✓ {fmtN(meta.rows)} keywords</span>
+                                    <span className="gh-tile-sub">
+                                      {(meta.months || [])[0]} – {(meta.months || []).slice(-1)[0]} · {meta.ageDays} d
+                                      {meta.stale ? " · verversen" : ""}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="gh-tile-big">{gStatus === null ? "…" : "Leeg"}</span>
+                                    <span className="gh-tile-sub">klik om te vullen</span>
+                                  </>
+                                )}
+                              </button>
+                            );
+                          })}
+                          <div className="gh-mlink">
+                            {row.sheetUrl ? (
+                              <a className="linklike" href={row.sheetUrl} target="_blank" rel="noreferrer noopener">
+                                Openen ↗
+                              </a>
+                            ) : (
+                              <span className="muted small">—</span>
+                            )}
+                          </div>
+                        </React.Fragment>
+                      );
+                    })}
                   </div>
-                )}
-                <div className="logpanel">
-                  {gLogs.map((l, i) => (
-                    <div className="log" key={i}>
-                      {l.ok ? <span className="ok">✓</span> : l.err ? <span className="err">✗</span> : null}
-                      <span style={{ flex: 1, fontWeight: l.strong ? 600 : 400, opacity: l.muted ? 0.7 : 1 }}>
-                        {l.text}
-                        {l.href ? (
-                          <>
-                            {" · "}
-                            <a className="linklike" href={l.href} target="_blank" rel="noreferrer noopener">
-                              openen ↗
-                            </a>
-                          </>
-                        ) : null}
-                      </span>
+
+                  {/* actiepaneel voor het gekozen vak */}
+                  <div className="gh-panel">
+                    <div className="gh-panel-head">
+                      <strong>
+                        ALL {allMarket} {gWord}
+                      </strong>
+                      {curMeta ? (
+                        <span className="muted small">
+                          nu: {fmtN(curMeta.rows)} keywords uit {curMeta.source === "link" ? `"${curMeta.tab}"` : `${(curMeta.files || []).length} CSV's`} ·
+                          een nieuwe batch vervangt deze ·{" "}
+                          <a className="linklike" href={curMeta.url} target="_blank" rel="noreferrer noopener">
+                            tab openen ↗
+                          </a>
+                        </span>
+                      ) : (
+                        <span className="muted small">nog leeg</span>
+                      )}
                     </div>
-                  ))}
+                    <div className="gh-panel-grid">
+                      <div>
+                        <div className="gh-sub">A · CSV's slepen</div>
+                        <div
+                          className={"gh-drop" + (allDrag ? " over" : "")}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setAllDrag(true);
+                          }}
+                          onDragLeave={() => setAllDrag(false)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setAllDrag(false);
+                            addAllFiles(e.dataTransfer.files);
+                          }}
+                          onClick={() => allFileInput.current && allFileInput.current.click()}
+                        >
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>Sleep de {gWord}-CSV's hierheen</div>
+                          <div className="muted small">of klik · 1–10 Keyword Planner-exports</div>
+                        </div>
+                        <input
+                          ref={allFileInput}
+                          type="file"
+                          accept=".csv"
+                          multiple
+                          style={{ display: "none" }}
+                          onChange={(e) => {
+                            addAllFiles(e.target.files);
+                            e.target.value = "";
+                          }}
+                        />
+                        {allFiles.length > 0 && (
+                          <div className="gh-files">
+                            {allFiles.map((f, i) => (
+                              <div className="log" key={f.name + i}>
+                                {f.error ? (
+                                  <span className="err" style={{ flex: 1 }}>✗ {f.name} — {f.error}</span>
+                                ) : (
+                                  <>
+                                    <span className="ok">✓</span>
+                                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>
+                                    <span className="muted small">{fmtN(f.rows.length)}</span>
+                                  </>
+                                )}
+                                <button className="kw-x" onClick={() => setAllFiles((l) => l.filter((_, j) => j !== i))}>×</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div className="gh-row">
+                          <button
+                            className="btn gh-btn"
+                            onClick={() => allRunCsv(false)}
+                            disabled={!!allBusy || !allFiles.some((f) => f.rows) || !(curAll && curAll.sheetUrl)}
+                          >
+                            {allBusy === "csv" ? "Bezig…" : `⌕ Samenvoegen (${allFiles.filter((f) => f.rows).length})`}
+                          </button>
+                          {!(curAll && curAll.sheetUrl) && <span className="muted small">koppel eerst de sheet hieronder</span>}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="gh-sub">B · Bestaand tabblad koppelen</div>
+                        <input
+                          type="text"
+                          placeholder="Link van de sheet met de batch"
+                          value={allLinkSheet}
+                          onChange={(e) => setAllLinkSheet(e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          style={{ marginTop: 8 }}
+                          placeholder={`Exacte bladnaam, bv. SHAPES WARDROBE - 02/10 - ${gWord}`}
+                          value={allLinkTab}
+                          onChange={(e) => setAllLinkTab(e.target.value)}
+                        />
+                        <div className="gh-row">
+                          <button
+                            className="btn-ghost gh-btn"
+                            onClick={() => allRunLink(false)}
+                            disabled={!!allBusy || !allLinkSheet.trim() || !allLinkTab.trim()}
+                          >
+                            {allBusy === "link" ? "Controleren…" : "⌕ Koppelen"}
+                          </button>
+                          <span className="muted small">tabblad blijft waar het staat</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {allNeedsForce && (
+                      <div className="gh-warn">
+                        <strong>Controle niet geslaagd — niets opgeslagen.</strong>
+                        <div style={{ marginTop: 4 }}>
+                          {allNeedsForce.season && allNeedsForce.season.text}
+                          <br />
+                          {allNeedsForce.genderChk && allNeedsForce.genderChk.text}
+                        </div>
+                        <button
+                          className="btn-ghost btn-small"
+                          style={{ marginTop: 8 }}
+                          disabled={!!allBusy}
+                          onClick={() => (allNeedsForce.kind === "link" ? allRunLink(true) : allRunCsv(true))}
+                        >
+                          Toch opslaan — markt en vak kloppen
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="gh-sheetline">
+                      <span className="gh-sub">All keywords-sheet {allMarket}</span>
+                      <input
+                        type="text"
+                        placeholder="Lege Google Sheet, gedeeld met attoh-sheets@attoh-tools.iam.gserviceaccount.com"
+                        value={allSheetInput}
+                        onChange={(e) => setAllSheetInput(e.target.value)}
+                      />
+                      <button className="btn-ghost btn-small" onClick={allSaveSheet} disabled={!!allBusy || !allSheetInput.trim()}>
+                        {allBusy === "sheet" ? "Koppelen…" : curAll && curAll.sheetUrl ? "Bijwerken" : "Koppelen"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
+
+                {/* ---- 2 · Store-geheugen ---- */}
+                <div className="card">
+                  <h2>
+                    2 · Store-geheugen <span className="opt">aanvul-sheet per store · klik een store</span>
+                  </h2>
+                  {shopStores.length === 0 ? (
+                    <div className="hint">Nog geen stores gevonden — voeg ze eerst toe in de Importer (zelfde lijst).</div>
+                  ) : (
+                    <div className="gh-table">
+                      <div className="gh-tr gh-th">
+                        <div>Store</div>
+                        <div>Markt</div>
+                        <div>Geslacht</div>
+                        <div>Aanvul-sheet</div>
+                        <div>Laatste snapshot</div>
+                      </div>
+                      {shopStores.map((s) => {
+                        const saved = savedStores.find((x) => x.domain === s.domain);
+                        const snap = saved && saved.snapshot;
+                        return (
+                          <div key={s.domain} className={"gh-tr" + (stSel === s.domain ? " on" : "")} onClick={() => stSelect(s.domain)}>
+                            <div className="gh-ellip">
+                              <strong style={{ color: "var(--ink)" }}>{s.name || s.domain}</strong>
+                              {s.publicDomain ? <span className="muted small"> · {s.publicDomain}</span> : null}
+                            </div>
+                            <div>{(saved && saved.market) || <span className="muted">—</span>}</div>
+                            <div>{saved ? GLABEL[saved.genders] || saved.genders : <span className="muted">—</span>}</div>
+                            <div>
+                              {saved && saved.aanvulUrl ? (
+                                <a className="linklike" href={saved.aanvulUrl} target="_blank" rel="noreferrer noopener" onClick={(e) => e.stopPropagation()}>
+                                  Openen ↗
+                                </a>
+                              ) : (
+                                <span className="muted small">niet gekoppeld</span>
+                              )}
+                            </div>
+                            <div>
+                              {snap ? (
+                                <span>
+                                  <span style={{ color: "var(--ok)" }}>✓</span> {String(snap.at).slice(5, 10).split("-").reverse().join("-")} · {fmtN(snap.products)} prod.
+                                </span>
+                              ) : (
+                                <span className="muted small">nog niet</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {stStore && (
+                    <div className="gh-panel">
+                      <div className="gh-panel-head">
+                        <strong>{stStore.name || stStore.domain}</strong>
+                        {stSaved && stSaved.snapshot ? (
+                          <span className="muted small">
+                            vrouw {fmtN(stSaved.snapshot.vrouw.keywords)} keywords · man {fmtN(stSaved.snapshot.man.keywords)} keywords ·{" "}
+                            {stSaved.snapshot.collections} collecties ·{" "}
+                            {stSaved.snapshot.origRows ? `origineel ${fmtN(stSaved.snapshot.origRows)} keywords` : "zonder origineel"}
+                          </span>
+                        ) : (
+                          <span className="muted small">nog geen snapshot</span>
+                        )}
+                      </div>
+                      <div className="gh-form">
+                        <div>
+                          <div className="gh-sub">Markt</div>
+                          <div className="seg">
+                            {MARKET_SEG.map(([val, label]) => (
+                              <button key={val} className={stForm.market === val ? "on" : ""} onClick={() => setStForm((f) => ({ ...f, market: val }))} type="button">
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="gh-sub">Geslacht store</div>
+                          <div className="seg">
+                            {[["MV", "Man + vrouw"], ["V", "Dames"], ["M", "Heren"]].map(([val, label]) => (
+                              <button key={val} className={stForm.genders === val ? "on" : ""} onClick={() => setStForm((f) => ({ ...f, genders: val }))} type="button">
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="gh-span2">
+                          <div className="gh-sub">Aanvul-sheet</div>
+                          <input
+                            type="text"
+                            placeholder="Lege Google Sheet, gedeeld met attoh-sheets@attoh-tools.iam.gserviceaccount.com"
+                            value={stForm.aanvul}
+                            onChange={(e) => setStForm((f) => ({ ...f, aanvul: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <div className="gh-sub">Originele organization — sheet</div>
+                          <input
+                            type="text"
+                            placeholder="https://docs.google.com/spreadsheets/d/…"
+                            value={stForm.orgSheet}
+                            onChange={(e) => setStForm((f) => ({ ...f, orgSheet: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <div className="gh-sub">Bladnaam <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(leeg = alleen de store)</span></div>
+                          <input
+                            type="text"
+                            placeholder="Exacte bladnaam van de organization"
+                            value={stForm.orgTab}
+                            onChange={(e) => setStForm((f) => ({ ...f, orgTab: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                      <div className="gh-row" style={{ marginTop: 14 }}>
+                        <button className="btn gh-btn" onClick={stSnapshot} disabled={!!stBusy || !stForm.aanvul.trim() || !stForm.market}>
+                          {stBusy === "snap" ? "Shopify uitlezen…" : "⟳ Store-geheugen bijwerken"}
+                        </button>
+                        <button className="btn-ghost gh-btn" onClick={stSaveClick} disabled={!!stBusy || !stForm.aanvul.trim()}>
+                          {stBusy === "save" ? "Opslaan…" : "Alleen opslaan"}
+                        </button>
+                        <span className="muted small">schrijft ORG VROUW · ORG MAN · COLLECTIES · INFO in de aanvul-sheet</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ---- Batch-geheugen importer (bestond al) — ingeklapt ---- */}
+                <details className="card gh-details">
+                  <summary>
+                    <h2>
+                      Batch-geheugen importer <span className="opt">MEM/TOP per markt · booming zoektermen · klik om te openen</span>
+                    </h2>
+                  </summary>
+                  <div className="hint" style={{ marginTop: 0, marginBottom: 6 }}>
+                    Elke stap 1-run wordt hier per markt samengevoegd; de importer haalt er de booming zoektermen
+                    van de komende 4 maanden uit. Werkt zoals altijd.
+                  </div>
+                  <div className="gh-memgrid">
+                    {(memStatus || []).map((row) => (
+                      <div key={row.market} className="gh-memcell">
+                        <div className="gh-sub" style={{ marginBottom: 4 }}>{row.market}</div>
+                        <div className="muted small" style={{ marginBottom: 8 }}>
+                          {row.meta
+                            ? `${fmtN(row.meta.rows)} keywords · ${String(row.meta.updatedAt || "").slice(0, 10)} · venster ${row.meta.window || "-"}`
+                            : "nog leeg"}
+                        </div>
+                        <div className="gh-row" style={{ marginTop: 0 }}>
+                          <input
+                            type="text"
+                            placeholder={`Sheet-link ${row.market}-geheugen`}
+                            value={memLinks[row.market] || ""}
+                            onChange={(e) => setMemLinks((l) => ({ ...l, [row.market]: e.target.value }))}
+                          />
+                          <button className="btn-ghost btn-small" onClick={() => memSaveLink(row.market)} disabled={!!memBusy || !(memLinks[row.market] || "").trim()}>
+                            {memBusy === row.market + ":save" ? "…" : row.sheetUrl ? "Bijwerken" : "Koppelen"}
+                          </button>
+                        </div>
+                        <div className="gh-row">
+                          <button className="btn-ghost btn-small" onClick={() => memMake(row.market)} disabled={!!memBusy || !row.sheetUrl || !row.meta}>
+                            {memBusy === row.market + ":make" ? "Bezig…" : "⚡ All-batch-tab"}
+                          </button>
+                          <button className="btn-ghost btn-small" onClick={() => memUseAsSource(row.market)} disabled={!!memBusy || !row.sheetUrl || !row.meta}>
+                            → Als bron
+                          </button>
+                          {row.sheetUrl && (
+                            <a className="linklike" href={row.sheetUrl} target="_blank" rel="noreferrer noopener">
+                              Openen ↗
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {memStatus === null && <div className="hint">Status laden…</div>}
+                  </div>
+                </details>
               </div>
-              <div className="card" style={{ marginTop: 18 }}>
-                <h2>Zo werkt het</h2>
-                <div className="hint">
-                  1. <strong>All keywords per markt</strong> — vrouw en man elk in een eigen vak: CSV's slepen
-                  of een bestaand tabblad koppelen. Een batch waarvan het seizoen niet bij de markt past,
-                  of die in het verkeerde vak zit, wordt pas opgeslagen als jij dat bevestigt.
-                  <br />
-                  <br />
-                  2. <strong>Store-geheugen</strong> — per store de aanvul-sheet + originele organization
-                  koppelen en "Store-geheugen bijwerken". De tool leest de store live uit en schrijft ORG
-                  VROUW, ORG MAN, COLLECTIES en INFO in de aanvul-sheet.
-                  <br />
-                  <br />
-                  3. <strong>Planning</strong> — op basis van All keywords (markt) + de ORG-tabs (store)
-                  komt de weekplanning (25–50 producten per week, kern + rotatie) als week-tabs in dezelfde
-                  aanvul-sheet.
-                  <br />
-                  <br />
-                  4. <strong>Scraper</strong> — kies de bijvul-optie, controleer aanvul-sheet + weektab,
-                  scrape → import-lijst of aanvul-import-sheet → Importer.
-                  <br />
-                  <br />
-                  Het batch-geheugen van de importer (onderaan links) werkt zoals altijd: het voedt de
-                  booming zoektermen in de omschrijvingen.
+
+              {/* ---- log ---- */}
+              <div className="gh-side">
+                <div className="card">
+                  <h2>
+                    Log {(allBusy || stBusy) && <span className="opt">bezig…</span>}
+                    {gLogs.length > 0 && !allBusy && !stBusy && (
+                      <button className="linklike" style={{ marginLeft: "auto" }} onClick={() => setGLogs([])}>
+                        wissen
+                      </button>
+                    )}
+                  </h2>
+                  {gLogs.length === 0 ? (
+                    <div className="muted small">Elke stap laat hier zien wat hij doet en wat hij controleert.</div>
+                  ) : (
+                    <div className="logpanel">
+                      {gLogs.map((l, i) => (
+                        <div className="log" key={i}>
+                          {l.ok ? <span className="ok">✓</span> : l.err ? <span className="err">✗</span> : null}
+                          <span style={{ flex: 1, fontWeight: l.strong ? 600 : 400, opacity: l.muted ? 0.7 : 1 }}>
+                            {l.text}
+                            {l.href ? (
+                              <>
+                                {" · "}
+                                <a className="linklike" href={l.href} target="_blank" rel="noreferrer noopener">
+                                  openen ↗
+                                </a>
+                              </>
+                            ) : null}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {view === "bijvullen" && (
           <div className="layout-scraper">
