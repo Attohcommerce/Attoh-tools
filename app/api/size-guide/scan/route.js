@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listProducts, listProductMetafieldValues } from "@/lib/shopify";
 import { productSummary, SG_NS, SG_KEY, KIND_LABEL } from "@/lib/sizeguide";
+import { storeGendersOf } from "@/lib/store-gender";
 
 export const maxDuration = 60;
 
@@ -23,8 +24,9 @@ export async function POST(req) {
     const mf = await listProductMetafieldValues(store, { namespace: SG_NS, key: SG_KEY });
     const guides = mf.ok ? mf.values : {};
 
+    const storeGenders = await storeGendersOf(store);
     const items = products.map((p) => {
-      const s = productSummary(p);
+      const s = productSummary(p, { storeGenders });
       let guide = null;
       const raw = guides[String(p.id)];
       if (raw) {

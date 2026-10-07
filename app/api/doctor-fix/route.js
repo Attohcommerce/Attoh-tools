@@ -3,6 +3,7 @@ import { listProductsByIds, getProductMetafieldValues } from "@/lib/shopify";
 import { applyDoctorFix, FIX_FIELDS } from "@/lib/doctor";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { addTab, appendRows } from "@/lib/sheets";
+import { storeGendersOf } from "@/lib/store-gender";
 
 export const maxDuration = 60;
 
@@ -103,6 +104,8 @@ export async function POST(req) {
   if (!fix || !Array.isArray(ids) || !ids.length) {
     return NextResponse.json({ error: "fix/ids ontbreekt" }, { status: 400 });
   }
+  // Storegeslacht (EMC = heren-only) — bepaalt o.a. de schoenentabel
+  if (options.storeGenders == null) options.storeGenders = await storeGendersOf(store).catch(() => null);
   const backupOn = !!(backup && backup.sheetId && backup.tab);
   if (!backupOn && !skipBackup) {
     return NextResponse.json(

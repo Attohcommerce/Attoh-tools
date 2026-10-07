@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { listProducts, listProductMetafieldValues } from "@/lib/shopify";
 import { runDoctor } from "@/lib/doctor";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
+import { storeGendersOf } from "@/lib/store-gender";
 
 export const maxDuration = 60;
 
@@ -35,12 +36,14 @@ export async function POST(req) {
       guides = {};
     }
 
+    const storeGenders = await storeGendersOf(store);
     const result = runDoctor(products, {
       vendorName: vendorName || store.name || "",
       menTemplate: "men",
       market: market || "",
       bareSystem: bareSystem || "",
       guides,
+      storeGenders,
     });
 
     return NextResponse.json({
