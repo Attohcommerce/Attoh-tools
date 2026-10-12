@@ -40,7 +40,15 @@ const HEADER_ROW = [
    varianten); "kansrijk" = score ≥ 25; "alles" = geen filter (oud gedrag).
    Producten waarvan de winkel géén enkel signaal geeft blijven altijd staan
    en heten "Onbekend" in kolom L. */
-const LS_PROOF = "sa_proof_mode";
+const LS_PROOF = "sa_proof_mode_v2"; // v2: standaard "alles" (zoals Chaim)
+
+/* Spreiding: "vol" = een concurrent mag het hele quotum van een keyword
+   leveren (Chaim-route — een winkel met 10 goede jassen levert 10 jassen);
+   "gespreid" = oude gedrag (max ⅓ per winkel per keyword, max 25% van de run).
+   Snelmodus: geen reviews ophalen per product (scheelt tot 8 fetches per
+   winkel×keyword); bestseller-positie telt nog steeds mee in de volgorde. */
+const LS_SPREAD = "sa_spread_mode";
+const LS_FAST = "sa_fast_mode";
 
 // Stores verlopen automatisch na 14 dagen zonder gebruik van de tool
 const STORE_TTL_DAYS = 14;
@@ -173,7 +181,11 @@ export default function ScraperPage() {
   const [compMarket, setCompMarket] = useState("USA");
   const [compMax, setCompMax] = useState("25");
   const [compBusy, setCompBusy] = useState("");
-  const [proofMode, setProofMode] = useState("bewezen"); // bewezen | kansrijk | alles
+  const [proofMode, setProofMode] = useState("alles"); // bewezen | kansrijk | alles
+  const [spreadMode, setSpreadMode] = useState("vol"); // vol | gespreid
+  const [fastMode, setFastMode] = useState(true);
+  const [catInfo, setCatInfo] = useState({}); // domein → {count, at, lang}
+  const [catBusy, setCatBusy] = useState("");
   const [auditBusy, setAuditBusy] = useState(false);
   const [kw, setKw] = useState({ vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] });
   const [workSheet, setWorkSheet] = useState("");
@@ -227,7 +239,9 @@ export default function ScraperPage() {
     setCompSheet(load(LS_COMP_SHEET, "") || DEFAULT_COMP_SHEET);
     setCompTab(load(LS_COMP_TAB, ""));
     setCompMeta(load(LS_COMP_META, {}));
-    setProofMode(load(LS_PROOF, "bewezen"));
+    setProofMode(load(LS_PROOF, "alles"));
+    setSpreadMode(load(LS_SPREAD, "vol"));
+    setFastMode(load(LS_FAST, true));
     setOrgTab(load(LS.orgTab, "Collection & Product organization"));
     fetch("/api/sheets", {
       method: "POST",
@@ -261,6 +275,60 @@ export default function ScraperPage() {
     save(LS.stores, next);
     setStoreInput("");
   }
+
+  /* Catalogi laden/verversen — één winkel per call (blijft onder de
+     serverless-limiet). Daarna staat elke catalogus 7 dagen klaar in de
+     permanente cache en is de scraper per winkel direct klaar. */
+  async function loadCatalogs(refresh) {
+    const list = [...storeList];
+    if (!list.length) return;
+    let done = 0;
+    let total = 0;
+    setCatBusy(`0/${list.length}`);
+    const queue = [...list];
+    const worker = async () => {
+      while (queue.length) {
+        const d = queue.shift();
+        try {
+          const r = await fetch("/api/competitors", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "catalog", domain: d, refresh: !!refresh }),
+          }).then((x) => x.json());
+          if (r && r.meta) {
+            total += r.meta.count || 0;
+            setCatInfo((prev) => ({ ...prev, [d]: r.meta }));
+            if (r.meta.lang) {
+              setCompMeta((prev) => {
+                const next = { ...prev, [d]: { ...(prev[d] || {}), lang: r.meta.lang } };
+                save(LS_COMP_META, next);
+                return next;
+              });
+            }
+          }
+        } catch {}
+        done++;
+        setCatBusy(`${done}/${list.length}`);
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(4, list.length) }, worker));
+    setCatBusy("");
+    pushLog({ ok: true, text: `📦 ${list.length} catalogi ${refresh ? "ververst" : "geladen"} — ${total.toLocaleString("nl-NL")} producten staan klaar.` });
+  }
+
+  // Cache-overzicht ophalen zodra de lijst bekend is
+  useEffect(() => {
+    if (!storeList.length) return;
+    fetch("/api/competitors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "catalogInfo", domains: storeList }),
+    })
+      .then((r) => r.json())
+      .then((d) => d && d.meta && setCatInfo((prev) => ({ ...prev, ...d.meta })))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeList.length]);
 
   function removeStoreItem(dom) {
     const next = storeList.filter((s) => s !== dom);
@@ -659,10 +727,79 @@ export default function ScraperPage() {
          hun eigen taal. Per taal één batch-vertaling (gecachet), zodat de
          run zelf nergens hoeft te wachten. */
       const transCache = load(LS_TRANS, {});
+      /* Taal per winkel: eerst uit de permanente catalogus-cache (taal
+         herkend aan de eigen titels), anders uit de competitor-sheet. */
+      const metaNow = {};
+      for (const d of stores) metaNow[d] = { ...(compMeta[d] || {}) };
+      try {
+        const ci = await fetch("/api/competitors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "catalogInfo", domains: stores }),
+        }).then((r) => r.json());
+        if (ci && ci.meta) {
+          setCatInfo((prev) => ({ ...prev, ...ci.meta }));
+          let cached = 0;
+          for (const [d, m] of Object.entries(ci.meta)) {
+            cached++;
+            if (m.lang) metaNow[d] = { ...(metaNow[d] || {}), lang: m.lang, langDetected: true };
+          }
+          pushLog({ muted: true, text: `📦 Catalogus-cache: ${cached}/${stores.length} winkels staan al klaar — die worden direct doorzocht.` });
+        }
+      } catch {
+        /* geen cache-info → gewoon live laden */
+      }
+      const LANG_MARKET_ALL = { nl: "NL/BE", fr: "FR", pl: "PL", de: "DE", es: "ES", it: "IT" };
+      const allKwList = allKwItems.map((x) => x.kw);
+      // Vertalingen voor één taal, in één batch, gecachet in de browser
+      const ensureTranslations = async (lang) => {
+        if (!lang || lang === "en") return;
+        const missing = allKwList.filter((k2) => !(transCache[lang] || {})[k2]);
+        if (!missing.length) return;
+        try {
+          const res = await fetch("/api/competitors", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "translate", keywords: missing, market: LANG_MARKET_ALL[lang] || lang }),
+          });
+          const data = await res.json();
+          if (res.ok && data.map) {
+            transCache[lang] = { ...(transCache[lang] || {}), ...data.map };
+            save(LS_TRANS, transCache);
+            pushLog({ ok: true, text: `Vertalingen klaar (${lang.toUpperCase()}) — bv. ${Object.entries(data.map).slice(0, 2).map(([k3, v]) => `"${k3}" → "${v[0]}"`).join(" · ")}` });
+          }
+        } catch (e) {
+          pushLog({ warn: true, text: `Vertalen naar ${lang} mislukt (${e.message}) — die winkel wordt met de Engelse term doorzocht.` });
+        }
+      };
+      // Winkel nog niet in de cache? Eén keer laden: dan is de taal bekend
+      // (en staat de catalogus klaar voor alle volgende keywords).
+      const langChecked = new Set();
+      const ensureStoreLang = async (store) => {
+        if (langChecked.has(store)) return;
+        langChecked.add(store);
+        if (!(metaNow[store] && metaNow[store].langDetected)) {
+          try {
+            const r = await fetch("/api/competitors", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "catalog", domain: store }),
+            }).then((x) => x.json());
+            if (r && r.meta) {
+              metaNow[store] = { ...(metaNow[store] || {}), lang: r.meta.lang, langDetected: true };
+              setCatInfo((prev) => ({ ...prev, [store]: r.meta }));
+              if (r.meta.lang && r.meta.lang !== "en") {
+                pushLog({ muted: true, text: `${store}: winkel is ${r.meta.lang.toUpperCase()}-talig — zoekt ook op de vertaling.` });
+              }
+            }
+          } catch {}
+        }
+        await ensureTranslations((metaNow[store] && metaNow[store].lang) || "en");
+      };
       const foreignLangs = [
         ...new Set(
           stores
-            .map((d) => (compMeta[d] && compMeta[d].lang) || "en")
+            .map((d) => (metaNow[d] && metaNow[d].lang) || "en")
             .filter((l) => l && l !== "en")
         ),
       ];
@@ -854,11 +991,12 @@ export default function ScraperPage() {
               let bestSelling = false;
               let bsStatus = "";
               let bsTotal = 0;
-              const skips = { gender: 0, foreign: 0, vraag: 0 };
+              const skips = { gender: 0, foreign: 0, vraag: 0, kids: 0, set: 0 };
+              await ensureStoreLang(store);
               /* Buitenlandse store? Dan éérst de vertaalde termen ("laarzen",
                  "robe de cocktail"), daarna alsnog de Engelse — veel
                  NL/PL-shops titelen deels in het Engels. */
-              const storeLang = (compMeta[store] && compMeta[store].lang) || "en";
+              const storeLang = (metaNow[store] && metaNow[store].lang) || "en";
               const storeTerms =
                 storeLang !== "en"
                   ? [...new Set([...((transCache[storeLang] || {})[kwLower] || []), ...terms])]
@@ -887,8 +1025,10 @@ export default function ScraperPage() {
                       excludeLinks: [...exclude],
                       // Nooit het hele quotum uit één winkel: pak van elke
                       // winkel de bovenkant in plaats van de staart van één.
-                      maxPerStore: Math.max(2, Math.ceil(target / 3)),
+                      // "vol": een sterke concurrent mag het hele quotum leveren
+                      maxPerStore: spreadMode === "vol" ? needed : Math.max(2, Math.ceil(target / 3)),
                       proof: proofMode,
+                      fast: fastMode,
                     }),
                   });
                   const data = await res.json();
@@ -988,7 +1128,7 @@ export default function ScraperPage() {
                     const capTotal = Math.max(20, Number(totalTarget) || 0);
                     const cap = Math.ceil(capTotal * MAX_STORE_SHARE);
                     const already = perStore.get(dom) || 0;
-                    const room = Math.max(0, cap - already);
+                    const room = spreadMode === "vol" ? found.length : Math.max(0, cap - already);
                     if (found.length > room) {
                       storeCapHits += found.length - room;
                       found = found.slice(0, room);
@@ -1057,9 +1197,11 @@ export default function ScraperPage() {
                 ok: true,
                 text:
                   `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bsStatus === "geldig" ? `, best-selling geldig · ${bsTotal} gerangschikt` : bsStatus === "genegeerd" ? ", ⚠ thema negeert best-selling — geen bestseller-signaal" : ", ⚠ GEEN best-selling volgorde — catalogusvolgorde gebruikt"}${skips.vraag ? ` · ${skips.vraag} te weinig vraag-bewijs` : ""}) — nog ${Math.max(needed, 0)} nodig` +
-                  (skips.gender || skips.foreign
+                  (skips.gender || skips.foreign || skips.kids || skips.set
                     ? ` · overgeslagen: ${[
                         skips.gender ? `${skips.gender} verkeerd geslacht` : "",
+                        skips.kids ? `${skips.kids} baby/kids` : "",
+                        skips.set ? `${skips.set} set/meerdelig` : "",
                         skips.foreign ? `${skips.foreign} anderstalig zonder titelbewijs` : "",
                       ].filter(Boolean).join(" · ")}`
                     : ""),
@@ -1623,6 +1765,12 @@ export default function ScraperPage() {
                         {compMeta[s].lang && compMeta[s].lang !== "en" ? ` · ${compMeta[s].lang.toUpperCase()}` : ""}
                       </span>
                     )}
+                    {catInfo[s] && (
+                      <span className="muted">
+                        {` · 📦 ${Number(catInfo[s].count || 0).toLocaleString("nl-NL")} producten · ${new Date(catInfo[s].at).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`}
+                        {catInfo[s].lang && catInfo[s].lang !== "en" && !(compMeta[s] && compMeta[s].lang) ? ` · ${catInfo[s].lang.toUpperCase()}` : ""}
+                      </span>
+                    )}
                   </span>
                   <button className="kw-x" onClick={() => removeStoreItem(s)}>
                     ×
@@ -1635,6 +1783,12 @@ export default function ScraperPage() {
                   <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button className="btn-ghost btn-small" onClick={() => auditStores(storeList)} disabled={auditBusy || !!busy}>
                       {auditBusy ? "Checken…" : "🔎 Stores checken & sorteren"}
+                    </button>
+                    <button className="btn-ghost btn-small" onClick={() => loadCatalogs(false)} disabled={!!catBusy || !!busy}>
+                      {catBusy ? `📦 Laden ${catBusy}…` : "📦 Catalogi laden"}
+                    </button>
+                    <button className="btn-ghost btn-small" onClick={() => loadCatalogs(true)} disabled={!!catBusy || !!busy}>
+                      ↻ Alle catalogi verversen
                     </button>
                     <button className="btn-ghost btn-small" onClick={clearAllStores}>
                       ✕ Alles wissen
@@ -1884,13 +2038,47 @@ export default function ScraperPage() {
               >
                 <option value="bewezen">Alleen bewezen verkopers (score ≥ 50)</option>
                 <option value="kansrijk">Bewezen + kansrijk (score ≥ 25)</option>
-                <option value="alles">Alles wat matcht (geen vraag-filter)</option>
+                <option value="alles">Alles wat matcht (geen vraag-filter) — aanrader</option>
               </select>
               <div className="hint">
                 Score = gevalideerde bestseller-positie + reviews + uitverkochte varianten + fotoset.
                 Staat per product in kolom L–N van de importlijst. "Onbekend" = de winkel geeft geen
                 enkel signaal; die blijven staan, zodat je ze zelf kunt beoordelen.
               </div>
+            </div>
+
+            <div style={{ marginTop: 14 }}>
+              <div className="field-label">Spreiding over concurrenten</div>
+              <select
+                value={spreadMode}
+                onChange={(e) => {
+                  setSpreadMode(e.target.value);
+                  save(LS_SPREAD, e.target.value);
+                }}
+                disabled={!!busy}
+              >
+                <option value="vol">Vol — een sterke concurrent mag het hele keyword leveren (aanrader)</option>
+                <option value="gespreid">Gespreid — max ⅓ per winkel per keyword, max 25% van de run</option>
+              </select>
+              <div className="hint">
+                Vol = zoals Chaim: verkoopt een concurrent 10 goede jassen, dan pak je die 10. Dubbele
+                producten (zelfde titel bij een andere winkel) blijven altijd geweigerd.
+              </div>
+            </div>
+
+            <div style={{ marginTop: 14 }}>
+              <label className="small" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="checkbox"
+                  checked={fastMode}
+                  onChange={(e) => {
+                    setFastMode(e.target.checked);
+                    save(LS_FAST, e.target.checked);
+                  }}
+                  disabled={!!busy}
+                />
+                Snelmodus — geen reviews ophalen per product (bestseller-volgorde telt wel mee)
+              </label>
             </div>
 
             <div style={{ marginTop: 16 }}>

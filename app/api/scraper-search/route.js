@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchCatalog, guessGender, analyzeKeyword, matchProduct } from "@/lib/scrape";
+import { fetchCatalog, guessGender, analyzeKeyword, matchProduct, isKidsProduct, isSetMismatch } from "@/lib/scrape";
 import { demandScore, fetchReviewsMany, DEMAND_PROVEN, DEMAND_LIKELY } from "@/lib/demand";
 
 export const maxDuration = 60;
@@ -19,7 +19,7 @@ export const maxDuration = 60;
 //        "kansrijk" → score ≥ 25 of Onbekend
 //        "alles"    → geen vraag-filter (oude gedrag)
 export async function POST(req) {
-  const { store, keyword, gender, need, excludeLinks, maxPerStore, proof } =
+  const { store, keyword, gender, need, excludeLinks, maxPerStore, proof, fast } =
     await req.json().catch(() => ({}));
   if (!store || !keyword) {
     return NextResponse.json({ error: "store en keyword zijn verplicht" }, { status: 400 });
@@ -41,12 +41,13 @@ export async function POST(req) {
       store: catalog.domain,
       usedBestSelling: catalog.usedBestSelling,
       bestSellingStatus: catalog.bestSellingStatus,
+      lang: catalog.lang || "en",
       total: 0,
       matches: [],
     });
   }
 
-  const skipped = { gender: 0, foreign: 0, vraag: 0 };
+  const skipped = { gender: 0, foreign: 0, vraag: 0, kids: 0, set: 0 };
   const scored = [];
   for (let i = 0; i < catalog.products.length; i++) {
     const p = catalog.products[i];
@@ -59,6 +60,17 @@ export async function POST(req) {
 
     const m = matchProduct(analysis, p);
     if (!m) continue;
+
+    // Zoals Chaim's scraper: baby/kids eruit, en geen sets/meerdelige
+    // outfits als het keyword om één item vraagt.
+    if (isKidsProduct(p)) {
+      skipped.kids++;
+      continue;
+    }
+    if (isSetMismatch(p, keyword)) {
+      skipped.set++;
+      continue;
+    }
 
     const g = guessGender(p);
     if (gender === "Vrouw" && g === "Man") {
@@ -116,7 +128,10 @@ export async function POST(req) {
   /* Reviews alleen voor de shortlist (max 2× de cap, max 8): dat zijn de
      enige producten die de eindronde kunnen halen, en elke productpagina
      kost een fetch. */
-  const shortlist = scored.slice(0, Math.min(8, cap * 2));
+  // Snelmodus: geen productpagina's ophalen voor reviews — de score draait
+  // dan op bestseller-positie, uitverkochte varianten en fotoset. Scheelt
+  // per store×keyword tot 8 extra fetches.
+  const shortlist = fast ? [] : scored.slice(0, Math.min(8, cap * 2));
   const reviews = shortlist.length ? await fetchReviewsMany(shortlist.map((c) => c.link)) : new Map();
   for (const c of scored) {
     const d = demandScore(c.p, reviews.get(c.link) || null, catalog.bestSellingStatus);
@@ -171,6 +186,7 @@ export async function POST(req) {
     usedBestSelling: catalog.usedBestSelling,
     bestSellingStatus: catalog.bestSellingStatus,
     rankTotal: catalog.rankTotal,
+    lang: catalog.lang || "en",
     total: catalog.products.length,
     candidates: scored.length,
     proof: mode,

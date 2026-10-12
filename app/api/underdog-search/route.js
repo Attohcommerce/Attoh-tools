@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchCatalog, guessGender, analyzeKeyword, matchProduct } from "@/lib/scrape";
+import { fetchCatalog, guessGender, analyzeKeyword, matchProduct, isKidsProduct, isSetMismatch } from "@/lib/scrape";
 import { verifyUnderdogCandidates } from "@/lib/ai";
 
 export const maxDuration = 60;
@@ -129,6 +129,11 @@ export async function POST(req) {
       }
     }
     if (!hit) {
+      stats.typeMis++;
+      continue;
+    }
+    // Baby/kids en sets (bij een enkel-item-keyword) vallen altijd af
+    if (isKidsProduct(prod) || isSetMismatch(prod, keyword)) {
       stats.typeMis++;
       continue;
     }

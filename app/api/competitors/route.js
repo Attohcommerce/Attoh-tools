@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { readRange } from "@/lib/sheets";
 import { selectCompetitors, translateKeywordsForMarket } from "@/lib/ai";
-import { auditStore } from "@/lib/scrape";
+import { auditStore, fetchCatalog } from "@/lib/scrape";
+import { readCatalogMeta, catalogCacheAvailable } from "@/lib/catalog-cache";
 
 export const maxDuration = 60;
 
@@ -249,6 +250,32 @@ export async function POST(req) {
       await Promise.all(Array.from({ length: Math.min(6, queue.length) }, worker));
       results.sort((x, y) => y.score - x.score || (y.visits || 0) - (x.visits || 0));
       return NextResponse.json({ ok: true, audits: results });
+    }
+
+    /* CATALOGI — permanente cache (zoals Chaim's "Refresh all catalogs").
+       catalogInfo: per domein aantal producten, tijdstip, taal, uit Redis.
+       catalog:     één winkel laden (refresh=true = opnieuw ophalen). De
+                    client loopt zelf over de winkels, zodat elke call kort
+                    blijft. */
+    if (action === "catalogInfo") {
+      const list = [...new Set((body.domains || []).map(cleanDomain).filter(Boolean))].slice(0, 400);
+      const meta = await readCatalogMeta(list);
+      return NextResponse.json({ ok: true, cache: catalogCacheAvailable(), meta });
+    }
+    if (action === "catalog") {
+      const d = cleanDomain(body.domain);
+      if (!d) return NextResponse.json({ error: "Geen domein" }, { status: 400 });
+      const c = await fetchCatalog(d, { refresh: !!body.refresh });
+      return NextResponse.json({
+        ok: true,
+        meta: {
+          domain: d,
+          count: c.products.length,
+          at: c.fetchedAt || Date.now(),
+          lang: c.lang || "en",
+          bestSelling: c.bestSellingStatus || "onbekend",
+        },
+      });
     }
 
     if (action === "translate") {
