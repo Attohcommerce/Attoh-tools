@@ -17,6 +17,8 @@ Size Guide-module in Attoh Tools (`/size-guide`). Zonder metafield rendert de sn
 
 Gedrag: knop "Size guide" (inline SVG, storekleur) → modal met tabel, in/cm-knop (keuze onthouden in
 localStorage, default uit `unit_default`: USA/CAN inches, AUS/NZ/UK cm), note en meet-instructies.
+Optioneel veld `alert` in het metafield (v2.2) → rode melding bovenaan de maattabel, voor producten die
+afwijkend vallen (bv. "Runs small — we recommend ordering one size up.").
 Mobiel: links uitgelijnd, tabel horizontaal scrollbaar. `font-family: inherit` overal.
 
 ## Env vars voor de module (Vercel)

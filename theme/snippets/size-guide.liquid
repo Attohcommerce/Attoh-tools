@@ -1,5 +1,8 @@
 {% comment %}
-  SIZE GUIDE — Attoh Tools (v2.1, 03-09-2026, gestyled op Soul Society Boutique / Impulse)
+  SIZE GUIDE — Attoh Tools (v2.2, 12-10-2026, gestyled op Soul Society Boutique / Impulse)
+  v2.2: optioneel metafield-veld `alert` (tekst) → rode melding bovenaan de
+  maattabel, bv. "Runs small — we recommend ordering one size up." Zonder veld
+  verandert er niets.
   v2.1: fit-balk "Runs small · True to size · Runs large" met bolletje; stand
   uit het metafield-veld `fit` ("small" | "true" | "large"), zonder veld = true.
   Toont de maattabel uit product-metafield custom.size_guide (json, geschreven
@@ -18,7 +21,7 @@
 {%- assign sg_id = 'sg-' | append: product.id -%}
 {%- assign sg_unit = sg.unit_default | default: 'in' -%}
 <style>
-  .sg-wrap{--sg-ink:#2a3743;--sg-muted:#6f7a86;--sg-line:#e8e4de;--sg-head:#f7f5f2;--sg-accent:#2a3743;--sg-bg:#fff;font-family:inherit;text-align:left!important;margin:.75rem 0 1.1rem;display:flex;justify-content:flex-start!important}
+  .sg-wrap{--sg-ink:#2a3743;--sg-muted:#6f7a86;--sg-line:#e8e4de;--sg-head:#f7f5f2;--sg-accent:#2a3743;--sg-bg:#fff;--sg-alert:#c20000;--sg-alert-bg:#fdf1f1;font-family:inherit;text-align:left!important;margin:.75rem 0 1.1rem;display:flex;justify-content:flex-start!important}
   .sg-open{display:inline-flex;align-items:center;gap:.45rem;background:none;border:0;padding:0;font:inherit;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--sg-ink);cursor:pointer;line-height:1.2}
   .sg-open svg{width:17px;height:17px;flex:none;color:var(--sg-accent)}
   .sg-open span{border-bottom:1px solid var(--sg-line);padding-bottom:.15rem;transition:border-color .15s}
@@ -34,6 +37,7 @@
   .sg-units button.on{color:var(--sg-ink);border-bottom-color:var(--sg-accent)}
   .sg-close{background:none;border:0;font:inherit;font-size:1.5rem;line-height:1;cursor:pointer;color:var(--sg-muted);padding:0 0 0 .4rem}
   .sg-close:hover{color:var(--sg-ink)}
+  .sg-alert{margin:0 0 1rem;padding:.65rem .85rem;background:var(--sg-alert-bg);border-left:3px solid var(--sg-alert);border-radius:3px;color:var(--sg-alert);font-size:.84rem;font-weight:600;line-height:1.45}
   .sg-fit{margin:.15rem 0 1.15rem;padding:0 .2rem}
   .sg-fit-track{position:relative;height:2px;background:var(--sg-line);border-radius:2px;margin:0 .35rem}
   .sg-fit-track::before,.sg-fit-track::after{content:"";position:absolute;top:50%;width:1px;height:8px;background:var(--sg-line);transform:translateY(-50%)}
@@ -90,6 +94,7 @@
         </div>
         <button type="button" class="sg-close" aria-label="Close" data-sg-close>&times;</button>
       </div>
+      {%- if sg.alert != blank -%}<p class="sg-alert" role="note">{{ sg.alert | escape }}</p>{%- endif -%}
       {%- assign sg_fit = sg.fit | default: 'true' -%}
       <div class="sg-fit" data-fit="{{ sg_fit }}" aria-label="Fit: {% if sg_fit == 'small' %}runs small{% elsif sg_fit == 'large' %}runs large{% else %}true to size{% endif %}">
         <div class="sg-fit-track"><span class="sg-fit-dot"></span></div>

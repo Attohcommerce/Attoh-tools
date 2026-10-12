@@ -49,6 +49,7 @@ const FIXALL_ORDER = [
   "translate-options",
   "clean-size-labels",
   "convert-sizes",
+  "shoe-us-eu-labels",
   "unify-variant-prices",
   "clear-barcodes",
   "set-vendor",

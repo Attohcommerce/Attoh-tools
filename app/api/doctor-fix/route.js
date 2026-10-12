@@ -3,7 +3,7 @@ import { listProductsByIds, getProductMetafieldValues } from "@/lib/shopify";
 import { applyDoctorFix, FIX_FIELDS } from "@/lib/doctor";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { addTab, appendRows } from "@/lib/sheets";
-import { storeGendersOf } from "@/lib/store-gender";
+import { storeGendersOf, storeShoeLabelsOf } from "@/lib/store-gender";
 
 export const maxDuration = 60;
 
@@ -38,6 +38,7 @@ const CHUNK_FOR = {
   "fix-size-guides": 10,
   "delete-small-men-shoe-sizes": 8,
   "clean-size-labels": 12,
+  "shoe-us-eu-labels": 8,
   default: 15,
 };
 
@@ -90,6 +91,12 @@ function snapshotFor(fix, p) {
       return { variants: vars((x) => [x.id, x.option1, x.option2, x.option3, x.price, x.sku]) };
     case "clean-size-labels":
       return { variants: vars((x) => [x.id, x.option1, x.option2, x.option3]) };
+    case "shoe-us-eu-labels":
+      return {
+        options: (p.options || []).map((o) => o.name),
+        variants: vars((x) => [x.id, x.option1, x.option2, x.option3]),
+        size_guide: p.__sizeGuide || null,
+      };
     default:
       return { title: p.title || "", tags: p.tags || "" };
   }
@@ -106,6 +113,8 @@ export async function POST(req) {
   }
   // Storegeslacht (EMC = heren-only) — bepaalt o.a. de schoenentabel
   if (options.storeGenders == null) options.storeGenders = await storeGendersOf(store).catch(() => null);
+  // SSB: schoenmaten als "US 7 (EU 40)" — ook de andere maat-fixes houden hier rekening mee
+  if (options.shoeLabels == null) options.shoeLabels = await storeShoeLabelsOf(store).catch(() => null);
   const backupOn = !!(backup && backup.sheetId && backup.tab);
   if (!backupOn && !skipBackup) {
     return NextResponse.json(
@@ -146,7 +155,7 @@ export async function POST(req) {
     const pending = slice.map((id) => products.find((p) => String(p.id) === String(id))).filter(Boolean);
 
     // Maattabel-fix: de huidige metafield erbij halen (voor backup + manual-guard)
-    if (fix === "fix-size-guides" && pending.length) {
+    if ((fix === "fix-size-guides" || fix === "shoe-us-eu-labels") && pending.length) {
       const mf = await getProductMetafieldValues(store, pending.map((p) => p.id), { namespace: SG_NS, key: SG_KEY });
       if (mf.ok) for (const p of pending) p.__sizeGuide = mf.values[String(p.id)] || null;
     }
