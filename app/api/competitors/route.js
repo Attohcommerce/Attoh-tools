@@ -3,7 +3,7 @@ import { readRange } from "@/lib/sheets";
 import { selectCompetitors, translateKeywordsForMarket } from "@/lib/ai";
 import { auditStore, fetchCatalog } from "@/lib/scrape";
 import {
-  readCatalogMeta, catalogCacheAvailable, cacheStats,
+  readCatalogMeta, catalogCacheAvailable, cacheStats, clearAllCatalogs,
   getStoreList, addToStoreList, reorderStoreList, removeFromStoreList, clearStoreList,
   getStoreMeta, mergeStoreMeta,
 } from "@/lib/catalog-cache";
@@ -268,6 +268,14 @@ export async function POST(req) {
       const stats = await cacheStats();
       return NextResponse.json({ ok: true, cache: catalogCacheAvailable(), meta, stats });
     }
+    /* NOODKNOP — alle catalogi uit Redis (lijst en meta blijven staan).
+       Werkt ook als Redis vol zit: DEL mag altijd, SET niet. */
+    if (action === "cacheClear") {
+      if (body.confirm !== "WISSEN") return NextResponse.json({ error: "bevestiging ontbreekt" }, { status: 400 });
+      const r = await clearAllCatalogs();
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
+      return NextResponse.json(r);
+    }
 
     /* PERMANENTE COMPETITOR-LIJST (Redis comp:list:v1) + meta (comp:meta:v1).
        Dubbele winkels (ook www./https://-varianten) worden genegeerd; een
@@ -311,24 +319,38 @@ export async function POST(req) {
       for (const row of r.rows) {
         patch[row.domain] = { market: row.market, visits: row.visits, products: row.products, note: row.note, name: row.name };
       }
-      const meta = await mergeStoreMeta(patch);
-      const add = await addToStoreList(r.rows.map((x) => x.domain));
-      return NextResponse.json({ ok: true, rows: r.rows, added: add.added, dupes: add.dupes, list: add.list, meta });
+      // Opslaan mag het lezen nooit laten mislukken: lukt Redis niet (vol),
+      // dan krijgt de UI de rijen tóch terug plus een waarschuwing.
+      let meta = {};
+      let add = { added: [], dupes: 0, list: [] };
+      let warn = "";
+      try {
+        meta = await mergeStoreMeta(patch);
+        add = await addToStoreList(r.rows.map((x) => x.domain));
+      } catch (e) {
+        warn = `Winkels gelezen, maar niet op de server opgeslagen: ${String(e.message || e)}`;
+      }
+      return NextResponse.json({ ok: true, rows: r.rows, added: add.added, dupes: add.dupes, list: warn ? null : add.list, meta, warn });
     }
     if (action === "catalog") {
       const d = cleanDomain(body.domain);
       if (!d) return NextResponse.json({ error: "Geen domein" }, { status: 400 });
       const c = await fetchCatalog(d, { refresh: !!body.refresh });
+      const stored = c.cacheStored || c.products.length;
       return NextResponse.json({
         ok: true,
         meta: {
           domain: d,
-          count: c.products.length,
+          count: stored,
+          total: c.total || c.products.length,
+          truncated: !!c.truncated || stored < c.products.length,
           at: c.fetchedAt || Date.now(),
           lang: c.lang || "en",
           bestSelling: c.bestSellingStatus || "onbekend",
           partial: !!c.partial,
+          kb: c.cacheKb || 0,
           cacheWrite: c.cacheWrite || (c.products.length ? "ok" : "leeg"),
+          evicted: c.cacheEvicted || [],
         },
       });
     }
