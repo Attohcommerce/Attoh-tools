@@ -10,6 +10,7 @@ import {
   dateNLOf,
   dupKey,
   orderCostKey,
+  orderNo,
   toNum,
   round2,
 } from "@/lib/bills";
@@ -159,7 +160,7 @@ export async function POST(req) {
     }
 
     // 3. Shopify: unieke ordernummers opzoeken (max 6 tegelijk).
-    const uniq = [...new Set(rows.map((r) => String(r.order || "").trim()).filter(Boolean))];
+    const uniq = [...new Set(rows.map((r) => orderNo(r.order)).filter(Boolean))];
     const orderMap = new Map();
     let scopeError = null;
     let hardError = null;
@@ -205,7 +206,7 @@ export async function POST(req) {
         out.push({ ...base, status: "onleesbaar", note: "geen ordernummer of bedrag" });
         continue;
       }
-      const o = orderMap.get(base.order);
+      const o = orderMap.get(orderNo(base.order));
       if (!o) {
         out.push({
           ...base,
