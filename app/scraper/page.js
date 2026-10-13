@@ -70,6 +70,9 @@ const BROAD_AT = 4;
 const STALL_PROMPT_AT = 6;
 const STALL_AUTO_AT = 20;
 const MAX_LADDER_ROUNDS = 4; // vangnet tegen eindeloos herstarten
+// Aantal winkels dat tegelijk wordt doorzocht (snelheid). 6 = ±6× sneller
+// dan één voor één; de catalogi komen uit de cache, dus dat kan veilig.
+const WAVE = 6;
 
 // Geleerde kennis blijft bewaard tussen runs:
 const LS_ALTS = "sa_kw_alts"; // kw → AI-alternatieven (cache, geen dubbele AI-calls)
@@ -157,79 +160,6 @@ function parseKwPaste(text) {
     }
   }
   return out;
-}
-
-/* ---------- Organization-sheet lezen: twee formaten ----------
-   1. Verdeling-formaat (Keywords-tool): A Rank · B Keyword · C Collectie ·
-      D Groep · … · H Aantal producten · I Type · J Uitleg.
-   2. Weekplanning (Chaim-opmaak, de organization sheets die Claude maakt):
-      kopregel A "Categorie (Bet)" · B "Keyword" · C "Aantal" · D "The Play",
-      daaronder per categorie een regel "Casual Dresses (HERO)  [105]" en
-      per keyword een rij met B keyword en C aantal. De collectie staat in
-      kolom A of H (nieuwe sheets) of volgt uit de laatste categorieregel.
-   Beide leveren dezelfde rijen op: { k, n, g, col, type, uitleg }. */
-const OCCASION_RE =
-  /\b(christmas|xmas|race day|races|nye|new years?|wedding|bridesmaid|mother of the (bride|groom)|formal|cocktail|evening|party|going out|graduation|engagement|semi formal|ball|dinner|occasion|prom|gala)\b/i;
-const low = (v) => String(v || "").toLowerCase().trim();
-
-function parseVerdelingSheet(values) {
-  const h = (values[0] || []).map(low);
-  if (!h[1]?.startsWith("keyword") || !h[3]?.startsWith("groep") || !h[7]?.startsWith("aantal")) return null;
-  /* Storegeslacht uit de kop van kolom D ("Groep — alleen heren"). Bij een
-     heren-only blad is élk keyword heren — ook "shoes" zonder "mens". */
-  const storeG = /alleen heren/.test(h[3]) ? "man" : /alleen dames/.test(h[3]) ? "vrouw" : null;
-  const parsed = [];
-  for (const r of values.slice(1)) {
-    const k = String(r[1] || "").trim();
-    if (!k) continue;
-    if (k.toUpperCase().startsWith("UNDERDOG KEYWORDS")) continue; // scheidingsregel
-    if (/^keyword$/i.test(k)) continue; // koprij van het underdog-blok
-    if (!Number.isFinite(Number(r[0])) && !Number.isFinite(Number(r[7]))) continue;
-    const n = Math.max(1, Number(r[7]) || 0);
-    const g = storeG || (String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw");
-    const col = String(r[2] || "").trim(); // C = Collectie — reist mee naar de importlijst
-    const type = String(r[8] || "").trim() || "Direct"; // I = Direct/Attribuut/Gelegenheid/Underdog
-    const uitleg = String(r[9] || "").trim(); // J = underdog-uitleg voor de foto-controle
-    parsed.push({ k, n, g, col, type, uitleg });
-  }
-  return { parsed, storeG, formaat: "verdeling", bron: "kop van kolom D" };
-}
-
-function parseWeekplanSheet(values) {
-  let hdr = -1;
-  for (let i = 0; i < Math.min(values.length, 8); i++) {
-    const r = values[i] || [];
-    if (low(r[0]).startsWith("categorie") && low(r[1]).startsWith("keyword") && low(r[2]).startsWith("aantal")) {
-      hdr = i;
-      break;
-    }
-  }
-  if (hdr < 0) return null;
-  // Titel + notitie boven de kopregel: "Week 1 (12 Oct-18 Oct) — 1x AUS/NZ", "alleen dames"
-  const head = values.slice(0, hdr + 1).flat().map(low).join(" ");
-  const storeG = /alleen heren|herenstore/.test(head) ? "man" : /alleen dames|dameszaak/.test(head) ? "vrouw" : null;
-  const title = head.match(/week\s*(\d+)\s*\(([^)]+)\)/);
-  let cat = "";
-  const parsed = [];
-  for (const r of values.slice(hdr + 1)) {
-    const a = String(r[0] || "").trim();
-    const b = String(r[1] || "").trim();
-    const catRow = a.match(/^(.+?)\s*\((HERO|CORE|SIDE)\)/i);
-    if (catRow && !b) {
-      cat = catRow[1].trim(); // "Casual Dresses (HERO)  [105]" → Casual Dresses
-      continue;
-    }
-    if (!b || /^keyword$/i.test(b) || /^totaal/i.test(a) || /^totaal/i.test(b)) continue;
-    const n = Number(String(r[2] || "").replace(",", "."));
-    if (!Number.isFinite(n) || n <= 0) continue;
-    const col = (a && !catRow ? a : "") || String(r[7] || "").trim() || cat;
-    const zoekterm = String(r[5] || "").trim(); // F = zoekterm (heren: "mens …")
-    const g = storeG || (/^men'?s\b/i.test(col) || /^mens\b/i.test(zoekterm) ? "man" : "vrouw");
-    const k = g === "man" && zoekterm ? zoekterm : b;
-    const type = OCCASION_RE.test(k) ? "Gelegenheid" : "Direct";
-    parsed.push({ k, n: Math.max(1, Math.round(n)), g, col, type, uitleg: "" });
-  }
-  return { parsed, storeG, formaat: "weekplanning", bron: "notitie boven de tabel", week: title ? `week ${title[1]} (${title[2]})` : "" };
 }
 
 function storeOf(link) {
@@ -439,7 +369,6 @@ export default function ScraperPage() {
         });
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || res.status);
-        if (d.warn) pushLog({ warn: true, text: `Screenshot ${i + 1}: ${d.warn}` });
         added += (d.added || []).length;
         dupes += d.dupes || 0;
         newOnes.push(...(d.added || []));
@@ -470,19 +399,15 @@ export default function ScraperPage() {
   }
 
   /* Catalogi laden/verversen — één winkel per call (blijft onder de
-     serverless-limiet). Daarna staat elke catalogus permanent klaar in de
-     cache (binnen het Redis-geheugenbudget) en is de scraper per winkel
-     direct klaar. */
+     serverless-limiet). Daarna staat elke catalogus 7 dagen klaar in de
+     permanente cache en is de scraper per winkel direct klaar. */
   async function loadCatalogs(refresh, only) {
     const list = only && only.length ? [...only] : [...storeList];
     if (!list.length) return;
     let cacheFail = 0;
-    let cacheFailMsg = "";
     let partial = 0;
     let done = 0;
     let total = 0;
-    const evicted = new Set();
-    const truncated = [];
     setCatBusy(`0/${list.length}`);
     const queue = [...list];
     const worker = async () => {
@@ -496,13 +421,8 @@ export default function ScraperPage() {
           }).then((x) => x.json());
           if (r && r.meta) {
             total += r.meta.count || 0;
-            if (r.meta.count && r.meta.cacheWrite && r.meta.cacheWrite !== "ok") {
-              cacheFail++;
-              cacheFailMsg = r.meta.cacheWrite;
-            }
+            if (r.meta.count && r.meta.cacheWrite && r.meta.cacheWrite !== "ok") cacheFail++;
             if (r.meta.partial) partial++;
-            if (r.meta.truncated) truncated.push(`${d} (${Number(r.meta.count).toLocaleString("nl-NL")} van ${Number(r.meta.total).toLocaleString("nl-NL")})`);
-            for (const x of r.meta.evicted || []) evicted.add(x);
             setCatInfo((prev) => ({ ...prev, [d]: r.meta }));
             if (r.meta.lang) {
               setCompMeta((prev) => {
@@ -521,51 +441,7 @@ export default function ScraperPage() {
     setCatBusy("");
     pushLog({ ok: true, text: `📦 ${list.length} catalogi ${refresh ? "ververst" : "geladen"} — ${total.toLocaleString("nl-NL")} producten staan klaar.` });
     if (partial) pushLog({ warn: true, text: `${partial} winkel(s) zo groot dat niet alles binnen 1 minuut binnenkwam — klik nog eens op "Alle catalogi verversen" voor die winkels.` });
-    if (truncated.length) pushLog({ muted: true, text: `Ingekort tot de best verkopende producten (te groot voor de cache): ${truncated.join(", ")}.` });
-    if (evicted.size) {
-      // Alleen melden wat écht uit de lijst verdween; winkels die later in
-      // dezelfde ronde opnieuw geladen zijn staan gewoon weer in de cache.
-      setCatInfo((prev) => {
-        const next = { ...prev };
-        for (const x of evicted) if (!list.includes(x)) delete next[x];
-        return next;
-      });
-      pushLog({ warn: true, text: `Cache vol: de oudste catalogi zijn weggehaald om ruimte te maken (${[...evicted].slice(0, 8).join(", ")}${evicted.size > 8 ? ` +${evicted.size - 8}` : ""}). Wil je álle ${storeList.length} winkels permanent bewaren, dan is het Redis-plan te klein.` });
-    }
-    if (cacheFail) pushLog({ err: true, text: `${cacheFail} catalogi konden NIET in de cache worden opgeslagen: ${cacheFailMsg}` });
-    refreshCacheStats();
-  }
-
-  // Geheugenregel onder de lijst bijwerken (na laden, verversen of wissen)
-  function refreshCacheStats() {
-    fetch("/api/competitors", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "catalogInfo", domains: [] }),
-    })
-      .then((r) => r.json())
-      .then((d) => d && d.stats && setCacheStats(d.stats))
-      .catch(() => {});
-  }
-
-  // Noodknop: alle catalogi uit Redis, de lijst en de maandbezoekers blijven.
-  // Werkt ook als Redis vol zit (wissen mag altijd, opslaan niet).
-  async function clearCatalogCache() {
-    if (!window.confirm("Alle catalogi uit de cache wissen? De winkellijst en de maandbezoekers blijven staan; de catalogi worden daarna opnieuw opgehaald zodra je ze laadt.")) return;
-    try {
-      const r = await fetch("/api/competitors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "cacheClear", confirm: "WISSEN" }),
-      });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || r.status);
-      setCatInfo({});
-      if (d.stats) setCacheStats(d.stats);
-      pushLog({ ok: true, text: `🧹 Cache gewist: ${d.stores} catalogi weg, ${d.freedMb} MB vrijgemaakt — Redis staat nu op ${d.stats ? d.stats.usedMb : "?"} MB. Klik op "📦 Catalogi laden" om ze opnieuw op te halen.` });
-    } catch (e) {
-      pushLog({ err: true, text: `Cache wissen mislukt: ${e.message}` });
-    }
+    if (cacheFail) pushLog({ err: true, text: `${cacheFail} catalogi konden NIET in de cache worden opgeslagen — waarschijnlijk zit Redis vol. Kijk bij het cache-geheugen onder de lijst.` });
   }
 
   // Cache-overzicht ophalen zodra de lijst bekend is
@@ -710,20 +586,46 @@ export default function ScraperPage() {
       const values = data.values || [];
       if (!values.length) throw new Error(`Tabblad "${tab}" is leeg of bestaat niet`);
 
-      // Formaat herkennen: verdeling (Keywords-tool) of weekplanning (Chaim-opmaak)
-      const read = parseVerdelingSheet(values) || parseWeekplanSheet(values);
-      if (!read) {
+      // Header exact herkennen zoals de Keywords-tool hem wegschrijft:
+      // A Rank · B Keyword · C Collectie · D Groep · … · H Aantal producten
+      const h = (values[0] || []).map((x) => String(x || "").toLowerCase());
+      if (!String(h[1] || "").startsWith("keyword") || !String(h[3] || "").startsWith("groep") || !String(h[7] || "").startsWith("aantal")) {
         throw new Error(
-          `Dit blad heeft geen bekend formaat. Verwacht: verdeling (Rank · Keyword · Collectie · Groep · … · Aantal producten) of weekplanning (Categorie (Bet) · Keyword · Aantal · The Play). Controleer de bladnaam.`
+          `Dit blad heeft niet het verdeling-formaat (verwacht: Rank · Keyword · Collectie · Groep · … · Aantal producten). Controleer de bladnaam.`
         );
       }
-      const { parsed, storeG } = read;
-      if (read.formaat === "weekplanning") {
-        const zonderCol = parsed.filter((p) => !p.col).length;
-        pushLog({
-          muted: true,
-          text: `Weekplanning herkend${read.week ? ` (${read.week})` : ""}: ${parsed.length} keywords uit de categorieblokken, collectie per rij uit kolom A/H of de categorieregel${zonderCol ? ` — ${zonderCol} zonder collectie` : ""}.`,
-        });
+
+      /* Storegeslacht uit de kop van kolom D ("Groep — alleen heren").
+         De Keywords-tool legt het daar één keer vast; vanaf hier hoeft geen
+         enkele vervolgstap het nog te raden. Bij een heren-only blad is élk
+         keyword heren — ook "shoes" of "hoodies" zonder het woord "mens" —
+         zodat de scraper nooit meer vrouwenstukken ophaalt. */
+      const gHead = String(h[3] || "");
+      const storeG = /alleen heren/i.test(gHead)
+        ? "man"
+        : /alleen dames/i.test(gHead)
+        ? "vrouw"
+        : null;
+
+      const parsed = [];
+      for (const r of values.slice(1)) {
+        const k = String(r[1] || "").trim();
+        if (!k) continue;
+        // Scheidingsregel van het underdog-blok is geen keyword
+        if (k.toUpperCase().startsWith("UNDERDOG KEYWORDS")) continue;
+        /* Het underdog-blok heeft zijn eigen KOPRIJ ("Keyword | Collectie |
+           … | Aantal producten"). Zonder deze controle werd die als keyword
+           "Keyword" ingelezen en zou de scraper er producten voor gaan
+           zoeken. Een echte datarij heeft altijd een numerieke rank (A) of
+           een numeriek aantal (H); een koprij geen van beide. */
+        if (/^keyword$/i.test(k)) continue;
+        if (!Number.isFinite(Number(r[0])) && !Number.isFinite(Number(r[7]))) continue;
+        const n = Math.max(1, Number(r[7]) || 0);
+        const g = storeG || (String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw");
+        const col = String(r[2] || "").trim(); // C = Collectie — reist mee naar de importlijst
+        const type = String(r[8] || "").trim() || "Direct"; // I = Type (Direct/Attribuut/Gelegenheid/Underdog)
+        const uitleg = String(r[9] || "").trim(); // J = underdog-uitleg voor de foto-controle
+        parsed.push({ k, n, g, col, type, uitleg });
       }
       if (!parsed.length) throw new Error("Geen keywords gevonden in dit blad");
 
@@ -763,12 +665,12 @@ export default function ScraperPage() {
       if (storeG) {
         pushLog({
           strong: true,
-          text: `Dit blad is gemarkeerd als ${storeG === "man" ? "HERENSTORE" : "DAMESZAAK"} (${read.bron}). Alle ${parsedFiltered.length} keywords worden als ${storeG === "man" ? "Man" : "Vrouw"} gescrapet — ook de keywords zonder geslachtswoord.`,
+          text: `Dit blad is gemarkeerd als ${storeG === "man" ? "HERENSTORE" : "DAMESZAAK"} (kop van kolom D). Alle ${parsedFiltered.length} keywords worden als ${storeG === "man" ? "Man" : "Vrouw"} gescrapet — ook de keywords zonder geslachtswoord.`,
         });
       } else {
         pushLog({
           muted: true,
-          text: read.formaat === "weekplanning" ? "Geen storegeslacht in de notitie — per rij: categorie \"Men's …\" of zoekterm \"mens …\" (kolom F) = Man, de rest Vrouw." : "Geen storegeslacht in de kop van kolom D — per rij wordt Groep M/V aangehouden. Draai stap 1 opnieuw als dit een heren- of dameszaak is.",
+          text: "Geen storegeslacht in de kop van kolom D — per rij wordt Groep M/V aangehouden. Draai stap 1 opnieuw als dit een heren- of dameszaak is.",
         });
       }
 
@@ -1240,11 +1142,17 @@ export default function ScraperPage() {
           };
 
           // Eén ronde langs alle stores met de huidige zoektermen
+          /* SNELLER (13-10): winkels in GOLVEN van WAVE tegelijk doorzoeken
+             i.p.v. één voor één, en de kandidaten van de hele golf samen
+             rangschikken: titel-match vóór omschrijving, daarna BEWEZEN
+             (best-selling-positie in de winkel, deels uitverkocht, vraag-
+             score) — pas daarna de winkelvolgorde. Zo pakt de tool de
+             bestsellers van de golf, niet blind alles van de eerste winkel.
+             Sheet-schrijven gebeurt één keer per golf. */
           const scanStores = async (withStallLogic) => {
-            for (const store of stores) {
+            for (let w = 0; w < stores.length; w += WAVE) {
               await checkControl();
               if (needed <= 0) return;
-              // Handmatig overgeslagen? Direct stoppen met dit keyword.
               if (skipRequested(k)) {
                 stallDecision.current = "skip";
                 return;
@@ -1256,260 +1164,218 @@ export default function ScraperPage() {
                 const a = expandAlts("Op jouw verzoek");
                 const b = expandBroad();
                 const c = relaxUnderdog();
-                if (a || b || c) return "restart"; // ook nu: beste winkel eerst
+                if (a || b || c) return "restart";
               }
-              let foundThisStore = 0;
-              let scanned = 0;
-              let bestSelling = false;
-              let bsStatus = "";
-              let bsTotal = 0;
-              const skips = { gender: 0, foreign: 0, vraag: 0, kids: 0, set: 0 };
-              await ensureStoreLang(store);
-              /* Buitenlandse store? Dan éérst de vertaalde termen ("laarzen",
-                 "robe de cocktail"), daarna alsnog de Engelse — veel
-                 NL/PL-shops titelen deels in het Engels. */
-              const storeLang = (metaNow[store] && metaNow[store].lang) || "en";
-              const storeTerms =
-                storeLang !== "en"
-                  ? [...new Set([...((transCache[storeLang] || {})[kwLower] || []), ...terms])]
-                  : terms;
-              for (const term of storeTerms) {
-                if (needed <= 0) break;
-                const pairKey = `${store}|${term.toLowerCase()}`;
-                if (triedPairs.has(pairKey)) continue;
-                triedPairs.add(pairKey);
-                try {
-                  /* Underdogs gaan langs de slimme route: breed vangen op het
-                     producttype, maar alléén binnen de bestsellers van de
-                     winkel, en daarna fotocontrole tegen de uitleg. Zo levert
-                     een niche-zoekvraag alsnog bewezen verkopers op. */
-                  const res = await fetch(udProfile ? "/api/underdog-search" : "/api/scraper-search", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      store,
-                      keyword: udProfile ? k : term,
-                      profile: udProfile || undefined,
-                      // Tweede ronde: bestseller-grens los (zie relaxUnderdog)
-                      relaxBestseller: udRelax || undefined,
-                      gender,
-                      need: needed,
-                      excludeLinks: [...exclude],
-                      // Nooit het hele quotum uit één winkel: pak van elke
-                      // winkel de bovenkant in plaats van de staart van één.
-                      // "vol": een sterke concurrent mag het hele quotum leveren
-                      maxPerStore: spreadMode === "vol" ? needed : Math.max(2, Math.ceil(target / 3)),
-                      proof: proofMode,
-                      fast: fastMode,
-                    }),
-                  });
-                  const data = await res.json();
-                  if (!res.ok) throw new Error(data.error || res.status);
-                  let found = data.matches || [];
-                  /* Bij underdogs laten zien WAAR de kandidaten sneuvelen —
-                     anders zie je alleen "0 gevonden" zonder te weten of het
-                     aan de bestseller-grens, het producttype of de
-                     fotocontrole lag. */
-                  if (udProfile && data.stats && !found.length) {
-                    const st = data.stats;
-                    pushLog({
-                      muted: true,
-                      text:
-                        `${store}: ${data.candidates || 0} kandidaten` +
-                        (st.grensLos ? " (bestseller-grens losgelaten — te weinig in de top)" : "") +
-                        ` · afgevallen: ${st.typeMis || 0} verkeerd producttype, ${st.breekpunt || 0} breekpunt in titel, ${st.geslacht || 0} verkeerd geslacht` +
-                        (st.naarAi ? ` · ${st.naarAi} naar de fotocontrole` : " · niets voor de fotocontrole"),
-                    });
-                  }
-                  scanned = Math.max(scanned, data.total || 0);
-                  bestSelling = bestSelling || !!data.usedBestSelling;
-                  if (data.bestSellingStatus) bsStatus = data.bestSellingStatus;
-                  if (data.rankTotal) bsTotal = data.rankTotal;
-                  // Elke zoekterm scant dezelfde catalogus en telt dezelfde
-                  // overgeslagen producten opnieuw — max i.p.v. som, anders
-                  // staat er "964 te weinig foto's" waar het er 241 zijn.
-                  if (data.skipped) for (const key of Object.keys(skips)) skips[key] = Math.max(skips[key], data.skipped[key] || 0);
+              const wave = stores.slice(w, w + WAVE);
+              await Promise.all(wave.map((st) => ensureStoreLang(st)));
+              const needAtStart = needed;
 
-                  // FOTO-CONTROLE OP ELK PRODUCT — niet alleen bij
-                  // via-alternatieven. De tekstmatcher kan een keyword te ruim
-                  // uitleggen ("cocktail dress" matchte op elke party/evening
-                  // dress); Claude kijkt daarom naar de FOTO en toetst tegen de
-                  // product-briefing van dit keyword. Alleen bij een kaal
-                  // producttype zonder eisen (bv. "boots") slaan we het over,
-                  // want daar valt weinig te verwarren.
-                  /* Foto-AI alleen waar hij iets kan tegenhouden: producten
-                     met zwak bewijs (kleur/materiaal niet in de titel,
-                     match via omschrijving, anderstalig) en ALLES wat via
-                     een alternatieve zoekterm binnenkwam. Een titel-match
-                     op een direct keyword ("boots" in "Chelsea Boots")
-                     hoeft niet langs de foto — dat was de grootste
-                     tijdvreter van de hele run. */
-                  /* Underdogs zijn server-side al op titel, omschrijving én
-                     foto beoordeeld tegen hun profiel — nog een keer langs
-                     de algemene fotocontrole is dubbel werk en dubbele
-                     kosten, en die controle kent de uitleg uit kolom J niet
-                     eens. */
-                  const toVerify = udProfile
-                    ? []
-                    : term !== k || isOccasion
-                    ? found
-                    : found.filter((m) => m.needsPhotoProof);
-                  if (toVerify.length) {
+              const results = await Promise.all(
+                wave.map(async (store, wi) => {
+                  const out = { store, wi, items: [], scanned: 0, bsStatus: "", bsTotal: 0, skips: { gender: 0, foreign: 0, vraag: 0, kids: 0, set: 0 } };
+                  const storeLang = (metaNow[store] && metaNow[store].lang) || "en";
+                  const storeTerms =
+                    storeLang !== "en"
+                      ? [...new Set([...((transCache[storeLang] || {})[kwLower] || []), ...terms])]
+                      : terms;
+                  for (const term of storeTerms) {
+                    const pairKey = `${store}|${term.toLowerCase()}`;
+                    if (triedPairs.has(pairKey)) continue;
+                    triedPairs.add(pairKey);
                     try {
-                      const vres = await fetch("/api/verify-products", {
+                      const res = await fetch(udProfile ? "/api/underdog-search" : "/api/scraper-search", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                          keyword: k,
+                          store,
+                          keyword: udProfile ? k : term,
+                          profile: udProfile || undefined,
+                          relaxBestseller: udRelax || undefined,
                           gender,
-                          brief: kwBrief,
-                          items: toVerify.map((m) => ({
-                            index: found.indexOf(m),
-                            title: m.title,
-                            image: m.image || null,
-                            images: m.images || null,
-                            needsPhotoProof: !!m.needsPhotoProof,
-                          })),
+                          need: needAtStart,
+                          excludeLinks: [...exclude],
+                          maxPerStore: spreadMode === "vol" ? needAtStart : Math.max(2, Math.ceil(target / 3)),
+                          proof: proofMode,
+                          fast: fastMode,
                         }),
                       });
-                      const vdata = await vres.json();
-                      if (vres.ok && Array.isArray(vdata.reject) && vdata.reject.length) {
-                        const bad = new Set(vdata.reject.map((r) => r.index));
-                        const reasons = [
-                          ...new Set(vdata.reject.map((r) => String(r.reason || "").trim()).filter(Boolean)),
-                        ].slice(0, 2);
-                        const kept = found.filter((_, fi) => !bad.has(fi));
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data.error || res.status);
+                      let found = data.matches || [];
+                      if (udProfile && data.stats && !found.length) {
+                        const st = data.stats;
                         pushLog({
                           muted: true,
                           text:
-                            `Foto-controle: ${found.length - kept.length} van ${found.length} afgekeurd voor "${k}"` +
-                            (reasons.length ? ` — ${reasons.join(" · ")}` : ""),
+                            `${store}: ${data.candidates || 0} kandidaten` +
+                            (st.grensLos ? " (bestseller-grens losgelaten — te weinig in de top)" : "") +
+                            ` · afgevallen: ${st.typeMis || 0} verkeerd producttype, ${st.breekpunt || 0} breekpunt in titel, ${st.geslacht || 0} verkeerd geslacht` +
+                            (st.naarAi ? ` · ${st.naarAi} naar de fotocontrole` : " · niets voor de fotocontrole"),
                         });
-                        found = kept;
                       }
-                    } catch {
-                      /* vision-check niet beschikbaar → producten gewoon meenemen */
-                    }
-                  }
+                      out.scanned = Math.max(out.scanned, data.total || 0);
+                      if (data.bestSellingStatus) out.bsStatus = data.bestSellingStatus;
+                      if (data.rankTotal) out.bsTotal = data.rankTotal;
+                      if (data.skipped) for (const key of Object.keys(out.skips)) out.skips[key] = Math.max(out.skips[key], data.skipped[key] || 0);
 
-                  /* Spreiding: nooit meer dan MAX_STORE_SHARE van de hele
-                     lijst uit één winkel, en nooit twee keer hetzelfde
-                     product (zelfde titel bij een andere dropship-winkel). */
-                  if (found.length) {
-                    const dom = storeOf(found[0].link) || store;
-                    const capTotal = Math.max(20, Number(totalTarget) || 0);
-                    const cap = Math.ceil(capTotal * MAX_STORE_SHARE);
-                    const already = perStore.get(dom) || 0;
-                    const room = spreadMode === "vol" ? found.length : Math.max(0, cap - already);
-                    if (found.length > room) {
-                      storeCapHits += found.length - room;
-                      found = found.slice(0, room);
-                    }
-                    const fresh = [];
-                    for (const m of found) {
-                      const nt = normTitle(m.title);
-                      if (nt && seenTitles.has(nt)) {
-                        titleDupHits++;
-                        continue;
+                      // Foto-AI alleen bij zwak bewijs of een hulp-zoekterm
+                      const toVerify = udProfile ? [] : term !== k || isOccasion ? found : found.filter((m) => m.needsPhotoProof);
+                      if (toVerify.length) {
+                        try {
+                          const vres = await fetch("/api/verify-products", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              keyword: k,
+                              gender,
+                              brief: kwBrief,
+                              items: toVerify.map((m) => ({
+                                index: found.indexOf(m),
+                                title: m.title,
+                                image: m.image || null,
+                                images: m.images || null,
+                                needsPhotoProof: !!m.needsPhotoProof,
+                              })),
+                            }),
+                          });
+                          const vdata = await vres.json();
+                          if (vres.ok && Array.isArray(vdata.reject) && vdata.reject.length) {
+                            const bad = new Set(vdata.reject.map((r) => r.index));
+                            const kept = found.filter((_, fi) => !bad.has(fi));
+                            pushLog({ muted: true, text: `Foto-controle ${store}: ${found.length - kept.length} van ${found.length} afgekeurd voor "${k}"` });
+                            found = kept;
+                          }
+                        } catch {
+                          /* vision niet beschikbaar → gewoon meenemen */
+                        }
                       }
-                      if (nt) seenTitles.add(nt);
-                      fresh.push(m);
+                      for (const m of found) out.items.push({ ...m, _term: term, _store: store, _wi: wi });
+                    } catch (e) {
+                      pushLog({ err: true, text: `${store}: ${e.message}` });
+                      break;
                     }
-                    found = fresh;
-                    if (found.length) perStore.set(dom, already + found.length);
                   }
+                  return out;
+                })
+              );
 
-                  if (found.length) {
-                    // Origineel keyword in de sheet; via-term zichtbaar in Matchbron.
-                    // Matchtype is bij via-vondsten NOOIT "Literal" — dat zou over
-                    // het hulp-woord gaan, niet over jouw echte keyword.
-                    const via = term === k ? "" : ` · via "${term}"`;
-                    const newRows = found.map((m) => [
-                      m.link,
-                      m.title,
-                      k,
-                      m.source + via,
-                      term === k ? m.literal : "Ruim",
-                      gender === "Man" ? "Man" : gender === "Vrouw" ? "Vrouw" : "",
-                      "",
-                      "",
-                      col || "",
-                      kwType,
-                      (kwBrief && kwBrief.titleForm) || "",
-                      m.demandLabel || "",
-                      m.demand === null || m.demand === undefined ? "" : m.demand,
-                      m.signals || "",
-                    ]);
-                    await sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:N`, rows: newRows });
-                    if (memSheet.trim()) {
-                      await sheetsCall({
-                        action: "append",
-                        sheetId: memSheet,
-                        rows: found.map((m) => [m.link, k, new Date().toISOString().slice(0, 10)]),
-                      });
-                      memAdded += found.length;
-                    }
-                    for (const m of found) exclude.add(m.link.toLowerCase().replace(/\/$/, ""));
-                    needed -= found.length;
-                    grandTotal += found.length;
-                    foundThisStore += found.length;
-                    setProg((p) => ({ ...p, found: grandTotal, kwFound: target - needed }));
-                    // Leren: dit alternatief werkt voor dit keyword → volgende run meteen eerst
-                    if (term.toLowerCase() !== kwLower) {
-                      altHits[kwLower] = term.toLowerCase();
-                      save(LS_ALT_HITS, altHits);
-                    }
+              /* Rangschikken over de hele golf: bewezen eerst */
+              const proofScore = (m) => {
+                let sc = 0;
+                if (m.bsPct !== null && m.bsPct !== undefined) sc += Math.max(0, 100 - Number(m.bsPct)) * 0.6; // top van de winkel
+                if (typeof m.demand === "number") sc += m.demand * 0.4;
+                if (m.soldOutRatio > 0 && m.soldOutRatio < 1) sc += 8; // deels uitverkocht = verkoopt
+                return sc;
+              };
+              const tierOf = (m) => (String(m.source || "").startsWith("Titel") ? 0 : String(m.source || "").startsWith("Omschrijving") ? 1 : 2);
+              const all = results.flatMap((r) => r.items);
+              all.sort(
+                (a, b) =>
+                  tierOf(a) - tierOf(b) ||
+                  (a._term === k ? 0 : 1) - (b._term === k ? 0 : 1) ||
+                  proofScore(b) - proofScore(a) ||
+                  a._wi - b._wi
+              );
+
+              const take = [];
+              const seenLinks = new Set();
+              for (const m of all) {
+                if (take.length >= needed) break;
+                const lk = m.link.toLowerCase().replace(/\/$/, "");
+                if (seenLinks.has(lk) || exclude.has(lk)) continue;
+                seenLinks.add(lk);
+                const nt = normTitle(m.title);
+                if (nt && seenTitles.has(nt)) {
+                  titleDupHits++;
+                  continue;
+                }
+                const dom = storeOf(m.link) || m._store;
+                if (spreadMode !== "vol") {
+                  const cap = Math.ceil(Math.max(20, Number(totalTarget) || 0) * MAX_STORE_SHARE);
+                  if ((perStore.get(dom) || 0) >= cap) {
+                    storeCapHits++;
+                    continue;
                   }
-                } catch (e) {
-                  pushLog({ err: true, text: `${store}: ${e.message}` });
-                  break;
+                }
+                if (nt) seenTitles.add(nt);
+                perStore.set(dom, (perStore.get(dom) || 0) + 1);
+                take.push(m);
+              }
+
+              if (take.length) {
+                const newRows = take.map((m) => [
+                  m.link,
+                  m.title,
+                  k,
+                  m.source + (m._term === k ? "" : ` · via "${m._term}"`),
+                  m._term === k ? m.literal : "Ruim",
+                  gender === "Man" ? "Man" : gender === "Vrouw" ? "Vrouw" : "",
+                  "",
+                  "",
+                  col || "",
+                  kwType,
+                  (kwBrief && kwBrief.titleForm) || "",
+                  m.demandLabel || "",
+                  m.demand === null || m.demand === undefined ? "" : m.demand,
+                  m.signals || "",
+                ]);
+                await Promise.all([
+                  sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:N`, rows: newRows }),
+                  memSheet.trim()
+                    ? sheetsCall({ action: "append", sheetId: memSheet, rows: take.map((m) => [m.link, k, new Date().toISOString().slice(0, 10)]) })
+                    : Promise.resolve(),
+                ]);
+                if (memSheet.trim()) memAdded += take.length;
+                for (const m of take) exclude.add(m.link.toLowerCase().replace(/\/$/, ""));
+                needed -= take.length;
+                grandTotal += take.length;
+                setProg((p) => ({ ...p, found: grandTotal, kwFound: target - needed }));
+                const altTerm = take.find((m) => m._term.toLowerCase() !== kwLower);
+                if (altTerm) {
+                  altHits[kwLower] = altTerm._term.toLowerCase();
+                  save(LS_ALT_HITS, altHits);
                 }
               }
-              pushLog({
-                ok: true,
-                text:
-                  `${store}: ${foundThisStore} gevonden (${scanned} producten gescand${bsStatus === "geldig" ? `, best-selling geldig · ${bsTotal} gerangschikt` : bsStatus === "genegeerd" ? ", ⚠ thema negeert best-selling — geen bestseller-signaal" : ", ⚠ GEEN best-selling volgorde — catalogusvolgorde gebruikt"}${skips.vraag ? ` · ${skips.vraag} te weinig vraag-bewijs` : ""}) — nog ${Math.max(needed, 0)} nodig` +
-                  (skips.gender || skips.foreign || skips.kids || skips.set
-                    ? ` · overgeslagen: ${[
-                        skips.gender ? `${skips.gender} verkeerd geslacht` : "",
-                        skips.kids ? `${skips.kids} baby/kids` : "",
-                        skips.set ? `${skips.set} set/meerdelig` : "",
-                        skips.foreign ? `${skips.foreign} anderstalig zonder titelbewijs` : "",
-                      ].filter(Boolean).join(" · ")}`
-                    : ""),
-              });
-              storesTried++;
 
-              // Vastloop-ladder: alleen zolang er nog NIETS gevonden is
+              // Eén logregel per winkel in de golf
+              for (const r of results) {
+                const got = take.filter((m) => m._store === r.store).length;
+                const sk = r.skips;
+                pushLog({
+                  ok: true,
+                  text:
+                    `${r.store}: ${got} genomen van ${r.items.length} gevonden (${r.scanned} gescand${r.bsStatus === "geldig" ? `, best-selling ✓ ${r.bsTotal}` : r.bsStatus === "genegeerd" ? ", best-selling ✗" : ""})` +
+                    (sk.gender || sk.foreign || sk.kids || sk.set
+                      ? ` · overgeslagen: ${[
+                          sk.gender ? `${sk.gender} geslacht` : "",
+                          sk.kids ? `${sk.kids} baby/kids` : "",
+                          sk.set ? `${sk.set} set` : "",
+                          sk.foreign ? `${sk.foreign} anderstalig` : "",
+                        ].filter(Boolean).join(" · ")}`
+                      : ""),
+                });
+              }
+              pushLog({ muted: true, text: `"${k}": nog ${Math.max(needed, 0)} nodig.` });
+              storesTried += wave.length;
+
               if (withStallLogic && needed === target) {
-                /* Zodra de aanpak verbreedt, stoppen we deze ronde en
-                   beginnen we opnieuw bij winkel 1 — de beste winkel moet de
-                   nieuwe zoektermen als eerste krijgen, niet als laatste. */
-                /* Underdogs hebben hun eigen laddertje server-side (vakterm →
-                   zoektermen → breed type). De generieke alternatieven en het
-                   brede vangnet zouden hier alleen dezelfde zoekactie
-                   herhalen — voor die keywords is de bestseller-grens
-                   loslaten de enige zinnige verbreding. */
                 if (udProfile) {
                   if (storesTried >= ALTS_AT && relaxUnderdog()) return "restart";
                 } else {
                   if (storesTried >= ALTS_AT && alts.length && expandAlts(`Na ${storesTried} winkel(s) nog 0`)) return "restart";
                   if (storesTried >= BROAD_AT && expandBroad()) return "restart";
                 }
-                if (storesTried === STALL_PROMPT_AT && !stallDecision.current) {
+                if (storesTried >= STALL_PROMPT_AT && storesTried - wave.length < STALL_PROMPT_AT && !stallDecision.current) {
                   setStall({ kw: k, gender });
                   pushLog({
                     warn: true,
-                    text: `"${k}" na ${STALL_PROMPT_AT} stores nog 0 — slim zoeken is al actief; na ${STALL_AUTO_AT} stores ga ik automatisch door naar het volgende keyword.`,
+                    text: `"${k}" na ${storesTried} stores nog 0 — slim zoeken is al actief; na ${STALL_AUTO_AT} stores ga ik automatisch door naar het volgende keyword.`,
                   });
                 }
                 if (storesTried >= STALL_AUTO_AT && stallDecision.current !== "continue") {
                   setStall(null);
                   stallDecision.current = "skip-auto";
-                  pushLog({
-                    warn: true,
-                    text: `"${k}" na ${STALL_AUTO_AT} stores nog 0 (ook met AI + breed vangnet) — automatisch door naar het volgende keyword.`,
-                  });
+                  pushLog({ warn: true, text: `"${k}" na ${storesTried} stores nog 0 — automatisch door naar het volgende keyword.` });
                   return;
                 }
               }
@@ -2087,7 +1953,7 @@ export default function ScraperPage() {
                     )}
                     {catInfo[s] && (
                       <span className="muted">
-                        {` · 📦 ${Number(catInfo[s].count || 0).toLocaleString("nl-NL")} producten${catInfo[s].truncated ? ` (ingekort van ${Number(catInfo[s].total || 0).toLocaleString("nl-NL")})` : ""} · ${new Date(catInfo[s].at).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`}
+                        {` · 📦 ${Number(catInfo[s].count || 0).toLocaleString("nl-NL")} producten · ${new Date(catInfo[s].at).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`}
                         {catInfo[s].lang && catInfo[s].lang !== "en" && !(compMeta[s] && compMeta[s].lang) ? ` · ${catInfo[s].lang.toUpperCase()}` : ""}
                       </span>
                     )}
@@ -2103,14 +1969,8 @@ export default function ScraperPage() {
                   <div className="hint">
                     {storeList.length} stores — volgorde = zoekvolgorde (beste eerst) ·{" "}
                     {Object.keys(catInfo).filter((d) => storeList.includes(d)).length} catalogi in de cache
-                    {cacheStats ? ` · Redis ${cacheStats.usedMb} MB${cacheStats.maxMb ? ` van ${cacheStats.maxMb} MB` : ""}${cacheStats.catalogMb !== undefined ? ` (catalogi ${cacheStats.catalogMb} MB${cacheStats.budgetMb ? `, budget ${cacheStats.budgetMb} MB` : ""})` : ""}` : ""}
+                    {cacheStats ? ` · cache-geheugen ${cacheStats.usedMb} MB${cacheStats.maxMb ? ` van ${cacheStats.maxMb} MB` : ""}` : ""}
                   </div>
-                  {cacheStats && cacheStats.maxMb && cacheStats.usedMb >= cacheStats.maxMb * 0.95 && (
-                    <div className="hint" style={{ color: "#b45309" }}>
-                      ⚠ Redis zit (bijna) vol. Nieuwe catalogi verdringen nu de oudste; wil je er in één keer vanaf, klik dan op
-                      "🧹 Catalogi-cache wissen" en daarna op "📦 Catalogi laden".
-                    </div>
-                  )}
                   <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button className="btn-ghost btn-small" onClick={() => auditStores(storeList)} disabled={auditBusy || !!busy}>
                       {auditBusy ? "Checken…" : "🔎 Stores checken & sorteren"}
@@ -2120,9 +1980,6 @@ export default function ScraperPage() {
                     </button>
                     <button className="btn-ghost btn-small" onClick={() => loadCatalogs(true)} disabled={!!catBusy || !!busy}>
                       ↻ Alle catalogi verversen
-                    </button>
-                    <button className="btn-ghost btn-small" onClick={clearCatalogCache} disabled={!!catBusy || !!busy}>
-                      🧹 Catalogi-cache wissen
                     </button>
                     <button className="btn-ghost btn-small" onClick={clearAllStores}>
                       ✕ Alles wissen
@@ -2134,9 +1991,8 @@ export default function ScraperPage() {
                     zoekvolgorde. Winkels die best-selling negeren kunnen geen "bewezen" producten leveren.
                   </div>
                   <div className="hint">
-                    De lijst en de maandbezoekers staan permanent op de server. De catalogi ook, binnen het
-                    Redis-geheugen (catalogi max 80%): zit dat vol, dan maakt de nieuwste catalogus plaats door de
-                    oudste weg te halen — die wordt bij de volgende run gewoon opnieuw opgehaald.
+                    De lijst en de catalogi staan permanent op de server — er verdwijnt niets vanzelf, alleen als je
+                    een winkel zelf weghaalt.
                   </div>
                 </>
               )}

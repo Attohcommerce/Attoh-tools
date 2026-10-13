@@ -759,7 +759,11 @@ export default function KeywordsPage() {
       market: (saved && saved.market) || (prof && prof.market) || CURRENCY_MARKET[String(s.currency || "").toUpperCase()] || "",
       genders: (saved && saved.genders) || (prof && prof.genders) || "MV",
       aanvul: (saved && saved.aanvulUrl) || "",
-      orgSheet: saved && saved.orgSheetId ? `https://docs.google.com/spreadsheets/d/${saved.orgSheetId}/edit` : DEFAULT_ORG_SHEET,
+      // Leeg = dezelfde sheet als de aanvul-sheet (alles in één sheet)
+      orgSheet:
+        saved && saved.orgSheetId && saved.orgSheetId !== saved.aanvulSheetId
+          ? `https://docs.google.com/spreadsheets/d/${saved.orgSheetId}/edit`
+          : "",
       orgTab: (saved && saved.orgTab) || "",
     });
   }
@@ -1851,7 +1855,7 @@ export default function KeywordsPage() {
                           </div>
                         </div>
                         <div className="gh-span2">
-                          <div className="gh-sub">Aanvul-sheet</div>
+                          <div className="gh-sub">Organization / aanvul-sheet <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(één sheet met weken, Plan en Collecties (import) is genoeg)</span></div>
                           <input
                             type="text"
                             placeholder="Lege Google Sheet, gedeeld met attoh-sheets@attoh-tools.iam.gserviceaccount.com"
@@ -1860,19 +1864,19 @@ export default function KeywordsPage() {
                           />
                         </div>
                         <div>
-                          <div className="gh-sub">Originele organization — sheet</div>
+                          <div className="gh-sub">Aparte organization-sheet <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(optioneel)</span></div>
                           <input
                             type="text"
-                            placeholder="https://docs.google.com/spreadsheets/d/…"
+                            placeholder="Leeg = zelfde sheet als hierboven"
                             value={stForm.orgSheet}
                             onChange={(e) => setStForm((f) => ({ ...f, orgSheet: e.target.value }))}
                           />
                         </div>
                         <div>
-                          <div className="gh-sub">Bladnaam <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(leeg = alleen de store)</span></div>
+                          <div className="gh-sub">Bladnaam <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(leeg = automatisch)</span></div>
                           <input
                             type="text"
-                            placeholder="Exacte bladnaam van de organization"
+                            placeholder="Leeg = Collecties (import) → Plan"
                             value={stForm.orgTab}
                             onChange={(e) => setStForm((f) => ({ ...f, orgTab: e.target.value }))}
                           />
@@ -1885,7 +1889,7 @@ export default function KeywordsPage() {
                         <button className="btn-ghost gh-btn" onClick={stSaveClick} disabled={!!stBusy || !stForm.aanvul.trim()}>
                           {stBusy === "save" ? "Opslaan…" : "Alleen opslaan"}
                         </button>
-                        <span className="muted small">schrijft ORG VROUW · ORG MAN · COLLECTIES · INFO in de aanvul-sheet</span>
+                        <span className="muted small">schrijft ORG VROUW · ORG MAN · STORE COLLECTIES · INFO in dezelfde sheet — jouw eigen tabbladen blijven onaangeroerd</span>
                       </div>
                     </div>
                   )}
