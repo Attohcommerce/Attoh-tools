@@ -50,9 +50,6 @@ const LS_PROOF = "sa_proof_mode_v2"; // v2: standaard "alles" (zoals Chaim)
 const LS_SPREAD = "sa_spread_mode";
 const LS_FAST = "sa_fast_mode";
 
-// Stores verlopen automatisch na 14 dagen zonder gebruik van de tool
-const STORE_TTL_DAYS = 14;
-const LS_LAST_ACTIVE = "sa_last_active";
 
 /* Slim zoeken — de trap-ladder per keyword:
      store 1     → alleen het originele keyword (+ eerder bewezen winnaar)
@@ -186,6 +183,9 @@ export default function ScraperPage() {
   const [fastMode, setFastMode] = useState(true);
   const [catInfo, setCatInfo] = useState({}); // domein → {count, at, lang}
   const [catBusy, setCatBusy] = useState("");
+  const [shotBusy, setShotBusy] = useState("");
+  const [cacheStats, setCacheStats] = useState(null); // {usedMb, maxMb}
+  const autoLoaded = useRef(false);
   const [auditBusy, setAuditBusy] = useState(false);
   const [kw, setKw] = useState({ vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] });
   const [workSheet, setWorkSheet] = useState("");
@@ -220,16 +220,42 @@ export default function ScraperPage() {
   const [prog, setProg] = useState(null); // {target, found, kwDone, kwTotal, currentKw, currentGender, kwTarget, kwFound}
 
   useEffect(() => {
-    // Stores automatisch wissen als de tool 14+ dagen niet gebruikt is
-    const lastActive = Number(load(LS_LAST_ACTIVE, 0)) || 0;
-    const expired = lastActive && Date.now() - lastActive > STORE_TTL_DAYS * 24 * 60 * 60 * 1000;
-    if (expired) {
-      save(LS.stores, []);
-      setStoreList([]);
-    } else {
-      setStoreList(load(LS.stores, []));
-    }
-    save(LS_LAST_ACTIVE, Date.now());
+    /* Competitor-lijst: de SERVER is de bron (Redis, permanent). Eerst de
+       lokale kopie tonen, daarna samenvoegen met de server-lijst — winkels
+       die alleen nog in deze browser stonden gaan er ook bij. Er verloopt
+       niets meer na 14 dagen. */
+    const localList = load(LS.stores, []);
+    setStoreList(localList);
+    fetch("/api/competitors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "listGet" }),
+    })
+      .then((r) => r.json())
+      .then(async (d) => {
+        if (!d || !d.ok || !d.server) return; // geen Redis → alleen lokaal
+        let list = d.list || [];
+        const missing = localList.filter((x) => !list.includes(x));
+        if (missing.length) {
+          const r2 = await fetch("/api/competitors", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "listAdd", domains: missing, meta: load(LS_COMP_META, {}) }),
+          }).then((x) => x.json());
+          if (r2 && r2.list) list = r2.list;
+        }
+        setStoreList(list);
+        save(LS.stores, list);
+        if (d.meta && Object.keys(d.meta).length) {
+          setCompMeta((prev) => {
+            const next = { ...prev };
+            for (const [dom, m] of Object.entries(d.meta)) next[dom] = { ...(next[dom] || {}), ...m };
+            save(LS_COMP_META, next);
+            return next;
+          });
+        }
+      })
+      .catch(() => {});
     setKw(load(LS.keywords, { vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] }));
     setWorkSheet(load(LS.workSheet, "") || DEFAULT_WORK_SHEET);
     setMemSheet(load(LS.memSheet, "") || DEFAULT_MEM_SHEET);
@@ -270,18 +296,113 @@ export default function ScraperPage() {
       )
       .filter(Boolean);
     if (!items.length) return;
-    const next = [...new Set([...storeList, ...items])];
+    const lower = items.map((x) => x.toLowerCase());
+    const have = new Set(storeList);
+    const fresh = [...new Set(lower)].filter((x) => !have.has(x));
+    const dupes = lower.length - fresh.length;
+    const next = [...storeList, ...fresh];
     setStoreList(next);
     save(LS.stores, next);
     setStoreInput("");
+    if (fresh.length || dupes) {
+      pushLog({ ok: true, text: `${fresh.length} winkel(s) toegevoegd${dupes ? ` · ${dupes} dubbel genegeerd` : ""}.` });
+    }
+    if (!fresh.length) return;
+    fetch("/api/competitors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "listAdd", domains: fresh }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && d.list) {
+          setStoreList(d.list);
+          save(LS.stores, d.list);
+        }
+      })
+      .catch(() => {})
+      .finally(() => loadCatalogs(false, fresh)); // nieuwe winkels meteen in de cache
+  }
+
+  /* Screenshot van de competitor-sheet → winkels + maandbezoek. Afbeelding
+     wordt eerst verkleind (Vercel-limiet ±4,5 MB per request). */
+  async function shrinkImage(file) {
+    const url = await new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => res(fr.result);
+      fr.onerror = rej;
+      fr.readAsDataURL(file);
+    });
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = rej;
+      i.src = url;
+    });
+    const maxW = 1800;
+    const scale = Math.min(1, maxW / img.width);
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * scale);
+    c.height = Math.round(img.height * scale);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.9);
+  }
+
+  async function importScreenshots(files) {
+    const list = [...(files || [])].filter((f) => f && /^image\//.test(f.type));
+    if (!list.length) return;
+    setShotBusy(`0/${list.length}`);
+    let added = 0;
+    let dupes = 0;
+    let withVisits = 0;
+    const newOnes = [];
+    for (let i = 0; i < list.length; i++) {
+      try {
+        const dataUrl = await shrinkImage(list[i]);
+        const res = await fetch("/api/competitors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "readScreenshot", dataUrl }),
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || res.status);
+        added += (d.added || []).length;
+        dupes += d.dupes || 0;
+        newOnes.push(...(d.added || []));
+        withVisits += (d.rows || []).filter((r) => r.visits).length;
+        if (d.list) {
+          setStoreList(d.list);
+          save(LS.stores, d.list);
+        }
+        if (d.meta) {
+          setCompMeta((prev) => {
+            const next = { ...prev };
+            for (const [dom, m] of Object.entries(d.meta)) next[dom] = { ...(next[dom] || {}), ...m };
+            save(LS_COMP_META, next);
+            return next;
+          });
+        }
+      } catch (e) {
+        pushLog({ err: true, text: `Screenshot ${i + 1}: ${e.message}` });
+      }
+      setShotBusy(`${i + 1}/${list.length}`);
+    }
+    setShotBusy("");
+    pushLog({
+      ok: true,
+      text: `📷 Screenshot gelezen: ${withVisits} winkels met maandbezoek bijgewerkt · ${added} nieuw toegevoegd · ${dupes} stonden er al (genegeerd).`,
+    });
+    if (newOnes.length) loadCatalogs(false, newOnes);
   }
 
   /* Catalogi laden/verversen — één winkel per call (blijft onder de
      serverless-limiet). Daarna staat elke catalogus 7 dagen klaar in de
      permanente cache en is de scraper per winkel direct klaar. */
-  async function loadCatalogs(refresh) {
-    const list = [...storeList];
+  async function loadCatalogs(refresh, only) {
+    const list = only && only.length ? [...only] : [...storeList];
     if (!list.length) return;
+    let cacheFail = 0;
+    let partial = 0;
     let done = 0;
     let total = 0;
     setCatBusy(`0/${list.length}`);
@@ -297,6 +418,8 @@ export default function ScraperPage() {
           }).then((x) => x.json());
           if (r && r.meta) {
             total += r.meta.count || 0;
+            if (r.meta.count && r.meta.cacheWrite && r.meta.cacheWrite !== "ok") cacheFail++;
+            if (r.meta.partial) partial++;
             setCatInfo((prev) => ({ ...prev, [d]: r.meta }));
             if (r.meta.lang) {
               setCompMeta((prev) => {
@@ -314,6 +437,8 @@ export default function ScraperPage() {
     await Promise.all(Array.from({ length: Math.min(4, list.length) }, worker));
     setCatBusy("");
     pushLog({ ok: true, text: `📦 ${list.length} catalogi ${refresh ? "ververst" : "geladen"} — ${total.toLocaleString("nl-NL")} producten staan klaar.` });
+    if (partial) pushLog({ warn: true, text: `${partial} winkel(s) zo groot dat niet alles binnen 1 minuut binnenkwam — klik nog eens op "Alle catalogi verversen" voor die winkels.` });
+    if (cacheFail) pushLog({ err: true, text: `${cacheFail} catalogi konden NIET in de cache worden opgeslagen — waarschijnlijk zit Redis vol. Kijk bij het cache-geheugen onder de lijst.` });
   }
 
   // Cache-overzicht ophalen zodra de lijst bekend is
@@ -325,7 +450,21 @@ export default function ScraperPage() {
       body: JSON.stringify({ action: "catalogInfo", domains: storeList }),
     })
       .then((r) => r.json())
-      .then((d) => d && d.meta && setCatInfo((prev) => ({ ...prev, ...d.meta })))
+      .then((d) => {
+        if (!d) return;
+        if (d.meta) setCatInfo((prev) => ({ ...prev, ...d.meta }));
+        if (d.stats) setCacheStats(d.stats);
+        // Winkels zonder catalogus in de cache automatisch laden (één keer
+        // per sessie), zodat de hele lijst altijd klaarstaat.
+        if (d.cache && !autoLoaded.current && !running) {
+          const missing = storeList.filter((x) => !(d.meta || {})[x]);
+          if (missing.length) {
+            autoLoaded.current = true;
+            pushLog({ muted: true, text: `📦 ${missing.length} winkel(s) nog niet in de cache — worden nu automatisch geladen.` });
+            loadCatalogs(false, missing);
+          }
+        }
+      })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeList.length]);
@@ -334,12 +473,44 @@ export default function ScraperPage() {
     const next = storeList.filter((s) => s !== dom);
     setStoreList(next);
     save(LS.stores, next);
+    fetch("/api/competitors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "listRemove", domains: [dom] }),
+    }).catch(() => {});
   }
 
   function clearAllStores() {
+    // Alles wissen = ook uit de permanente lijst en de cache; dus eerst vragen
+    if (!window.confirm(`Alle ${storeList.length} competitor stores en hun catalogi definitief wissen?`)) return;
     setStoreList([]);
     save(LS.stores, []);
+    fetch("/api/competitors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "listClear", confirm: "WISSEN" }),
+    }).catch(() => {});
     pushLog({ muted: true, text: "Alle competitor stores gewist." });
+  }
+
+  // Volgorde opslaan op de server; winkels die niet in `order` staan blijven achteraan
+  async function saveOrder(order, meta) {
+    const have = new Set(order);
+    const merged = [...order, ...storeList.filter((x) => !have.has(x))];
+    setStoreList(merged);
+    save(LS.stores, merged);
+    try {
+      const r = await fetch("/api/competitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "listReorder", order: merged, meta: meta || undefined }),
+      }).then((x) => x.json());
+      if (r && r.list) {
+        setStoreList(r.list);
+        save(LS.stores, r.list);
+      }
+    } catch {}
+    return merged;
   }
 
   function clearAllKeywords() {
@@ -1439,21 +1610,29 @@ export default function ScraperPage() {
     setAuditBusy(true);
     try {
       pushLog({ strong: true, text: `— Stores checken: Shopify · best-selling · dekking · valuta (${list.length} stores)` });
-      const res = await fetch("/api/competitors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "audit",
-          domains: list,
-          types: runTypes(),
-          targetMarket: compMarket,
-          genders: runGenders(),
-          meta: metaIn || compMeta,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || res.status);
-      const audits = data.audits || [];
+      // In porties van 25 (elke call < 60 s) — de API checkte vroeger
+      // alleen de eerste 60 en de rest viel daarna uit de lijst.
+      let audits = [];
+      for (let i = 0; i < list.length; i += 25) {
+        const part = list.slice(i, i + 25);
+        pushLog({ key: "audit-prog", muted: true, text: `Checken ${Math.min(i + 25, list.length)}/${list.length}…` });
+        const res = await fetch("/api/competitors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "audit",
+            domains: part,
+            types: runTypes(),
+            targetMarket: compMarket,
+            genders: runGenders(),
+            meta: metaIn || compMeta,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.status);
+        audits.push(...(data.audits || []));
+      }
+      audits.sort((x, y) => y.score - x.score || (y.visits || 0) - (x.visits || 0));
       const meta = { ...(metaIn || compMeta) };
       for (const a of audits) {
         meta[a.domain] = {
@@ -1467,9 +1646,7 @@ export default function ScraperPage() {
       }
       setCompMeta(meta);
       save(LS_COMP_META, meta);
-      const order = audits.map((a) => a.domain);
-      setStoreList(order);
-      save(LS.stores, order);
+      await saveOrder(audits.map((a) => a.domain), meta);
       const dead = audits.filter((a) => !a.ok);
       const ignored = audits.filter((a) => a.ok && a.bestSelling === "genegeerd");
       pushLog({ ok: true, text: `Zoekvolgorde op score: ${audits.slice(0, 3).map((a) => `${a.domain} (${a.score})`).join(" · ")}${audits.length > 3 ? " · …" : ""}` });
@@ -1517,8 +1694,8 @@ export default function ScraperPage() {
       for (const p of picks) meta[p.domain] = { market: p.market, visits: p.visits, lang: p.lang || "en", reason: p.reason || "" };
       setCompMeta(meta);
       save(LS_COMP_META, meta);
-      setStoreList(picks.map((p) => p.domain));
-      save(LS.stores, picks.map((p) => p.domain));
+      // De AI-keuze komt bovenaan; je bestaande winkels blijven eronder staan
+      await saveOrder(picks.map((p) => p.domain), meta);
 
       pushLog({ ok: true, text: `${picks.length} stores gekozen${data.ai ? " (AI)" : " (ranking op bezoek — AI onbereikbaar)"}. Zoekvolgorde = beste eerst.` });
       const foreign = picks.filter((p) => p.lang && p.lang !== "en");
@@ -1750,6 +1927,45 @@ export default function ScraperPage() {
                 Deze lijst blijft bewaard tussen sessies — plak ook meerdere stores tegelijk (één per regel of
                 komma-gescheiden)
               </div>
+              <div
+                style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}
+                onPaste={(e) => {
+                  const files = [...(e.clipboardData?.files || [])];
+                  if (files.length) {
+                    e.preventDefault();
+                    importScreenshots(files);
+                  }
+                }}
+              >
+                <label className="btn-ghost btn-small" style={{ cursor: "pointer" }}>
+                  {shotBusy ? `📷 Lezen ${shotBusy}…` : "📷 Screenshot competitor-sheet"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: "none" }}
+                    disabled={!!shotBusy}
+                    onChange={(e) => {
+                      importScreenshots(e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                <span className="hint" style={{ margin: 0 }}>
+                  of plak een screenshot (Ctrl+V) hier — bezoek/mnd, land, producten en opmerking worden per winkel
+                  ingevuld, nieuwe winkels komen erbij, dubbele worden genegeerd.
+                </span>
+              </div>
+              <div
+                style={{
+                  maxHeight: 420,
+                  overflowY: "auto",
+                  marginTop: 10,
+                  paddingRight: 4,
+                  border: "1px solid rgba(255,255,255,.08)",
+                  borderRadius: 8,
+                }}
+              >
               {storeList.map((s) => (
                 <div className="kw-row" key={s} style={{ gridTemplateColumns: "1fr 24px" }}>
                   <span className="small" style={{ wordBreak: "break-all" }}>
@@ -1758,7 +1974,10 @@ export default function ScraperPage() {
                       <span className="muted">
                         {compMeta[s].score !== undefined ? ` · score ${compMeta[s].score}` : ""}
                         {compMeta[s].market ? ` · ${compMeta[s].market}` : ""}
-                        {compMeta[s].visits ? ` · ${Math.round(compMeta[s].visits / 1000)}k/mnd` : ""}
+                        {compMeta[s].visits
+                          ? ` · ${compMeta[s].visits >= 1e6 ? `${(compMeta[s].visits / 1e6).toFixed(1).replace(".0", "")}M` : `${Math.round(compMeta[s].visits / 1000)}k`}/mnd`
+                          : ""}
+                        {compMeta[s].note ? ` · ${compMeta[s].note}` : ""}
                         {compMeta[s].bestSelling === "geldig" ? " · best-selling ✓" : compMeta[s].bestSelling === "genegeerd" ? " · best-selling ✗" : ""}
                         {compMeta[s].coverage !== undefined ? ` · ${compMeta[s].coverage}% dekking` : ""}
                         {compMeta[s].ok === false ? " · ⚠ offline" : ""}
@@ -1777,9 +1996,14 @@ export default function ScraperPage() {
                   </button>
                 </div>
               ))}
+              </div>
               {storeList.length > 0 && (
                 <>
-                  <div className="hint">{storeList.length} stores — volgorde = zoekvolgorde (beste eerst)</div>
+                  <div className="hint">
+                    {storeList.length} stores — volgorde = zoekvolgorde (beste eerst) ·{" "}
+                    {Object.keys(catInfo).filter((d) => storeList.includes(d)).length} catalogi in de cache
+                    {cacheStats ? ` · cache-geheugen ${cacheStats.usedMb} MB${cacheStats.maxMb ? ` van ${cacheStats.maxMb} MB` : ""}` : ""}
+                  </div>
                   <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button className="btn-ghost btn-small" onClick={() => auditStores(storeList)} disabled={auditBusy || !!busy}>
                       {auditBusy ? "Checken…" : "🔎 Stores checken & sorteren"}
@@ -1800,7 +2024,8 @@ export default function ScraperPage() {
                     zoekvolgorde. Winkels die best-selling negeren kunnen geen "bewezen" producten leveren.
                   </div>
                   <div className="hint">
-                    Stores verdwijnen ook vanzelf na {STORE_TTL_DAYS} dagen zonder gebruik van de tool.
+                    De lijst en de catalogi staan permanent op de server — er verdwijnt niets vanzelf, alleen als je
+                    een winkel zelf weghaalt.
                   </div>
                 </>
               )}

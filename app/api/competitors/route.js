@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { readRange } from "@/lib/sheets";
 import { selectCompetitors, translateKeywordsForMarket } from "@/lib/ai";
 import { auditStore, fetchCatalog } from "@/lib/scrape";
-import { readCatalogMeta, catalogCacheAvailable } from "@/lib/catalog-cache";
+import {
+  readCatalogMeta, catalogCacheAvailable, cacheStats,
+  getStoreList, addToStoreList, reorderStoreList, removeFromStoreList, clearStoreList,
+  getStoreMeta, mergeStoreMeta,
+} from "@/lib/catalog-cache";
+import { readCompetitorScreenshot } from "@/lib/competitor-vision";
 
 export const maxDuration = 60;
 
@@ -258,9 +263,57 @@ export async function POST(req) {
                     client loopt zelf over de winkels, zodat elke call kort
                     blijft. */
     if (action === "catalogInfo") {
-      const list = [...new Set((body.domains || []).map(cleanDomain).filter(Boolean))].slice(0, 400);
+      const list = [...new Set((body.domains || []).map(cleanDomain).filter(Boolean))].slice(0, 1000);
       const meta = await readCatalogMeta(list);
-      return NextResponse.json({ ok: true, cache: catalogCacheAvailable(), meta });
+      const stats = await cacheStats();
+      return NextResponse.json({ ok: true, cache: catalogCacheAvailable(), meta, stats });
+    }
+
+    /* PERMANENTE COMPETITOR-LIJST (Redis comp:list:v1) + meta (comp:meta:v1).
+       Dubbele winkels (ook www./https://-varianten) worden genegeerd; een
+       winkel verdwijnt alleen als je hem zelf weghaalt. */
+    if (action === "listGet") {
+      const list = await getStoreList();
+      const meta = await getStoreMeta();
+      return NextResponse.json({ ok: true, server: list !== null, list: list || [], meta });
+    }
+    if (action === "listAdd") {
+      const r = await addToStoreList(body.domains || []);
+      if (body.meta && typeof body.meta === "object") await mergeStoreMeta(body.meta);
+      return NextResponse.json({ ok: true, ...r });
+    }
+    if (action === "listReorder") {
+      const list = await reorderStoreList(body.order || []);
+      if (body.meta && typeof body.meta === "object") await mergeStoreMeta(body.meta);
+      return NextResponse.json({ ok: true, list });
+    }
+    if (action === "listRemove") {
+      const list = await removeFromStoreList(body.domains || []);
+      return NextResponse.json({ ok: true, list });
+    }
+    if (action === "listClear") {
+      if (body.confirm !== "WISSEN") return NextResponse.json({ error: "bevestiging ontbreekt" }, { status: 400 });
+      const list = await clearStoreList();
+      return NextResponse.json({ ok: true, list });
+    }
+    if (action === "metaMerge") {
+      const meta = await mergeStoreMeta(body.meta || {});
+      return NextResponse.json({ ok: true, meta });
+    }
+
+    /* SCREENSHOT van de competitor-sheet → winkels + maandbezoek erbij.
+       Nieuwe winkels gaan achteraan de lijst (dubbel = genegeerd); bij
+       bestaande winkels worden bezoek/land/producten/opmerking bijgewerkt. */
+    if (action === "readScreenshot") {
+      const r = await readCompetitorScreenshot(body.dataUrl);
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
+      const patch = {};
+      for (const row of r.rows) {
+        patch[row.domain] = { market: row.market, visits: row.visits, products: row.products, note: row.note, name: row.name };
+      }
+      const meta = await mergeStoreMeta(patch);
+      const add = await addToStoreList(r.rows.map((x) => x.domain));
+      return NextResponse.json({ ok: true, rows: r.rows, added: add.added, dupes: add.dupes, list: add.list, meta });
     }
     if (action === "catalog") {
       const d = cleanDomain(body.domain);
@@ -274,6 +327,8 @@ export async function POST(req) {
           at: c.fetchedAt || Date.now(),
           lang: c.lang || "en",
           bestSelling: c.bestSellingStatus || "onbekend",
+          partial: !!c.partial,
+          cacheWrite: c.cacheWrite || (c.products.length ? "ok" : "leeg"),
         },
       });
     }
