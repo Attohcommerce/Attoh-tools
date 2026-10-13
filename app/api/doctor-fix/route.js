@@ -39,6 +39,8 @@ const CHUNK_FOR = {
   "delete-small-men-shoe-sizes": 8,
   "clean-size-labels": 12,
   "shoe-us-eu-labels": 8,
+  "fix-gender-from-title": 8,
+  "gender-tags": 8,
   default: 15,
 };
 

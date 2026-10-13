@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 import DoctorPanel from "../components/DoctorPanel";
+import { normSourceUrl, findExisting } from "@/lib/source-match";
 
 const LS = {
   stores: "sa_stores",
@@ -78,6 +79,8 @@ export default function ImporterPage() {
   const boomRef = useRef(null); // {market, rows: [{kw, vol, peak}], window}
   const [genderPrefix, setGenderPrefix] = useState(false);
   const [forceMens, setForceMens] = useState(false);
+  // Herimport: alles overslaan wat al in de store staat (bron-URL, foto's, SKU's)
+  const [skipExisting, setSkipExisting] = useState(true);
   const [currencyOverride, setCurrencyOverride] = useState(false);
   const [manualRate, setManualRate] = useState("");
   const [colorLabel, setColorLabel] = useState("Color");
@@ -426,6 +429,42 @@ export default function ImporterPage() {
       }
     }
 
+    /* Wat staat er al in de store? Eén keer per run ophalen; daarna wordt elk
+       bron-product dat er al staat overgeslagen VÓÓR de AI-stap — kost dus
+       geen credits. Lukt het ophalen niet, dan stoppen we liever (anders
+       komen er dubbele producten). */
+    let existing = null;
+    if (skipExisting) {
+      setStep("Bestaande producten van de store ophalen (overslaan wat er al staat)…");
+      try {
+        const res = await fetch("/api/import-existing", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            store: {
+              domain: selectedStore.domain,
+              token: selectedStore.token,
+              clientId: selectedStore.clientId,
+              clientSecret: selectedStore.clientSecret,
+            },
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        existing = { ...data, urlSet: new Set(data.urls || []) };
+        pushLog({
+          info: true,
+          text: `Overslaan aan: ${data.products} producten in ${selectedStore.name} gecheckt (${(data.urls || []).length} met bron-URL, de rest op foto-namen en SKU's) — wat er al staat wordt overgeslagen zonder AI-kosten.`,
+        });
+      } catch (e) {
+        pushLog({ ok: false, text: `Kon de bestaande producten niet ophalen (${e.message}) — import gestopt om dubbele producten te voorkomen. Zet "Sla over wat al in de store staat" uit als je toch wilt draaien.` });
+        setStep("");
+        setRunning(false);
+        return;
+      }
+    }
+    let skippedCount = 0;
+
     // Wisselkoersen één keer ophalen
     let rates = null;
     if (!currencyOverride) {
@@ -480,6 +519,12 @@ export default function ImporterPage() {
       const rowGender = typeof entry === "object" ? entry.gender || "" : "";
       const nr = `${i + 1}/${urls.length}`;
       try {
+        // 0. Staat de bron-URL al in de store? Dan niet eens scrapen.
+        if (existing && existing.urlSet.has(normSourceUrl(url))) {
+          skippedCount++;
+          pushLog({ muted: true, text: `${nr} · overgeslagen — staat al in de store (bron-URL): ${url}` });
+          return;
+        }
         // 1. Scrape
         setStep(`${nr} · Product scrapen…`);
         const sRes = await fetch("/api/scrape", {
@@ -490,6 +535,16 @@ export default function ImporterPage() {
         const sData = await sRes.json();
         if (!sRes.ok) throw new Error(sData.error || "scrape mislukt");
         const product = sData.product;
+
+        // 1b. Oudere import zonder bron-URL: herkennen op foto-namen / SKU's
+        if (existing) {
+          const hit = findExisting(existing, product);
+          if (hit) {
+            skippedCount++;
+            pushLog({ muted: true, text: `${nr} · overgeslagen — staat al in de store als "${hit.title}" (zelfde ${hit.via}): ${url}` });
+            return;
+          }
+        }
 
         // 2. AI Generate
         setStep(`${nr} · AI schrijft titel + omschrijving… (±20 sec)`);
@@ -572,6 +627,7 @@ export default function ImporterPage() {
             listing: gData.listing,
             fx: { rate, usdRate, storeCurrency: selectedStore.currency },
             settings: {
+              sourceUrl: url,
               discountPct: rowDiscount,
               status,
               tags,
@@ -694,10 +750,12 @@ export default function ImporterPage() {
       } catch (e) {
         pushLog({ ok: false, text: `${url} — ${e.message}` });
         window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+      } finally {
+        // finally: ook een overgeslagen product (return hierboven) telt mee
+        finished++;
+        setProgress({ done: finished, total: urls.length });
+        setStep(`${finished}/${urls.length} klaar — tot ${IMPORT_CONCURRENCY} producten tegelijk in de keten.`);
       }
-      finished++;
-      setProgress({ done: finished, total: urls.length });
-      setStep(`${finished}/${urls.length} klaar — tot ${IMPORT_CONCURRENCY} producten tegelijk in de keten.`);
     };
 
     let cursor = 0;
@@ -721,7 +779,8 @@ export default function ImporterPage() {
       pushLog({ info: true, text: `Gestopt door gebruiker na ${finished} van ${urls.length} producten.` });
     }
     const aiTotalTxt = aiRunUsd > 0 ? ` AI-kosten deze run: ±$${aiRunUsd.toFixed(2)}${vangnetCount ? ` · vangnet (groot model) ${vangnetCount}x` : ""}.` : "";
-    pushLog({ info: true, text: `Klaar: ${okCount}/${urls.length} producten geïmporteerd als ${status === "active" ? "Active" : "Draft"}.${aiTotalTxt}` });
+    const skipTxt = skippedCount ? ` ${skippedCount} overgeslagen (stonden al in de store).` : "";
+    pushLog({ info: true, text: `Klaar: ${okCount}/${urls.length} producten geïmporteerd als ${status === "active" ? "Active" : "Draft"}.${skipTxt}${aiTotalTxt}` });
     if (okCount > 0) window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
     setStep("");
     setRunning(false);
@@ -1135,6 +1194,14 @@ export default function ImporterPage() {
                   type="button"
                 />
                 Gender prefix in title (Women's …)
+              </div>
+              <div className="toggle-row">
+                <button
+                  className={"switch" + (skipExisting ? " on" : "")}
+                  onClick={() => setSkipExisting(!skipExisting)}
+                  type="button"
+                />
+                Sla over wat al in de store staat (herimport na een afgebroken run — geen dubbele producten, geen AI-kosten)
               </div>
               <div className="toggle-row">
                 <button

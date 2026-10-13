@@ -7,7 +7,9 @@ import {
   findTaxonomyCategory,
   setProductCategory,
   ensureSmartCollection,
+  setProductMetafields,
 } from "@/lib/shopify";
+import { SRC_NS, SRC_KEY, normSourceUrl } from "@/lib/source-match";
 import { collectionFor } from "@/lib/verdeling";
 import { flagBrandedImages } from "@/lib/ai";
 import { analyzeKeyword } from "@/lib/fashion";
@@ -372,6 +374,19 @@ export async function POST(req) {
   const r = await createProduct(store, payload);
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
   const created = r.product;
+
+  /* Bron-URL op het product (metafield attoh.source_url): daarmee slaat een
+     herimport van dezelfde lijst dit product over. Best effort. */
+  try {
+    const src = normSourceUrl(s.sourceUrl || product.sourceUrl || "");
+    if (src) {
+      await setProductMetafields(store, [
+        { productId: created.id, namespace: SRC_NS, key: SRC_KEY, type: "single_line_text_field", value: src },
+      ]);
+    }
+  } catch {
+    /* geen showstopper */
+  }
 
   /* ----------------------------------------------------------------
      Variant-foto's koppelen (kleur → juiste afbeelding).
