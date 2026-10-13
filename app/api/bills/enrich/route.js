@@ -9,6 +9,8 @@ import {
   splitDate,
   dateNLOf,
   dupKey,
+  orderCostKey,
+  toNum,
   round2,
 } from "@/lib/bills";
 
@@ -142,10 +144,16 @@ export async function POST(req) {
 
     // 2. Bestaand COGS Log voor de dupe-check (tab mag nog ontbreken).
     const seen = new Set();
+    const seenOrderCost = new Map(); // order|bedrag → invoice waarop hij al staat
     let logMissing = false;
     try {
       const log = await readRange(sheetId, `'${LOG_TAB}'!A2:I100000`);
-      for (const r of log) if (r[1] != null && r[1] !== "") seen.add(dupKey(r[1], r[2]));
+      for (const r of log) {
+        if (r[1] == null || r[1] === "") continue;
+        seen.add(dupKey(r[1], r[2]));
+        const k = orderCostKey(r[1], toNum(r[4]));
+        if (!seenOrderCost.has(k)) seenOrderCost.set(k, String(r[2] || "").trim());
+      }
     } catch {
       logMissing = true;
     }
@@ -230,7 +238,10 @@ export async function POST(req) {
         continue;
       }
       const gbp = round2(base.cost * fx.rate);
-      const dup = seen.has(dupKey(base.order, base.invoiceNo));
+      const sameInvoice = seen.has(dupKey(base.order, base.invoiceNo));
+      const otherInvoice = seenOrderCost.get(orderCostKey(base.order, base.cost));
+      const crossDup = !sameInvoice && otherInvoice !== undefined && otherInvoice !== base.invoiceNo;
+      const dup = sameInvoice || crossDup;
       out.push({
         ...base,
         shopifyOrder: o.name || `#${o.order_number}`,
@@ -244,7 +255,8 @@ export async function POST(req) {
         cancelled: Boolean(o.cancelled_at),
         status: dup ? "dupe" : "ok",
         note: [
-          dup ? "staat al in het COGS Log" : "",
+          sameInvoice ? "staat al in het COGS Log" : "",
+          crossDup ? `zelfde order + bedrag staat al in het COGS Log (invoice ${otherInvoice || "onbekend"})` : "",
           !tabTitles.has(monthTab) ? `maandtab "${monthTab}" ontbreekt — regel wordt wel gelogd, V niet geschreven` : "",
           o.cancelled_at ? "order is geannuleerd in Shopify" : "",
         ]

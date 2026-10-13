@@ -14,6 +14,7 @@ import {
   splitDate,
   toNum,
   dupKey,
+  orderCostKey,
   round2,
 } from "@/lib/bills";
 
@@ -25,7 +26,9 @@ export const maxDuration = 60;
 // V wordt altijd herrekend uit het volledige log, dus late bills voor een
 // oude datum tellen er gewoon bij op. Dupes (zelfde order + invoice) worden
 // hier nogmaals tegen de sheet gecheckt — dubbel uploaden kan nooit dubbel
-// meetellen, ook niet bij twee tabbladen tegelijk open.
+// meetellen, ook niet bij twee tabbladen tegelijk open. Sinds 13-10 ook
+// over facturen heen: zelfde order + zelfde bedrag op een andere invoice
+// (totaal-export "vanaf dag 1", overlappende her-export) = dubbel.
 //
 // Alle writes zijn RAW (les uit de rest van de tool: USER_ENTERED + NL-
 // locale maakt van datums en komma-getallen stille rommel).
@@ -52,7 +55,13 @@ export async function POST(req) {
     // 2. Vers log lezen — de dupe-check hier is leidend, niet die van de preview.
     const existing = await readRange(sheetId, `'${LOG_TAB}'!A2:I100000`);
     const seen = new Set();
-    for (const r of existing) if (r[1] != null && r[1] !== "") seen.add(dupKey(r[1], r[2]));
+    const seenOrderCost = new Map(); // order|bedrag → invoice (cross-invoice dubbelcheck)
+    for (const r of existing) {
+      if (r[1] == null || r[1] === "") continue;
+      seen.add(dupKey(r[1], r[2]));
+      const k = orderCostKey(r[1], toNum(r[4]));
+      if (!seenOrderCost.has(k)) seenOrderCost.set(k, String(r[2] || "").trim());
+    }
 
     // VANDAAG-REGEL (ook hier, los van de preview): de dag van vandaag
     // wordt nooit geschreven — die is pas morgen compleet.
@@ -73,7 +82,16 @@ export async function POST(req) {
         dupesSkipped++;
         continue;
       }
+      // Zelfde order + bedrag al gelogd onder een ANDERE invoice → dubbel,
+      // tenzij de gebruiker hem in de preview bewust heeft aangevinkt (force).
+      const ock = orderCostKey(r.order, r.cost);
+      const prevInv = seenOrderCost.get(ock);
+      if (!r.force && prevInv !== undefined && prevInv !== String(r.invoiceNo || "").trim()) {
+        dupesSkipped++;
+        continue;
+      }
       seen.add(key);
+      if (!seenOrderCost.has(ock)) seenOrderCost.set(ock, String(r.invoiceNo || "").trim());
       clean.push({
         date: String(r.date),
         values: [
