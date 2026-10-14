@@ -13,6 +13,8 @@ const LS = {
   newTab: "sa_new_tab",
   orgSheet: "sa_org_sheet",
   orgTab: "sa_org_tab",
+  orgStore: "sa_org_store", // store uit het geheugen (domein) die de organization-sheet levert
+  orgTabByStore: "sa_org_tab_by_store", // laatst gebruikte bladnaam per store
 };
 
 function load(key, fallback) {
@@ -70,9 +72,6 @@ const BROAD_AT = 4;
 const STALL_PROMPT_AT = 6;
 const STALL_AUTO_AT = 20;
 const MAX_LADDER_ROUNDS = 4; // vangnet tegen eindeloos herstarten
-// Aantal winkels dat tegelijk wordt doorzocht (snelheid). 6 = ±6× sneller
-// dan één voor één; de catalogi komen uit de cache, dus dat kan veilig.
-const WAVE = 6;
 
 // Geleerde kennis blijft bewaard tussen runs:
 const LS_ALTS = "sa_kw_alts"; // kw → AI-alternatieven (cache, geen dubbele AI-calls)
@@ -162,6 +161,79 @@ function parseKwPaste(text) {
   return out;
 }
 
+/* ---------- Organization-sheet lezen: twee formaten ----------
+   1. Verdeling-formaat (Keywords-tool): A Rank · B Keyword · C Collectie ·
+      D Groep · … · H Aantal producten · I Type · J Uitleg.
+   2. Weekplanning (Chaim-opmaak, de organization sheets die Claude maakt):
+      kopregel A "Categorie (Bet)" · B "Keyword" · C "Aantal" · D "The Play",
+      daaronder per categorie een regel "Casual Dresses (HERO)  [105]" en
+      per keyword een rij met B keyword en C aantal. De collectie staat in
+      kolom A of H (nieuwe sheets) of volgt uit de laatste categorieregel.
+   Beide leveren dezelfde rijen op: { k, n, g, col, type, uitleg }. */
+const OCCASION_RE =
+  /\b(christmas|xmas|race day|races|nye|new years?|wedding|bridesmaid|mother of the (bride|groom)|formal|cocktail|evening|party|going out|graduation|engagement|semi formal|ball|dinner|occasion|prom|gala)\b/i;
+const low = (v) => String(v || "").toLowerCase().trim();
+
+function parseVerdelingSheet(values) {
+  const h = (values[0] || []).map(low);
+  if (!h[1]?.startsWith("keyword") || !h[3]?.startsWith("groep") || !h[7]?.startsWith("aantal")) return null;
+  /* Storegeslacht uit de kop van kolom D ("Groep — alleen heren"). Bij een
+     heren-only blad is élk keyword heren — ook "shoes" zonder "mens". */
+  const storeG = /alleen heren/.test(h[3]) ? "man" : /alleen dames/.test(h[3]) ? "vrouw" : null;
+  const parsed = [];
+  for (const r of values.slice(1)) {
+    const k = String(r[1] || "").trim();
+    if (!k) continue;
+    if (k.toUpperCase().startsWith("UNDERDOG KEYWORDS")) continue; // scheidingsregel
+    if (/^keyword$/i.test(k)) continue; // koprij van het underdog-blok
+    if (!Number.isFinite(Number(r[0])) && !Number.isFinite(Number(r[7]))) continue;
+    const n = Math.max(1, Number(r[7]) || 0);
+    const g = storeG || (String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw");
+    const col = String(r[2] || "").trim(); // C = Collectie — reist mee naar de importlijst
+    const type = String(r[8] || "").trim() || "Direct"; // I = Direct/Attribuut/Gelegenheid/Underdog
+    const uitleg = String(r[9] || "").trim(); // J = underdog-uitleg voor de foto-controle
+    parsed.push({ k, n, g, col, type, uitleg });
+  }
+  return { parsed, storeG, formaat: "verdeling", bron: "kop van kolom D" };
+}
+
+function parseWeekplanSheet(values) {
+  let hdr = -1;
+  for (let i = 0; i < Math.min(values.length, 8); i++) {
+    const r = values[i] || [];
+    if (low(r[0]).startsWith("categorie") && low(r[1]).startsWith("keyword") && low(r[2]).startsWith("aantal")) {
+      hdr = i;
+      break;
+    }
+  }
+  if (hdr < 0) return null;
+  // Titel + notitie boven de kopregel: "Week 1 (12 Oct-18 Oct) — 1x AUS/NZ", "alleen dames"
+  const head = values.slice(0, hdr + 1).flat().map(low).join(" ");
+  const storeG = /alleen heren|herenstore/.test(head) ? "man" : /alleen dames|dameszaak/.test(head) ? "vrouw" : null;
+  const title = head.match(/week\s*(\d+)\s*\(([^)]+)\)/);
+  let cat = "";
+  const parsed = [];
+  for (const r of values.slice(hdr + 1)) {
+    const a = String(r[0] || "").trim();
+    const b = String(r[1] || "").trim();
+    const catRow = a.match(/^(.+?)\s*\((HERO|CORE|SIDE)\)/i);
+    if (catRow && !b) {
+      cat = catRow[1].trim(); // "Casual Dresses (HERO)  [105]" → Casual Dresses
+      continue;
+    }
+    if (!b || /^keyword$/i.test(b) || /^totaal/i.test(a) || /^totaal/i.test(b)) continue;
+    const n = Number(String(r[2] || "").replace(",", "."));
+    if (!Number.isFinite(n) || n <= 0) continue;
+    const col = (a && !catRow ? a : "") || String(r[7] || "").trim() || cat;
+    const zoekterm = String(r[5] || "").trim(); // F = zoekterm (heren: "mens …")
+    const g = storeG || (/^men'?s\b/i.test(col) || /^mens\b/i.test(zoekterm) ? "man" : "vrouw");
+    const k = g === "man" && zoekterm ? zoekterm : b;
+    const type = OCCASION_RE.test(k) ? "Gelegenheid" : "Direct";
+    parsed.push({ k, n: Math.max(1, Math.round(n)), g, col, type, uitleg: "" });
+  }
+  return { parsed, storeG, formaat: "weekplanning", bron: "notitie boven de tabel", week: title ? `week ${title[1]} (${title[2]})` : "" };
+}
+
 function storeOf(link) {
   try {
     return new URL(link).host.replace(/^www\./, "");
@@ -204,6 +276,13 @@ export default function ScraperPage() {
   const [orgFilter, setOrgFilter] = useState("alles"); // "alles" | "normaal" | "underdog"
   const [orgBusy, setOrgBusy] = useState(false);
   const [orgInfo, setOrgInfo] = useState(null);
+  /* Store-geheugen (Keywords → Geheugen → 2 · Store-geheugen): per store staat
+     daar de organization/aanvul-sheet. Store kiezen = sheet + tabbladen
+     automatisch ingevuld; alleen bij LGB stond de sheet tot nu toe vast. */
+  const [memStores, setMemStores] = useState([]); // [{name, domain, market, genders, aanvulSheetId, orgSheetId, orgTab}]
+  const [memStore, setMemStore] = useState(""); // gekozen domein ("" = handmatige link)
+  const [orgTabs, setOrgTabs] = useState([]); // tabbladen van de gekozen sheet
+  const [orgTabsBusy, setOrgTabsBusy] = useState(false);
 
   const [running, setRunning] = useState(false);
   const [checkBusy, setCheckBusy] = useState("");
@@ -272,6 +351,21 @@ export default function ScraperPage() {
     setSpreadMode(load(LS_SPREAD, "vol"));
     setFastMode(load(LS_FAST, true));
     setOrgTab(load(LS.orgTab, "Collection & Product organization"));
+    // Store-geheugen ophalen; de laatst gekozen store meteen weer toepassen
+    fetch("/api/geheugen", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "status" }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        const list = (d.stores || []).filter((x) => x && (x.orgSheetId || x.aanvulSheetId));
+        setMemStores(list);
+        const last = load(LS.orgStore, "");
+        const hit = last && list.find((x) => x.domain === last);
+        if (hit) pickMemStore(hit, list, true);
+      })
+      .catch(() => {});
     fetch("/api/sheets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -369,6 +463,7 @@ export default function ScraperPage() {
         });
         const d = await res.json();
         if (!res.ok) throw new Error(d.error || res.status);
+        if (d.warn) pushLog({ warn: true, text: `Screenshot ${i + 1}: ${d.warn}` });
         added += (d.added || []).length;
         dupes += d.dupes || 0;
         newOnes.push(...(d.added || []));
@@ -399,15 +494,19 @@ export default function ScraperPage() {
   }
 
   /* Catalogi laden/verversen — één winkel per call (blijft onder de
-     serverless-limiet). Daarna staat elke catalogus 7 dagen klaar in de
-     permanente cache en is de scraper per winkel direct klaar. */
+     serverless-limiet). Daarna staat elke catalogus permanent klaar in de
+     cache (binnen het Redis-geheugenbudget) en is de scraper per winkel
+     direct klaar. */
   async function loadCatalogs(refresh, only) {
     const list = only && only.length ? [...only] : [...storeList];
     if (!list.length) return;
     let cacheFail = 0;
+    let cacheFailMsg = "";
     let partial = 0;
     let done = 0;
     let total = 0;
+    const evicted = new Set();
+    const truncated = [];
     setCatBusy(`0/${list.length}`);
     const queue = [...list];
     const worker = async () => {
@@ -421,8 +520,13 @@ export default function ScraperPage() {
           }).then((x) => x.json());
           if (r && r.meta) {
             total += r.meta.count || 0;
-            if (r.meta.count && r.meta.cacheWrite && r.meta.cacheWrite !== "ok") cacheFail++;
+            if (r.meta.count && r.meta.cacheWrite && r.meta.cacheWrite !== "ok") {
+              cacheFail++;
+              cacheFailMsg = r.meta.cacheWrite;
+            }
             if (r.meta.partial) partial++;
+            if (r.meta.truncated) truncated.push(`${d} (${Number(r.meta.count).toLocaleString("nl-NL")} van ${Number(r.meta.total).toLocaleString("nl-NL")})`);
+            for (const x of r.meta.evicted || []) evicted.add(x);
             setCatInfo((prev) => ({ ...prev, [d]: r.meta }));
             if (r.meta.lang) {
               setCompMeta((prev) => {
@@ -441,7 +545,51 @@ export default function ScraperPage() {
     setCatBusy("");
     pushLog({ ok: true, text: `📦 ${list.length} catalogi ${refresh ? "ververst" : "geladen"} — ${total.toLocaleString("nl-NL")} producten staan klaar.` });
     if (partial) pushLog({ warn: true, text: `${partial} winkel(s) zo groot dat niet alles binnen 1 minuut binnenkwam — klik nog eens op "Alle catalogi verversen" voor die winkels.` });
-    if (cacheFail) pushLog({ err: true, text: `${cacheFail} catalogi konden NIET in de cache worden opgeslagen — waarschijnlijk zit Redis vol. Kijk bij het cache-geheugen onder de lijst.` });
+    if (truncated.length) pushLog({ muted: true, text: `Ingekort tot de best verkopende producten (te groot voor de cache): ${truncated.join(", ")}.` });
+    if (evicted.size) {
+      // Alleen melden wat écht uit de lijst verdween; winkels die later in
+      // dezelfde ronde opnieuw geladen zijn staan gewoon weer in de cache.
+      setCatInfo((prev) => {
+        const next = { ...prev };
+        for (const x of evicted) if (!list.includes(x)) delete next[x];
+        return next;
+      });
+      pushLog({ warn: true, text: `Cache vol: de oudste catalogi zijn weggehaald om ruimte te maken (${[...evicted].slice(0, 8).join(", ")}${evicted.size > 8 ? ` +${evicted.size - 8}` : ""}). Wil je álle ${storeList.length} winkels permanent bewaren, dan is het Redis-plan te klein.` });
+    }
+    if (cacheFail) pushLog({ err: true, text: `${cacheFail} catalogi konden NIET in de cache worden opgeslagen: ${cacheFailMsg}` });
+    refreshCacheStats();
+  }
+
+  // Geheugenregel onder de lijst bijwerken (na laden, verversen of wissen)
+  function refreshCacheStats() {
+    fetch("/api/competitors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "catalogInfo", domains: [] }),
+    })
+      .then((r) => r.json())
+      .then((d) => d && d.stats && setCacheStats(d.stats))
+      .catch(() => {});
+  }
+
+  // Noodknop: alle catalogi uit Redis, de lijst en de maandbezoekers blijven.
+  // Werkt ook als Redis vol zit (wissen mag altijd, opslaan niet).
+  async function clearCatalogCache() {
+    if (!window.confirm("Alle catalogi uit de cache wissen? De winkellijst en de maandbezoekers blijven staan; de catalogi worden daarna opnieuw opgehaald zodra je ze laadt.")) return;
+    try {
+      const r = await fetch("/api/competitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cacheClear", confirm: "WISSEN" }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || r.status);
+      setCatInfo({});
+      if (d.stats) setCacheStats(d.stats);
+      pushLog({ ok: true, text: `🧹 Cache gewist: ${d.stores} catalogi weg, ${d.freedMb} MB vrijgemaakt — Redis staat nu op ${d.stats ? d.stats.usedMb : "?"} MB. Klik op "📦 Catalogi laden" om ze opnieuw op te halen.` });
+    } catch (e) {
+      pushLog({ err: true, text: `Cache wissen mislukt: ${e.message}` });
+    }
   }
 
   // Cache-overzicht ophalen zodra de lijst bekend is
@@ -567,6 +715,83 @@ export default function ScraperPage() {
     save(LS.memSheet, m);
   }
 
+  // ---------- Store uit het geheugen → organization-sheet + tabbladen ----------
+  const memSheetUrl = (e) => `https://docs.google.com/spreadsheets/d/${e.orgSheetId || e.aanvulSheetId}/edit`;
+
+  /* Standaard-tabblad: laatst gebruikt voor deze store, anders het eerste
+     Scraper-tabblad vanaf week 2 (Scraper W2, W3 …), anders de eerste weektab
+     vanaf week 2, anders het eerste tabblad. Week 1 = het origineel (wat al op
+     de store staat) en is niet om te scrapen. */
+  function defaultOrgTab(titles, domain, entry) {
+    const byStore = load(LS.orgTabByStore, {});
+    if (domain && byStore[domain] && titles.includes(byStore[domain])) return byStore[domain];
+    if (entry && entry.orgTab && titles.includes(entry.orgTab)) return entry.orgTab;
+    const num = (t, re) => {
+      const m = String(t).match(re);
+      return m ? Number(m[1]) : null;
+    };
+    const pick = (re) => {
+      const hits = titles.map((t) => [t, num(t, re)]).filter(([, n]) => n !== null && n >= 2).sort((a, b) => a[1] - b[1]);
+      return hits.length ? hits[0][0] : "";
+    };
+    return pick(/^scraper w(\d+)/i) || pick(/^week (\d+)/i) || titles[0] || "";
+  }
+
+  async function loadOrgTabs(sheet, domain, entry) {
+    setOrgTabsBusy(true);
+    try {
+      const d = await sheetsCall({ action: "tabs", sheetId: sheet });
+      const titles = (d.tabs || []).map((t) => t.title).filter(Boolean);
+      setOrgTabs(titles);
+      const tab = defaultOrgTab(titles, domain, entry);
+      if (tab) {
+        setOrgTab(tab);
+        save(LS.orgTab, tab);
+      }
+      return titles;
+    } catch (e) {
+      setOrgTabs([]);
+      pushLog({ err: true, text: `Tabbladen van de organization-sheet niet kunnen lezen: ${e.message}` });
+      return [];
+    } finally {
+      setOrgTabsBusy(false);
+    }
+  }
+
+  async function pickMemStore(entryOrDomain, list, quiet) {
+    const all = list || memStores;
+    const entry = typeof entryOrDomain === "string" ? all.find((x) => x.domain === entryOrDomain) : entryOrDomain;
+    if (!entry) {
+      setMemStore("");
+      save(LS.orgStore, "");
+      setOrgTabs([]);
+      return;
+    }
+    const url = memSheetUrl(entry);
+    setMemStore(entry.domain);
+    save(LS.orgStore, entry.domain);
+    setOrgSheet(url);
+    save(LS.orgSheet, url);
+    const titles = await loadOrgTabs(url, entry.domain, entry);
+    if (!quiet) {
+      pushLog({
+        ok: true,
+        text: `Store-geheugen: ${entry.name || entry.domain} (${entry.market || "?"} · ${entry.genders || "MV"}) → organization-sheet geladen, ${titles.length} tabbladen.`,
+        href: url,
+      });
+    }
+  }
+
+  function chooseOrgTab(tab) {
+    setOrgTab(tab);
+    save(LS.orgTab, tab);
+    if (memStore) {
+      const byStore = load(LS.orgTabByStore, {});
+      byStore[memStore] = tab;
+      save(LS.orgTabByStore, byStore);
+    }
+  }
+
   // ---------- Verdeling inladen (Collection & Product organization) ----------
   async function loadVerdeling() {
     if (orgBusy || running) return;
@@ -586,46 +811,26 @@ export default function ScraperPage() {
       const values = data.values || [];
       if (!values.length) throw new Error(`Tabblad "${tab}" is leeg of bestaat niet`);
 
-      // Header exact herkennen zoals de Keywords-tool hem wegschrijft:
-      // A Rank · B Keyword · C Collectie · D Groep · … · H Aantal producten
-      const h = (values[0] || []).map((x) => String(x || "").toLowerCase());
-      if (!String(h[1] || "").startsWith("keyword") || !String(h[3] || "").startsWith("groep") || !String(h[7] || "").startsWith("aantal")) {
+      // Formaat herkennen: verdeling (Keywords-tool) of weekplanning (Chaim-opmaak)
+      const read = parseVerdelingSheet(values) || parseWeekplanSheet(values);
+      if (!read) {
+        const kop = values.slice(0, 8).flat().map(low).join(" ");
+        if (/op store/.test(kop) && /nog te scrapen|gepland/.test(kop)) {
+          throw new Error(
+            `"${tab}" is het origineel (wat al op de store staat), niet om te scrapen. Kies "Scraper W1" (alleen wat nog ontbreekt) of een weektab vanaf Week 2.`
+          );
+        }
         throw new Error(
-          `Dit blad heeft niet het verdeling-formaat (verwacht: Rank · Keyword · Collectie · Groep · … · Aantal producten). Controleer de bladnaam.`
+          `Dit blad heeft geen bekend formaat. Verwacht: verdeling (Rank · Keyword · Collectie · Groep · … · Aantal producten) of weekplanning (Categorie (Bet) · Keyword · Aantal · The Play). Controleer de bladnaam.`
         );
       }
-
-      /* Storegeslacht uit de kop van kolom D ("Groep — alleen heren").
-         De Keywords-tool legt het daar één keer vast; vanaf hier hoeft geen
-         enkele vervolgstap het nog te raden. Bij een heren-only blad is élk
-         keyword heren — ook "shoes" of "hoodies" zonder het woord "mens" —
-         zodat de scraper nooit meer vrouwenstukken ophaalt. */
-      const gHead = String(h[3] || "");
-      const storeG = /alleen heren/i.test(gHead)
-        ? "man"
-        : /alleen dames/i.test(gHead)
-        ? "vrouw"
-        : null;
-
-      const parsed = [];
-      for (const r of values.slice(1)) {
-        const k = String(r[1] || "").trim();
-        if (!k) continue;
-        // Scheidingsregel van het underdog-blok is geen keyword
-        if (k.toUpperCase().startsWith("UNDERDOG KEYWORDS")) continue;
-        /* Het underdog-blok heeft zijn eigen KOPRIJ ("Keyword | Collectie |
-           … | Aantal producten"). Zonder deze controle werd die als keyword
-           "Keyword" ingelezen en zou de scraper er producten voor gaan
-           zoeken. Een echte datarij heeft altijd een numerieke rank (A) of
-           een numeriek aantal (H); een koprij geen van beide. */
-        if (/^keyword$/i.test(k)) continue;
-        if (!Number.isFinite(Number(r[0])) && !Number.isFinite(Number(r[7]))) continue;
-        const n = Math.max(1, Number(r[7]) || 0);
-        const g = storeG || (String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw");
-        const col = String(r[2] || "").trim(); // C = Collectie — reist mee naar de importlijst
-        const type = String(r[8] || "").trim() || "Direct"; // I = Type (Direct/Attribuut/Gelegenheid/Underdog)
-        const uitleg = String(r[9] || "").trim(); // J = underdog-uitleg voor de foto-controle
-        parsed.push({ k, n, g, col, type, uitleg });
+      const { parsed, storeG } = read;
+      if (read.formaat === "weekplanning") {
+        const zonderCol = parsed.filter((p) => !p.col).length;
+        pushLog({
+          muted: true,
+          text: `Weekplanning herkend${read.week ? ` (${read.week})` : ""}: ${parsed.length} keywords uit de categorieblokken, collectie per rij uit kolom A/H of de categorieregel${zonderCol ? ` — ${zonderCol} zonder collectie` : ""}.`,
+        });
       }
       if (!parsed.length) throw new Error("Geen keywords gevonden in dit blad");
 
@@ -665,12 +870,12 @@ export default function ScraperPage() {
       if (storeG) {
         pushLog({
           strong: true,
-          text: `Dit blad is gemarkeerd als ${storeG === "man" ? "HERENSTORE" : "DAMESZAAK"} (kop van kolom D). Alle ${parsedFiltered.length} keywords worden als ${storeG === "man" ? "Man" : "Vrouw"} gescrapet — ook de keywords zonder geslachtswoord.`,
+          text: `Dit blad is gemarkeerd als ${storeG === "man" ? "HERENSTORE" : "DAMESZAAK"} (${read.bron}). Alle ${parsedFiltered.length} keywords worden als ${storeG === "man" ? "Man" : "Vrouw"} gescrapet — ook de keywords zonder geslachtswoord.`,
         });
       } else {
         pushLog({
           muted: true,
-          text: "Geen storegeslacht in de kop van kolom D — per rij wordt Groep M/V aangehouden. Draai stap 1 opnieuw als dit een heren- of dameszaak is.",
+          text: read.formaat === "weekplanning" ? "Geen storegeslacht in de notitie — per rij: categorie \"Men's …\" of zoekterm \"mens …\" (kolom F) = Man, de rest Vrouw." : "Geen storegeslacht in de kop van kolom D — per rij wordt Groep M/V aangehouden. Draai stap 1 opnieuw als dit een heren- of dameszaak is.",
         });
       }
 
@@ -1953,7 +2158,7 @@ export default function ScraperPage() {
                     )}
                     {catInfo[s] && (
                       <span className="muted">
-                        {` · 📦 ${Number(catInfo[s].count || 0).toLocaleString("nl-NL")} producten · ${new Date(catInfo[s].at).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`}
+                        {` · 📦 ${Number(catInfo[s].count || 0).toLocaleString("nl-NL")} producten${catInfo[s].truncated ? ` (ingekort van ${Number(catInfo[s].total || 0).toLocaleString("nl-NL")})` : ""} · ${new Date(catInfo[s].at).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`}
                         {catInfo[s].lang && catInfo[s].lang !== "en" && !(compMeta[s] && compMeta[s].lang) ? ` · ${catInfo[s].lang.toUpperCase()}` : ""}
                       </span>
                     )}
@@ -1969,8 +2174,14 @@ export default function ScraperPage() {
                   <div className="hint">
                     {storeList.length} stores — volgorde = zoekvolgorde (beste eerst) ·{" "}
                     {Object.keys(catInfo).filter((d) => storeList.includes(d)).length} catalogi in de cache
-                    {cacheStats ? ` · cache-geheugen ${cacheStats.usedMb} MB${cacheStats.maxMb ? ` van ${cacheStats.maxMb} MB` : ""}` : ""}
+                    {cacheStats ? ` · Redis ${cacheStats.usedMb} MB${cacheStats.maxMb ? ` van ${cacheStats.maxMb} MB` : ""}${cacheStats.catalogMb !== undefined ? ` (catalogi ${cacheStats.catalogMb} MB${cacheStats.budgetMb ? `, budget ${cacheStats.budgetMb} MB` : ""})` : ""}` : ""}
                   </div>
+                  {cacheStats && cacheStats.maxMb && cacheStats.usedMb >= cacheStats.maxMb * 0.95 && (
+                    <div className="hint" style={{ color: "#b45309" }}>
+                      ⚠ Redis zit (bijna) vol. Nieuwe catalogi verdringen nu de oudste; wil je er in één keer vanaf, klik dan op
+                      "🧹 Catalogi-cache wissen" en daarna op "📦 Catalogi laden".
+                    </div>
+                  )}
                   <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button className="btn-ghost btn-small" onClick={() => auditStores(storeList)} disabled={auditBusy || !!busy}>
                       {auditBusy ? "Checken…" : "🔎 Stores checken & sorteren"}
@@ -1980,6 +2191,9 @@ export default function ScraperPage() {
                     </button>
                     <button className="btn-ghost btn-small" onClick={() => loadCatalogs(true)} disabled={!!catBusy || !!busy}>
                       ↻ Alle catalogi verversen
+                    </button>
+                    <button className="btn-ghost btn-small" onClick={clearCatalogCache} disabled={!!catBusy || !!busy}>
+                      🧹 Catalogi-cache wissen
                     </button>
                     <button className="btn-ghost btn-small" onClick={clearAllStores}>
                       ✕ Alles wissen
@@ -1991,8 +2205,9 @@ export default function ScraperPage() {
                     zoekvolgorde. Winkels die best-selling negeren kunnen geen "bewezen" producten leveren.
                   </div>
                   <div className="hint">
-                    De lijst en de catalogi staan permanent op de server — er verdwijnt niets vanzelf, alleen als je
-                    een winkel zelf weghaalt.
+                    De lijst en de maandbezoekers staan permanent op de server. De catalogi ook, binnen het
+                    Redis-geheugen (catalogi max 80%): zit dat vol, dan maakt de nieuwste catalogus plaats door de
+                    oudste weg te halen — die wordt bij de volgende run gewoon opnieuw opgehaald.
                   </div>
                 </>
               )}
@@ -2002,20 +2217,67 @@ export default function ScraperPage() {
               <h2>
                 Verdeling inladen <span className="opt">(Collection & Product organization)</span>
               </h2>
+              <div className="field-label">Store <span className="opt">(uit het geheugen — Keywords → Geheugen → Store-geheugen)</span></div>
+              <select
+                value={memStore}
+                onChange={(e) => pickMemStore(e.target.value)}
+                disabled={orgBusy || running}
+                style={{ width: "100%" }}
+              >
+                <option value="">— handmatig (link hieronder) —</option>
+                {memStores.map((st) => (
+                  <option key={st.domain} value={st.domain}>
+                    {st.name || st.domain}
+                    {st.market ? ` · ${st.market}` : ""}
+                    {st.genders === "M" ? " · heren" : st.genders === "V" ? " · dames" : " · dames+heren"}
+                  </option>
+                ))}
+              </select>
+              {!memStores.length && (
+                <div className="hint">
+                  Nog geen stores in het geheugen. Zet per store de organization-sheet in Keywords → Geheugen → 2 · Store-geheugen; daarna kies je hier alleen nog de store en het weektabblad.
+                </div>
+              )}
               <div className="field-label">Organization-sheet link</div>
               <input
                 type="text"
                 placeholder="https://docs.google.com/spreadsheets/d/…"
                 value={orgSheet}
-                onChange={(e) => setOrgSheet(e.target.value)}
+                onChange={(e) => {
+                  setOrgSheet(e.target.value);
+                  if (memStore) {
+                    setMemStore("");
+                    save(LS.orgStore, "");
+                    setOrgTabs([]);
+                  }
+                }}
               />
-              <div className="field-label">Exacte bladnaam</div>
-              <input
-                type="text"
-                placeholder="Collection & Product organization"
-                value={orgTab}
-                onChange={(e) => setOrgTab(e.target.value)}
-              />
+              <div className="field-label">
+                {orgTabs.length ? "Tabblad" : "Exacte bladnaam"}
+                {orgTabsBusy ? <span className="opt"> · tabbladen ophalen…</span> : null}
+              </div>
+              {orgTabs.length ? (
+                <select value={orgTabs.includes(orgTab) ? orgTab : ""} onChange={(e) => chooseOrgTab(e.target.value)} disabled={orgBusy || running} style={{ width: "100%" }}>
+                  {!orgTabs.includes(orgTab) && <option value="">— kies een tabblad —</option>}
+                  {orgTabs.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="Collection & Product organization"
+                  value={orgTab}
+                  onChange={(e) => setOrgTab(e.target.value)}
+                />
+              )}
+              {memStore && orgTabs.length ? (
+                <div className="hint">
+                  Week 1 = het origineel (staat al op de store). Scrapen vanaf <b>Scraper W2</b> / <b>Week 2</b>; bij SSB staat in <b>Scraper W1</b> alleen wat nog ontbreekt. Het gekozen tabblad wordt per store onthouden.
+                </div>
+              ) : null}
               <div className="field-label">Welke keywords</div>
               <div className="seg">
                 {[

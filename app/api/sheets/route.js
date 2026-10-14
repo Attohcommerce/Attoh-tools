@@ -11,6 +11,7 @@ import {
   deleteRows,
   getFirstTabId,
   formatRunTab,
+  getSheetSizes,
 } from "@/lib/sheets";
 
 export const maxDuration = 30;
@@ -26,6 +27,11 @@ export async function POST(req) {
     }
     if (!sheetId) return NextResponse.json({ error: "sheetId ontbreekt" }, { status: 400 });
 
+    // Tabbladen van een sheet (naam + id) — voor de tabblad-keuze in de scraper
+    if (action === "tabs") {
+      const tabs = (await getSheetSizes(sheetId)).map((t) => ({ title: t.title, tabId: t.tabId }));
+      return NextResponse.json({ ok: true, tabs });
+    }
     if (action === "read") {
       const values = await readRange(sheetId, range || "A:H");
       return NextResponse.json({ ok: true, values });
