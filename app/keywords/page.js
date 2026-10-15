@@ -282,19 +282,21 @@ export default function KeywordsPage() {
   const [uElapsed, setUElapsed] = useState(0);
   const [uPhase, setUPhase] = useState("");
 
-  /* ---- Tabblad 4: Bijvullen (aanvulling op een bestaande organization) ---- */
-  const [bOrgTab, setBOrgTab] = useState("");
-  const [bStatsSheet, setBStatsSheet] = useState("");
-  const [bStatsTab, setBStatsTab] = useState("");
-  const [bTargetSheet, setBTargetSheet] = useState("");
-  const [bTargetTab, setBTargetTab] = useState("");
-  const [bInstruction, setBInstruction] = useState("");
-  const [bProducts, setBProducts] = useState(""); // leeg = AI kiest
-  const [bBusy, setBBusy] = useState(""); // "" | "plan" | "prep" | "write"
-  const [bPlan, setBPlan] = useState(null); // antwoord van stap 1
-  const [bPrep, setBPrep] = useState(null); // antwoord van stap 2
-  const [bLogs, setBLogs] = useState([]);
-  const [bDoneUrl, setBDoneUrl] = useState("");
+  /* ---- Tabblad 4: TPK — Top Performing Keywords (vervangt Bijvullen, 15-10-2026).
+     Per store één TPK-sheet (store-geheugen), één blad per week. Orders van
+     de laatste 30 dagen → winnende keywords → ±10 producten → scrape-ready blad. */
+  const [tStore, setTStore] = useState(""); // domein uit sa_stores
+  const [tSource, setTSource] = useState("shopify"); // shopify | csv
+  const [tDays, setTDays] = useState(30);
+  const [tN, setTN] = useState(10);
+  const [tTab, setTTab] = useState("");
+  const [tTabTouched, setTTabTouched] = useState(false);
+  const [tCsv, setTCsv] = useState("");
+  const [tBusy, setTBusy] = useState(""); // "" | analyse | write
+  const [tResult, setTResult] = useState(null); // antwoord van stap 1
+  const [tLogs, setTLogs] = useState([]);
+  const [tDoneUrl, setTDoneUrl] = useState("");
+  const [tTabs, setTTabs] = useState([]); // bestaande tabbladen in de TPK-sheet
 
   // ----- Geheugen v2: All keywords per markt (man/vrouw apart) + store-geheugen -----
   const [gStatus, setGStatus] = useState(null); // { all: [...], stores: [...] }
@@ -311,7 +313,7 @@ export default function KeywordsPage() {
   const allFileInput = useRef(null);
   const [shopStores, setShopStores] = useState([]); // zelfde lijst als de Importer (sa_stores)
   const [stSel, setStSel] = useState("");
-  const [stForm, setStForm] = useState({ market: "", genders: "MV", aanvul: "", orgSheet: "", orgTab: "", importSheet: "" });
+  const [stForm, setStForm] = useState({ market: "", genders: "MV", aanvul: "", orgSheet: "", orgTab: "", tpk: "", importSheet: "" });
   const [stBusy, setStBusy] = useState(""); // "" | save | snap
 
   const fileInput = useRef(null);
@@ -336,14 +338,14 @@ export default function KeywordsPage() {
       if (us) setUStatsTab(us);
       const usl = localStorage.getItem("kw_u_statssheet");
       if (usl) setUStatsSheet(usl);
-      const bo = localStorage.getItem("kw_b_orgtab");
-      if (bo) setBOrgTab(bo);
-      const bss = localStorage.getItem("kw_b_statssheet");
-      if (bss) setBStatsSheet(bss);
-      const bst = localStorage.getItem("kw_b_statstab");
-      if (bst) setBStatsTab(bst);
-      const bts = localStorage.getItem("kw_b_targetsheet");
-      if (bts) setBTargetSheet(bts);
+      const ts = localStorage.getItem("kw_tpk_store");
+      if (ts) setTStore(ts);
+      const tsrc = localStorage.getItem("kw_tpk_source");
+      if (tsrc === "csv" || tsrc === "shopify") setTSource(tsrc);
+      const tn = Number(localStorage.getItem("kw_tpk_n"));
+      if (tn > 0) setTN(tn);
+      const td = Number(localStorage.getItem("kw_tpk_days"));
+      if (td > 0) setTDays(td);
     } catch {}
     setSessions(loadSessions());
   }, []);
@@ -765,7 +767,8 @@ export default function KeywordsPage() {
           ? `https://docs.google.com/spreadsheets/d/${saved.orgSheetId}/edit`
           : "",
       orgTab: (saved && saved.orgTab) || "",
-      // Import-lijst sheet (scraper) — de scraper vult hem in zodra je de store kiest
+      // TPK-sheet (top performing keywords) en import-lijst (scraper/importer) — optioneel
+      tpk: (saved && saved.tpkUrl) || "",
       importSheet: (saved && saved.importUrl) || "",
     });
   }
@@ -781,9 +784,10 @@ export default function KeywordsPage() {
       aanvul: stForm.aanvul,
       orgSheet: stForm.orgSheet,
       orgTab: stForm.orgTab,
+      tpk: stForm.tpk,
       importSheet: stForm.importSheet,
     });
-    if (!quiet) gLog({ ok: true, text: `Store-geheugen ${r.entry.name || r.entry.domain} opgeslagen (${r.entry.market} · ${r.entry.genders}${r.entry.importSheetId ? " · import-lijst gekoppeld" : " · geen import-lijst"}).`, href: r.entry.aanvulUrl });
+    if (!quiet) gLog({ ok: true, text: `Store-geheugen ${r.entry.name || r.entry.domain} opgeslagen (${r.entry.market} · ${r.entry.genders}${r.entry.tpkSheetId ? " · TPK-sheet gekoppeld" : " · geen TPK-sheet"}${r.entry.importSheetId ? " · import-lijst gekoppeld" : " · geen import-lijst"}).`, href: r.entry.aanvulUrl });
     return r.entry;
   }
 
@@ -1156,9 +1160,9 @@ export default function KeywordsPage() {
     !uRunning && uOrgSheet.trim() && uOrgTab.trim() && uStatsSheet.trim() &&
     uStatsTab.trim() && orderedMonths.length === 4;
 
-  /* ---------- Bijvullen ---------- */
-  const bPush = (e) =>
-    setBLogs((l) => {
+  /* ---------- TPK — Top Performing Keywords ---------- */
+  const tPush = (e) =>
+    setTLogs((l) => {
       if (e.key) {
         const i = l.findIndex((x) => x.key === e.key);
         if (i >= 0) {
@@ -1169,144 +1173,153 @@ export default function KeywordsPage() {
       }
       return [...l, e];
     });
-  const canBijvulPlan = !bBusy && uOrgSheet.trim() && bOrgTab.trim() && bInstruction.trim();
-  const canBijvulPrep = !bBusy && bPlan && bStatsSheet.trim() && bStatsTab.trim() && orderedMonths.length === 4;
-  const canBijvulWrite = !bBusy && bPrep && bTargetSheet.trim() && bTargetTab.trim();
-
-  function bRemember() {
+  const tShop = shopStores.find((s) => s.domain === tStore) || null;
+  const tSaved = savedStores.find((s) => s.domain === tStore) || null;
+  // Orders-app-sleutels van deze store (zelfde opslag als de Bills-pagina)
+  const tOrdersKeys = (() => {
+    if (!tStore) return null;
     try {
-      localStorage.setItem("kw_b_orgtab", bOrgTab.trim());
-      localStorage.setItem("kw_b_statssheet", bStatsSheet.trim());
-      localStorage.setItem("kw_b_statstab", bStatsTab.trim());
-      localStorage.setItem("kw_b_targetsheet", bTargetSheet.trim());
-      localStorage.setItem("kw_store", vStore.trim());
-      localStorage.setItem("kw_market", vMarket);
+      const k = JSON.parse(localStorage.getItem("sa_orders_app::" + tStore) || "null");
+      return k && k.clientId && k.clientSecret ? k : null;
+    } catch {
+      return null;
+    }
+  })();
+  const canTpkAnalyse = !tBusy && tStore && tSaved && tSaved.tpkSheetId && (tSource === "csv" ? tCsv.trim() : !!tOrdersKeys) && Number(tN) > 0;
+  const canTpkWrite = !tBusy && tResult && tResult.analysis && tTab.trim();
+
+  function tRemember() {
+    try {
+      localStorage.setItem("kw_tpk_store", tStore);
+      localStorage.setItem("kw_tpk_source", tSource);
+      localStorage.setItem("kw_tpk_n", String(tN));
+      localStorage.setItem("kw_tpk_days", String(tDays));
     } catch {}
   }
 
-  /* Stap 1: de organization inlezen + de instructie omzetten in een plan.
-     Zet ook het venster klaar: het originele venster één maand opgeschoven
-     (de aanvulling gaat later live dan de eerste import). */
-  async function bijvulPlan() {
-    if (!canBijvulPlan) return;
-    setBBusy("plan");
-    setBPlan(null);
-    setBPrep(null);
-    setBDoneUrl("");
-    setBLogs([]);
-    bRemember();
+  /* Bladnaam voorstellen: (1) het weektab dat de scraper voor deze store het
+     laatst gebruikte ("Scraper W3" → W3), (2) hoogste W-nummer in de
+     TPK-sheet + 1, (3) W1. Handmatig getypt = blijft staan. */
+  function tSuggestTab(tabs, domain) {
+    let fromScraper = "";
     try {
-      bPush({ strong: true, text: `— Bijvullen: ${vStore.trim() || "store ?"} · markt ${vMarket} · origineel "${bOrgTab.trim()}"` });
-      bPush({ text: "Stap 1/3 · Originele organization inlezen en je instructie omzetten in een plan…", key: "b-step" });
-      const r = await api("/api/keywords-bijvullen", {
-        action: "plan",
-        orgSheetId: uOrgSheet.trim(),
-        orgTab: bOrgTab.trim(),
-        instruction: bInstruction.trim(),
-        storeUrl: vStore.trim(),
-        market: vMarket,
-        genders: vGenders,
-        productTarget: Number(bProducts) > 0 ? Number(bProducts) : null,
-        months: orderedMonths.length === 4 ? orderedMonths : null,
+      const byStore = JSON.parse(localStorage.getItem("sa_org_tab_by_store") || "{}") || {};
+      const last = byStore[domain] || byStore[`${domain}|org`] || "";
+      const m = String(last).match(/w(?:eek)?\s*(\d+)/i);
+      if (m) fromScraper = `W${Number(m[1])}`;
+    } catch {}
+    if (fromScraper) return fromScraper;
+    const nums = (tabs || []).map((t) => {
+      const m = String(t).match(/^w(?:eek)?\s*(\d+)/i);
+      return m ? Number(m[1]) : null;
+    }).filter((n) => n !== null);
+    if (nums.length) return `W${Math.max(...nums) + 1}`;
+    return "W1";
+  }
+
+  async function tLoadTabs(domain) {
+    const saved = savedStores.find((s) => s.domain === domain);
+    if (!saved || !saved.tpkSheetId) {
+      setTTabs([]);
+      return;
+    }
+    try {
+      const d = await api("/api/sheets", { action: "tabs", sheetId: saved.tpkSheetId });
+      const titles = (d.tabs || []).map((t) => t.title).filter((t) => !/^(overzicht|log)$/i.test(t));
+      setTTabs(titles);
+      if (!tTabTouched) setTTab(tSuggestTab(titles, domain));
+    } catch {
+      setTTabs([]);
+      if (!tTabTouched) setTTab(tSuggestTab([], domain));
+    }
+  }
+
+  function tSelectStore(domain) {
+    setTStore(domain);
+    setTResult(null);
+    setTDoneUrl("");
+    setTTabTouched(false);
+    try {
+      localStorage.setItem("kw_tpk_store", domain);
+    } catch {}
+    tLoadTabs(domain);
+  }
+
+  async function tAnalyse() {
+    if (!canTpkAnalyse) return;
+    setTBusy("analyse");
+    setTResult(null);
+    setTDoneUrl("");
+    setTLogs([]);
+    tRemember();
+    try {
+      tPush({ strong: true, text: `— TPK: ${tShop.name || tShop.domain} · ${tSource === "csv" ? "CSV" : `orders laatste ${tDays} dagen`} · ${tN} producten` });
+      tPush({ key: "t-step", text: tSource === "csv" ? "Stap 1/2 · CSV lezen, keywords tellen, verdeling berekenen…" : "Stap 1/2 · Orders uit Shopify halen, keywords tellen, verdeling berekenen…" });
+      const r = await api("/api/tpk", {
+        action: "analyse",
+        store: { name: tShop.name, domain: tShop.domain, publicDomain: tShop.publicDomain, currency: tShop.currency },
+        ordersStore: tSource === "csv" ? null : { name: tShop.name, domain: tShop.domain, clientId: tOrdersKeys.clientId, clientSecret: tOrdersKeys.clientSecret },
+        csvText: tSource === "csv" ? tCsv : "",
+        days: Number(tDays) || 30,
+        n: Number(tN) || 10,
       });
-      setBPlan(r);
-      if (r.org && r.org.genders && r.org.genders !== vGenders) setVGenders(r.org.genders);
-      if (orderedMonths.length !== 4 && r.suggestedMonths && r.suggestedMonths.length === 4) setVMonths(r.suggestedMonths);
-      bPush({
+      setTResult(r);
+      const a = r.analysis;
+      const t = a.totals;
+      tPush({
         ok: true,
-        key: "b-step",
-        text: `Stap 1/3 · Origineel: ${r.org.products} producten in ${r.org.keywords} keywords (${(r.org.origMonths || []).join("-") || "venster onbekend"}${r.org.underdogs ? `, ${r.org.underdogs} underdogs` : ""}). Plan: ${r.plan.target} extra producten.`,
+        key: "t-step",
+        text: `Stap 1/2 · ${t.orders} orders · ${t.units} stuks${t.netLabel ? ` · ${t.netLabel}` : ""} · ${t.keywords} keywords met verkoop · ${t.winners} winnaar${t.winners === 1 ? "" : "s"} (≥ 10) · ${t.eligible} met ≥ 3 ${t.measure}.`,
       });
-      if (r.plan.summary) bPush({ text: `Plan (AI): ${r.plan.summary}` });
-      for (const f of r.plan.focus || []) bPush({ text: `• ${f.label} — ${Math.round(f.share * 100)}% van het budget${f.gender ? ` · ${f.gender === "M" ? "heren" : f.gender === "V" ? "dames" : "heren + dames"}` : ""}${f.collection ? ` · nieuwe collectie "${f.collection}"` : ""} · termen: ${f.terms.join(", ")}` });
-      if (!(r.plan.focus || []).length) bPush({ text: "Geen specifieke productsoorten gevraagd — de engine vult aan met de beste seizoens-keywords die nog niet in de organization staan." });
-      for (const n of r.plan.notes || []) bPush({ text: `Aanname: ${n}` });
-      if (orderedMonths.length !== 4 && r.suggestedMonths) bPush({ text: `Venster gezet op ${r.suggestedMonths.join("-")} (origineel + 1 maand). Pas aan als je wilt.` });
-      bPush({ text: "Klopt het plan? Pas anders je instructie aan en draai stap 1 opnieuw. Anders: stap 2." });
+      const top = a.scrape.map((s) => `${s.zoekterm} ${s.n}`).join(" · ");
+      tPush({ text: `Verdeling (${t.planned} producten over ${t.fed} keywords): ${top}` });
+      if (r.weeks && r.weeks.length) tPush({ muted: true, text: `Eerdere TPK-weken in de sheet: ${r.weeks.join(", ")}` });
+      for (const w of a.warnings || []) tPush({ err: true, text: `Let op: ${w}` });
+      if (tTabs.includes(tTab.trim())) tPush({ err: true, text: `Blad "${tTab.trim()}" bestaat al in de TPK-sheet — stap 2 overschrijft het (Log-regels van dat blad worden vervangen).` });
+      tPush({ text: `Klopt de verdeling? Pas eventueel het aantal aan en draai opnieuw. Anders: stap 2 schrijft blad "${tTab.trim() || "…"}" + Log + Overzicht.` });
     } catch (e) {
-      bPush({ err: true, text: `Mislukt: ${e.message || e}` });
+      tPush({ key: "t-step", err: true, text: `Mislukt: ${e.message || e}` });
+      sfx("error");
     } finally {
-      setBBusy("");
+      setTBusy("");
     }
   }
 
-  /* Stap 2: verse keyword-data inlezen en de bijvul-verdeling berekenen. */
-  async function bijvulPrep() {
-    if (!canBijvulPrep) return;
-    setBBusy("prep");
-    setBPrep(null);
-    setBDoneUrl("");
-    bRemember();
+  async function tWrite() {
+    if (!canTpkWrite) return;
+    setTBusy("write");
+    tRemember();
     try {
-      bPush({ text: `Stap 2/3 · Keyword-data "${bStatsTab.trim()}" inlezen, bijvul-verdeling berekenen (${orderedMonths.join("-")}) en AI-eindcontrole…`, key: "b-step" });
-      const r = await api("/api/keywords-bijvullen", {
-        action: "prep",
-        orgSheetId: uOrgSheet.trim(),
-        orgTab: bOrgTab.trim(),
-        statsSheetId: bStatsSheet.trim(),
-        statsTab: bStatsTab.trim(),
-        months: orderedMonths,
-        market: vMarket,
-        genders: bPlan && bPlan.org ? bPlan.org.genders : vGenders,
-        storeUrl: vStore.trim(),
-        plan: bPlan.plan,
-      });
-      setBPrep(r);
-      bPush({ ok: true, key: "b-step", text: `Stap 2/3 · ${r.totalProducts} producten · ${r.rows.length} keywords · ${r.collections.length} collecties (doel ${r.target}) uit ${r.statsRows} keywords in de batch.` });
-      for (const f of r.focusReport || []) bPush({ text: `• ${f.label}: gevraagd ±${f.wanted}, gevuld ${f.got}` });
-      const top = r.collections.slice(0, 8).map((c) => `${c.col}${c.nieuw ? " (NIEUW)" : ""} ${c.products}p`).join(" · ");
-      if (top) bPush({ text: `Spreiding: ${top}${r.collections.length > 8 ? " · …" : ""}` });
-      if (r.nieuweCollecties && r.nieuweCollecties.length) bPush({ text: `Nieuwe collecties (bestaan nog niet in de store): ${r.nieuweCollecties.join(", ")}` });
-      if (r.aiRemoved && r.aiRemoved.length) bPush({ text: `AI-eindcontrole schrapte ${r.aiRemoved.length}: ${r.aiRemoved.slice(0, 6).join(", ")}${r.aiRemoved.length > 6 ? " …" : ""}` });
-      for (const w of r.warnings || []) bPush({ err: true, text: `Let op: ${w}` });
-      bPush({ text: "Bekijk het voorbeeld rechts. Goed? Stap 3 schrijft het naar je aanvul-sheet." });
-    } catch (e) {
-      bPush({ err: true, text: `Mislukt: ${e.message || e}` });
-    } finally {
-      setBBusy("");
-    }
-  }
-
-  /* Stap 3: nieuw tabblad in de aanvul-sheet. */
-  async function bijvulWrite() {
-    if (!canBijvulWrite) return;
-    setBBusy("write");
-    bRemember();
-    try {
-      bPush({ text: `Stap 3/3 · Tabblad "${bTargetTab.trim()}" aanmaken en wegschrijven…`, key: "b-step" });
-      const r = await api("/api/keywords-bijvullen", {
+      tPush({ key: "t-write", text: `Stap 2/2 · Blad "${tTab.trim()}" schrijven + Log + Overzicht…` });
+      const r = await api("/api/tpk", {
         action: "write",
-        targetSheetId: bTargetSheet.trim(),
-        targetTab: bTargetTab.trim(),
-        rows: bPrep.rows,
-        collections: bPrep.collections,
-        meta: {
-          months: bPrep.months,
-          genders: bPrep.org.genders,
-          gLabel: bPrep.org.gLabel,
-          maxRank: bPrep.org.maxRank,
-          orgTab: bPrep.org.tab,
-          orgProducts: bPrep.org.products,
-          orgKeywords: bPrep.org.keywords,
-          origMonths: bPlan && bPlan.org ? bPlan.org.origMonths : [],
-          instruction: bInstruction.trim(),
-          planSummary: bPlan && bPlan.plan ? bPlan.plan.summary : "",
-          planNotes: bPlan && bPlan.plan ? bPlan.plan.notes : [],
-          focusReport: bPrep.focusReport,
-          target: bPrep.target,
-          warnings: bPrep.warnings,
-          aiRemoved: bPrep.aiRemoved,
-        },
+        store: { name: tShop.name, domain: tShop.domain, publicDomain: tShop.publicDomain, currency: tShop.currency },
+        tab: tTab.trim(),
+        analysis: tResult.analysis,
       });
-      setBDoneUrl(r.url);
-      bPush({ ok: true, key: "b-step", text: `✓ Klaar: "${r.title}" — ${r.totalProducts} producten · ${r.keywordCount} keywords. Rank loopt door op het origineel; kolom J zegt per keyword waarom hij erin zit.` });
-      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+      setTDoneUrl(r.url);
+      tPush({ ok: true, key: "t-write", text: `✓ Klaar: "${r.tab}"${r.replaced ? " (overschreven)" : ""} — ${r.products} producten · ${r.keywords} keywords. Scraper → Verdeling inladen → store → bron TPK-sheet → tabblad "${r.tab}".` });
+      // Scraper-suggestie: dit blad als laatst gebruikte TPK-tab van deze store
+      try {
+        const byStore = JSON.parse(localStorage.getItem("sa_org_tab_by_store") || "{}") || {};
+        byStore[`${tStore}|tpk`] = r.tab;
+        localStorage.setItem("sa_org_tab_by_store", JSON.stringify(byStore));
+      } catch {}
+      sfx("success");
+      tLoadTabs(tStore);
     } catch (e) {
-      bPush({ err: true, text: `Mislukt: ${e.message || e}` });
+      tPush({ key: "t-write", err: true, text: `Mislukt: ${e.message || e}` });
+      sfx("error");
     } finally {
-      setBBusy("");
+      setTBusy("");
     }
   }
+
+  // TPK-sheet-tabbladen (en de bladnaam-suggestie) laden zodra de TPK-tab open is
+  useEffect(() => {
+    if (view === "tpk" && gStatus && tStore) tLoadTabs(tStore);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, gStatus, tStore]);
 
   async function runUnderdog() {
     if (!canUnderdog) return;
@@ -1519,8 +1532,8 @@ export default function KeywordsPage() {
           <button className={"srctab" + (view === "geheugen" ? " on" : "")} onClick={() => { setView("geheugen"); loadMemStatus(); loadGeheugen(); }}>
             Geheugen
           </button>
-          <button className={"srctab" + (view === "bijvullen" ? " on" : "")} onClick={() => setView("bijvullen")}>
-            Bijvullen
+          <button className={"srctab" + (view === "tpk" ? " on" : "")} onClick={() => { setView("tpk"); loadGeheugen(); }}>
+            TPK
           </button>
         </div>
 
@@ -1563,7 +1576,7 @@ export default function KeywordsPage() {
                 <div className="gh-step-n">4</div>
                 <div>
                   <div className="gh-step-t">Scraper → Importer</div>
-                  <div className="gh-step-s">aanvul-sheet + weektab kiezen</div>
+                  <div className="gh-step-s">aanvul-sheet of TPK-sheet + weektab kiezen</div>
                 </div>
               </div>
             </div>
@@ -1811,6 +1824,11 @@ export default function KeywordsPage() {
                                   import-lijst ↗
                                 </a>
                               ) : null}
+                              {saved && saved.tpkUrl ? (
+                                <a className="linklike" style={{ marginLeft: 8 }} href={saved.tpkUrl} target="_blank" rel="noreferrer noopener" onClick={(e) => e.stopPropagation()}>
+                                  TPK ↗
+                                </a>
+                              ) : null}
                             </div>
                             <div>
                               {snap ? (
@@ -1887,6 +1905,15 @@ export default function KeywordsPage() {
                             placeholder="Leeg = Collecties (import) → Plan"
                             value={stForm.orgTab}
                             onChange={(e) => setStForm((f) => ({ ...f, orgTab: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <div className="gh-sub">TPK-sheet <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(top performing keywords — één per store, blad per week)</span></div>
+                          <input
+                            type="text"
+                            placeholder="Google Sheet, gedeeld met de service account — Keywords → TPK schrijft hierin"
+                            value={stForm.tpk}
+                            onChange={(e) => setStForm((f) => ({ ...f, tpk: e.target.value }))}
                           />
                         </div>
                         <div className="gh-span2">
@@ -2003,83 +2030,113 @@ export default function KeywordsPage() {
           );
         })()}
 
-        {view === "bijvullen" && (
+        {view === "tpk" && (() => {
+          const a = tResult && tResult.analysis;
+          const pct = (x) => `${Math.round((x || 0) * 100)}%`;
+          const GL = { MV: "dames + heren", V: "dames", M: "heren" };
+          return (
           <div className="layout-scraper">
             <div>
               <div className="card">
-                <h2>Bijvullen <span className="opt">(aanvulling op een bestaande organization)</span></h2>
+                <h2>TPK <span className="opt">(top performing keywords — wat verkoopt, krijgt er producten bij)</span></h2>
                 <div className="hint" style={{ marginBottom: 12 }}>
-                  Een store start met 200–400 producten en groeit daarna. Plak de originele
-                  organization, vertel wat erbij moet (de productsoorten van de mediabuyer, een
-                  aantal — of laat de AI kiezen) en wijs een verse Keyword Planner-batch aan. De
-                  tool kiest alleen keywords die nog NIET in de organization staan, rekent op het
-                  venster van nu (origineel + 1 maand) en schrijft een apart aanvul-blad.
+                  Elke week per store: orders van de laatste 30 dagen → welke keywords verkopen → ±10 extra
+                  producten bovenop de aanvul-planning. Eén TPK-sheet per store (store-geheugen), één blad per
+                  week. Het blad is direct scrape-ready: Scraper → Verdeling inladen → bron <b>TPK-sheet</b>.
                 </div>
 
-                <div className="field-label">Originele organization — sheet</div>
-                <input type="text" value={uOrgSheet} onChange={(e) => setUOrgSheet(e.target.value)} />
-                <div className="field-label">Bladnaam van de originele organization</div>
-                <input type="text" placeholder='bv. "LGB - 16/08/2026"' value={bOrgTab} onChange={(e) => setBOrgTab(e.target.value)} />
+                <div className="field-label">Store <span className="opt">(TPK-sheet uit het geheugen)</span></div>
+                {shopStores.length === 0 ? (
+                  <div className="hint">Nog geen stores gevonden — voeg ze eerst toe in de Importer.</div>
+                ) : (
+                  <select value={tStore} onChange={(e) => tSelectStore(e.target.value)} disabled={!!tBusy} style={{ width: "100%" }}>
+                    <option value="">— kies een store —</option>
+                    {shopStores.map((s) => {
+                      const sv = savedStores.find((x) => x.domain === s.domain);
+                      return (
+                        <option key={s.domain} value={s.domain}>
+                          {s.name || s.domain}
+                          {sv && sv.market ? ` · ${sv.market}` : ""}
+                          {sv && sv.tpkSheetId ? "" : " · (geen TPK-sheet)"}
+                        </option>
+                      );
+                    })}
+                  </select>
+                )}
+                {tStore && tSaved && !tSaved.tpkSheetId && (
+                  <div className="hint" style={{ color: "var(--warn)" }}>
+                    Deze store heeft nog geen TPK-sheet: Geheugen → 2 · Store-geheugen → store aanklikken → veld "TPK-sheet" → Alleen opslaan.
+                  </div>
+                )}
+                {tStore && tSaved && tSaved.tpkSheetId && (
+                  <div className="hint">
+                    <a className="linklike" href={tSaved.tpkUrl} target="_blank" rel="noreferrer noopener">TPK-sheet openen ↗</a>
+                    {" · "}{GL[tSaved.genders] || tSaved.genders}
+                    {tTabs.length ? ` · bladen: ${tTabs.join(", ")}` : " · nog geen weekbladen"}
+                    {tSaved.snapshot ? "" : " · let op: nog geen store-snapshot (collecties blijven leeg)"}
+                  </div>
+                )}
 
-                <div className="field-label">Store</div>
-                <input type="text" placeholder="bv. ladyglamboutique.com" value={vStore} onChange={(e) => setVStore(e.target.value)} />
-                <div className="field-label">Markt</div>
+                <div className="field-label">Data</div>
                 <div className="seg">
-                  {[["USA", "USA"], ["UK", "UK"], ["AUS", "AUS + NZ"], ["CAN", "CAN"]].map(([val, label]) => (
-                    <button key={val} className={vMarket === val ? "on" : ""} onClick={() => setVMarket(val)} type="button">
+                  {[["shopify", "Orders uit Shopify"], ["csv", "CSV plakken"]].map(([val, label]) => (
+                    <button key={val} className={tSource === val ? "on" : ""} onClick={() => setTSource(val)} type="button">
                       {label}
                     </button>
                   ))}
                 </div>
+                {tSource === "shopify" ? (
+                  <>
+                    <div className="hint">
+                      {tStore && !tOrdersKeys
+                        ? "Geen Orders-app-sleutels voor deze store — vul Client ID en Client secret in op de Bills-pagina (Orders-app), of plak de CSV."
+                        : "Leest de orders via de Orders-app van de store (zelfde sleutels als de Bills-pagina). Geannuleerde en test-orders tellen niet mee."}
+                    </div>
+                    <div className="field-label">Periode <span className="opt">(dagen terug)</span></div>
+                    <input type="number" style={{ width: 110 }} min={7} max={120} value={tDays} onChange={(e) => setTDays(e.target.value)} />
+                  </>
+                ) : (
+                  <>
+                    <div className="field-label">Shopify → Analytics → Rapporten → "Verkopen per product" → laatste 30 dagen → Exporteren (CSV) — plak de inhoud hier</div>
+                    <textarea
+                      rows={6}
+                      placeholder={"Product title,Orders,Net items sold,Net sales,…\nPlaid Oversized Button-Down Flannel Shirt | …,41,41,1842.50,…"}
+                      value={tCsv}
+                      onChange={(e) => setTCsv(e.target.value)}
+                      style={{ width: "100%", resize: "vertical", fontFamily: "monospace", fontSize: 12 }}
+                    />
+                  </>
+                )}
 
-                <div className="field-label">Wat moet erbij? <span className="opt">(instructie van de mediabuyer, gewone taal)</span></div>
-                <textarea
-                  rows={4}
-                  placeholder={'bv. "loafers heren en dames, meer men\'s shoes en ankle boots, 300 producten. Geen sportschoenen."'}
-                  value={bInstruction}
-                  onChange={(e) => setBInstruction(e.target.value)}
-                  style={{ width: "100%", resize: "vertical" }}
-                />
-                <div className="field-label">Aantal producten <span className="opt">(leeg = AI kiest)</span></div>
-                <input type="number" style={{ width: 110 }} min={20} max={900} placeholder="AI" value={bProducts} onChange={(e) => setBProducts(e.target.value)} />
+                <div className="field-label">Aantal producten deze week</div>
+                <input type="number" style={{ width: 110 }} min={1} max={60} value={tN} onChange={(e) => setTN(e.target.value)} />
+                <div className="hint">
+                  Regels: alleen keywords met ≥ 3 orders · evenredig met hun aandeel · minimaal 1, maximaal 3 per keyword · tot het aantal vol is.
+                  Koptermen (jeans, shoe, top …) krijgen een verfijnde zoekterm op het best verkopende product.
+                </div>
 
                 <div style={{ marginTop: 12 }}>
-                  <button className="btn" onClick={bijvulPlan} disabled={!canBijvulPlan}>
-                    {bBusy === "plan" ? "Bezig…" : "1 · Plan maken"}
+                  <button className="btn" onClick={tAnalyse} disabled={!canTpkAnalyse}>
+                    {tBusy === "analyse" ? "Bezig…" : "1 · Analyseren"}
                   </button>
                 </div>
 
                 <div className="field-label" style={{ marginTop: 18 }}>
-                  Maanden <span className="opt">(venster van de aanvulling — {orderedMonths.length}/4; stap 1 zet origineel + 1 maand)</span>
+                  Naam van het weekblad <span className="opt">(voorstel volgt de scraper: zelfde W-nummer als de aanvul-week)</span>
                 </div>
-                <div className="mcal">
-                  {MONTHS.map((m) => {
-                    const on = vMonths.includes(m.key);
-                    const full = !on && vMonths.length >= 4;
-                    return (
-                      <button key={m.key} type="button" className={"mcal-m" + (on ? " on" : "") + (full ? " dim" : "")} onClick={() => toggleMonth(m.key)}>
-                        {m.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="field-label">Verse keyword-data — sheet <span className="opt">(stap 1 van de verdeling met nieuwe batches, of het Geheugen van de markt)</span></div>
-                <input type="text" placeholder="https://docs.google.com/spreadsheets/d/…" value={bStatsSheet} onChange={(e) => setBStatsSheet(e.target.value)} />
-                <div className="field-label">Bladnaam van dat keyword-tabblad</div>
-                <input type="text" placeholder='bv. "LGB bijvul okt" of "MEM AUS"' value={bStatsTab} onChange={(e) => setBStatsTab(e.target.value)} />
+                <input
+                  type="text"
+                  placeholder="bv. W2"
+                  value={tTab}
+                  onChange={(e) => {
+                    setTTab(e.target.value);
+                    setTTabTouched(true);
+                  }}
+                />
+                {tTabs.includes(tTab.trim()) && <div className="hint" style={{ color: "var(--warn)" }}>Bestaat al — stap 2 overschrijft dit blad.</div>}
                 <div style={{ marginTop: 12 }}>
-                  <button className="btn" onClick={bijvulPrep} disabled={!canBijvulPrep}>
-                    {bBusy === "prep" ? "Bezig…" : "2 · Bijvul berekenen"}
-                  </button>
-                </div>
-
-                <div className="field-label" style={{ marginTop: 18 }}>Aanvul-sheet — link <span className="opt">(gedeeld met de service account)</span></div>
-                <input type="text" placeholder="https://docs.google.com/spreadsheets/d/…" value={bTargetSheet} onChange={(e) => setBTargetSheet(e.target.value)} />
-                <div className="field-label">Naam van het nieuwe blad</div>
-                <input type="text" placeholder='bv. "LGB bijvul 1 - okt 2026"' value={bTargetTab} onChange={(e) => setBTargetTab(e.target.value)} />
-                <div style={{ marginTop: 12 }}>
-                  <button className="btn" onClick={bijvulWrite} disabled={!canBijvulWrite}>
-                    {bBusy === "write" ? "Bezig…" : "3 · Wegschrijven naar aanvul-sheet"}
+                  <button className="btn" onClick={tWrite} disabled={!canTpkWrite}>
+                    {tBusy === "write" ? "Bezig…" : "2 · Schrijf naar TPK-sheet"}
                   </button>
                 </div>
               </div>
@@ -2088,60 +2145,67 @@ export default function KeywordsPage() {
             <div>
               <div className="card">
                 <h2>
-                  Bijvul-log
-                  {bBusy && <span className="opt"> — bezig: stap {bBusy === "plan" ? "1" : bBusy === "prep" ? "2" : "3"}</span>}
-                  {!bBusy && bDoneUrl && <span className="opt"> — klaar</span>}
+                  TPK-log
+                  {tBusy && <span className="opt"> — bezig: stap {tBusy === "analyse" ? "1" : "2"}</span>}
+                  {!tBusy && tDoneUrl && <span className="opt"> — klaar</span>}
                 </h2>
-                {bLogs.length === 0 && !bBusy && (
+                {tLogs.length === 0 && !tBusy && (
                   <div className="center-note" style={{ padding: "18px 8px" }}>
-                    Vul het origineel en je instructie in en druk op "1 · Plan maken". Elke stap
-                    laat zien wat hij gaat doen voordat er iets wordt weggeschreven.
+                    Kies een store en druk op "1 · Analyseren". Stap 1 schrijft niets; je ziet eerst de verdeling.
                   </div>
                 )}
                 <div className="logpanel">
-                  {bLogs.map((l, i) => (
-                    <div key={i} className={"logline" + (l.err ? " err" : l.ok ? " ok" : l.strong ? " strong" : "")}>
+                  {tLogs.map((l, i) => (
+                    <div key={i} className={"logline" + (l.err ? " err" : l.ok ? " ok" : l.strong ? " strong" : l.muted ? " muted" : "")}>
                       {l.text}
                     </div>
                   ))}
                 </div>
-                {bDoneUrl && (
+                {tDoneUrl && (
                   <div style={{ marginTop: 10 }}>
-                    <a className="btn" href={bDoneUrl} target="_blank" rel="noreferrer">
-                      ↗ Open het aanvul-blad
+                    <a className="btn" href={tDoneUrl} target="_blank" rel="noreferrer">
+                      ↗ Open het weekblad
                     </a>
                   </div>
                 )}
               </div>
 
-              {bPrep && (
+              {a && (
                 <div className="card" style={{ marginTop: 18 }}>
-                  <h2>Voorbeeld <span className="opt">({bPrep.totalProducts} producten · {bPrep.rows.length} keywords)</span></h2>
-                  <div className="hint" style={{ marginBottom: 8 }}>Per collectie: bestaand in het origineel → erbij in deze aanvulling.</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "4px 14px", fontSize: 13 }}>
-                    <div className="opt">Collectie</div><div className="opt">Bestaand</div><div className="opt">Erbij</div>
-                    {bPrep.collections.map((c) => (
-                      <React.Fragment key={c.col}>
-                        <div>{c.col}{c.nieuw ? <span className="opt"> (NIEUW)</span> : null}</div>
-                        <div style={{ textAlign: "right" }}>{c.bestaand || 0}</div>
-                        <div style={{ textAlign: "right" }}>+{c.products}</div>
+                  <h2>
+                    Verdeling <span className="opt">({a.totals.planned} producten · {a.totals.fed} keywords · {a.totals.measure})</span>
+                  </h2>
+                  <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto auto", gap: "4px 12px", fontSize: 13, alignItems: "baseline" }}>
+                    <div className="opt">#</div><div className="opt">Zoekterm · collectie</div><div className="opt">Orders</div><div className="opt">Aandeel</div><div className="opt">Aantal</div>
+                    {a.scrape.map((s) => (
+                      <React.Fragment key={s.key}>
+                        <div>{s.rank}</div>
+                        <div>
+                          <strong>{s.zoekterm}</strong>
+                          <span className="opt"> · {s.g === "M" ? "heren" : "dames"}{s.coll ? ` · ${s.coll}` : " · (geen collectie)"}{s.type === "Gelegenheid" ? " · gelegenheid" : ""}</span>
+                          {s.keyword !== s.zoekterm.replace(/^mens /, "") && <span className="opt"> · uit "{s.keyword}"</span>}
+                        </div>
+                        <div style={{ textAlign: "right" }}>{s.m}</div>
+                        <div style={{ textAlign: "right" }}>{pct(s.share)}</div>
+                        <div style={{ textAlign: "right" }}><strong>{s.n}</strong></div>
                       </React.Fragment>
                     ))}
                   </div>
-                  <div className="hint" style={{ marginTop: 12 }}>Eerste keywords:</div>
-                  <div className="logpanel" style={{ maxHeight: 260, overflow: "auto" }}>
-                    {bPrep.rows.slice(0, 40).map((r) => (
-                      <div key={r.kw} className="logline">
-                        {r.n}× {r.kw} <span className="opt">— {r.col} · {r.g} · {r.bron}</span>
+                  <div className="hint" style={{ marginTop: 12 }}>Alle keywords met verkoop (staat vanaf kolom L in het blad):</div>
+                  <div className="logpanel" style={{ maxHeight: 300, overflow: "auto" }}>
+                    {a.ana.slice(0, 60).map((r) => (
+                      <div key={r.key} className="logline">
+                        {r.orders} {a.totals.measure === "stuks" ? "st." : "orders"} · {r.keyword} <span className="opt">— {r.g === "M" ? "heren" : "dames"} · {r.verdict} · {pct(r.share)} · {r.trend}{r.onStore != null ? ` · ${r.onStore} op store` : ""}{r.top ? ` · top: ${r.top}` : ""}</span>
                       </div>
                     ))}
-                    {bPrep.rows.length > 40 && <div className="logline muted">… en nog {bPrep.rows.length - 40} keywords (staan allemaal in het blad)</div>}
+                    {a.ana.length > 60 && <div className="logline muted">… en nog {a.ana.length - 60} keywords (staan allemaal in het blad)</div>}
                   </div>
                 </div>
               )}
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {view === "underdog" && (
           <div className="layout-scraper">

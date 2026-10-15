@@ -18,7 +18,8 @@ const LS = {
   orgSheet: "sa_org_sheet",
   orgTab: "sa_org_tab",
   orgStore: "sa_org_store", // store uit het geheugen (domein) die de organization-sheet levert
-  orgTabByStore: "sa_org_tab_by_store", // laatst gebruikte bladnaam per store
+  orgTabByStore: "sa_org_tab_by_store", // laatst gebruikte bladnaam per store (+ bron)
+  orgSourceByStore: "sa_org_source_by_store", // "org" | "tpk" per store
 };
 
 function load(key, fallback) {
@@ -287,6 +288,10 @@ export default function ScraperPage() {
   const [memStore, setMemStore] = useState(""); // gekozen domein ("" = handmatige link)
   const [orgTabs, setOrgTabs] = useState([]); // tabbladen van de gekozen sheet
   const [orgTabsBusy, setOrgTabsBusy] = useState(false);
+  /* Bron per store: "org" = organization-/aanvul-sheet (weekplanning, Scraper Wx),
+     "tpk" = Top Performing Keywords-sheet (winnaars per week, tab bv. "W2"). */
+  const [orgSource, setOrgSource] = useState("org");
+  const [autoTabName, setAutoTabName] = useState(""); // laatst automatisch voorgestelde bladnaam voor de run
 
   const [running, setRunning] = useState(false);
   const [checkBusy, setCheckBusy] = useState("");
@@ -772,37 +777,62 @@ export default function ScraperPage() {
   }
 
   // ---------- Store uit het geheugen → organization-sheet + tabbladen ----------
-  const memSheetUrl = (e) => `https://docs.google.com/spreadsheets/d/${e.orgSheetId || e.aanvulSheetId}/edit`;
+  const memSheetUrl = (e, source) =>
+    source === "tpk" && e.tpkSheetId
+      ? `https://docs.google.com/spreadsheets/d/${e.tpkSheetId}/edit`
+      : `https://docs.google.com/spreadsheets/d/${e.orgSheetId || e.aanvulSheetId}/edit`;
+  const tabMemKey = (domain, source) => `${domain}|${source || "org"}`;
+
+  /* Bladnaam voor de run automatisch voorstellen: "<store> - <tabblad>".
+     Alleen vervangen als het veld leeg is of nog de vorige suggestie bevat —
+     een zelf getypte naam blijft staan. */
+  function suggestRunTab(entry, tab, force) {
+    const name = `${(entry && (entry.name || entry.domain)) || "Run"} - ${tab}`;
+    setNewTabName((cur) => {
+      if (force || !cur || cur === autoTabName) {
+        save(LS.newTab, name);
+        return name;
+      }
+      return cur;
+    });
+    setAutoTabName(name);
+  }
 
   /* Standaard-tabblad: laatst gebruikt voor deze store, anders het eerste
      Scraper-tabblad vanaf week 2 (Scraper W2, W3 …), anders de eerste weektab
      vanaf week 2, anders het eerste tabblad. Week 1 = het origineel (wat al op
      de store staat) en is niet om te scrapen. */
-  function defaultOrgTab(titles, domain, entry) {
+  function defaultOrgTab(titles, domain, entry, source) {
     const byStore = load(LS.orgTabByStore, {});
-    if (domain && byStore[domain] && titles.includes(byStore[domain])) return byStore[domain];
-    if (entry && entry.orgTab && titles.includes(entry.orgTab)) return entry.orgTab;
+    const remembered = domain ? byStore[tabMemKey(domain, source)] : "";
+    if (remembered && titles.includes(remembered)) return remembered;
     const num = (t, re) => {
       const m = String(t).match(re);
       return m ? Number(m[1]) : null;
     };
-    const pick = (re) => {
-      const hits = titles.map((t) => [t, num(t, re)]).filter(([, n]) => n !== null && n >= 2).sort((a, b) => a[1] - b[1]);
+    const pick = (re, lowest = true) => {
+      const hits = titles.map((t) => [t, num(t, re)]).filter(([, n]) => n !== null && n >= 2).sort((a, b) => (lowest ? a[1] - b[1] : b[1] - a[1]));
       return hits.length ? hits[0][0] : "";
     };
+    if (source === "tpk") {
+      // TPK-sheet: het meest recente weektabblad ("W5" > "W2"), anders het eerste blad
+      return pick(/^w\s*(\d+)\b/i, false) || pick(/^scraper w(\d+)/i, false) || pick(/^week (\d+)/i, false) || titles[0] || "";
+    }
+    if (entry && entry.orgTab && titles.includes(entry.orgTab)) return entry.orgTab;
     return pick(/^scraper w(\d+)/i) || pick(/^week (\d+)/i) || titles[0] || "";
   }
 
-  async function loadOrgTabs(sheet, domain, entry) {
+  async function loadOrgTabs(sheet, domain, entry, source, forceName) {
     setOrgTabsBusy(true);
     try {
       const d = await sheetsCall({ action: "tabs", sheetId: sheet });
       const titles = (d.tabs || []).map((t) => t.title).filter(Boolean);
       setOrgTabs(titles);
-      const tab = defaultOrgTab(titles, domain, entry);
+      const tab = defaultOrgTab(titles, domain, entry, source);
       if (tab) {
         setOrgTab(tab);
         save(LS.orgTab, tab);
+        if (entry) suggestRunTab(entry, tab, forceName);
       }
       return titles;
     } catch (e) {
@@ -814,7 +844,7 @@ export default function ScraperPage() {
     }
   }
 
-  async function pickMemStore(entryOrDomain, list, quiet) {
+  async function pickMemStore(entryOrDomain, list, quiet, sourceOverride) {
     const all = list || memStores;
     const entry = typeof entryOrDomain === "string" ? all.find((x) => x.domain === entryOrDomain) : entryOrDomain;
     if (!entry) {
@@ -823,7 +853,14 @@ export default function ScraperPage() {
       setOrgTabs([]);
       return;
     }
-    const url = memSheetUrl(entry);
+    // Bron: gevraagd → onthouden per store → organization. TPK alleen als de store een TPK-sheet heeft.
+    const bySrc = load(LS.orgSourceByStore, {});
+    let source = sourceOverride || bySrc[entry.domain] || "org";
+    if (source === "tpk" && !entry.tpkSheetId) source = "org";
+    setOrgSource(source);
+    bySrc[entry.domain] = source;
+    save(LS.orgSourceByStore, bySrc);
+    const url = memSheetUrl(entry, source);
     setMemStore(entry.domain);
     save(LS.orgStore, entry.domain);
     setOrgSheet(url);
@@ -834,14 +871,20 @@ export default function ScraperPage() {
       setWorkSheet(iurl);
       save(LS.workSheet, iurl);
     }
-    const titles = await loadOrgTabs(url, entry.domain, entry);
+    // Store/bron bewust gekozen (niet bij het herladen van de pagina) → bladnaam voor de run opnieuw voorstellen
+    const titles = await loadOrgTabs(url, entry.domain, entry, source, !quiet);
     if (!quiet) {
       pushLog({
         ok: true,
-        text: `Store-geheugen: ${entry.name || entry.domain} (${entry.market || "?"} · ${entry.genders || "MV"}) → organization-sheet geladen, ${titles.length} tabbladen${entry.importSheetId ? " · import-lijst ingevuld" : " · geen import-lijst in het geheugen (zet hem in Keywords → Geheugen → Store-geheugen)"}.`,
+        text: `Store-geheugen: ${entry.name || entry.domain} (${entry.market || "?"} · ${entry.genders || "MV"}) → ${source === "tpk" ? "TPK-sheet" : "organization-sheet"} geladen, ${titles.length} tabbladen${entry.importSheetId ? " · import-lijst ingevuld" : " · geen import-lijst in het geheugen (zet hem in Keywords → Geheugen → Store-geheugen)"}.`,
         href: url,
       });
     }
+  }
+
+  function chooseOrgSource(source) {
+    if (!memStore) return;
+    pickMemStore(memStore, null, false, source);
   }
 
   function chooseOrgTab(tab) {
@@ -849,8 +892,10 @@ export default function ScraperPage() {
     save(LS.orgTab, tab);
     if (memStore) {
       const byStore = load(LS.orgTabByStore, {});
-      byStore[memStore] = tab;
+      byStore[tabMemKey(memStore, orgSource)] = tab;
       save(LS.orgTabByStore, byStore);
+      const entry = memStores.find((x) => x.domain === memStore);
+      if (entry) suggestRunTab(entry, tab);
     }
   }
 
@@ -2335,6 +2380,21 @@ export default function ScraperPage() {
                   Nog geen stores in het geheugen. Zet per store de organization-sheet in Keywords → Geheugen → 2 · Store-geheugen; daarna kies je hier alleen nog de store en het weektabblad.
                 </div>
               )}
+              {memStore && (memStores.find((x) => x.domain === memStore) || {}).tpkSheetId ? (
+                <>
+                  <div className="field-label">Bron</div>
+                  <div className="seg">
+                    {[
+                      ["org", "Organization-sheet (weekplanning)"],
+                      ["tpk", "TPK-sheet (winnaars)"],
+                    ].map(([val, label]) => (
+                      <button key={val} className={orgSource === val ? "on" : ""} onClick={() => chooseOrgSource(val)} type="button" disabled={orgBusy || running}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : null}
               <div className="field-label">Organization-sheet link</div>
               <input
                 type="text"
@@ -2372,7 +2432,9 @@ export default function ScraperPage() {
               )}
               {memStore && orgTabs.length ? (
                 <div className="hint">
-                  Week 1 = het origineel (staat al op de store). Scrapen vanaf <b>Scraper W2</b> / <b>Week 2</b>; bij SSB staat in <b>Scraper W1</b> alleen wat nog ontbreekt. Het gekozen tabblad wordt per store onthouden.
+                  {orgSource === "tpk"
+                    ? "TPK-sheet: standaard het nieuwste weektabblad (W2, W3 …) — de winnaars-lijst in scraper-formaat. Het gekozen tabblad wordt per store en bron onthouden."
+                    : "Week 1 = het origineel (staat al op de store). Scrapen vanaf Scraper W2 / Week 2; bij SSB staat in Scraper W1 alleen wat nog ontbreekt. Het gekozen tabblad wordt per store onthouden."}
                 </div>
               ) : null}
               <div className="field-label">Welke keywords</div>
@@ -2519,8 +2581,8 @@ export default function ScraperPage() {
                 }}
               />
               <div className="hint">
-                De scraper maakt in de import-lijst een nieuw blad met deze naam. Laat je dit leeg, dan wordt het
-                automatisch "Run dag-maand uu:mm".
+                De scraper maakt in de import-lijst een nieuw blad met deze naam. Bij een store uit het geheugen wordt hij
+                voorgesteld als "&lt;store&gt; - &lt;tabblad&gt;" (aanpassen mag). Leeg = automatisch "Run dag-maand uu:mm".
               </div>
               <div className="field-label" style={{ fontWeight: 400, fontSize: 13 }}>
                 Geheugen-sheet (permanent, nooit leegmaken)
