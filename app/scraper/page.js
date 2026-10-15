@@ -318,6 +318,45 @@ export default function ScraperPage() {
   const [skipHint, setSkipHint] = useState("");
   // Voortgangsbalk
   const [prog, setProg] = useState(null); // {target, found, kwDone, kwTotal, currentKw, currentGender, kwTarget, kwFound}
+  /* Compacte weergave (15-10, puur uiterlijk): kaarten klappen in tot één
+     kopregel met samenvatting; de stappenstrook bovenaan springt naar de
+     kaart. Open/dicht wordt per kaart onthouden (sa_scraper_open). */
+  const [secOpen, setSecOpen] = useState({});
+  useEffect(() => {
+    setSecOpen(load("sa_scraper_open", {}));
+  }, []);
+  const isOpen = (id, dflt) => (secOpen[id] === undefined ? !!dflt : !!secOpen[id]);
+  const secCls = (id, dflt) => "card sec" + (isOpen(id, dflt) ? " open" : "");
+  function toggleSec(id, dflt) {
+    setSecOpen((o) => {
+      const cur = o[id] === undefined ? !!dflt : !!o[id];
+      const n = { ...o, [id]: !cur };
+      save("sa_scraper_open", n);
+      return n;
+    });
+  }
+  function jumpTo(id) {
+    setSecOpen((o) => {
+      const n = { ...o, [id]: true };
+      save("sa_scraper_open", n);
+      return n;
+    });
+    setTimeout(() => {
+      const el = document.getElementById("sec-" + id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  }
+  const memStoreName = (memStores.find((x) => x.domain === memStore) || {}).name || memStore || "";
+  const cachedCount = Object.keys(catInfo).filter((d) => storeList.includes(d)).length;
+  const kwCount = (g) => kw[g].filter((r) => r.k.trim()).length;
+  const kwProducts = (g) => kw[g].filter((r) => r.k.trim()).reduce((t, r) => t + (Number(r.n) || 0), 0);
+  const SecHead = ({ id, dflt, children, sum }) => (
+    <h2 className="sec-h2" onClick={() => toggleSec(id, dflt)} title={isOpen(id, dflt) ? "Inklappen" : "Openklappen"}>
+      {children}
+      <span className="sec-sum">{sum}</span>
+      <span className="sec-chev">{isOpen(id, dflt) ? "▾" : "▸"}</span>
+    </h2>
+  );
 
   useEffect(() => {
     /* Competitor-lijst: de SERVER is de bron (Redis, permanent). Eerst de
@@ -2193,11 +2232,44 @@ export default function ScraperPage() {
         subtitle="Competitor → Google Sheet"
       />
       <div className="page">
+        {/* -------- Stappenstrook (zoals Keywords → Geheugen): klik = naar de kaart -------- */}
+        <div className="gh-steps sc-steps">
+          <div className={"gh-step" + (storeList.length ? " done" : "")} onClick={() => jumpTo("stores")} role="button" tabIndex={0}>
+            <div className="gh-step-n">{storeList.length ? "✓" : "1"}</div>
+            <div>
+              <div className="gh-step-t">Stores</div>
+              <div className="gh-step-s">{storeList.length ? `${storeList.length} stores · ${cachedCount} catalogi in cache` : "nog geen stores"}</div>
+            </div>
+          </div>
+          <div className={"gh-step" + (orgInfo ? " done" : "")} onClick={() => jumpTo("verdeling")} role="button" tabIndex={0}>
+            <div className="gh-step-n">{orgInfo ? "✓" : "2"}</div>
+            <div>
+              <div className="gh-step-t">Verdeling</div>
+              <div className="gh-step-s">{orgInfo ? `${memStoreName || "handmatig"} · ${orgTab} · ${orgInfo.vrouwN + orgInfo.manN} producten` : "store + tabblad kiezen"}</div>
+            </div>
+          </div>
+          <div className={"gh-step" + (workSheet.trim() ? " done" : "")} onClick={() => jumpTo("sheet")} role="button" tabIndex={0}>
+            <div className="gh-step-n">{workSheet.trim() ? "✓" : "3"}</div>
+            <div>
+              <div className="gh-step-t">Import-lijst</div>
+              <div className="gh-step-s">{workSheet.trim() ? `blad: ${newTabName.trim() || "automatisch"}` : "geen sheet"}</div>
+            </div>
+          </div>
+          <div className={"gh-step" + (prog && !running ? " done" : "")} onClick={() => jumpTo("run")} role="button" tabIndex={0}>
+            <div className="gh-step-n">{running ? "…" : prog ? "✓" : "4"}</div>
+            <div>
+              <div className="gh-step-t">Run</div>
+              <div className="gh-step-s">{prog ? `${prog.found} / ${prog.target} producten${running ? " · bezig" : ""}` : "klaar om te starten"}</div>
+            </div>
+          </div>
+        </div>
         <div className="layout-scraper">
           {/* -------- Linker kolom -------- */}
           <div>
-            <div className="card">
-              <h2>Competitor-sheet <span className="opt">(slimme selectie)</span></h2>
+            <div className={secCls("compsheet", false)} id="sec-compsheet">
+              <SecHead id="compsheet" dflt={false} sum={compTab.trim() ? `tab: ${compTab}` : "AI kiest uit de sheet"}>
+                Competitor-sheet <span className="opt">(slimme selectie)</span>
+              </SecHead>
               <div className="field-label">Google Sheet-link</div>
               <input
                 type="text"
@@ -2253,8 +2325,10 @@ export default function ScraperPage() {
               )}
             </div>
 
-            <div className="card">
-              <h2>Competitor stores</h2>
+            <div className={secCls("stores", !storeList.length)} id="sec-stores">
+              <SecHead id="stores" dflt={!storeList.length} sum={storeList.length ? `${storeList.length} stores · ${cachedCount} in cache${cacheStats ? ` · Redis ${cacheStats.usedMb}${cacheStats.maxMb ? `/${cacheStats.maxMb}` : ""} MB` : ""}` : "nog geen stores"}>
+                Competitor stores
+              </SecHead>
               <div className="kw-row" style={{ gridTemplateColumns: "1fr 36px", marginTop: 0 }}>
                 <input
                   type="text"
@@ -2404,10 +2478,10 @@ export default function ScraperPage() {
               )}
             </div>
 
-            <div className="card">
-              <h2>
+            <div className={secCls("verdeling", !orgInfo)} id="sec-verdeling">
+              <SecHead id="verdeling" dflt={!orgInfo} sum={orgInfo ? `${memStoreName || "handmatig"} · ${orgTab} · V ${orgInfo.vrouwKw}/${orgInfo.vrouwN} · M ${orgInfo.manKw}/${orgInfo.manN}` : "nog niets geladen"}>
                 Verdeling inladen <span className="opt">(organization-sheet of TPK-sheet)</span>
-              </h2>
+              </SecHead>
               <div className="field-label">Store <span className="opt">(uit het geheugen — Keywords → Geheugen → Store-geheugen)</span></div>
               <select
                 value={memStore}
@@ -2528,8 +2602,10 @@ export default function ScraperPage() {
               )}
             </div>
 
-            <div className="card">
-              <h2>Keywords</h2>
+            <div className={secCls("keywords", false)} id="sec-keywords">
+              <SecHead id="keywords" dflt={false} sum={`V ${kwCount("vrouw")} kw / ${kwProducts("vrouw")} · M ${kwCount("man")} kw / ${kwProducts("man")}`}>
+                Keywords
+              </SecHead>
               {["vrouw", "man"].map((group) => {
                 const rows = kw[group].map((row, idx) => (
                   <div className="kw-row" key={idx}>
@@ -2593,8 +2669,10 @@ export default function ScraperPage() {
               )}
             </div>
 
-            <div className="card">
-              <h2>Google Sheet</h2>
+            <div className={secCls("sheet", !workSheet.trim())} id="sec-sheet">
+              <SecHead id="sheet" dflt={!workSheet.trim()} sum={workSheet.trim() ? `blad: ${newTabName.trim() || "automatisch"}${memStore ? ` · import-lijst ${memStoreName}` : ""}` : "geen sheet"}>
+                Google Sheet
+              </SecHead>
               <div className="field-label" style={{ marginTop: 0 }}>
                 Import-lijst sheet
               </div>
@@ -2670,8 +2748,10 @@ export default function ScraperPage() {
               </div>
             </div>
 
-            <div className="card">
-              <h2>Geslacht-check</h2>
+            <div className={secCls("gender", false)} id="sec-gender">
+              <SecHead id="gender" dflt={false} sum="achteraf · kolom F">
+                Geslacht-check
+              </SecHead>
               <div className="hint" style={{ marginTop: 0, marginBottom: 8 }}>
                 Loopt alle rijen na en zet in kolom F een label: Man of Vrouw — geen twijfelgevallen.
               </div>
@@ -2680,8 +2760,10 @@ export default function ScraperPage() {
               </button>
             </div>
 
-            <div className="card">
-              <h2>Dubbele-foto-check</h2>
+            <div className={secCls("dupes", false)} id="sec-dupes">
+              <SecHead id="dupes" dflt={false} sum="achteraf · kolom G">
+                Dubbele-foto-check
+              </SecHead>
               <div className="hint" style={{ marginTop: 0, marginBottom: 8 }}>
                 Vergelijkt elke productfoto en tagt rijen met dezelfde foto (andere store, unieke link) in kolom G.
               </div>
@@ -2690,8 +2772,10 @@ export default function ScraperPage() {
               </button>
             </div>
 
-            <div className="card">
-              <h2>Literal-check</h2>
+            <div className={secCls("literal", false)} id="sec-literal">
+              <SecHead id="literal" dflt={false} sum="achteraf · kolom H">
+                Literal-check
+              </SecHead>
               <div className="hint" style={{ marginTop: 0, marginBottom: 8 }}>
                 Controleert achteraf of elke "Literal"-match het keyword ook echt letterlijk bevat en tagt
                 twijfelgevallen in kolom H.
@@ -2701,6 +2785,10 @@ export default function ScraperPage() {
               </button>
             </div>
 
+            <div className={secCls("settings", false)} id="sec-settings">
+              <SecHead id="settings" dflt={false} sum={`${proofMode === "alles" ? "alles" : proofMode === "kansrijk" ? "bewezen + kansrijk" : "alleen bewezen"} · ${spreadMode === "vol" ? "vol" : "gespreid"} · ${fastMode ? "snelmodus" : "met reviews"}`}>
+                Instellingen
+              </SecHead>
             <div style={{ marginTop: 14 }}>
               <div className="field-label">Vraag-bewijs per product</div>
               <select
@@ -2756,7 +2844,9 @@ export default function ScraperPage() {
               </label>
             </div>
 
-            <div style={{ marginTop: 16 }}>
+            </div>
+
+            <div className="sc-start" id="sec-run">
               <button className="btn" onClick={start} disabled={!!busy}>
                 {running ? "Bezig met scrapen…" : "⌕ Starten"}
               </button>
