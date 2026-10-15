@@ -311,7 +311,7 @@ export default function KeywordsPage() {
   const allFileInput = useRef(null);
   const [shopStores, setShopStores] = useState([]); // zelfde lijst als de Importer (sa_stores)
   const [stSel, setStSel] = useState("");
-  const [stForm, setStForm] = useState({ market: "", genders: "MV", aanvul: "", orgSheet: "", orgTab: "" });
+  const [stForm, setStForm] = useState({ market: "", genders: "MV", aanvul: "", orgSheet: "", orgTab: "", importSheet: "" });
   const [stBusy, setStBusy] = useState(""); // "" | save | snap
 
   const fileInput = useRef(null);
@@ -765,6 +765,8 @@ export default function KeywordsPage() {
           ? `https://docs.google.com/spreadsheets/d/${saved.orgSheetId}/edit`
           : "",
       orgTab: (saved && saved.orgTab) || "",
+      // Import-lijst sheet (scraper) — de scraper vult hem in zodra je de store kiest
+      importSheet: (saved && saved.importUrl) || "",
     });
   }
 
@@ -779,8 +781,9 @@ export default function KeywordsPage() {
       aanvul: stForm.aanvul,
       orgSheet: stForm.orgSheet,
       orgTab: stForm.orgTab,
+      importSheet: stForm.importSheet,
     });
-    if (!quiet) gLog({ ok: true, text: `Store-geheugen ${r.entry.name || r.entry.domain} opgeslagen (${r.entry.market} · ${r.entry.genders}).`, href: r.entry.aanvulUrl });
+    if (!quiet) gLog({ ok: true, text: `Store-geheugen ${r.entry.name || r.entry.domain} opgeslagen (${r.entry.market} · ${r.entry.genders}${r.entry.importSheetId ? " · import-lijst gekoppeld" : " · geen import-lijst"}).`, href: r.entry.aanvulUrl });
     return r.entry;
   }
 
@@ -1803,6 +1806,11 @@ export default function KeywordsPage() {
                               ) : (
                                 <span className="muted small">niet gekoppeld</span>
                               )}
+                              {saved && saved.importUrl ? (
+                                <a className="linklike" style={{ marginLeft: 8 }} href={saved.importUrl} target="_blank" rel="noreferrer noopener" onClick={(e) => e.stopPropagation()}>
+                                  import-lijst ↗
+                                </a>
+                              ) : null}
                             </div>
                             <div>
                               {snap ? (
@@ -1879,6 +1887,15 @@ export default function KeywordsPage() {
                             placeholder="Leeg = Collecties (import) → Plan"
                             value={stForm.orgTab}
                             onChange={(e) => setStForm((f) => ({ ...f, orgTab: e.target.value }))}
+                          />
+                        </div>
+                        <div className="gh-span2">
+                          <div className="gh-sub">Import-lijst sheet <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(scraper — hier komen de gescrapete producten in; de scraper vult hem in zodra je deze store kiest)</span></div>
+                          <input
+                            type="text"
+                            placeholder="Google Sheet van de import-lijst, gedeeld met attoh-sheets@attoh-tools.iam.gserviceaccount.com — leeg = geen"
+                            value={stForm.importSheet}
+                            onChange={(e) => setStForm((f) => ({ ...f, importSheet: e.target.value }))}
                           />
                         </div>
                       </div>

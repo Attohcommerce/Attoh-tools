@@ -772,11 +772,17 @@ export default function ScraperPage() {
     save(LS.orgStore, entry.domain);
     setOrgSheet(url);
     save(LS.orgSheet, url);
+    // Import-lijst van deze store (uit het geheugen) → Google Sheet-blok; bladnaam kies je zelf
+    if (entry.importSheetId) {
+      const iurl = `https://docs.google.com/spreadsheets/d/${entry.importSheetId}/edit`;
+      setWorkSheet(iurl);
+      save(LS.workSheet, iurl);
+    }
     const titles = await loadOrgTabs(url, entry.domain, entry);
     if (!quiet) {
       pushLog({
         ok: true,
-        text: `Store-geheugen: ${entry.name || entry.domain} (${entry.market || "?"} · ${entry.genders || "MV"}) → organization-sheet geladen, ${titles.length} tabbladen.`,
+        text: `Store-geheugen: ${entry.name || entry.domain} (${entry.market || "?"} · ${entry.genders || "MV"}) → organization-sheet geladen, ${titles.length} tabbladen${entry.importSheetId ? " · import-lijst ingevuld" : " · geen import-lijst in het geheugen (zet hem in Keywords → Geheugen → Store-geheugen)"}.`,
         href: url,
       });
     }
@@ -2390,6 +2396,13 @@ export default function ScraperPage() {
                 value={workSheet}
                 onChange={(e) => saveSheets(e.target.value, memSheet)}
               />
+              {memStore && memStores.find((x) => x.domain === memStore) ? (
+                <div className="hint" style={{ color: "var(--ink-2)" }}>
+                  {memStores.find((x) => x.domain === memStore).importSheetId
+                    ? `Import-lijst van ${memStores.find((x) => x.domain === memStore).name || memStore} uit het geheugen. Alleen de bladnaam hieronder kies je zelf.`
+                    : `Geen import-lijst in het geheugen van ${memStores.find((x) => x.domain === memStore).name || memStore} — zet hem in Keywords → Geheugen → Store-geheugen, dan staat hij hier voortaan klaar.`}
+                </div>
+              ) : null}
               <div className="hint">
                 <strong>Deel hier de link naar de import-lijst sheet</strong> — hier komen alle gescrapete
                 producten in. Deel de sheet met het service account
@@ -2407,7 +2420,7 @@ export default function ScraperPage() {
               </div>
               <input
                 type="text"
-                placeholder="bv. Clara James aug-nov — leeg = automatisch Run-naam"
+                placeholder={memStore && orgTab ? `bv. ${(memStores.find((x) => x.domain === memStore) || {}).name || memStore} - ${orgTab}` : "bv. Clara James aug-nov — leeg = automatisch Run-naam"}
                 value={newTabName}
                 onChange={(e) => {
                   setNewTabName(e.target.value);
