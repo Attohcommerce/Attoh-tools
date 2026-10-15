@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
 import { analyzeKeyword, alternativeIsSafe, hardAttributes } from "@/lib/fashion";
 
+// Aantal winkels dat tegelijk wordt doorzocht (snelheid). 6 = ±6× sneller
+// dan één voor één; de catalogi komen uit de cache, dus dat kan veilig.
+const WAVE = 6;
+
 const LS = {
   stores: "sa_competitor_stores",
   keywords: "sa_scraper_keywords",
@@ -589,6 +593,24 @@ export default function ScraperPage() {
       pushLog({ ok: true, text: `🧹 Cache gewist: ${d.stores} catalogi weg, ${d.freedMb} MB vrijgemaakt — Redis staat nu op ${d.stats ? d.stats.usedMb : "?"} MB. Klik op "📦 Catalogi laden" om ze opnieuw op te halen.` });
     } catch (e) {
       pushLog({ err: true, text: `Cache wissen mislukt: ${e.message}` });
+    }
+  }
+
+  // Bron-indexen van de Size Guide uit Redis (herbouwbaar) — als die het geheugen opeten
+  async function clearSourceIndexCache() {
+    if (!window.confirm("De bron-indexen van de Size Guide uit Redis wissen? Ze worden bij de volgende size-guide-run opnieuw opgebouwd; het matchgeheugen (product → AliExpress) blijft staan.")) return;
+    try {
+      const r = await fetch("/api/competitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cacheClearIdx", confirm: "WISSEN" }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || r.status);
+      if (d.stats) setCacheStats(d.stats);
+      pushLog({ ok: true, text: `🧹 Bron-indexen gewist: ${d.keys} stuks, ${d.freedMb} MB vrijgemaakt — Redis staat nu op ${d.stats ? d.stats.usedMb : "?"} MB.` });
+    } catch (e) {
+      pushLog({ err: true, text: `Bron-indexen wissen mislukt: ${e.message}` });
     }
   }
 
@@ -2182,6 +2204,12 @@ export default function ScraperPage() {
                     {Object.keys(catInfo).filter((d) => storeList.includes(d)).length} catalogi in de cache
                     {cacheStats ? ` · Redis ${cacheStats.usedMb} MB${cacheStats.maxMb ? ` van ${cacheStats.maxMb} MB` : ""}${cacheStats.catalogMb !== undefined ? ` (catalogi ${cacheStats.catalogMb} MB${cacheStats.budgetMb ? `, budget ${cacheStats.budgetMb} MB` : ""})` : ""}` : ""}
                   </div>
+                  {cacheStats && cacheStats.breakdown && (
+                    <div className="hint">
+                      Wat zit erin: catalogi {cacheStats.breakdown.catalogiMb} MB · bron-indexen size guide {cacheStats.breakdown.bronIndexenMb} MB · size-guide matches {cacheStats.breakdown.sizeGuideMb} MB · geheugen/keywords {cacheStats.breakdown.geheugenMb} MB · competitors {cacheStats.breakdown.competitorsMb} MB · to do {cacheStats.breakdown.todosMb} MB · overig {cacheStats.breakdown.overigMb} MB ({cacheStats.breakdown.keys} keys)
+                      {cacheStats.breakdown.bronIndexenMb > (cacheStats.catalogMb || 0) ? " — de bron-indexen zijn groter dan de catalogi: wis ze met de knop hieronder, de scraper ruimt ze voortaan ook zelf op als het vol zit." : ""}
+                    </div>
+                  )}
                   {cacheStats && cacheStats.maxMb && cacheStats.usedMb >= cacheStats.maxMb * 0.95 && (
                     <div className="hint" style={{ color: "#b45309" }}>
                       ⚠ Redis zit (bijna) vol. Nieuwe catalogi verdringen nu de oudste; wil je er in één keer vanaf, klik dan op
@@ -2200,6 +2228,9 @@ export default function ScraperPage() {
                     </button>
                     <button className="btn-ghost btn-small" onClick={clearCatalogCache} disabled={!!catBusy || !!busy}>
                       🧹 Catalogi-cache wissen
+                    </button>
+                    <button className="btn-ghost btn-small" onClick={clearSourceIndexCache} disabled={!!catBusy || !!busy}>
+                      🧹 Bron-indexen (size guide) wissen
                     </button>
                     <button className="btn-ghost btn-small" onClick={clearAllStores}>
                       ✕ Alles wissen

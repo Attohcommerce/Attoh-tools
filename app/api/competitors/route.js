@@ -3,7 +3,7 @@ import { readRange } from "@/lib/sheets";
 import { selectCompetitors, translateKeywordsForMarket } from "@/lib/ai";
 import { auditStore, fetchCatalog } from "@/lib/scrape";
 import {
-  readCatalogMeta, catalogCacheAvailable, cacheStats, clearAllCatalogs,
+  readCatalogMeta, catalogCacheAvailable, cacheStats, clearAllCatalogs, clearSourceIndexes,
   getStoreList, addToStoreList, reorderStoreList, removeFromStoreList, clearStoreList,
   getStoreMeta, mergeStoreMeta,
 } from "@/lib/catalog-cache";
@@ -273,6 +273,14 @@ export async function POST(req) {
     if (action === "cacheClear") {
       if (body.confirm !== "WISSEN") return NextResponse.json({ error: "bevestiging ontbreekt" }, { status: 400 });
       const r = await clearAllCatalogs();
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
+      return NextResponse.json(r);
+    }
+    /* Bron-indexen van de Size Guide (sg:srcidx:*) uit Redis — herbouwbaar,
+       het matchgeheugen (sg:match:*) blijft staan. */
+    if (action === "cacheClearIdx") {
+      if (body.confirm !== "WISSEN") return NextResponse.json({ error: "bevestiging ontbreekt" }, { status: 400 });
+      const r = await clearSourceIndexes();
       if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
       return NextResponse.json(r);
     }
