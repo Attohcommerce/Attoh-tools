@@ -281,8 +281,8 @@ export async function POST(req) {
        env var REDIS_URL_OLD of de link uit het formulier; doel = REDIS_URL. */
     if (action === "redisMigrate") {
       if (body.confirm !== "OVERZETTEN") return NextResponse.json({ error: "bevestiging ontbreekt" }, { status: 400 });
-      const fromUrl = String(process.env.REDIS_URL_OLD || body.fromUrl || "").trim();
-      if (!/^rediss?:\/\//i.test(fromUrl)) return NextResponse.json({ error: "Plak de volledige oude Redis-link (begint met redis:// of rediss://)" }, { status: 400 });
+      const fromUrl = String(body.fromUrl || "").trim(); // leeg = uit de env vars (zie lib/redis-url.js)
+      if (fromUrl && !/^rediss?:\/\//i.test(fromUrl)) return NextResponse.json({ error: "Plak de volledige oude Redis-link (begint met redis:// of rediss://)" }, { status: 400 });
       const r = await migrateRedis({ fromUrl, skipCatalogs: !!body.skipCatalogs, skipSourceIndexes: body.skipSourceIndexes !== false });
       return NextResponse.json({ ok: true, ...r, stats: await cacheStats() });
     }

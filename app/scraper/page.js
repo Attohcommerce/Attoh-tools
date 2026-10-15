@@ -618,10 +618,11 @@ export default function ScraperPage() {
   // competitor-lijst, maandbezoekers, store-geheugen, To Do, matches én catalogi.
   async function migrateOldRedis() {
     const fromUrl = window.prompt(
-      "Plak de link van de OUDE Redis-database (redis://… of rediss://…, uit Vercel → Storage → redis-coral-notebook → .env). REDIS_URL moet al op de nieuwe database staan. Alles wordt gekopieerd; bestaande keys in de nieuwe database worden overschreven."
+      "Oude Redis overzetten naar de nieuwe (STORAGE2_REDIS_URL). Laat LEEG als de oude link nog als REDIS_URL in Vercel staat — dan pakt de server hem zelf. Anders: plak hier de oude link (redis://… of rediss://…). Alles wordt gekopieerd; bestaande keys in de nieuwe database worden overschreven.",
+      ""
     );
     if (fromUrl === null) return;
-    if (!/^rediss?:\/\//i.test(String(fromUrl).trim())) {
+    if (String(fromUrl).trim() && !/^rediss?:\/\//i.test(String(fromUrl).trim())) {
       pushLog({ err: true, text: "Dat is geen Redis-link (hij begint met redis:// of rediss://)." });
       return;
     }

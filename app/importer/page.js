@@ -109,6 +109,14 @@ export default function ImporterPage() {
   const [queueTag, setQueueTag] = useState("");
   const [queueKeyword, setQueueKeyword] = useState("");
 
+  /* Store-geheugen (Keywords → Geheugen): per store de import-lijst. Bij
+     "Sheet plakken" staan sheet + blad dan automatisch goed: de import-lijst
+     van de gekozen store en het blad dat de scraper voor die store het laatst
+     vulde (aanvul- én TPK-scrape landen in hetzelfde blad), anders het laatste
+     run-blad. */
+  const [memStores, setMemStores] = useState([]);
+  const [sheetAuto, setSheetAuto] = useState(""); // melding: van welke store de import-lijst ingevuld staat
+
   useEffect(() => {
     setStores(load(LS.stores, []));
     setSelected(load(LS.selected, null));
@@ -117,7 +125,37 @@ export default function ImporterPage() {
     const ls = load(LS.logSheet, "") || load("sa_sheet_work", "");
     setLogSheet(ls);
     setSheetTab(load("sa_run_tab", ""));
+    fetch("/api/geheugen", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "status" }),
+    })
+      .then((r) => r.json())
+      .then((d) => setMemStores((d && d.stores) || []))
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!selected) return;
+    const entry = memStores.find((x) => x && x.domain === selected);
+    const byStore = load("sa_import_tab_by_store", {});
+    const lastTab = (byStore && byStore[selected]) || "";
+    if (entry && entry.importSheetId) {
+      setSheetId(`https://docs.google.com/spreadsheets/d/${entry.importSheetId}/edit`);
+      setSheetAuto(entry.name || entry.domain);
+    } else if (!sheetId) {
+      // geen eigen import-lijst → de vaste werksheet van de scraper
+      const w = load("sa_sheet_work", "");
+      if (w) setSheetId(w);
+      setSheetAuto("");
+    } else {
+      setSheetAuto("");
+    }
+    if (lastTab) setSheetTab(lastTab);
+    setSheetLinks(null);
+    setSheetMsg("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, memStores]);
 
   const urls = useMemo(() => {
     // Dubbele URL's binnen één batch overslaan — zelfde product 2× importeren
@@ -1004,12 +1042,18 @@ export default function ImporterPage() {
 
               {tab === "sheet" && (
                 <>
-                  <div className="field-label">Werk-sheet (van de Product Scraper)</div>
+                  <div className="field-label">
+                    Import-lijst (werk-sheet van de Product Scraper)
+                    {sheetAuto ? <span className="opt"> · van {sheetAuto}, uit het geheugen</span> : null}
+                  </div>
                   <input
                     type="text"
                     placeholder="Sheet ID of volledige URL"
                     value={sheetId}
-                    onChange={(e) => setSheetId(e.target.value)}
+                    onChange={(e) => {
+                      setSheetId(e.target.value);
+                      setSheetAuto("");
+                    }}
                   />
                   <input
                     type="text"
@@ -1018,6 +1062,10 @@ export default function ImporterPage() {
                     onChange={(e) => setSheetTab(e.target.value)}
                     style={{ marginTop: 8 }}
                   />
+                  <div className="hint" style={{ marginTop: 4 }}>
+                    Staat per store automatisch goed: de import-lijst uit Keywords → Geheugen → Store-geheugen en het blad dat de
+                    scraper voor deze store het laatst vulde (aanvul + TPK van dezelfde week staan in één blad).
+                  </div>
                   <div className="kw-row" style={{ gridTemplateColumns: "1fr auto" }}>
                     <input
                       type="text"
