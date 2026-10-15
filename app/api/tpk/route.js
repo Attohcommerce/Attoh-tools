@@ -15,8 +15,8 @@ export async function POST(req) {
   const action = String(body.action || "");
   try {
     if (action === "analyse") {
-      const { store, ordersStore, csvText, days, n, useAi } = body;
-      return NextResponse.json(await tpkAnalyseForStore({ store, ordersStore, csvText, days, n, useAi }));
+      const { store, ordersStore, csvText, days, n, useAi, tab } = body;
+      return NextResponse.json(await tpkAnalyseForStore({ store, ordersStore, csvText, days, n, useAi, tab }));
     }
     if (action === "write") {
       const { store, tab, analysis } = body;

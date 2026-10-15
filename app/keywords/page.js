@@ -1262,6 +1262,8 @@ export default function KeywordsPage() {
         csvText: tSource === "csv" ? tCsv : "",
         days: Number(tDays) || 30,
         n: Number(tN) || 10,
+        // het blad dat stap 2 gaat schrijven: telt niet mee als "vorige week" (overschrijven = herkansing)
+        tab: tTab.trim(),
       });
       setTResult(r);
       const a = r.analysis;
@@ -1273,9 +1275,10 @@ export default function KeywordsPage() {
       });
       const top = a.scrape.map((s) => `${s.zoekterm} ${s.n}`).join(" · ");
       tPush({ text: `Verdeling (${t.planned} producten over ${t.fed} keywords${t.big != null ? ` · ${t.big} met ≥ 15% van de orders → 3` : ""}): ${top}` });
-      if (r.weeks && r.weeks.length) tPush({ muted: true, text: `Eerdere TPK-weken in de sheet: ${r.weeks.join(", ")}` });
+      tPush({ muted: true, text: r.weeks && r.weeks.length ? `Trend en TPK t/m nu vergeleken met: ${r.weeks.join(", ")}` : "Geen eerdere TPK-weken — trend = nieuw." });
+      if (r.ignoredWeeks && r.ignoredWeeks.length) tPush({ muted: true, text: `Niet meegeteld: ${r.ignoredWeeks.join(", ")} (verwijderd blad, of het blad dat stap 2 nu overschrijft) — stap 2 haalt die regels uit Log en Overzicht.` });
       for (const w of a.warnings || []) tPush({ err: true, text: `Let op: ${w}` });
-      if (tTabs.includes(tTab.trim())) tPush({ err: true, text: `Blad "${tTab.trim()}" bestaat al in de TPK-sheet — stap 2 overschrijft het (Log-regels van dat blad worden vervangen).` });
+      if (tTabs.includes(tTab.trim())) tPush({ err: true, text: `Blad "${tTab.trim()}" bestaat al in de TPK-sheet — stap 2 overschrijft het (Log-regels van dat blad worden vervangen, telt niet als extra week).` });
       tPush({ text: `Klopt de verdeling? Pas eventueel het aantal aan en draai opnieuw. Anders: stap 2 schrijft blad "${tTab.trim() || "…"}" + Log + Overzicht.` });
     } catch (e) {
       tPush({ key: "t-step", err: true, text: `Mislukt: ${e.message || e}` });
@@ -1299,6 +1302,13 @@ export default function KeywordsPage() {
       });
       setTDoneUrl(r.url);
       tPush({ ok: true, key: "t-write", text: `✓ Klaar: "${r.tab}"${r.replaced ? " (overschreven)" : ""} — ${r.products} producten · ${r.keywords} keywords.` });
+      const lc = r.logCleaned;
+      if (lc && ((lc.goneTabs && lc.goneTabs.length) || lc.ownOld)) {
+        tPush({
+          muted: true,
+          text: `Log opgeschoond:${lc.ownOld ? ` ${lc.ownOld} oude regels van "${r.tab}" vervangen` : ""}${lc.goneTabs && lc.goneTabs.length ? `${lc.ownOld ? " ·" : ""} regels + Overzicht-rij van verwijderde bladen weg (${lc.goneTabs.join(", ")})` : ""}.`,
+        });
+      }
       // Scrape-ready-check: het blad is teruggelezen zoals de scraper het leest (A1:J)
       const sr = r.scrapeReady;
       if (sr && sr.ok) {
