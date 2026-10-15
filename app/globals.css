@@ -3551,3 +3551,69 @@ select:focus {
     display: none;
   }
 }
+
+
+/* ============================================================
+   Scraper — compacte weergave (15-10-2026): stappenstrook +
+   inklapbare kaarten (kop = samenvatting), Start-knop blijft in beeld
+   ============================================================ */
+.sc-steps {
+  margin-bottom: 16px;
+}
+.sc-steps .gh-step {
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.sc-steps .gh-step:hover {
+  border-color: var(--line-hi);
+  background: var(--panel-hi);
+}
+.card.sec > h2.sec-h2 {
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.card.sec.open > h2.sec-h2 {
+  margin-bottom: 14px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--line);
+}
+.card.sec .sec-sum {
+  margin-left: auto;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 62%;
+}
+.card.sec .sec-chev {
+  flex: none;
+  font-size: 11px;
+  color: var(--muted);
+}
+.card.sec:not(.open) {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.card.sec:not(.open) > *:not(h2.sec-h2) {
+  display: none;
+}
+.card.sec + .card.sec {
+  margin-top: 10px;
+}
+.sc-start {
+  position: sticky;
+  bottom: 14px;
+  margin-top: 14px;
+  z-index: 3;
+}
+.sc-start .btn {
+  width: 100%;
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.9);
+}
