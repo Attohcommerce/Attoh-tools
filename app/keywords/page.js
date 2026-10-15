@@ -1272,7 +1272,7 @@ export default function KeywordsPage() {
         text: `Stap 1/2 · ${t.orders} orders · ${t.units} stuks${t.netLabel ? ` · ${t.netLabel}` : ""} · ${t.keywords} keywords met verkoop · ${t.winners} winnaar${t.winners === 1 ? "" : "s"} (≥ 10) · ${t.eligible} met ≥ 3 ${t.measure}.`,
       });
       const top = a.scrape.map((s) => `${s.zoekterm} ${s.n}`).join(" · ");
-      tPush({ text: `Verdeling (${t.planned} producten over ${t.fed} keywords): ${top}` });
+      tPush({ text: `Verdeling (${t.planned} producten over ${t.fed} keywords${t.big != null ? ` · ${t.big} met ≥ 15% van de orders → 3` : ""}): ${top}` });
       if (r.weeks && r.weeks.length) tPush({ muted: true, text: `Eerdere TPK-weken in de sheet: ${r.weeks.join(", ")}` });
       for (const w of a.warnings || []) tPush({ err: true, text: `Let op: ${w}` });
       if (tTabs.includes(tTab.trim())) tPush({ err: true, text: `Blad "${tTab.trim()}" bestaat al in de TPK-sheet — stap 2 overschrijft het (Log-regels van dat blad worden vervangen).` });
@@ -1298,14 +1298,26 @@ export default function KeywordsPage() {
         analysis: tResult.analysis,
       });
       setTDoneUrl(r.url);
-      tPush({ ok: true, key: "t-write", text: `✓ Klaar: "${r.tab}"${r.replaced ? " (overschreven)" : ""} — ${r.products} producten · ${r.keywords} keywords. Scraper → Verdeling inladen → store → bron TPK-sheet → tabblad "${r.tab}".` });
+      tPush({ ok: true, key: "t-write", text: `✓ Klaar: "${r.tab}"${r.replaced ? " (overschreven)" : ""} — ${r.products} producten · ${r.keywords} keywords.` });
+      // Scrape-ready-check: het blad is teruggelezen zoals de scraper het leest (A1:J)
+      const sr = r.scrapeReady;
+      if (sr && sr.ok) {
+        tPush({
+          ok: true,
+          text: `✓ Scrape-ready: blad "${r.tab}" teruggelezen zoals de scraper (A1:J) — ${sr.keywords} keywords · ${sr.products} producten${sr.women ? ` · ${sr.women} dames` : ""}${sr.men ? ` · ${sr.men} heren` : ""}. Scraper → Verdeling inladen → store → bron TPK-sheet → tabblad "${r.tab}".`,
+        });
+        for (const n of sr.notes || []) tPush({ muted: true, text: `Let op: ${n}` });
+      } else if (sr) {
+        tPush({ err: true, text: `✗ Niet scrape-ready — de scraper leest blad "${r.tab}" anders dan bedoeld: ${(sr.issues || []).join(" · ")}` });
+        for (const n of sr.notes || []) tPush({ muted: true, text: `Let op: ${n}` });
+      }
       // Scraper-suggestie: dit blad als laatst gebruikte TPK-tab van deze store
       try {
         const byStore = JSON.parse(localStorage.getItem("sa_org_tab_by_store") || "{}") || {};
         byStore[`${tStore}|tpk`] = r.tab;
         localStorage.setItem("sa_org_tab_by_store", JSON.stringify(byStore));
       } catch {}
-      sfx("success");
+      sfx(sr && !sr.ok ? "error" : "success");
       tLoadTabs(tStore);
     } catch (e) {
       tPush({ key: "t-write", err: true, text: `Mislukt: ${e.message || e}` });
@@ -2111,8 +2123,9 @@ export default function KeywordsPage() {
                 <div className="field-label">Aantal producten deze week</div>
                 <input type="number" style={{ width: 110 }} min={1} max={60} value={tN} onChange={(e) => setTN(e.target.value)} />
                 <div className="hint">
-                  Regels: alleen keywords met ≥ 3 orders · evenredig met hun aandeel · minimaal 1, maximaal 3 per keyword · tot het aantal vol is.
-                  Koptermen (jeans, shoe, top …) krijgen een verfijnde zoekterm op het best verkopende product.
+                  Regels (bewezen verkoop): alleen keywords met ≥ 3 orders, op volgorde van orders · ≥ 15% van alle orders → 3 producten, de rest 1 · tot het aantal vol is (blijft er over: van boven af bijplussen tot max 3).
+                  Koptermen (jeans, shoe, top …) krijgen een verfijnde zoekterm op het best verkopende product: max 3 woorden, kopterm achteraan.
+                  Na stap 2 wordt het blad teruggelezen zoals de scraper het leest en gecheckt (scrape-ready).
                 </div>
 
                 <div style={{ marginTop: 12 }}>
