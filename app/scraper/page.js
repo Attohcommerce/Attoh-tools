@@ -614,6 +614,39 @@ export default function ScraperPage() {
     }
   }
 
+  // Oude Redis → nieuwe (na een nieuwe database via de Vercel Marketplace):
+  // competitor-lijst, maandbezoekers, store-geheugen, To Do, matches én catalogi.
+  async function migrateOldRedis() {
+    const fromUrl = window.prompt(
+      "Plak de link van de OUDE Redis-database (redis://… of rediss://…, uit Vercel → Storage → redis-coral-notebook → .env). REDIS_URL moet al op de nieuwe database staan. Alles wordt gekopieerd; bestaande keys in de nieuwe database worden overschreven."
+    );
+    if (fromUrl === null) return;
+    if (!/^rediss?:\/\//i.test(String(fromUrl).trim())) {
+      pushLog({ err: true, text: "Dat is geen Redis-link (hij begint met redis:// of rediss://)." });
+      return;
+    }
+    pushLog({ strong: true, text: "— Oude Redis overzetten…" });
+    try {
+      const r = await fetch("/api/competitors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "redisMigrate", confirm: "OVERZETTEN", fromUrl: String(fromUrl).trim() }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || r.status);
+      if (d.stats) setCacheStats(d.stats);
+      const per = Object.entries(d.perKind || {})
+        .map(([k, v]) => `${k} ${v.copied}${v.skipped ? ` (+${v.skipped} overgeslagen)` : ""}${v.failed ? ` (${v.failed} mislukt)` : ""}`)
+        .join(" · ");
+      pushLog({ ok: true, text: `⇄ Overgezet: ${d.copied} van ${d.total} keys (${d.mb} MB) in ${Math.round((d.ms || 0) / 1000)} s — ${per}. Nieuwe Redis staat nu op ${d.stats ? d.stats.usedMb : "?"} MB.` });
+      if (d.failed) pushLog({ warn: true, text: `${d.failed} keys mislukt: ${(d.errors || []).join(" · ")}` });
+      pushLog({ muted: true, text: "Pagina wordt ververst zodat de lijst en het geheugen uit de nieuwe database komen…" });
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (e) {
+      pushLog({ err: true, text: `Overzetten mislukt: ${e.message}` });
+    }
+  }
+
   // Cache-overzicht ophalen zodra de lijst bekend is
   useEffect(() => {
     if (!storeList.length) return;
@@ -1088,22 +1121,45 @@ export default function ScraperPage() {
       if (missingBriefs.length) {
         try {
           pushLog({ muted: true, text: `Productkennis opbouwen — AI bepaalt voor ${missingBriefs.length} keywords wat het product precies is…` });
-          const res = await fetch("/api/keyword-brief", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ keywords: missingBriefs }),
-          });
-          const data = await res.json();
-          if (res.ok && data.map) {
+          /* Max 16 keywords per aanroep: één aanroep met 41 keywords liep
+             tegen de Vercel-tijdslimiet en gaf een HTML-foutpagina terug
+             (geen JSON) → alle productkennis weg. Nu per 16, mislukt er één
+             dan missen alleen die keywords hun titelvorm. */
+          const SLICE = 16;
+          const data = { map: {}, failed: [] };
+          for (let i = 0; i < missingBriefs.length; i += SLICE) {
+            const part = missingBriefs.slice(i, i + SLICE);
+            try {
+              const res = await fetch("/api/keyword-brief", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ keywords: part }),
+              });
+              const txt = await res.text();
+              let d = null;
+              try {
+                d = JSON.parse(txt);
+              } catch {
+                throw new Error(`server gaf geen JSON terug (${res.status}: ${txt.slice(0, 60)}…) — waarschijnlijk tijdslimiet`);
+              }
+              if (!res.ok || !d.map) throw new Error(d.error || res.status);
+              Object.assign(data.map, d.map);
+              if (Array.isArray(d.failed)) data.failed.push(...d.failed);
+            } catch (e) {
+              data.failed.push(...part.map((x) => x.kw));
+              pushLog({ warn: true, text: `Productkennis deel ${Math.floor(i / SLICE) + 1} mislukt (${e.message}) — die ${part.length} keywords krijgen geen titelvorm.` });
+            }
+          }
+          if (Object.keys(data.map).length) {
             Object.assign(briefCache, data.map);
             save(LS_BRIEFS, briefCache);
             const got = Object.keys(data.map).length;
             pushLog({ ok: true, text: `Productkennis klaar voor ${got} keywords — elk gevonden product wordt tegen zijn eigen definitie gecontroleerd.` });
-            if (Array.isArray(data.failed) && data.failed.length) {
+            if (data.failed.length) {
               pushLog({ err: true, text: `LET OP: briefing mislukt voor ${data.failed.length} keywords (${data.failed.slice(0, 5).join(", ")}…) — bij die keywords blijft TITELVORM (kolom K) leeg en is de foto-controle minder streng.` });
             }
           } else {
-            throw new Error(data.error || res.status);
+            throw new Error("geen enkele briefing gelukt");
           }
         } catch (e) {
           pushLog({ err: true, text: `LET OP: productkennis laden mislukt (${e.message}) — TITELVORM (kolom K) blijft dan LEEG en de foto-controle draait op algemene kennis. Run gaat door, maar de gelegenheids-titels missen hun titelvorm.` });
@@ -2231,6 +2287,9 @@ export default function ScraperPage() {
                     </button>
                     <button className="btn-ghost btn-small" onClick={clearSourceIndexCache} disabled={!!catBusy || !!busy}>
                       🧹 Bron-indexen (size guide) wissen
+                    </button>
+                    <button className="btn-ghost btn-small" onClick={migrateOldRedis} disabled={!!catBusy || !!busy} title="Na een nieuwe Redis-database: alles van de oude overzetten">
+                      ⇄ Oude Redis overzetten
                     </button>
                     <button className="btn-ghost btn-small" onClick={clearAllStores}>
                       ✕ Alles wissen
