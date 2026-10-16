@@ -708,13 +708,13 @@ export default function ImporterPage() {
           pushLog({ ok: false, text: `${nr} · CATEGORIE NIET GEZET: ${iData.categoryWarn}` });
         }
         if (iData.categoryAttrs) {
-          pushLog({ muted: true, text: `${nr} · Category metafields: ${iData.categoryAttrs}` });
+          pushLog({ info: true, text: `${nr} · Category metafields: ${iData.categoryAttrs}` });
         }
         if (iData.categoryAttrsWarn) {
           pushLog({ ok: false, text: `${nr} · CATEGORY METAFIELDS: ${iData.categoryAttrsWarn}` });
         }
         if (iData.sizeGuide) {
-          pushLog({ muted: true, text: `${nr} · Maattabel: ${iData.sizeGuide}` });
+          pushLog({ info: true, text: `${nr} · Maattabel: ${iData.sizeGuide}` });
         }
         if (iData.sizeGuideWarn) {
           pushLog({ ok: false, text: `${nr} · GEEN MAATTABEL: ${iData.sizeGuideWarn} — via Size Guide-pagina of Doctor nazetten` });
