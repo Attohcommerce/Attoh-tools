@@ -713,6 +713,12 @@ export default function ImporterPage() {
         if (iData.categoryAttrsWarn) {
           pushLog({ ok: false, text: `${nr} · CATEGORY METAFIELDS: ${iData.categoryAttrsWarn}` });
         }
+        if (iData.sizeGuide) {
+          pushLog({ muted: true, text: `${nr} · Maattabel: ${iData.sizeGuide}` });
+        }
+        if (iData.sizeGuideWarn) {
+          pushLog({ ok: false, text: `${nr} · GEEN MAATTABEL: ${iData.sizeGuideWarn} — via Size Guide-pagina of Doctor nazetten` });
+        }
         if (iData.pricing && iData.pricing.clamped) {
           pushLog({
             info: true,

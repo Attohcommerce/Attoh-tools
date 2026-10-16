@@ -8,7 +8,10 @@ import {
   setProductCategory,
   ensureSmartCollection,
   setProductMetafields,
+  getProductRaw,
 } from "@/lib/shopify";
+import { productSummary, standardGuide, KIND_LABEL, SG_NS, SG_KEY, SG_STATUS_KEY } from "@/lib/sizeguide";
+import { storeProfileOf } from "@/lib/store-gender";
 import { SRC_NS, SRC_KEY, normSourceUrl } from "@/lib/source-match";
 import { collectionFor } from "@/lib/verdeling";
 import { flagBrandedImages } from "@/lib/ai";
@@ -575,6 +578,38 @@ export async function POST(req) {
     }
   }
 
+  /* MAATTABEL BIJ IMPORT (16-10, Justin): zelfde standaardtabel als de
+     Doctor-fix "Zet standaardtabel per productsoort" — broek = taille/heup/
+     binnenbeen, jas = borst/schouder/mouw, schoen = UK/US/EU + voetlengte —
+     in de juiste man/vrouw-versie en markt. Geldt ook voor drafts, zodat het
+     achteraf-werk vervalt. De Size Guide-pagina kan daarna nog steeds de
+     echte leveranciersmaten eroverheen zetten (status "standard"). */
+  let sizeGuideSet = "";
+  let sizeGuideWarn = "";
+  try {
+    const raw = await getProductRaw(store, created.id, "id,title,product_type,tags,options,variants,images");
+    if (raw.ok && raw.product) {
+      const prof = await storeProfileOf(store).catch(() => null);
+      const CUR_MARKET = { USD: "USA", GBP: "UK", AUD: "AUS+NZ", NZD: "AUS+NZ", CAD: "CAN" };
+      const PROF_MARKET = { AUS: "AUS+NZ", NZ: "AUS+NZ", USA: "USA", CAN: "CAN", UK: "UK" };
+      const market = (prof && PROF_MARKET[prof.market]) || CUR_MARKET[storeCurrency] || "USA";
+      const summ = productSummary(raw.product, { storeGenders: (prof && prof.genders) || storeGenders });
+      const std = standardGuide(summ, market);
+      if (std.ok) {
+        const w = await setProductMetafields(store, [
+          { productId: created.id, namespace: SG_NS, key: SG_KEY, type: "json", value: JSON.stringify(std.guide) },
+          { productId: created.id, namespace: SG_NS, key: SG_STATUS_KEY, type: "single_line_text_field", value: "standard" },
+        ]);
+        if (w.ok) sizeGuideSet = `${KIND_LABEL[std.guide.kind] || std.guide.kind} · ${summ.gender === "men" ? "heren" : "dames"} · ${market}`;
+        else sizeGuideWarn = w.errors.join("; ");
+      } else if (!/geen maten|accessoire/i.test(std.reason || "")) {
+        sizeGuideWarn = std.reason;
+      }
+    }
+  } catch (e) {
+    sizeGuideWarn = String(e.message || e);
+  }
+
   let previewUrl = null;
   try {
     previewUrl = await getPreviewUrl(store, created.id);
@@ -586,6 +621,8 @@ export async function POST(req) {
     categoryWarn,
     categoryAttrs: attrsSet,
     categoryAttrsWarn: attrsWarn,
+    sizeGuide: sizeGuideSet,
+    sizeGuideWarn,
     pricing: {
       originCountry: CUR_LAND[srcCur] || srcCur,
       originCurrency: srcCur,
