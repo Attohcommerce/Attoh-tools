@@ -41,6 +41,8 @@ const CHUNK_FOR = {
   "shoe-us-eu-labels": 8,
   "fix-gender-from-title": 8,
   "gender-tags": 8,
+  // per product: 1 lees-call + per nieuwe waarde een metaobject-upsert + 1 write
+  "fill-category-attrs": 8,
   default: 15,
 };
 
@@ -67,6 +69,8 @@ function snapshotFor(fix, p) {
       return { product_type: p.product_type || "" };
     case "set-category":
       return { category: p.__category || null };
+    case "fill-category-attrs":
+      return { note: "alleen lege shopify.*-metafields gevuld (niets overschreven)" };
     case "clean-titles":
       return { title: p.title || "" };
     case "fix-compareat":

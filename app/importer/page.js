@@ -309,7 +309,9 @@ export default function ImporterPage() {
       let withCol = 0;
       for (const r of rows) {
         const link = r[0];
-        const kw = (r[2] || "").toLowerCase();
+        // Krul-apostrof (’) → ' : anders "Men's 's Chino Shorts" in titel en type
+        const straightQ = (s) => String(s || "").replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g, "'");
+        const kw = straightQ(r[2]).toLowerCase();
         const dup = r[6];
         const doubt = r[7];
         const collection = String(r[8] || "").trim(); // I = Collectie (uit de organization-sheet)
@@ -319,11 +321,11 @@ export default function ImporterPage() {
         if (collection) withCol++;
         links.push({
           url: link,
-          keyword: (r[2] || "").trim(),
+          keyword: straightQ(r[2]).trim(),
           collection,
           gender: String(r[5] || "").trim(), // F = Man/Vrouw (geslacht-check scraper)
           kwType: String(r[9] || "").trim(), // J = Direct/Attribuut/Gelegenheid
-          titleForm: String(r[10] || "").trim(), // K = hoe het keyword in de titel hoort
+          titleForm: straightQ(r[10]).trim(), // K = hoe het keyword in de titel hoort
         });
       }
       setSheetLinks(links);
@@ -394,15 +396,21 @@ export default function ImporterPage() {
         boomMissRef.current = `markt onbekend voor ${selectedStore.publicDomain || selectedStore.domain} (valuta ${selectedStore.currency || "?"}) — voeg de store opnieuw toe in de importer of zet het domein in STORE_PROFILES`;
         return null;
       }
-      if (data.notConfigured) {
-        boomMissRef.current = `markt ${data.market} herkend, maar er is geen geheugen-sheet gekoppeld (Keywords → Geheugen → ${data.market})`;
-        return null;
-      }
       if (!(data.rows || []).length) {
-        boomMissRef.current = `markt ${data.market} herkend, maar het TOP-tabblad in de geheugen-sheet is leeg — draai een stap 1-run met markt ${data.market}`;
+        // Server zoekt eerst in het markt-geheugen (ALL-tabs), daarna in het oude batch-geheugen (TOP-tab)
+        boomMissRef.current = data.v2Error
+          ? `markt ${data.market} herkend, maar ${data.v2Error}`
+          : `markt ${data.market} herkend, maar er staan nog geen All keywords in het geheugen (Keywords → Geheugen → 1 · Markt-geheugen → ${data.market})`;
         return null;
       }
-      return { market: data.market, via: data.via, window: data.window, rows: data.rows.map((r) => ({ ...r, toks: boomTokens(r.kw) })) };
+      return {
+        market: data.market,
+        via: data.via,
+        window: data.window,
+        source: data.source || "",
+        storeGenders: data.storeGenders || "",
+        rows: data.rows.map((r) => ({ ...r, toks: boomTokens(r.kw) })),
+      };
     } catch (e) {
       boomMissRef.current = `geheugen niet bereikbaar (${e.message})`;
       return null;
@@ -410,18 +418,24 @@ export default function ImporterPage() {
   }
 
   /* Per product: booming termen die bij DIT producttype horen (minstens één
-     gedeeld type-woord met het rij-keyword) — max 6, sterkste eerst. */
-  function pickBooming(rowKeyword, extra) {
+     gedeeld type-woord met het rij-keyword) — max 6, sterkste eerst. Is het
+     geslacht van de rij bekend (kolom F van de import-lijst: Man/Vrouw), dan
+     alleen termen uit het geheugen van dat geslacht (rijen zonder g = oud
+     batch-geheugen, die tellen altijd). */
+  function pickBooming(rowKeyword, extra, rowGender) {
     const boom = boomRef.current;
     if (!boom) return [];
     const mine = new Set([...boomTokens(rowKeyword), ...boomTokens(extra)]);
     if (!mine.size) return [];
+    const gl = String(rowGender || "").toLowerCase();
+    const want = /^(m|man|men|heren)$/.test(gl) ? "M" : /^(v|vrouw|women|dames)$/.test(gl) ? "V" : "";
     const base = String(rowKeyword || "").toLowerCase().trim();
     const out = [];
     for (const r of boom.rows) {
       if (out.length >= 6) break;
+      if (want && r.g && r.g !== want) continue;
       if (!r.toks.some((t) => mine.has(t))) continue;
-      if (r.kw === base) continue;
+      if (r.kw === base || out.includes(r.kw)) continue;
       out.push(r.kw);
     }
     return out;
@@ -445,7 +459,9 @@ export default function ImporterPage() {
       boomRef.current = await loadBoom();
       if (boomRef.current) {
         const via = boomRef.current.via ? ` (markt via ${boomRef.current.via})` : "";
-        pushLog({ info: true, text: `Trend-keywords aan: geheugen ${boomRef.current.market}${via}, venster ${boomRef.current.window || "?"} (${boomRef.current.rows.length} booming zoektermen) — waar passend verwerkt de AI ze in de omschrijving.` });
+        const src = boomRef.current.source ? ` · ${boomRef.current.source}` : "";
+        const sg = boomRef.current.storeGenders === "V" ? " · alleen vrouw (dameszaak)" : boomRef.current.storeGenders === "M" ? " · alleen man (herenzaak)" : "";
+        pushLog({ info: true, text: `Trend-keywords aan: geheugen ${boomRef.current.market}${via}${src}${sg}, venster ${boomRef.current.window || "?"} (${boomRef.current.rows.length} booming zoektermen) — waar passend verwerkt de AI ze in de omschrijving.` });
       } else {
         pushLog({ muted: true, text: `Trend-keywords: geen geheugen gebruikt — ${boomMissRef.current || "markt onbekend of geheugen leeg"}. Omschrijvingen draaien gewoon zonder.` });
       }
@@ -601,7 +617,7 @@ export default function ImporterPage() {
               colorLabel,
               sizeLabel,
               aiSale,
-              boomingKeywords: pickBooming(rowKeyword, typeof entry === "object" ? entry.col || "" : ""),
+              boomingKeywords: pickBooming(rowKeyword, typeof entry === "object" ? entry.col || "" : "", rowGender),
             },
           }),
         });
@@ -690,6 +706,12 @@ export default function ImporterPage() {
         aiRunUsd += brandUsd;
         if (iData.categoryWarn) {
           pushLog({ ok: false, text: `${nr} · CATEGORIE NIET GEZET: ${iData.categoryWarn}` });
+        }
+        if (iData.categoryAttrs) {
+          pushLog({ muted: true, text: `${nr} · Category metafields: ${iData.categoryAttrs}` });
+        }
+        if (iData.categoryAttrsWarn) {
+          pushLog({ ok: false, text: `${nr} · CATEGORY METAFIELDS: ${iData.categoryAttrsWarn}` });
         }
         if (iData.pricing && iData.pricing.clamped) {
           pushLog({

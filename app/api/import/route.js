@@ -16,6 +16,7 @@ import { analyzeKeyword } from "@/lib/fashion";
 import { canonOptionName, translateValue } from "@/lib/lang";
 import { repairVariantImages } from "@/lib/doctor";
 import { categoryFor, genderedTypeFor } from "@/lib/categories";
+import { resolveCategory, fillCategoryMetafields, summarizeSet } from "@/lib/category-attrs";
 
 export const maxDuration = 60;
 
@@ -34,7 +35,9 @@ const PRICE_BANDS = {
   bodysuit: [29.95, 44.95],
   leggings: [29.95, 44.95],
   polo: [34.95, 44.95],
-  shorts: [34.95, 44.95],
+  /* 16-10: was 34,95–44,95 → in AUD 49,95–64,95, terwijl EMC-shorts op
+     A$64,95 verkopen (6 orders/14 dgn). Nu USD 44,95–54,95 ≈ A$64,95–79,95. */
+  shorts: [44.95, 54.95],
   bikini: [34.95, 44.95],
   shirt: [34.95, 49.95],
   blouse: [34.95, 49.95],
@@ -525,10 +528,18 @@ export async function POST(req) {
     /* Eerst de vaste taxonomie-map (lib/categories.js) op de titel — die kent
        ook loafers/mules/tops/coats/jumpsuits/scarves, waar de zoekfunctie
        hieronder niets voor vond (→ "Uncategorized" op SSB, 15-10). */
-    const want = categoryFor({ title: listing.title, product_type: product.productType || "" });
+    /* 16-10: fijnste blad ("Shorts > Denim Shorts", "Swimwear > Boardshorts")
+       i.p.v. de hoofdtak — zelfde als Shopify's "Suggested", maar direct. */
+    const want =
+      (await resolveCategory(store, { title: listing.title, product_type: product.productType || "" }).catch(() => null)) ||
+      categoryFor({ title: listing.title, product_type: product.productType || "" });
     const taxTerm = want ? null : TYPE_TAXONOMY[priceType];
     if (want) {
-      const setRes = await setProductCategory(store, created.id, want.gid, want.name.split(" > ").pop());
+      let setRes = await setProductCategory(store, created.id, want.gid, want.name.split(" > ").pop());
+      // verfijnd blad faalt de verificatie → terugvallen op de hoofdtak
+      if (!setRes.ok && want.base && want.base.gid !== want.gid) {
+        setRes = await setProductCategory(store, created.id, want.base.gid, want.base.name.split(" > ").pop());
+      }
       if (setRes.ok) categorySet = setRes.fullName || want.name;
       else categoryWarn = setRes.error || "zetten mislukt";
     } else if (taxTerm) {
@@ -547,6 +558,23 @@ export async function POST(req) {
     categoryWarn = String(e.message || e);
   }
 
+  /* CATEGORIE-METAFIELDS (16-10): Color, Size, Fabric, Fit, Target gender,
+     Age group, Waist rise, Clothing features … — alles wat de categorie kent
+     en wat betrouwbaar uit varianten/titel/omschrijving volgt. Best effort:
+     een fout houdt de import nooit tegen, wel een melding in de log. */
+  let attrsSet = "";
+  let attrsWarn = "";
+  if (categorySet) {
+    try {
+      const fr = await fillCategoryMetafields(store, created.id, { gender: isMen ? "men" : "women", overwrite: true });
+      attrsSet = summarizeSet(fr.set);
+      if (fr.error) attrsWarn = fr.error;
+      else if (fr.errors && fr.errors.length) attrsWarn = fr.errors.slice(0, 3).join(" | ");
+    } catch (e) {
+      attrsWarn = String(e.message || e);
+    }
+  }
+
   let previewUrl = null;
   try {
     previewUrl = await getPreviewUrl(store, created.id);
@@ -556,6 +584,8 @@ export async function POST(req) {
     ok: true,
     category: categorySet,
     categoryWarn,
+    categoryAttrs: attrsSet,
+    categoryAttrsWarn: attrsWarn,
     pricing: {
       originCountry: CUR_LAND[srcCur] || srcCur,
       originCurrency: srcCur,

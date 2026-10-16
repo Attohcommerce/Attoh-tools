@@ -55,6 +55,7 @@ const FIXALL_ORDER = [
   "set-vendor",
   "set-product-type",
   "set-category",
+  "fill-category-attrs", // na de categorie: de velden hangen van de categorie af
   "fill-alt",
   "fix-size-order",
   "fix-men-template",
