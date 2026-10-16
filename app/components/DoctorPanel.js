@@ -54,6 +54,7 @@ const FIXALL_ORDER = [
   "clear-barcodes",
   "set-vendor",
   "set-product-type",
+  "set-category",
   "fill-alt",
   "fix-size-order",
   "fix-men-template",

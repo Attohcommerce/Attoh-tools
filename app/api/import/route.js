@@ -15,6 +15,7 @@ import { flagBrandedImages } from "@/lib/ai";
 import { analyzeKeyword } from "@/lib/fashion";
 import { canonOptionName, translateValue } from "@/lib/lang";
 import { repairVariantImages } from "@/lib/doctor";
+import { categoryFor, genderedTypeFor } from "@/lib/categories";
 
 export const maxDuration = 60;
 
@@ -359,7 +360,12 @@ export async function POST(req) {
     title: listing.title,
     body_html: listing.descriptionHtml,
     vendor: s.vendor || "",
-    product_type: product.productType || "",
+    /* Product type MET geslacht ("Women's Barrel Leg Jeans") — RTM/Ana 15-10.
+       Het brontype van de concurrent ("Barrel Leg Jeans") is alleen nog fallback. */
+    product_type:
+      genderedTypeFor({ title: listing.title, product_type: product.productType || "" }, isMen ? "men" : "women") ||
+      product.productType ||
+      "",
     status: s.status === "active" ? "active" : "draft",
     tags: tagList.join(", "),
     options: options.length ? options : undefined,
@@ -516,8 +522,16 @@ export async function POST(req) {
   let categorySet = "";
   let categoryWarn = "";
   try {
-    const taxTerm = TYPE_TAXONOMY[priceType];
-    if (taxTerm) {
+    /* Eerst de vaste taxonomie-map (lib/categories.js) op de titel — die kent
+       ook loafers/mules/tops/coats/jumpsuits/scarves, waar de zoekfunctie
+       hieronder niets voor vond (→ "Uncategorized" op SSB, 15-10). */
+    const want = categoryFor({ title: listing.title, product_type: product.productType || "" });
+    const taxTerm = want ? null : TYPE_TAXONOMY[priceType];
+    if (want) {
+      const setRes = await setProductCategory(store, created.id, want.gid, want.name.split(" > ").pop());
+      if (setRes.ok) categorySet = setRes.fullName || want.name;
+      else categoryWarn = setRes.error || "zetten mislukt";
+    } else if (taxTerm) {
       const node = await findTaxonomyCategory(store, taxTerm);
       if (node) {
         const setRes = await setProductCategory(store, created.id, node.id, taxTerm);

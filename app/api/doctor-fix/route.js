@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listProductsByIds, getProductMetafieldValues } from "@/lib/shopify";
+import { listProductsByIds, getProductMetafieldValues, getProductCategories } from "@/lib/shopify";
 import { applyDoctorFix, FIX_FIELDS } from "@/lib/doctor";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { addTab, appendRows } from "@/lib/sheets";
@@ -65,6 +65,8 @@ function snapshotFor(fix, p) {
       return { vendor: p.vendor || "" };
     case "set-product-type":
       return { product_type: p.product_type || "" };
+    case "set-category":
+      return { category: p.__category || null };
     case "clean-titles":
       return { title: p.title || "" };
     case "fix-compareat":
@@ -160,6 +162,12 @@ export async function POST(req) {
     if ((fix === "fix-size-guides" || fix === "shoe-us-eu-labels") && pending.length) {
       const mf = await getProductMetafieldValues(store, pending.map((p) => p.id), { namespace: SG_NS, key: SG_KEY });
       if (mf.ok) for (const p of pending) p.__sizeGuide = mf.values[String(p.id)] || null;
+    }
+
+    // Categorie-fix: huidige categorie erbij (REST geeft die niet) — voor backup + "stond al goed"
+    if (fix === "set-category" && pending.length) {
+      const c = await getProductCategories(store, pending.map((p) => p.id));
+      if (c.ok) for (const p of pending) p.__category = c.values[String(p.id)] || null;
     }
 
     // 1. EERST de snapshot van deze chunk wegschrijven — vóór elke wijziging

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listProducts, listProductMetafieldValues } from "@/lib/shopify";
+import { listProducts, listProductMetafieldValues, listProductCategories } from "@/lib/shopify";
 import { runDoctor } from "@/lib/doctor";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { storeGendersOf, storeShoeLabelsOf } from "@/lib/store-gender";
@@ -36,6 +36,15 @@ export async function POST(req) {
       guides = {};
     }
 
+    // Productcategorie (taxonomie) — niet in de REST-data; mislukt = check overslaan
+    let categories = null;
+    try {
+      const c = await listProductCategories(store, { max: Number(max) || 1000 });
+      categories = c.ok ? c.values : null;
+    } catch {
+      categories = null;
+    }
+
     const storeGenders = await storeGendersOf(store);
     const shoeLabels = await storeShoeLabelsOf(store); // SSB: "us-eu"
     const result = runDoctor(products, {
@@ -44,6 +53,7 @@ export async function POST(req) {
       market: market || "",
       bareSystem: bareSystem || "",
       guides,
+      categories,
       storeGenders,
       shoeLabels,
     });
