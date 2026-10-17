@@ -67,6 +67,8 @@ export default function PythagoPage() {
   const [fxOverride, setFxOverride] = useState("");
   const [result, setResult] = useState(null);
   const [filter, setFilter] = useState("Draften");
+  const [sort, setSort] = useState({ key: "", dir: "desc" }); // "" = volgorde van de server (advies, dan spend)
+  const [q, setQ] = useState("");
   const [picked, setPicked] = useState(() => new Set());
   const [sheet, setSheet] = useState("");
   const [tab, setTab] = useState(`Pythago ${today()}`);
@@ -219,7 +221,45 @@ export default function PythagoPage() {
     }
   }
 
-  const rows = result ? result.rows.filter((x) => filter === "Alles" || x.advies === filter) : [];
+  const ADV_ORDER = Object.fromEntries(ADVIES.map((a, i) => [a, i]));
+  const SORT = {
+    advies: (x) => ADV_ORDER[x.advies] ?? 99,
+    title: (x) => String(x.title || "").toLowerCase(),
+    age: (x) => (x.age == null ? -1 : x.age),
+    s7: (x) => x.per[7].spend, o7: (x) => x.per[7].orders, r7: (x) => (x.per[7].roas == null ? -1 : x.per[7].roas),
+    s14: (x) => x.per[14].spend, o14: (x) => x.per[14].orders, r14: (x) => (x.per[14].roas == null ? -1 : x.per[14].roas),
+    s30: (x) => x.per[30].spend, c30: (x) => x.per[30].clicks, o30: (x) => x.per[30].orders, v30: (x) => x.per[30].rev,
+    r30: (x) => (x.per[30].roas == null ? -1 : x.per[30].roas), g30: (x) => x.per[30].conv, p30: (x) => x.profit30,
+  };
+  const rows = useMemo(() => {
+    if (!result) return [];
+    const needle = q.trim().toLowerCase();
+    let list = result.rows.filter((x) => (filter === "Alles" || x.advies === filter) && (!needle || String(x.title || "").toLowerCase().includes(needle)));
+    if (sort.key && SORT[sort.key]) {
+      const get = SORT[sort.key];
+      const m = sort.dir === "asc" ? 1 : -1;
+      list = [...list].sort((a, b) => {
+        const va = get(a);
+        const vb = get(b);
+        return (typeof va === "string" ? va.localeCompare(vb) : va - vb) * m;
+      });
+    }
+    return list;
+  }, [result, filter, q, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  // klik op een kolomkop: eerst hoog → laag (tekst: A → Z), nog een klik draait om, derde klik = standaard
+  const sortBy = (key) =>
+    setSort((s) => {
+      const first = key === "title" || key === "advies" ? "asc" : "desc";
+      if (s.key !== key) return { key, dir: first };
+      if (s.dir === first) return { key, dir: first === "asc" ? "desc" : "asc" };
+      return { key: "", dir: "desc" };
+    });
+  const Th = ({ k, children, l, g, title }) => (
+    <th className={(l ? "l " : "") + (g ? "gl " : "") + "py-sort" + (sort.key === k ? " on" : "")} onClick={() => sortBy(k)} title={title || "Klik om te sorteren"}>
+      {children}
+      <span className="py-arrow">{sort.key === k ? (sort.dir === "asc" ? "▲" : "▼") : "↕"}</span>
+    </th>
+  );
   const RW = result ? result.settings.ruleWindow : 30;
   const cur = result ? (result.adsCurrency === "GBP" ? "£" : result.adsCurrency === "EUR" ? "€" : result.adsCurrency === "USD" ? "$" : "") : "£";
   const money = (n) => (n == null ? "—" : `${cur}${Number(n).toFixed(2)}`);
@@ -250,17 +290,34 @@ export default function PythagoPage() {
         .py-tile .k { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
         .py-tile .v { font-size: 17px; font-weight: 600; color: var(--ink); margin-top: 3px; font-variant-numeric: tabular-nums; }
         .py-tile .s { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-        .py-wrap { overflow: auto; max-height: 620px; border: 1px solid var(--line); border-radius: 10px; }
-        .py-table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
-        .py-table th { position: sticky; top: 0; background: #15151b; color: var(--muted); font-weight: 600; text-align: right; padding: 8px 9px; font-size: 11px; white-space: nowrap; border-bottom: 1px solid var(--line); z-index: 1; }
+        .py-wrap { overflow: auto; max-height: 72vh; border: 1px solid var(--line); border-radius: 12px; }
+        .py-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+        .py-table th { position: sticky; background: #15151b; color: var(--muted); font-weight: 600; text-align: right; padding: 8px 10px; font-size: 11px; white-space: nowrap; border-bottom: 1px solid var(--line); z-index: 2; }
+        .py-table thead tr:first-child th { top: 0; height: 30px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+        .py-table thead tr:nth-child(2) th { top: 30px; }
         .py-table th.l, .py-table td.l { text-align: left; }
-        .py-table td { padding: 7px 9px; border-top: 1px solid var(--line); text-align: right; color: var(--ink-2); white-space: nowrap; }
-        .py-table td.t { max-width: 340px; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
-        .py-table tr:hover td { background: var(--panel-hi); }
+        .py-table th.grp { text-align: center; border-left: 1px solid var(--line-hi); }
+        .py-table .gl { border-left: 1px solid var(--line-hi); }
+        .py-sort { cursor: pointer; user-select: none; }
+        .py-sort:hover { color: var(--ink); }
+        .py-sort.on { color: var(--accent-hi); }
+        .py-arrow { margin-left: 5px; font-size: 9px; opacity: .55; }
+        .py-sort.on .py-arrow { opacity: 1; }
+        .py-table td { padding: 8px 10px; border-top: 1px solid var(--line); text-align: right; color: var(--ink-2); white-space: nowrap; }
+        .py-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+        .py-table tbody tr:hover td { background: var(--panel-hi); }
+        .py-table td.t { min-width: 260px; max-width: 380px; white-space: normal; color: var(--ink); line-height: 1.35; }
+        .py-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .py-meta { margin-top: 4px; font-size: 11px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .py-pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; border: 1px solid currentColor; }
+        .py-search { width: 220px; }
+        .py-img { display: block; width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,0.04); }
+        .py-noimg { display: inline-block; }
+        .py-table td { vertical-align: middle; }
         .py-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
         @media (max-width: 1100px) { .py-tiles { grid-template-columns: 1fr 1fr; } }
       `}</style>
-      <div className="page layout-scraper">
+      <div className="page layout-scraper" style={result ? { paddingBottom: 0 } : undefined}>
         <div>
           <div className="card">
             <h2>1 · Store</h2>
@@ -402,6 +459,24 @@ export default function PythagoPage() {
         </div>
 
         <div>
+          <div className="card">
+            <h2>Log {busy && <span className="opt">— bezig</span>}</h2>
+            {logs.length === 0 && !busy && (
+              <div className="center-note" style={{ padding: "18px 8px" }}>
+                Kies een store, sleep de Google Ads-export erin en druk op Analyseren.
+              </div>
+            )}
+            <div className="logpanel">
+              {logs.map((l, i) => (
+                <div key={i} className={"logline" + (l.err ? " err" : l.ok ? " ok" : l.strong ? " strong" : "")}>
+                  {l.text}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="page" style={{ paddingTop: 22, maxWidth: 1640, display: result ? "grid" : "none" }}>
           {result && (
             <div className="card">
               <h2>
@@ -433,7 +508,13 @@ export default function PythagoPage() {
                     </button>
                   ))}
                 </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <input className="py-search" type="text" placeholder="Zoek product…" value={q} onChange={(e) => setQ(e.target.value)} />
+                  {sort.key && (
+                    <button className="btn-ghost btn-small" type="button" onClick={() => setSort({ key: "", dir: "desc" })}>
+                      Sortering wissen
+                    </button>
+                  )}
                   {result.counts.Draften > 0 && (
                     <button className="btn-ghost btn-small" type="button" disabled={!!busy} onClick={() => setPicked(new Set(result.rows.filter((x) => x.advies === "Draften" && draftable(x)).map((x) => x.productId)))}>
                       Selecteer alle Draften
@@ -449,56 +530,86 @@ export default function PythagoPage() {
                 <table className="py-table">
                   <thead>
                     <tr>
+                      <th className="l" colSpan={4} />
+                      <th className="grp" colSpan={3}>7 dagen</th>
+                      <th className="grp" colSpan={3}>14 dagen</th>
+                      <th className="grp" colSpan={6}>30 dagen</th>
+                      <th className="grp" />
+                    </tr>
+                    <tr>
                       <th className="l" />
-                      <th className="l">Advies</th>
-                      <th className="l">Product</th>
-                      <th>Dagen live</th>
-                      <th>Spend 7d</th>
-                      <th>Spend 14d</th>
-                      <th>Spend 30d</th>
-                      <th>Klikken 30d</th>
-                      <th>Orders 7/14/30</th>
-                      <th>Omzet 30d</th>
-                      <th>ROAS 7d</th>
-                      <th>ROAS 14d</th>
-                      <th>ROAS 30d</th>
-                      <th>Google conv 30d</th>
-                      <th>Winst 30d</th>
+                      <th className="l">Foto</th>
+                      <Th k="title" l>Product</Th>
+                      <Th k="age" title="Dagen sinds het product live staat">Dagen live</Th>
+                      <Th k="s7" g>Spend</Th>
+                      <Th k="o7">Orders</Th>
+                      <Th k="r7">ROAS</Th>
+                      <Th k="s14" g>Spend</Th>
+                      <Th k="o14">Orders</Th>
+                      <Th k="r14">ROAS</Th>
+                      <Th k="s30" g>Spend</Th>
+                      <Th k="c30">Klikken</Th>
+                      <Th k="o30">Orders</Th>
+                      <Th k="v30">Omzet</Th>
+                      <Th k="r30">ROAS</Th>
+                      <Th k="g30" title="Google-conversies (TrackBee) in 30 dagen">G-conv</Th>
+                      <Th k="p30" g title="Omzet × (1 − COGS − fees) − spend, 30 dagen">Winst 30d</Th>
                     </tr>
                   </thead>
                   <tbody>
+                    {rows.length === 0 && (
+                      <tr>
+                        <td className="l" colSpan={17} style={{ color: "var(--muted)", padding: 18 }}>
+                          Geen producten in deze selectie.
+                        </td>
+                      </tr>
+                    )}
                     {rows.map((x) => (
                       <tr key={x.productId || x.title}>
                         <td className="l">
                           {draftable(x) ? <input type="checkbox" checked={picked.has(x.productId)} onChange={() => toggle(x.productId)} disabled={!!busy} /> : null}
                         </td>
                         <td className="l">
-                          <span className="py-dot" style={{ background: TONE[x.advies] }} />
-                          {x.advies}
-                        </td>
-                        <td className="l t" title={x.title}>
-                          {x.productId && result.store.domain ? (
-                            <a className="linklike" href={`https://${result.store.domain}/admin/products/${x.productId}`} target="_blank" rel="noreferrer noopener">
-                              {x.title}
+                          {x.image ? (
+                            <a href={x.image.replace(/([?&])width=\d+/, "$1width=800")} target="_blank" rel="noreferrer noopener">
+                              <img className="py-img" src={x.image} alt="" loading="lazy" />
                             </a>
                           ) : (
-                            x.title
+                            <span className="py-img py-noimg" />
                           )}
                         </td>
-                        <td>{x.age ?? "—"}</td>
-                        <td>{money(x.per[7].spend)}</td>
-                        <td>{money(x.per[14].spend)}</td>
-                        <td>{money(x.per[30].spend)}</td>
-                        <td>{x.per[30].clicks}</td>
-                        <td>
-                          {x.per[7].orders}/{x.per[14].orders}/{x.per[30].orders}
+                        <td className="l t" title={x.title}>
+                          <div className="py-title">
+                            {x.productId && x.status && result.store.domain ? (
+                              <a className="linklike" href={`https://${result.store.domain}/admin/products/${x.productId}`} target="_blank" rel="noreferrer noopener">
+                                {x.title}
+                              </a>
+                            ) : (
+                              x.title
+                            )}
+                          </div>
+                          <div className="py-meta">
+                            <span className="py-pill" style={{ color: TONE[x.advies] }}>
+                              {x.advies}
+                            </span>
+                            {x.variants > 1 && <span>{x.variants} varianten met spend</span>}
+                            {x.status && x.status !== "active" && <span>{x.status}</span>}
+                          </div>
                         </td>
-                        <td>{money(x.per[30].rev)}</td>
+                        <td>{x.age ?? "—"}</td>
+                        <td className="gl">{money(x.per[7].spend)}</td>
+                        <td>{x.per[7].orders}</td>
                         <td>{roasCell(x.per[7].roas)}</td>
+                        <td className="gl">{money(x.per[14].spend)}</td>
+                        <td>{x.per[14].orders}</td>
                         <td>{roasCell(x.per[14].roas)}</td>
+                        <td className="gl">{money(x.per[30].spend)}</td>
+                        <td>{x.per[30].clicks}</td>
+                        <td>{x.per[30].orders}</td>
+                        <td>{money(x.per[30].rev)}</td>
                         <td>{roasCell(x.per[30].roas)}</td>
                         <td>{x.per[30].conv}</td>
-                        <td style={{ color: x.profit30 >= 0 ? "var(--ok)" : "var(--err)" }}>{money(x.profit30)}</td>
+                        <td className="gl" style={{ color: x.profit30 >= 0 ? "var(--ok)" : "var(--err)", fontWeight: 600 }}>{money(x.profit30)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -511,22 +622,6 @@ export default function PythagoPage() {
             </div>
           )}
 
-          <div className="card">
-            <h2>Log {busy && <span className="opt">— bezig</span>}</h2>
-            {logs.length === 0 && !busy && (
-              <div className="center-note" style={{ padding: "18px 8px" }}>
-                Kies een store, sleep de Google Ads-export erin en druk op Analyseren.
-              </div>
-            )}
-            <div className="logpanel">
-              {logs.map((l, i) => (
-                <div key={i} className={"logline" + (l.err ? " err" : l.ok ? " ok" : l.strong ? " strong" : "")}>
-                  {l.text}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
     </>
   );
