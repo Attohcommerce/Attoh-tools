@@ -15,6 +15,7 @@ const NAV = [
   { href: "/size-guide", label: "Size Guide" },
   { href: "/gmc-checklist", label: "GMC Checklist" },
   { href: "/bills", label: "Bills" },
+  { href: "/pythago", label: "Pythago" },
 ];
 
 export default function Header({ icon, title, subtitle }) {
