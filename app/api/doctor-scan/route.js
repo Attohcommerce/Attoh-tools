@@ -4,23 +4,45 @@ import { runDoctor } from "@/lib/doctor";
 import { resolveCategory, listCategoryAttrKeys } from "@/lib/category-attrs";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { storeGendersOf, storeShoeLabelsOf } from "@/lib/store-gender";
+import { latestProductIds, productsByIdsFull, doctorExtrasByIds, LATEST_MAX } from "@/lib/doctor-latest";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
-// STORE DOCTOR — scan. Haalt de producten op (heel de store, of alleen
-// alles van ná `sinceISO` = de lopende import-run) en draait alle gratis
+// STORE DOCTOR — scan. Haalt de producten op (heel de store, alleen alles
+// van ná `sinceISO` = de lopende import-run, of — 19-10 — de `latest`
+// nieuwste producten, actief + draft, max 1000) en draait alle gratis
 // deterministische checks. AI-checks lopen apart via /api/doctor-ai.
 export async function POST(req) {
-  const { store, max, sinceISO, vendorName, market, bareSystem } = await req.json().catch(() => ({}));
+  const { store, max, sinceISO, latest, vendorName, market, bareSystem } = await req.json().catch(() => ({}));
   if (!store || !store.domain) {
     return NextResponse.json({ error: "Geen store opgegeven" }, { status: 400 });
   }
   try {
-    const r = await listProducts(store, Number(max) || 1000, {
-      createdAtMin: sinceISO || null,
-    });
-    if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
-    const products = r.products || [];
+    const latestN = !sinceISO && Number(latest) > 0 ? Math.min(LATEST_MAX, Math.round(Number(latest))) : 0;
+    let products;
+    let scope = { mode: sinceISO ? "run" : "all" };
+    let guides = null;
+    let categories = null;
+    let byIdExtras = null;
+    if (latestN) {
+      const li = await latestProductIds(store, latestN);
+      if (!li.ok) return NextResponse.json({ error: li.error }, { status: 422 });
+      if (!li.ids.length) return NextResponse.json({ error: "Geen actieve of draft-producten gevonden" }, { status: 422 });
+      const pr = await productsByIdsFull(store, li.ids);
+      if (!pr.ok) return NextResponse.json({ error: pr.error }, { status: 422 });
+      products = pr.products;
+      scope = { mode: "latest", requested: latestN, found: products.length, refetched: pr.refetched, notFound: pr.notFound };
+      // maattabel / categorie / category-metafields precies voor deze ID's
+      byIdExtras = await doctorExtrasByIds(store, products.map((p) => String(p.id)), { namespace: SG_NS, key: SG_KEY });
+      guides = byIdExtras.guides;
+      categories = byIdExtras.categories;
+    } else {
+      const r = await listProducts(store, Number(max) || 1000, {
+        createdAtMin: sinceISO || null,
+      });
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
+      products = r.products || [];
+    }
     if (!products.length) {
       return NextResponse.json(
         { error: sinceISO ? "Geen producten gevonden binnen deze run (created_at-filter)" : "Deze store heeft (nog) geen producten" },
@@ -28,22 +50,22 @@ export async function POST(req) {
       );
     }
 
-    // Maattabellen (metafield custom.size_guide) — één GraphQL-loop, 250 per pagina
-    let guides = null;
-    try {
-      const mf = await listProductMetafieldValues(store, { namespace: SG_NS, key: SG_KEY });
-      guides = mf.ok ? mf.values : {};
-    } catch {
-      guides = {};
-    }
+    if (!byIdExtras) {
+      // Maattabellen (metafield custom.size_guide) — één GraphQL-loop, 250 per pagina
+      try {
+        const mf = await listProductMetafieldValues(store, { namespace: SG_NS, key: SG_KEY });
+        guides = mf.ok ? mf.values : {};
+      } catch {
+        guides = {};
+      }
 
-    // Productcategorie (taxonomie) — niet in de REST-data; mislukt = check overslaan
-    let categories = null;
-    try {
-      const c = await listProductCategories(store, { max: Number(max) || 1000 });
-      categories = c.ok ? c.values : null;
-    } catch {
-      categories = null;
+      // Productcategorie (taxonomie) — niet in de REST-data; mislukt = check overslaan
+      try {
+        const c = await listProductCategories(store, { max: Number(max) || 1000 });
+        categories = c.ok ? c.values : null;
+      } catch {
+        categories = null;
+      }
     }
 
     /* 16-10: fijnste categorie per product (Shorts → Denim Shorts) +
@@ -61,11 +83,15 @@ export async function POST(req) {
       } catch {
         refinedCategories = null;
       }
-      try {
-        const ak = await listCategoryAttrKeys(store, { max: Number(max) || 1000 });
-        attrKeys = ak.ok ? ak.values : null;
-      } catch {
-        attrKeys = null;
+      if (byIdExtras) {
+        attrKeys = byIdExtras.attrKeys;
+      } else {
+        try {
+          const ak = await listCategoryAttrKeys(store, { max: Number(max) || 1000 });
+          attrKeys = ak.ok ? ak.values : null;
+        } catch {
+          attrKeys = null;
+        }
       }
     }
 
@@ -88,6 +114,11 @@ export async function POST(req) {
       ok: true,
       ...result,
       scanned: products.length,
+      scope,
+      statusCount: {
+        active: products.filter((p) => p.status === "active").length,
+        draft: products.filter((p) => p.status === "draft").length,
+      },
       // alle gescande ids — de AI-checks lopen hier client-side in stukken doorheen
       productIds: products.map((p) => p.id),
     });

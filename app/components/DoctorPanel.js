@@ -18,6 +18,9 @@ import { useEffect, useRef, useState } from "react";
 import { MARKETS, MARKET_SIZE_GUIDE, BARE_SYSTEMS } from "@/lib/sizes";
 
 const LS_BACKUP = "sa_doctor_backup";
+const LS_SCOPE = "sa_doctor_scope"; // "all" | "latest"
+const LS_LATEST = "sa_doctor_latest"; // aantal nieuwste producten (max 1000)
+const LATEST_CHOICES = [50, 100, 250, 500, 1000];
 const LS_MARKET = "sa_doctor_market::"; // + store-domein
 const LS_BARESYS = "sa_doctor_baresys::"; // + store-domein — wat kale maat-nummers zijn (us/uk/au/eu)
 const WERKBOEK = "1Y3wg8X5ivuwaUTfUapzgUOIMzVqr0KRs6g2FR1COuKE"; // Import-werkboek (default)
@@ -74,6 +77,9 @@ function sfx(kind) {
 
 export default function DoctorPanel({ store, since }) {
   const [max, setMax] = useState("1000");
+  // 19-10: "hele store" of "laatste N producten" (actief + draft, nieuwste eerst, max 1000)
+  const [scope, setScope] = useState("all");
+  const [latestN, setLatestN] = useState("100");
   const [useSince, setUseSince] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -123,7 +129,30 @@ export default function DoctorPanel({ store, since }) {
     } catch {
       setBackupSheet(WERKBOEK);
     }
+    try {
+      const sc = localStorage.getItem(LS_SCOPE);
+      if (sc === "all" || sc === "latest") setScope(sc);
+      const n = localStorage.getItem(LS_LATEST);
+      if (n && Number(n) > 0) setLatestN(n);
+    } catch {}
   }, []);
+
+  function pickScope(v) {
+    setScope(v);
+    try {
+      localStorage.setItem(LS_SCOPE, v);
+    } catch {}
+  }
+  function pickLatest(v) {
+    const raw = String(v).replace(/\D/g, "");
+    const n = raw ? String(Math.min(1000, Number(raw))) : "";
+    setLatestN(n);
+    try {
+      if (n) localStorage.setItem(LS_LATEST, n);
+    } catch {}
+  }
+  const runScoped = !!(since && useSince); // importer: alleen de import-run
+  const latestOn = scope === "latest" && !runScoped;
 
   // Markt per store onthouden; eerste keer afgeleid uit de valuta
   useEffect(() => {
@@ -177,6 +206,7 @@ export default function DoctorPanel({ store, since }) {
           store: storeBody,
           max: Number(max) || 1000,
           sinceISO: since && useSince ? since : null,
+          latest: latestOn ? Math.max(1, Math.min(1000, Number(latestN) || 100)) : 0,
           vendorName: store.name || "",
           market,
           bareSystem,
@@ -537,11 +567,53 @@ export default function DoctorPanel({ store, since }) {
 
   return (
     <div>
-      <div className="kw-row" style={{ gridTemplateColumns: "1fr 2fr" }}>
-        <div>
-          <div className="field-label">Max producten</div>
-          <input type="number" value={max} onChange={(e) => setMax(e.target.value)} />
+      <div className="field-label">
+        Welke producten <span className="opt">{runScoped ? "(nu: alleen deze import-run — vinkje onderaan)" : "(actief + draft)"}</span>
+      </div>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", opacity: runScoped ? 0.5 : 1 }}>
+        <div className="seg">
+          <button type="button" className={scope === "all" ? "on" : ""} onClick={() => pickScope("all")} disabled={busy || runScoped}>
+            Hele store
+          </button>
+          <button type="button" className={scope === "latest" ? "on" : ""} onClick={() => pickScope("latest")} disabled={busy || runScoped}>
+            Laatste producten
+          </button>
         </div>
+        {scope === "latest" ? (
+          <>
+            {LATEST_CHOICES.map((n) => (
+              <button
+                key={n}
+                type="button"
+                className="btn-ghost btn-small"
+                onClick={() => pickLatest(n)}
+                disabled={busy || runScoped}
+                style={Number(latestN) === n ? { borderColor: "var(--ok)", color: "var(--ok)", fontWeight: 700 } : {}}
+              >
+                {n}
+              </button>
+            ))}
+            <input
+              type="number"
+              min={1}
+              max={1000}
+              value={latestN}
+              onChange={(e) => pickLatest(e.target.value)}
+              disabled={busy || runScoped}
+              style={{ width: 90 }}
+              title="Aantal nieuwste producten (max 1000)"
+            />
+            <span className="hint" style={{ margin: 0 }}>nieuwste eerst, max 1000</span>
+          </>
+        ) : (
+          <>
+            <span className="hint" style={{ margin: 0 }}>max</span>
+            <input type="number" value={max} onChange={(e) => setMax(e.target.value)} style={{ width: 90 }} disabled={busy || runScoped} />
+            <span className="hint" style={{ margin: 0 }}>producten (oudste eerst)</span>
+          </>
+        )}
+      </div>
+      <div className="kw-row" style={{ gridTemplateColumns: "1fr", marginTop: 8 }}>
         <div>
           <div className="field-label">
             Backup-sheet <span className="opt">(oude waarden vóór elke fix)</span>
@@ -732,7 +804,10 @@ export default function DoctorPanel({ store, since }) {
       {rep && (
         <div className="prog-card" style={{ marginTop: 12 }}>
           <div className="prog-top">
-            <span className="prog-title">Rapport · {rep.scanned} producten</span>
+            <span className="prog-title">
+              Rapport · {rep.scope && rep.scope.mode === "latest" ? `laatste ${rep.scanned} producten` : `${rep.scanned} producten`}
+              {rep.statusCount ? ` (${rep.statusCount.active} actief · ${rep.statusCount.draft} draft)` : ""}
+            </span>
             <span className="prog-count" style={{ color: scoreColor(rep.stats.score) }}>
               {String(rep.stats.score).replace(".", ",")}/10
             </span>
