@@ -997,7 +997,7 @@ export default function ImporterPage() {
                   {addErr && <div className="hint" style={{ color: "var(--err)" }}>{addErr}</div>}
                   <div className="hint">
                     {authMode === "client"
-                      ? "Voor apps uit het Shopify Dev Dashboard. De tool haalt zelf elke keer een vers token op — die verloopt na 24 uur."
+                      ? "Voor apps uit het Shopify Dev Dashboard. De tool haalt zelf elke keer een vers token op — die verloopt na 24 uur. Werkt alleen als de store in dezelfde Shopify-organisatie zit als de app: voor stores van een andere organisatie (bv. Sa Collective) maak je de app aan in de Dev Dashboard van die organisatie."
                       : "Alleen voor custom apps die vóór 1 januari 2026 in de Shopify-admin zijn gemaakt."}{" "}
                     Gegevens blijven in deze browser en gaan alleen via onze eigen server naar Shopify.
                   </div>
