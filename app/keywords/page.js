@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import { orderWindow, storeProfile } from "@/lib/verdeling";
 import { seasonCheck, genderCheck, parseMonthLabel } from "@/lib/market-season";
 import { orgLS } from "@/lib/org-client";
+import { useOrg } from "../components/OrgProvider";
 
 const LS_SHEET = "attoh_kw_sheet";
 const LS_VSHEET = "attoh_kw_vsheet"; // doel-sheet van de verdeling
@@ -212,6 +213,7 @@ const DEFAULT_ORG_SHEET =
   "https://docs.google.com/spreadsheets/d/1MaVHQ76s54lrZkNPfr-J32y7GvjJpLfV2j-m0MvXO3g/edit";
 
 export default function KeywordsPage() {
+  const org = useOrg(); // organisatie (lib/org.js): hints in het Geheugen-tabblad
   const [files, setFiles] = useState([]);
   /* Bron voor de keyword-stats: verse CSV's uit Keyword Planner, of een
      tabblad dat er al staat. Bij een bestaand tabblad hoeft er niets
@@ -1620,7 +1622,8 @@ export default function KeywordsPage() {
                 {/* ---- 1 · All keywords per markt ---- */}
                 <div className="card">
                   <h2>
-                    1 · All keywords per markt <span className="opt">man en vrouw apart · klik een vak</span>
+                    1 · All keywords per markt{" "}
+                    <span className="opt">man en vrouw apart · klik een vak{org === "sacollective" ? " · gedeeld met ATTOH COMMERCE LTD (zelfde All batch-sheets)" : ""}</span>
                   </h2>
                   <div className="gh-matrix">
                     <div className="gh-mh" />
@@ -1821,7 +1824,7 @@ export default function KeywordsPage() {
                 {/* ---- 2 · Store-geheugen ---- */}
                 <div className="card">
                   <h2>
-                    2 · Store-geheugen <span className="opt">aanvul-sheet per store · klik een store</span>
+                    2 · Store-geheugen <span className="opt">aanvul-sheet per store · klik een store{org === "sacollective" ? " · eigen geheugen van Sa Collective" : ""}</span>
                   </h2>
                   {shopStores.length === 0 ? (
                     <div className="hint">Nog geen stores gevonden — voeg ze eerst toe in de Importer (zelfde lijst).</div>

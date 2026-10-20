@@ -17,9 +17,9 @@ Eén Attoh Tools, twee werkruimtes — de switch staat links in de topbar en zet
 | Organisatie | Kleur | Tools | Geheugen |
 |---|---|---|---|
 | **ATTOH COMMERCE LTD** (standaard) | goud | alles | Redis-keys en localStorage zoals altijd (geen prefix) |
-| **Sa Collective** (stores van Chaim) | blauwgroen | Importer · Product Scraper · Keywords (alles) · Store Doctor (alleen "laatste … producten", zonder maattabellen) · Pythago | eigen store-koppelingen (`sc:sa_stores`), eigen store-geheugen (organization-/import-/TPK-sheet) en eigen keyword-geheugen (`sc:geh:*`, `sc:kwmem:*`) |
+| **Sa Collective** (stores van Chaim) | blauwgroen | Importer · Product Scraper · Keywords (alles) · Store Doctor (alleen "laatste … producten", zonder maattabellen) · Pythago | eigen store-koppelingen (`sc:sa_stores`) en eigen store-geheugen per store (`sc:geh:stores`: organization-/import-/TPK-sheet) |
 
-Gedeeld tussen beide: concurrentenlijst + catalogi-cache, To Do-board, size-guide-cache. Bills, Niche kiezen, Size Guide en GMC Checklist bestaan niet in Sa Collective (directe link → homepage). Code: `lib/org.js` (definities), `lib/org-server.js` (`rkey()` voor Redis), `lib/org-client.js` (`orgLS` voor localStorage), `app/components/OrgProvider.js` (context uit de root layout).
+Gedeeld tussen beide: het markt-geheugen (All keywords per markt + batch-geheugen — dezelfde All batch-sheets, `geh:all:*`, `kwmem:*`), concurrentenlijst + catalogi-cache, To Do-board, size-guide-cache. Bills, Niche kiezen, Size Guide en GMC Checklist bestaan niet in Sa Collective (directe link → homepage). Code: `lib/org.js` (definities), `lib/org-server.js` (`rkey()` voor Redis), `lib/org-client.js` (`orgLS` voor localStorage), `app/components/OrgProvider.js` (context uit de root layout).
 
 ## Environment variables
 
