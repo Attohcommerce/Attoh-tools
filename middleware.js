@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions } from "./lib/session";
+import { ORG_COOKIE, normOrg, toolAllowed } from "./lib/org";
 
 // /kw = statische keyword-CSV's die Google Sheets via IMPORTDATA mag ophalen
 // /api/size-guide/job/tick = cloud-run van de Size Guide roept zichzelf aan
@@ -23,6 +24,15 @@ export async function middleware(req) {
     }
     const loginUrl = new URL("/login", req.url);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Organisatie (20-10-2026): in Sa Collective bestaan Bills, Niche kiezen,
+  // Size Guide, GMC Checklist enz. niet — een directe link erheen gaat naar
+  // de homepage. Cookie `sa_org` wordt gezet door de switch in de topbar.
+  const orgCookie = req.cookies.get(ORG_COOKIE);
+  const org = normOrg(orgCookie && orgCookie.value);
+  if (!pathname.startsWith("/api/") && !toolAllowed(org, pathname)) {
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   return res;

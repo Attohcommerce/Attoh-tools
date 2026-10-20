@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 import { sfx } from "../components/sfx";
 import { parseAdsExport, combineExports, slimAds } from "@/lib/pythago-csv";
+import { orgLS } from "@/lib/org-client";
 
 const LS_STORES = "sa_stores";
 const LS_STORE = "sa_py_store";
@@ -36,7 +37,7 @@ const TONE = {
 
 function load(key, fallback) {
   try {
-    const v = localStorage.getItem(key);
+    const v = orgLS.getItem(key);
     return v ? JSON.parse(v) : fallback;
   } catch {
     return fallback;
@@ -44,7 +45,7 @@ function load(key, fallback) {
 }
 function save(key, value) {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    orgLS.setItem(key, JSON.stringify(value));
   } catch {}
 }
 const today = () => {

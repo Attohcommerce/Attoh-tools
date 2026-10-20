@@ -13,7 +13,10 @@ export const maxDuration = 120;
 // nieuwste producten, actief + draft, max 1000) en draait alle gratis
 // deterministische checks. AI-checks lopen apart via /api/doctor-ai.
 export async function POST(req) {
-  const { store, max, sinceISO, latest, vendorName, market, bareSystem } = await req.json().catch(() => ({}));
+  const { store, max, sinceISO, latest, vendorName, market, bareSystem, sizeGuides } = await req.json().catch(() => ({}));
+  // Sa Collective (lib/org.js, 20-10): maattabellen helemaal buiten de Doctor —
+  // metafield niet ophalen, checks "Geen maattabel"/"past niet" niet draaien.
+  const skipGuides = sizeGuides === false;
   if (!store || !store.domain) {
     return NextResponse.json({ error: "Geen store opgegeven" }, { status: 400 });
   }
@@ -33,8 +36,8 @@ export async function POST(req) {
       products = pr.products;
       scope = { mode: "latest", requested: latestN, found: products.length, refetched: pr.refetched, notFound: pr.notFound };
       // maattabel / categorie / category-metafields precies voor deze ID's
-      byIdExtras = await doctorExtrasByIds(store, products.map((p) => String(p.id)), { namespace: SG_NS, key: SG_KEY });
-      guides = byIdExtras.guides;
+      byIdExtras = await doctorExtrasByIds(store, products.map((p) => String(p.id)), { namespace: SG_NS, key: SG_KEY, skipGuides });
+      guides = skipGuides ? null : byIdExtras.guides;
       categories = byIdExtras.categories;
     } else {
       const r = await listProducts(store, Number(max) || 1000, {
@@ -52,11 +55,15 @@ export async function POST(req) {
 
     if (!byIdExtras) {
       // Maattabellen (metafield custom.size_guide) — één GraphQL-loop, 250 per pagina
-      try {
-        const mf = await listProductMetafieldValues(store, { namespace: SG_NS, key: SG_KEY });
-        guides = mf.ok ? mf.values : {};
-      } catch {
-        guides = {};
+      if (skipGuides) {
+        guides = null;
+      } else {
+        try {
+          const mf = await listProductMetafieldValues(store, { namespace: SG_NS, key: SG_KEY });
+          guides = mf.ok ? mf.values : {};
+        } catch {
+          guides = {};
+        }
       }
 
       // Productcategorie (taxonomie) — niet in de REST-data; mislukt = check overslaan
@@ -115,6 +122,7 @@ export async function POST(req) {
       ...result,
       scanned: products.length,
       scope,
+      sizeGuides: !skipGuides,
       statusCount: {
         active: products.filter((p) => p.status === "active").length,
         draft: products.filter((p) => p.status === "draft").length,

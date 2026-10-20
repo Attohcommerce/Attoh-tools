@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
 import { analyzeKeyword, alternativeIsSafe, hardAttributes } from "@/lib/fashion";
+import { orgLS } from "@/lib/org-client";
 
 // Aantal winkels dat tegelijk wordt doorzocht (snelheid). 6 = ±6× sneller
 // dan één voor één; de catalogi komen uit de cache, dus dat kan veilig.
@@ -33,7 +34,7 @@ function weekNumberOf(title) {
 
 function load(key, fallback) {
   try {
-    const v = JSON.parse(localStorage.getItem(key));
+    const v = JSON.parse(orgLS.getItem(key));
     return v ?? fallback;
   } catch {
     return fallback;
@@ -41,7 +42,7 @@ function load(key, fallback) {
 }
 function save(key, val) {
   try {
-    localStorage.setItem(key, JSON.stringify(val));
+    orgLS.setItem(key, JSON.stringify(val));
   } catch {}
 }
 
@@ -397,7 +398,10 @@ export default function ScraperPage() {
       .catch(() => {});
     setKw(load(LS.keywords, { vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] }));
     setWorkSheet(load(LS.workSheet, "") || DEFAULT_WORK_SHEET);
-    setMemSheet(load(LS.memSheet, "") || DEFAULT_MEM_SHEET);
+    // 20-10 (Justin): de geheugen-sheet is ALTIJD "Attoh — Geheugen" — een oude
+    // waarde uit de browser wint niet meer
+    setMemSheet(DEFAULT_MEM_SHEET);
+    save(LS.memSheet, DEFAULT_MEM_SHEET);
     setRunTab(load(LS.runTab, ""));
     setNewTabName(load(LS.newTab, ""));
     setOrgSheet(load(LS.orgSheet, "") || DEFAULT_ORG_SHEET);
@@ -820,10 +824,12 @@ export default function ScraperPage() {
   }
 
   function saveSheets(w, m) {
+    // geheugen-sheet nooit leeg: leegmaken = terug naar "Attoh — Geheugen"
+    const mm = String(m || "").trim() ? m : DEFAULT_MEM_SHEET;
     setWorkSheet(w);
-    setMemSheet(m);
+    setMemSheet(mm);
     save(LS.workSheet, w);
-    save(LS.memSheet, m);
+    save(LS.memSheet, mm);
   }
 
   // ---------- Store uit het geheugen → organization- of TPK-sheet + tabbladen ----------
@@ -2727,8 +2733,11 @@ export default function ScraperPage() {
                 onChange={(e) => saveSheets(workSheet, e.target.value)}
               />
               <div className="hint">
-                Staat altijd automatisch goed ingevuld — ook na Reset session of een nieuwe login. Voorkomt dat
-                dezelfde producten terugkomen. Alleen aanpassen als je bewust een andere geheugen-sheet wilt.
+                Staat altijd op <b>Attoh — Geheugen</b> — ook na herladen, Reset session of een nieuwe login (leegmaken
+                zet hem meteen terug). Voorkomt dat dezelfde producten terugkomen.{" "}
+                <a className="linklike" href={DEFAULT_MEM_SHEET} target="_blank" rel="noreferrer noopener">
+                  Openen ↗
+                </a>
               </div>
               <div className="field-label" style={{ fontWeight: 400, fontSize: 13 }}>
                 Run-tabblad voor de checks <span className="opt">(optioneel)</span>

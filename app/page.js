@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Header from "./components/Header";
 import TodoBoard from "./components/TodoBoard";
+import { orgOf } from "@/lib/org";
+import { useOrg } from "./components/OrgProvider";
 
 const MODULES = [
   {
@@ -44,10 +46,23 @@ const MODULES = [
     href: "/gmc-checklist",
     name: "GMC Checklist",
     tagline: "Merchant audit",
+    orgs: ["attoh"],
     icon: (
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2.8 4.5 6v6c0 4.4 3.2 7.9 7.5 9.2 4.3-1.3 7.5-4.8 7.5-9.2V6Z" />
         <path d="m8.8 11.8 2.3 2.3 4.1-4.4" />
+      </svg>
+    ),
+  },
+  {
+    href: "/qa",
+    name: "Store Doctor",
+    tagline: "Laatste producten",
+    orgs: ["sacollective"],
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 5v14M5 12h14" />
+        <circle cx="12" cy="12" r="9" />
       </svg>
     ),
   },
@@ -61,6 +76,10 @@ export default function HomePage() {
   const [lastSync, setLastSync] = useState(null);
   const [hov, setHov] = useState(null);
   const lastFetch = useRef(0);
+  // Organisatie (20-10-2026): tegels en Operator-blok per organisatie
+  const org = useOrg();
+  const orgDef = orgOf(org);
+  const modules = useMemo(() => MODULES.filter((m) => (m.orgs ? m.orgs.includes(org) : orgDef.tools.includes(m.href))), [org, orgDef]);
 
   const REFRESH_MS = 10 * 60 * 1000;
   const MIN_GAP_MS = 90 * 1000;
@@ -192,11 +211,11 @@ export default function HomePage() {
               <circle className="o-dot" cx="160" cy="160" r="5" />
             </svg>
             <div className={"o-read" + (hov !== null ? " on" : "")}>
-              {hov !== null ? MODULES[hov].name : "Attoh"}
+              {hov !== null ? modules[hov].name : orgDef.short}
             </div>
           </div>
 
-          {MODULES.map((m, i) => (
+          {modules.map((m, i) => (
             <Link
               key={m.href}
               href={m.href}
@@ -232,7 +251,7 @@ export default function HomePage() {
           <div className="stat">
             <span className="stat-k">Operator</span>
             <span className="stat-v">{name || "—"}</span>
-            <span className="stat-s">{(me && me.company) || " "}</span>
+            <span className="stat-s">{orgDef.name}</span>
           </div>
         </section>
 

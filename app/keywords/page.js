@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 import { orderWindow, storeProfile } from "@/lib/verdeling";
 import { seasonCheck, genderCheck, parseMonthLabel } from "@/lib/market-season";
+import { orgLS } from "@/lib/org-client";
 
 const LS_SHEET = "attoh_kw_sheet";
 const LS_VSHEET = "attoh_kw_vsheet"; // doel-sheet van de verdeling
@@ -184,7 +185,7 @@ const MARKET_SEG = [["USA", "USA"], ["UK", "UK"], ["AUS", "AUS + NZ"], ["CAN", "
 
 function loadSessions() {
   try {
-    const raw = localStorage.getItem(LS_SESSIONS);
+    const raw = orgLS.getItem(LS_SESSIONS);
     const arr = raw ? JSON.parse(raw) : [];
     return Array.isArray(arr) ? arr.slice(0, 2) : [];
   } catch {
@@ -194,7 +195,7 @@ function loadSessions() {
 
 function persistSessions(list) {
   try {
-    localStorage.setItem(LS_SESSIONS, JSON.stringify(list.slice(0, 2)));
+    orgLS.setItem(LS_SESSIONS, JSON.stringify(list.slice(0, 2)));
   } catch {}
 }
 
@@ -321,30 +322,30 @@ export default function KeywordsPage() {
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem(LS_SHEET);
+      const s = orgLS.getItem(LS_SHEET);
       if (s) setSheetLink(s);
-      const ss = localStorage.getItem(LS_SRCSHEET);
+      const ss = orgLS.getItem(LS_SRCSHEET);
       if (ss) setSrcSheetLink(ss);
       else if (s) setSrcSheetLink(s);
-      const v = localStorage.getItem(LS_VSHEET);
+      const v = orgLS.getItem(LS_VSHEET);
       if (v) setVSheetLink(v);
-      const st = localStorage.getItem("kw_store");
+      const st = orgLS.getItem("kw_store");
       if (st) setVStore(st);
-      const mk = localStorage.getItem("kw_market");
+      const mk = orgLS.getItem("kw_market");
       if (mk) setVMarket(mk);
-      const uo = localStorage.getItem("kw_u_orgtab");
+      const uo = orgLS.getItem("kw_u_orgtab");
       if (uo) setUOrgTab(uo);
-      const us = localStorage.getItem("kw_u_statstab");
+      const us = orgLS.getItem("kw_u_statstab");
       if (us) setUStatsTab(us);
-      const usl = localStorage.getItem("kw_u_statssheet");
+      const usl = orgLS.getItem("kw_u_statssheet");
       if (usl) setUStatsSheet(usl);
-      const ts = localStorage.getItem("kw_tpk_store");
+      const ts = orgLS.getItem("kw_tpk_store");
       if (ts) setTStore(ts);
-      const tsrc = localStorage.getItem("kw_tpk_source");
+      const tsrc = orgLS.getItem("kw_tpk_source");
       if (tsrc === "csv" || tsrc === "shopify") setTSource(tsrc);
-      const tn = Number(localStorage.getItem("kw_tpk_n"));
+      const tn = Number(orgLS.getItem("kw_tpk_n"));
       if (tn > 0) setTN(tn);
-      const td = Number(localStorage.getItem("kw_tpk_days"));
+      const td = Number(orgLS.getItem("kw_tpk_days"));
       if (td > 0) setTDays(td);
     } catch {}
     setSessions(loadSessions());
@@ -510,8 +511,8 @@ export default function KeywordsPage() {
       setCleanTab(tab);
       setSrcReady(true);
       try {
-        localStorage.setItem(LS_SRCSHEET, link);
-        localStorage.setItem(LS_SHEET, link);
+        orgLS.setItem(LS_SRCSHEET, link);
+        orgLS.setItem(LS_SHEET, link);
       } catch {}
       pushLog({ info: true, text: `Klaar — "${tab}" staat klaar voor de merken-check en de verdeling. Samenvoegen is niet nodig.` });
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
@@ -602,7 +603,7 @@ export default function KeywordsPage() {
 
   async function loadGeheugen() {
     try {
-      setShopStores(JSON.parse(localStorage.getItem("sa_stores") || "[]") || []);
+      setShopStores(JSON.parse(orgLS.getItem("sa_stores") || "[]") || []);
     } catch {
       setShopStores([]);
     }
@@ -838,7 +839,7 @@ export default function KeywordsPage() {
     setLogs([]);
     setDoneUrl("");
     try {
-      localStorage.setItem(LS_SHEET, sheetLink.trim());
+      orgLS.setItem(LS_SHEET, sheetLink.trim());
     } catch {}
 
     const runLogs = [];
@@ -1053,12 +1054,12 @@ export default function KeywordsPage() {
     setVRunning(true);
     setVDoneUrl("");
     try {
-      localStorage.setItem(LS_VSHEET, vSheetLink.trim());
+      orgLS.setItem(LS_VSHEET, vSheetLink.trim());
     } catch {}
     try {
       try {
-        localStorage.setItem("kw_store", vStore.trim());
-        localStorage.setItem("kw_market", vMarket);
+        orgLS.setItem("kw_store", vStore.trim());
+        orgLS.setItem("kw_market", vMarket);
       } catch {}
       const gLabel = vGenders === "MV" ? "man + vrouw" : vGenders === "V" ? "vrouw" : "man";
       const mLabel = mode === "focus" ? "AI-focus (zwakke soorten vallen weg)" : "eerlijke spreiding";
@@ -1179,21 +1180,32 @@ export default function KeywordsPage() {
   const tOrdersKeys = (() => {
     if (!tStore) return null;
     try {
-      const k = JSON.parse(localStorage.getItem("sa_orders_app::" + tStore) || "null");
+      const k = JSON.parse(orgLS.getItem("sa_orders_app::" + tStore) || "null");
       return k && k.clientId && k.clientSecret ? k : null;
     } catch {
       return null;
     }
   })();
-  const canTpkAnalyse = !tBusy && tStore && tSaved && tSaved.tpkSheetId && (tSource === "csv" ? tCsv.trim() : !!tOrdersKeys) && Number(tN) > 0;
+  /* 20-10: geen Orders-app-sleutels → de Importer-koppeling van de store
+     (Justins eigen app heeft read_orders; in Sa Collective is er geen
+     Bills-pagina om losse Orders-app-sleutels in te vullen). */
+  const tOrdersStore = (() => {
+    if (!tShop) return null;
+    if (tOrdersKeys) return { name: tShop.name, domain: tShop.domain, clientId: tOrdersKeys.clientId, clientSecret: tOrdersKeys.clientSecret, via: "orders-app" };
+    if (tShop.token || (tShop.clientId && tShop.clientSecret)) {
+      return { name: tShop.name, domain: tShop.domain, token: tShop.token || "", clientId: tShop.clientId || "", clientSecret: tShop.clientSecret || "", via: "importer" };
+    }
+    return null;
+  })();
+  const canTpkAnalyse = !tBusy && tStore && tSaved && tSaved.tpkSheetId && (tSource === "csv" ? tCsv.trim() : !!tOrdersStore) && Number(tN) > 0;
   const canTpkWrite = !tBusy && tResult && tResult.analysis && tTab.trim();
 
   function tRemember() {
     try {
-      localStorage.setItem("kw_tpk_store", tStore);
-      localStorage.setItem("kw_tpk_source", tSource);
-      localStorage.setItem("kw_tpk_n", String(tN));
-      localStorage.setItem("kw_tpk_days", String(tDays));
+      orgLS.setItem("kw_tpk_store", tStore);
+      orgLS.setItem("kw_tpk_source", tSource);
+      orgLS.setItem("kw_tpk_n", String(tN));
+      orgLS.setItem("kw_tpk_days", String(tDays));
     } catch {}
   }
 
@@ -1203,7 +1215,7 @@ export default function KeywordsPage() {
   function tSuggestTab(tabs, domain) {
     let fromScraper = "";
     try {
-      const byStore = JSON.parse(localStorage.getItem("sa_org_tab_by_store") || "{}") || {};
+      const byStore = JSON.parse(orgLS.getItem("sa_org_tab_by_store") || "{}") || {};
       const last = byStore[domain] || byStore[`${domain}|org`] || "";
       const m = String(last).match(/w(?:eek)?\s*(\d+)/i);
       if (m) fromScraper = `W${Number(m[1])}`;
@@ -1240,7 +1252,7 @@ export default function KeywordsPage() {
     setTDoneUrl("");
     setTTabTouched(false);
     try {
-      localStorage.setItem("kw_tpk_store", domain);
+      orgLS.setItem("kw_tpk_store", domain);
     } catch {}
     tLoadTabs(domain);
   }
@@ -1258,7 +1270,7 @@ export default function KeywordsPage() {
       const r = await api("/api/tpk", {
         action: "analyse",
         store: { name: tShop.name, domain: tShop.domain, publicDomain: tShop.publicDomain, currency: tShop.currency },
-        ordersStore: tSource === "csv" ? null : { name: tShop.name, domain: tShop.domain, clientId: tOrdersKeys.clientId, clientSecret: tOrdersKeys.clientSecret },
+        ordersStore: tSource === "csv" ? null : tOrdersStore,
         csvText: tSource === "csv" ? tCsv : "",
         days: Number(tDays) || 30,
         n: Number(tN) || 10,
@@ -1323,9 +1335,9 @@ export default function KeywordsPage() {
       }
       // Scraper-suggestie: dit blad als laatst gebruikte TPK-tab van deze store
       try {
-        const byStore = JSON.parse(localStorage.getItem("sa_org_tab_by_store") || "{}") || {};
+        const byStore = JSON.parse(orgLS.getItem("sa_org_tab_by_store") || "{}") || {};
         byStore[`${tStore}|tpk`] = r.tab;
-        localStorage.setItem("sa_org_tab_by_store", JSON.stringify(byStore));
+        orgLS.setItem("sa_org_tab_by_store", JSON.stringify(byStore));
       } catch {}
       sfx(sr && !sr.ok ? "error" : "success");
       tLoadTabs(tStore);
@@ -1363,11 +1375,11 @@ export default function KeywordsPage() {
         return [...l, e];
       });
     try {
-      localStorage.setItem("kw_u_orgtab", uOrgTab.trim());
-      localStorage.setItem("kw_u_statstab", uStatsTab.trim());
-      localStorage.setItem("kw_u_statssheet", uStatsSheet.trim());
-      localStorage.setItem("kw_store", vStore.trim());
-      localStorage.setItem("kw_market", vMarket);
+      orgLS.setItem("kw_u_orgtab", uOrgTab.trim());
+      orgLS.setItem("kw_u_statstab", uStatsTab.trim());
+      orgLS.setItem("kw_u_statssheet", uStatsSheet.trim());
+      orgLS.setItem("kw_store", vStore.trim());
+      orgLS.setItem("kw_market", vMarket);
     } catch {}
     try {
       push({
@@ -2110,9 +2122,11 @@ export default function KeywordsPage() {
                 {tSource === "shopify" ? (
                   <>
                     <div className="hint">
-                      {tStore && !tOrdersKeys
-                        ? "Geen Orders-app-sleutels voor deze store — vul Client ID en Client secret in op de Bills-pagina (Orders-app), of plak de CSV."
-                        : "Leest de orders via de Orders-app van de store (zelfde sleutels als de Bills-pagina). Geannuleerde en test-orders tellen niet mee."}
+                      {tStore && !tOrdersStore
+                        ? "Geen Orders-app-sleutels en geen Importer-koppeling voor deze store — koppel de store in de Importer (app met read_orders), of plak de CSV."
+                        : tOrdersStore && tOrdersStore.via === "importer"
+                          ? "Leest de orders via de Importer-koppeling van de store (de app moet read_orders hebben). Geannuleerde en test-orders tellen niet mee."
+                          : "Leest de orders via de Orders-app van de store (zelfde sleutels als de Bills-pagina). Geannuleerde en test-orders tellen niet mee."}
                     </div>
                     <div className="field-label">Periode <span className="opt">(dagen terug)</span></div>
                     <input type="number" style={{ width: 110 }} min={7} max={120} value={tDays} onChange={(e) => setTDays(e.target.value)} />

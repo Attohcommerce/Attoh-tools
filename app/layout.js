@@ -1,5 +1,7 @@
 import "./globals.css";
 import SoundFX from "./components/sfx";
+import { OrgProvider } from "./components/OrgProvider";
+import { getOrg } from "@/lib/org-server";
 
 export const metadata = {
   title: "Attoh Tools",
@@ -11,6 +13,9 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
+  // Organisatie uit de cookie (lib/org.js): stuurt nav, tools, kleur en
+  // welke Shopify-koppelingen/geheugen de pagina's gebruiken.
+  const org = getOrg();
   return (
     <html lang="nl">
       <head>
@@ -25,9 +30,9 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body>
+      <body data-org={org}>
         <SoundFX />
-        {children}
+        <OrgProvider org={org}>{children}</OrgProvider>
       </body>
     </html>
   );

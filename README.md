@@ -10,6 +10,17 @@ Interne tools voor Sa Collective LLC — product-import, concurrent-scraper en G
 | **Product Scraper** | `/scraper` | Zoekt op keyword door concurrent-stores en schrijft resultaten naar Google Sheets |
 | **GMC Checklist** | `/gmc-checklist` | Crawlt een winkel en controleert Merchant Center-vereisten |
 
+## Organisaties (20-10-2026)
+
+Eén Attoh Tools, twee werkruimtes — de switch staat links in de topbar en zet de cookie `sa_org`:
+
+| Organisatie | Kleur | Tools | Geheugen |
+|---|---|---|---|
+| **ATTOH COMMERCE LTD** (standaard) | goud | alles | Redis-keys en localStorage zoals altijd (geen prefix) |
+| **Sa Collective** (stores van Chaim) | blauwgroen | Importer · Product Scraper · Keywords (alles) · Store Doctor (alleen "laatste … producten", zonder maattabellen) · Pythago | eigen store-koppelingen (`sc:sa_stores`), eigen store-geheugen (organization-/import-/TPK-sheet) en eigen keyword-geheugen (`sc:geh:*`, `sc:kwmem:*`) |
+
+Gedeeld tussen beide: concurrentenlijst + catalogi-cache, To Do-board, size-guide-cache. Bills, Niche kiezen, Size Guide en GMC Checklist bestaan niet in Sa Collective (directe link → homepage). Code: `lib/org.js` (definities), `lib/org-server.js` (`rkey()` voor Redis), `lib/org-client.js` (`orgLS` voor localStorage), `app/components/OrgProvider.js` (context uit de root layout).
+
 ## Environment variables
 
 Zet deze in Vercel → Project → Settings → Environment Variables.

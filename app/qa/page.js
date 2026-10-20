@@ -7,13 +7,15 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import DoctorPanel from "../components/DoctorPanel";
+import { orgLS } from "@/lib/org-client";
+import { useOrgDef } from "../components/OrgProvider";
 
 const LS_STORES = "sa_stores";
 const LS_SELECTED = "sa_selected_store";
 
 function load(key, fallback) {
   try {
-    const v = localStorage.getItem(key);
+    const v = orgLS.getItem(key);
     return v ? JSON.parse(v) : fallback;
   } catch {
     return fallback;
@@ -23,6 +25,8 @@ function load(key, fallback) {
 export default function QaPage() {
   const [stores, setStores] = useState([]);
   const [selected, setSelected] = useState(null);
+  // Organisatie (20-10): Sa Collective = alleen laatste producten, zonder maattabellen
+  const orgDoc = useOrgDef().doctor;
 
   useEffect(() => {
     setStores(load(LS_STORES, []));
@@ -54,11 +58,23 @@ export default function QaPage() {
               </div>
             ))}
             <div className="hint">
-              Gratis checks: variant-foto's, taal, prijzen &amp; doorstreepprijzen, titels,
-              tags/gender, barcodes, vendor, templates, maten-volgorde, zichtbaarheid,
-              maattabellen (ontbreekt / past niet bij de productsoort).
-              Daarna optionele AI-checks (geslacht, kleur↔foto, watermerk, taal-restlaag)
-              met de kosten vooraf in beeld. Elke fix schrijft eerst een backup-tabblad.
+              {orgDoc.latestOnly ? (
+                <>
+                  Sa Collective: de Doctor kijkt alleen naar de <strong>laatste … producten</strong> (nieuw
+                  toegevoegd, actief + draft). Gratis checks: variant-foto's, taal, prijzen &amp; doorstreepprijzen,
+                  titels, tags/gender, barcodes, vendor, templates, maten-volgorde, zichtbaarheid.
+                  Maattabellen blijven buiten beschouwing. Daarna optionele AI-checks (geslacht, kleur↔foto,
+                  watermerk, taal-restlaag) met de kosten vooraf in beeld. Elke fix schrijft eerst een backup-tabblad.
+                </>
+              ) : (
+                <>
+                  Gratis checks: variant-foto's, taal, prijzen &amp; doorstreepprijzen, titels,
+                  tags/gender, barcodes, vendor, templates, maten-volgorde, zichtbaarheid,
+                  maattabellen (ontbreekt / past niet bij de productsoort).
+                  Daarna optionele AI-checks (geslacht, kleur↔foto, watermerk, taal-restlaag)
+                  met de kosten vooraf in beeld. Elke fix schrijft eerst een backup-tabblad.
+                </>
+              )}
             </div>
           </div>
         </div>

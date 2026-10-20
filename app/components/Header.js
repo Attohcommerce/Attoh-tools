@@ -4,6 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { isSoundOn, setSoundOn, sfx } from "./sfx";
+import { ORG_LIST, orgOf } from "@/lib/org";
+import { switchOrg, orgLS } from "@/lib/org-client";
+import { useOrg } from "./OrgProvider";
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -21,6 +24,10 @@ const NAV = [
 export default function Header({ icon, title, subtitle }) {
   const pathname = usePathname();
   const [sound, setSound] = useState(true);
+  // Organisatie (20-10-2026): attoh (alles) of sacollective (beperkte set).
+  // Komt via de root layout uit de cookie — klopt al bij de eerste render.
+  const org = useOrg();
+  const orgDef = orgOf(org);
 
   useEffect(() => {
     setSound(isSoundOn());
@@ -38,10 +45,17 @@ export default function Header({ icon, title, subtitle }) {
     window.location.href = "/login";
   }
 
-  // Alles wat op de pagina's is ingevuld in één keer wissen.
-  // Shopify-koppelingen (sa_stores) en geluidsvoorkeur blijven staan.
+  function pickOrg(id) {
+    if (id === org) return;
+    sfx("toggle");
+    switchOrg(id);
+  }
+
+  // Alles wat op de pagina's is ingevuld in één keer wissen — alleen van de
+  // organisatie waar je nu in zit. Shopify-koppelingen (sa_stores) en
+  // geluidsvoorkeur blijven staan.
   function resetSession() {
-    if (!window.confirm("Reset session? Alle ingevulde velden, lijsten en sessies worden gewist. Shopify-koppelingen blijven bewaard.")) return;
+    if (!window.confirm(`Reset session (${orgDef.name})? Alle ingevulde velden, lijsten en sessies worden gewist. Shopify-koppelingen blijven bewaard.`)) return;
     const KEYS = [
       // Scraper
       "sa_competitor_stores", "sa_scraper_keywords", "sa_sheet_work", "sa_sheet_memory",
@@ -54,19 +68,35 @@ export default function Header({ icon, title, subtitle }) {
       "attoh_niche_sheet",
     ];
     try {
-      for (const k of KEYS) localStorage.removeItem(k);
+      for (const k of KEYS) orgLS.removeItem(k);
     } catch {}
     window.location.reload();
   }
 
+  const nav = NAV.filter((l) => l.href === "/" || orgDef.tools.includes(l.href));
+
   return (
-    <div className="topbar">
+    <div className="topbar" data-org={org}>
       <span className="logo">{icon || "A"}</span>
       <span className="title">{title}</span>
       {subtitle ? <span className="subtitle">{subtitle}</span> : null}
+      <div className="orgswitch" role="group" aria-label="Organisatie" title="Organisatie: eigen stores, eigen geheugen, eigen tools">
+        {ORG_LIST.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            className={"orgbtn" + (o.id === org ? " on" : "")}
+            onClick={() => pickOrg(o.id)}
+            title={o.name}
+          >
+            <span className="orgletter">{o.letter}</span>
+            <span className="orgname">{o.short}</span>
+          </button>
+        ))}
+      </div>
       <span className="spacer" />
       <nav className="nav">
-        {NAV.map((l) => (
+        {nav.map((l) => (
           <Link
             key={l.href}
             href={l.href}

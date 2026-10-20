@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 import DoctorPanel from "../components/DoctorPanel";
 import { normSourceUrl, findExisting } from "@/lib/source-match";
+import { orgLS } from "@/lib/org-client";
 
 const LS = {
   stores: "sa_stores",
@@ -14,7 +15,7 @@ const LS = {
 
 function load(key, fallback) {
   try {
-    const v = JSON.parse(localStorage.getItem(key));
+    const v = JSON.parse(orgLS.getItem(key));
     return v ?? fallback;
   } catch {
     return fallback;
@@ -22,7 +23,7 @@ function load(key, fallback) {
 }
 function save(key, val) {
   try {
-    localStorage.setItem(key, JSON.stringify(val));
+    orgLS.setItem(key, JSON.stringify(val));
   } catch {}
 }
 

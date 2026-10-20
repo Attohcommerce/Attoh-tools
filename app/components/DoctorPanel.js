@@ -16,6 +16,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MARKETS, MARKET_SIZE_GUIDE, BARE_SYSTEMS } from "@/lib/sizes";
+import { orgLS } from "@/lib/org-client";
+import { useOrgDef } from "./OrgProvider";
 
 const LS_BACKUP = "sa_doctor_backup";
 const LS_SCOPE = "sa_doctor_scope"; // "all" | "latest"
@@ -81,6 +83,10 @@ export default function DoctorPanel({ store, since }) {
   const [scope, setScope] = useState("all");
   const [latestN, setLatestN] = useState("100");
   const [useSince, setUseSince] = useState(true);
+  /* Organisatie (20-10-2026, lib/org.js): Sa Collective scant ALLEEN de
+     laatste N producten (nieuw toegevoegd) en laat maattabellen volledig
+     buiten de Doctor (geen metafield-check, geen size-guide-fix). */
+  const orgDoc = useOrgDef().doctor;
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [rep, setRep] = useState(null);
@@ -124,23 +130,24 @@ export default function DoctorPanel({ store, since }) {
 
   useEffect(() => {
     try {
-      const v = localStorage.getItem(LS_BACKUP);
+      const v = orgLS.getItem(LS_BACKUP);
       setBackupSheet(v != null ? v : WERKBOEK);
     } catch {
       setBackupSheet(WERKBOEK);
     }
     try {
-      const sc = localStorage.getItem(LS_SCOPE);
+      const sc = orgLS.getItem(LS_SCOPE);
       if (sc === "all" || sc === "latest") setScope(sc);
-      const n = localStorage.getItem(LS_LATEST);
+      const n = orgLS.getItem(LS_LATEST);
       if (n && Number(n) > 0) setLatestN(n);
     } catch {}
+    if (orgDoc.latestOnly) setScope("latest");
   }, []);
 
   function pickScope(v) {
     setScope(v);
     try {
-      localStorage.setItem(LS_SCOPE, v);
+      orgLS.setItem(LS_SCOPE, v);
     } catch {}
   }
   function pickLatest(v) {
@@ -148,23 +155,23 @@ export default function DoctorPanel({ store, since }) {
     const n = raw ? String(Math.min(1000, Number(raw))) : "";
     setLatestN(n);
     try {
-      if (n) localStorage.setItem(LS_LATEST, n);
+      if (n) orgLS.setItem(LS_LATEST, n);
     } catch {}
   }
   const runScoped = !!(since && useSince); // importer: alleen de import-run
-  const latestOn = scope === "latest" && !runScoped;
+  const latestOn = (scope === "latest" || orgDoc.latestOnly) && !runScoped;
 
   // Markt per store onthouden; eerste keer afgeleid uit de valuta
   useEffect(() => {
     if (!store || !store.domain) return;
     let v = "";
     try {
-      v = localStorage.getItem(LS_MARKET + store.domain) || "";
+      v = orgLS.getItem(LS_MARKET + store.domain) || "";
     } catch {}
     setMarket(v || CUR_MARKET[String(store.currency || "").toUpperCase()] || "USA");
     let b = "";
     try {
-      b = localStorage.getItem(LS_BARESYS + store.domain) || "";
+      b = orgLS.getItem(LS_BARESYS + store.domain) || "";
     } catch {}
     setBareSystem(b);
   }, [store && store.domain]);
@@ -172,13 +179,13 @@ export default function DoctorPanel({ store, since }) {
   function pickMarket(m) {
     setMarket(m);
     try {
-      localStorage.setItem(LS_MARKET + store.domain, m);
+      orgLS.setItem(LS_MARKET + store.domain, m);
     } catch {}
   }
   function pickBareSystem(v) {
     setBareSystem(v);
     try {
-      localStorage.setItem(LS_BARESYS + (store && store.domain), v);
+      orgLS.setItem(LS_BARESYS + (store && store.domain), v);
     } catch {}
   }
 
@@ -210,6 +217,7 @@ export default function DoctorPanel({ store, since }) {
           vendorName: store.name || "",
           market,
           bareSystem,
+          sizeGuides: orgDoc.sizeGuides, // false (Sa Collective) = maattabellen niet ophalen/checken
         }),
       });
       const data = await r.json();
@@ -245,7 +253,7 @@ export default function DoctorPanel({ store, since }) {
   function askBackupSkip() {
     if (String(backupSheet || "").trim()) {
       try {
-        localStorage.setItem(LS_BACKUP, backupSheet.trim());
+        orgLS.setItem(LS_BACKUP, backupSheet.trim());
       } catch {}
       return { ok: true, skipBackup: false };
     }
@@ -403,6 +411,7 @@ export default function DoctorPanel({ store, since }) {
       for (const f of report.findings) {
         for (const fx of f.fixes || []) {
           if (!FIXALL_ORDER.includes(fx.id)) continue;
+          if (!orgDoc.sizeGuides && fx.id === "fix-size-guides") continue; // Sa Collective: geen maattabellen
           if (!jobs.has(fx.id)) jobs.set(fx.id, { fix: fx, ids: new Set() });
           for (const id of f.ids) jobs.get(fx.id).ids.add(id);
         }
@@ -568,18 +577,27 @@ export default function DoctorPanel({ store, since }) {
   return (
     <div>
       <div className="field-label">
-        Welke producten <span className="opt">{runScoped ? "(nu: alleen deze import-run — vinkje onderaan)" : "(actief + draft)"}</span>
+        Welke producten{" "}
+        <span className="opt">
+          {runScoped
+            ? "(nu: alleen deze import-run — vinkje onderaan)"
+            : orgDoc.latestOnly
+              ? "(Sa Collective: alleen de laatst toegevoegde producten, actief + draft — maattabellen blijven buiten beschouwing)"
+              : "(actief + draft)"}
+        </span>
       </div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", opacity: runScoped ? 0.5 : 1 }}>
         <div className="seg">
-          <button type="button" className={scope === "all" ? "on" : ""} onClick={() => pickScope("all")} disabled={busy || runScoped}>
-            Hele store
-          </button>
-          <button type="button" className={scope === "latest" ? "on" : ""} onClick={() => pickScope("latest")} disabled={busy || runScoped}>
+          {!orgDoc.latestOnly && (
+            <button type="button" className={scope === "all" ? "on" : ""} onClick={() => pickScope("all")} disabled={busy || runScoped}>
+              Hele store
+            </button>
+          )}
+          <button type="button" className={scope === "latest" || orgDoc.latestOnly ? "on" : ""} onClick={() => pickScope("latest")} disabled={busy || runScoped}>
             Laatste producten
           </button>
         </div>
-        {scope === "latest" ? (
+        {scope === "latest" || orgDoc.latestOnly ? (
           <>
             {LATEST_CHOICES.map((n) => (
               <button
