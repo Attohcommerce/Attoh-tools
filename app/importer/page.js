@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import DoctorPanel from "../components/DoctorPanel";
 import { normSourceUrl, findExisting } from "@/lib/source-match";
 import { orgLS } from "@/lib/org-client";
+import { parseImportRows } from "@/lib/import-format";
 
 const LS = {
   stores: "sa_stores",
@@ -61,6 +62,10 @@ export default function ImporterPage() {
   const [sheetLinks, setSheetLinks] = useState(null);
   const [sheetBusy, setSheetBusy] = useState(false);
   const [sheetMsg, setSheetMsg] = useState("");
+  // Formaat van het geladen blad: "attoh" of "chaim" (scraper-output van Chaim,
+  // Sa Collective) — bij "chaim" verschijnt de knop "Zet om naar Attoh-formaat".
+  const [sheetFormat, setSheetFormat] = useState("");
+  const [convBusy, setConvBusy] = useState(false);
 
   // Batch-instellingen
   const [requiredKeyword, setRequiredKeyword] = useState("");
@@ -305,33 +310,34 @@ export default function ImporterPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || res.status);
-      const rows = (data.values || []).slice(1); // header overslaan
+      /* Beide formaten (lib/import-format.js): Attoh (LINK in A) én Chaim
+         (Keyword · Competitor · Match · Productnaam · URL · Geslacht …, Sa
+         Collective). Bij Chaim-formaat: geslacht Women/Men → Vrouw/Man, type
+         uit het keyword, collectie leeg (wordt uit het keyword afgeleid). */
+      const parsed = parseImportRows(data.values || []);
+      setSheetFormat(parsed.format);
+      if (parsed.format === "unknown" && (data.values || []).length) {
+        throw new Error("Dit blad is geen import-lijst (geen LINK-kolom in A en geen URL-kolom in E). Kies het juiste blad.");
+      }
       let links = [];
       let withCol = 0;
-      for (const r of rows) {
-        const link = r[0];
-        // Krul-apostrof (’) → ' : anders "Men's 's Chino Shorts" in titel en type
-        const straightQ = (s) => String(s || "").replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g, "'");
-        const kw = straightQ(r[2]).toLowerCase();
-        const dup = r[6];
-        const doubt = r[7];
-        const collection = String(r[8] || "").trim(); // I = Collectie (uit de organization-sheet)
-        if (!link || !/products\//i.test(link)) continue;
-        if (skipTagged && (dup || doubt)) continue;
-        if (sheetKeywordFilter && !kw.includes(sheetKeywordFilter.toLowerCase())) continue;
-        if (collection) withCol++;
+      for (const p of parsed.rows) {
+        if (skipTagged && (p.dup || p.doubt)) continue;
+        if (sheetKeywordFilter && !p.keyword.toLowerCase().includes(sheetKeywordFilter.toLowerCase())) continue;
+        if (p.collection) withCol++;
         links.push({
-          url: link,
-          keyword: straightQ(r[2]).trim(),
-          collection,
-          gender: String(r[5] || "").trim(), // F = Man/Vrouw (geslacht-check scraper)
-          kwType: String(r[9] || "").trim(), // J = Direct/Attribuut/Gelegenheid
-          titleForm: straightQ(r[10]).trim(), // K = hoe het keyword in de titel hoort
+          url: p.url,
+          keyword: p.keyword,
+          collection: p.collection,
+          gender: p.gender, // Man/Vrouw (geslacht-check scraper)
+          kwType: p.kwType, // Direct/Attribuut/Gelegenheid
+          titleForm: p.titleForm, // hoe het keyword in de titel hoort
         });
       }
       setSheetLinks(links);
       setSheetMsg(
         `${links.length} links geladen uit de sheet` +
+          (parsed.format === "chaim" ? " — Chaim-formaat herkend (Keyword · Competitor · … · URL), bij het lezen omgezet" : "") +
           (links.length
             ? withCol
               ? ` — ${withCol} met collectie, keyword per rij wordt automatisch gebruikt`
@@ -342,6 +348,37 @@ export default function ImporterPage() {
       setSheetMsg("Fout: " + e.message);
     } finally {
       setSheetBusy(false);
+    }
+  }
+
+  /* Chaim-formaat → Attoh-formaat, in hetzelfde tabblad van dezelfde sheet
+     (kopregel LINK · TITEL · KEYWORD · … · COLLECTIE · TYPE, opmaak zoals een
+     scraper-run). Collectie per keyword uit het store-geheugen van de
+     gekozen store. Daarna leest de importer én de scraper het blad gewoon. */
+  async function convertSheetTab() {
+    if (convBusy || !sheetId || !sheetTab.trim()) return;
+    if (!window.confirm(`Blad "${sheetTab.trim()}" omzetten naar het Attoh-formaat? De kolommen worden herschikt (zelfde producten, zelfde sheet).`)) return;
+    setConvBusy(true);
+    setSheetMsg("");
+    try {
+      const r = await sheetsCall({
+        action: "convertImportTab",
+        sheetId,
+        title: sheetTab.trim(),
+        store: selectedStore ? { domain: selectedStore.domain, publicDomain: selectedStore.publicDomain || "" } : null,
+      });
+      if (r.already) {
+        setSheetMsg(`Blad "${sheetTab.trim()}" staat al in het Attoh-formaat (${r.count} links).`);
+      } else {
+        setSheetMsg(
+          `Blad "${sheetTab.trim()}" omgezet: ${r.count} links in Attoh-formaat${r.withCollection ? ` · ${r.withCollection} met collectie uit het store-geheugen` : " · geen collecties (koppel de aanvul-sheet in Keywords → Geheugen en draai \"Store-geheugen bijwerken\")"}${r.skipped ? ` · ${r.skipped} rijen zonder product-link overgeslagen` : ""}.`
+        );
+      }
+      await loadSheet();
+    } catch (e) {
+      setSheetMsg("Omzetten mislukt: " + e.message);
+    } finally {
+      setConvBusy(false);
     }
   }
 
@@ -1115,6 +1152,16 @@ export default function ImporterPage() {
                     Rijen met Dubbel/Twijfel-tags (kolom G/H) overslaan
                   </div>
                   {sheetMsg && <div className="hint">{sheetMsg}</div>}
+                  {sheetFormat === "chaim" && (
+                    <div className="kw-row" style={{ gridTemplateColumns: "auto 1fr", alignItems: "center", marginTop: 6 }}>
+                      <button className="btn-ghost btn-small" onClick={convertSheetTab} disabled={convBusy || sheetBusy || !sheetId || !sheetTab.trim()} type="button">
+                        {convBusy ? "Omzetten…" : "⇄ Zet dit blad om naar Attoh-formaat"}
+                      </button>
+                      <span className="hint" style={{ margin: 0 }}>
+                        Zelfde tabblad, zelfde sheet: kolommen LINK · TITEL · KEYWORD · … · COLLECTIE · TYPE + opmaak. Daarna kan de scraper er ook in verder schrijven.
+                      </span>
+                    </div>
+                  )}
                 </>
               )}
 

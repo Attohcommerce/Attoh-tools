@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
 import { analyzeKeyword, alternativeIsSafe, hardAttributes } from "@/lib/fashion";
 import { orgLS } from "@/lib/org-client";
+import { IMPORT_HEADER, detectImportFormat } from "@/lib/import-format";
 
 // Aantal winkels dat tegelijk wordt doorzocht (snelheid). 6 = ±6× sneller
 // dan één voor één; de catalogi komen uit de cache, dus dat kan veilig.
@@ -46,11 +47,9 @@ function save(key, val) {
   } catch {}
 }
 
-const HEADER_ROW = [
-  "LINK", "TITEL", "KEYWORD", "GEVONDEN VIA", "MATCH", "GESLACHT",
-  "DUBBELE FOTO", "LITERAL-TWIJFEL", "COLLECTIE", "TYPE", "TITELVORM",
-  "VRAAG", "VRAAG-SCORE", "SIGNALEN",
-];
+// Kopregel van de import-lijst — één bron: lib/import-format.js (importer leest
+// dezelfde kolommen; Chaim-formaat wordt daar ook herkend/omgezet).
+const HEADER_ROW = IMPORT_HEADER;
 
 /* Vraag-bewijs per product (lib/demand.js). "bewezen" = alleen producten
    met score ≥ 50 (gevalideerde bestseller-top, reviews, uitverkochte
@@ -1159,6 +1158,21 @@ export default function ScraperPage() {
         const byStore = load(LS.importTabByStore, {});
         byStore[memStore] = tabRes.title;
         save(LS.importTabByStore, byStore);
+      }
+      /* Bestaand blad in een ander formaat (Chaim-scraper: Keyword · Competitor
+         · … · URL in E) — daar niet onder schrijven, dan staan twee formaten
+         door elkaar. Eerst omzetten in de Importer (Sheet plakken → "Zet dit
+         blad om naar Attoh-formaat") of een nieuwe bladnaam kiezen. */
+      if (tabRes.existed) {
+        const head = await sheetsCall({ action: "read", sheetId: workSheet, range: `'${tabRes.title}'!A1:I6` }).catch(() => null);
+        const fmt = head && head.values ? detectImportFormat(head.values).format : "attoh";
+        if (fmt !== "attoh") {
+          throw new Error(
+            fmt === "chaim"
+              ? `Blad "${tabRes.title}" staat in het Chaim-formaat. Zet het eerst om (Importer → Sheet plakken → "Zet dit blad om naar Attoh-formaat") of kies een nieuwe bladnaam.`
+              : `Blad "${tabRes.title}" is geen import-lijst (kolom A is geen LINK). Kies een nieuwe bladnaam.`
+          );
+        }
       }
       pushLog({ ok: true, text: tabRes.existed ? `Tabblad "${tabRes.title}" bestaat al — producten komen eronder (vult aan)` : `Tabblad "${tabRes.title}" aangemaakt`, href: tabRes.url });
       if (!tabRes.existed) {

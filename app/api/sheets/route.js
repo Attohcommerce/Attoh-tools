@@ -12,13 +12,19 @@ import {
   getFirstTabId,
   formatRunTab,
   getSheetSizes,
+  clearValues,
+  updateValues,
+  a1Tab,
 } from "@/lib/sheets";
+import { parseImportRows, toImportRow, IMPORT_HEADER } from "@/lib/import-format";
+import { getStoreMemory, canonOf } from "@/lib/geheugen";
+import { loadOrgMap } from "@/lib/tpk";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 // Eén route met acties: read / append / update / info / createTab / deleteTab / deleteTailRows
 export async function POST(req) {
-  const { action, sheetId, range, rows, updates, title, header, tabId, count } = await req
+  const { action, sheetId, range, rows, updates, title, header, tabId, count, store } = await req
     .json()
     .catch(() => ({}));
   try {
@@ -68,6 +74,57 @@ export async function POST(req) {
         tabId,
         existed,
         url: `https://docs.google.com/spreadsheets/d/${id}/edit#gid=${tabId}`,
+      });
+    }
+    /* Import-tabblad in Chaim-formaat (Keyword · Competitor · Match ·
+       Productnaam · URL · Geslacht · Duplicaten · Literal-check · Store) ter
+       plekke omzetten naar het Attoh-formaat (LINK · TITEL · KEYWORD · … ·
+       COLLECTIE · TYPE), zelfde tabblad, zelfde sheet (Sa Collective, 20-10).
+       Collectie per keyword komt uit het store-geheugen (ORG VROUW/ORG MAN
+       van de aanvul-sheet) als er een store is meegegeven. */
+    if (action === "convertImportTab") {
+      const t = String(title || "").trim();
+      if (!t) return NextResponse.json({ error: "Tabbladnaam ontbreekt" }, { status: 400 });
+      const values = await readRange(sheetId, `${a1Tab(t)}!A1:N`);
+      if (!values.length) return NextResponse.json({ error: `Tabblad "${t}" is leeg of bestaat niet` }, { status: 422 });
+      const parsed = parseImportRows(values);
+      if (parsed.format === "attoh") return NextResponse.json({ ok: true, already: true, count: parsed.rows.length });
+      if (parsed.format !== "chaim") {
+        return NextResponse.json({ error: `"${t}" is geen import-lijst in Chaim-formaat (verwacht: Keyword · Competitor · Match · Productnaam · URL · Geslacht) en ook niet in Attoh-formaat.` }, { status: 422 });
+      }
+      let orgMap = new Map();
+      if (store && store.domain) {
+        try {
+          orgMap = await loadOrgMap(await getStoreMemory(store.domain));
+        } catch {
+          orgMap = new Map();
+        }
+      }
+      let withCol = 0;
+      const out = parsed.rows.map((p) => {
+        const g = p.gender === "Man" ? "M" : "V";
+        const hit = orgMap.get(`${g}|${canonOf(p.keyword)}`);
+        const collection = hit && hit.coll ? hit.coll : "";
+        if (collection) withCol++;
+        return toImportRow({ ...p, collection });
+      });
+      const id = await getTabIdByTitle(sheetId, t);
+      if (id === null) return NextResponse.json({ error: `Tabblad "${t}" niet gevonden` }, { status: 422 });
+      await clearValues(sheetId, a1Tab(t));
+      await updateValues(sheetId, `${a1Tab(t)}!A1`, [IMPORT_HEADER, ...out]);
+      try {
+        await formatRunTab(sheetId, id);
+      } catch {
+        /* opmaak is nice-to-have */
+      }
+      const sid = parseSheetId(sheetId);
+      return NextResponse.json({
+        ok: true,
+        count: out.length,
+        withCollection: withCol,
+        skipped: Math.max(0, values.length - (parsed.hasHeader ? 1 : 0) - out.length),
+        tabId: id,
+        url: `https://docs.google.com/spreadsheets/d/${sid}/edit#gid=${id}`,
       });
     }
     // Fancy opmaak voor een scraper-run-tabblad (import-lijst)
