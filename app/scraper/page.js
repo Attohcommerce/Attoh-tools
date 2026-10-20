@@ -6,6 +6,7 @@ import { analyzeKeyword, alternativeIsSafe, hardAttributes } from "@/lib/fashion
 import { orgLS } from "@/lib/org-client";
 import { IMPORT_HEADER, detectImportFormat } from "@/lib/import-format";
 import { parseVerdelingSheet, parseWeekplanSheet } from "@/lib/weekplan";
+import { useOrgDef } from "../components/OrgProvider";
 
 // Aantal winkels dat tegelijk wordt doorzocht (snelheid). 6 = ±6× sneller
 // dan één voor één; de catalogi komen uit de cache, dus dat kan veilig.
@@ -131,10 +132,10 @@ const LS_COMP_TAB = "sa_comp_tab";
 const LS_COMP_META = "sa_comp_meta_v1"; // domein → {market, visits, lang, reason}
 const LS_TRANS = "sa_kw_trans_v1"; // taal → {keyword: [zoektermen]}
 
-// Vaste geheugen-sheet — staat altijd automatisch ingevuld, ook na
-// Reset session, nieuwe logins of een andere browser.
-const DEFAULT_MEM_SHEET =
-  "https://docs.google.com/spreadsheets/d/1gbu2XAZMPBIbyr47B_rBvoHDcWoVaTNUuBNwmp9ucJg/edit";
+// Vaste geheugen-sheet — staat altijd automatisch ingevuld, ook na Reset
+// session, nieuwe logins of een andere browser. Per ORGANISATIE (lib/org.js,
+// 20-10): Attoh = "Attoh — Geheugen", Sa Collective = Chaims "Producten
+// scraper · geheugen" (zelfde sheet als zijn tool). Zie useOrgDef() hieronder.
 
 // Vaste import-werksheet (de import-lijst) — automatisch ingevuld;
 // alleen de bladnaam per run kies je zelf.
@@ -189,6 +190,9 @@ function storeOf(link) {
 }
 
 export default function ScraperPage() {
+  // Organisatie (lib/org.js): bepaalt o.a. de vaste geheugen-sheet
+  const orgDef = useOrgDef();
+  const DEFAULT_MEM_SHEET = orgDef.memorySheet.url;
   const [storeInput, setStoreInput] = useState("");
   const [storeList, setStoreList] = useState([]);
   // Competitor-sheet (slimme selectie)
@@ -330,7 +334,8 @@ export default function ScraperPage() {
       .catch(() => {});
     setKw(load(LS.keywords, { vrouw: [{ k: "", n: 10 }], man: [{ k: "", n: 10 }] }));
     setWorkSheet(load(LS.workSheet, "") || DEFAULT_WORK_SHEET);
-    // 20-10 (Justin): de geheugen-sheet is ALTIJD "Attoh — Geheugen" — een oude
+    // 20-10 (Justin): de geheugen-sheet is ALTIJD die van de organisatie
+    // (Attoh — Geheugen, of Chaims geheugen in Sa Collective) — een oude
     // waarde uit de browser wint niet meer
     setMemSheet(DEFAULT_MEM_SHEET);
     save(LS.memSheet, DEFAULT_MEM_SHEET);
@@ -1166,14 +1171,31 @@ export default function ScraperPage() {
         }
       }
 
-      // Exclusie: het permanente geheugen (dé bron tegen dubbel scrapen)
+      /* Exclusie: het permanente geheugen (dé bron tegen dubbel scrapen).
+         Twee formaten (20-10): Attoh = link in A; Chaim = Keyword · Competitor ·
+         Match · Productnaam · URL (E) · Geslacht — in Sa Collective is dit
+         Chaims eigen geheugen-sheet, dus zijn scraper en de onze slaan
+         elkaars producten over. Per rij telt de eerste http-cel. */
       const exclude = new Set();
+      let memFormat = orgDef.memorySheet.format; // "attoh" | "chaim" — leeg blad = standaard van de organisatie
       if (memSheet.trim()) {
-        const mem = await sheetsCall({ action: "read", sheetId: memSheet, range: "A:A" });
-        for (const r of mem.values || [])
-          if (r[0] && r[0].startsWith("http")) exclude.add(r[0].toLowerCase().replace(/\/$/, ""));
+        const mem = await sheetsCall({ action: "read", sheetId: memSheet, range: "A:F" });
+        let inA = 0;
+        let inE = 0;
+        for (const r of mem.values || []) {
+          const cell = (r || []).find((c) => typeof c === "string" && c.startsWith("http"));
+          if (!cell) continue;
+          if (r[0] === cell) inA++;
+          else if (r[4] === cell) inE++;
+          exclude.add(cell.toLowerCase().replace(/\/$/, ""));
+        }
+        if (inA || inE) memFormat = inE > inA ? "chaim" : "attoh";
       }
-      pushLog({ muted: true, text: `${exclude.size} bekende links worden overgeslagen (geheugen).` });
+      const memRow = (m, kwNow, g) =>
+        memFormat === "chaim"
+          ? [kwNow, storeOf(m.link) || m._store || "", m.literal || "Literal", m.title || "", m.link, g === "Man" ? "Man" : g === "Vrouw" ? "Vrouw" : ""]
+          : [m.link, kwNow, new Date().toISOString().slice(0, 10)];
+      pushLog({ muted: true, text: `${exclude.size} bekende links worden overgeslagen (geheugen${memFormat === "chaim" ? ", Chaim-formaat" : ""}).` });
 
       /* Spreiding over concurrenten + ontdubbeling op producttitel.
          Bij dropshipping verkopen tien winkels exact hetzelfde artikel; de
@@ -1747,7 +1769,7 @@ export default function ScraperPage() {
                 await Promise.all([
                   sheetsCall({ action: "append", sheetId: workSheet, range: `'${runTitle}'!A:N`, rows: newRows }),
                   memSheet.trim()
-                    ? sheetsCall({ action: "append", sheetId: memSheet, rows: take.map((m) => [m.link, k, new Date().toISOString().slice(0, 10)]) })
+                    ? sheetsCall({ action: "append", sheetId: memSheet, rows: take.map((m) => memRow(m, k, gender)) })
                     : Promise.resolve(),
                 ]);
                 if (memSheet.trim()) memAdded += take.length;
@@ -2740,8 +2762,11 @@ export default function ScraperPage() {
                 onChange={(e) => saveSheets(workSheet, e.target.value)}
               />
               <div className="hint">
-                Staat altijd op <b>Attoh — Geheugen</b> — ook na herladen, Reset session of een nieuwe login (leegmaken
-                zet hem meteen terug). Voorkomt dat dezelfde producten terugkomen.{" "}
+                Staat altijd op <b>{orgDef.memorySheet.name}</b> — ook na herladen, Reset session of een nieuwe login (leegmaken
+                zet hem meteen terug). Voorkomt dat dezelfde producten terugkomen.
+                {orgDef.memorySheet.format === "chaim"
+                  ? " Dit is de geheugen-sheet van Chaims eigen scraper (tab Geheugen): beide tools slaan elkaars producten over; wij schrijven er in zijn formaat bij."
+                  : ""}{" "}
                 <a className="linklike" href={DEFAULT_MEM_SHEET} target="_blank" rel="noreferrer noopener">
                   Openen ↗
                 </a>

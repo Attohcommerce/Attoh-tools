@@ -168,6 +168,28 @@ export async function POST(req) {
     }
     return NextResponse.json({ error: "Onbekende actie" }, { status: 400 });
   } catch (e) {
-    return NextResponse.json({ error: String(e.message || e) }, { status: 500 });
+    const msg = String(e.message || e);
+    /* 403 van Google ("The caller does not have permission"): de service
+       account mag deze sheet niet (be)werken. Vaak is de sheet wel "iedereen
+       met de link kan bekijken" — lezen lukt dan, schrijven niet. Melding
+       noemt welke sheet en wat te doen (20-10). */
+    if (/does not have permission|PERMISSION_DENIED|forbidden|\b403\b/i.test(msg)) {
+      let id = "";
+      try {
+        id = parseSheetId(sheetId);
+      } catch {
+        id = String(sheetId || "");
+      }
+      const write = ["append", "update", "createTab", "deleteTab", "deleteTailRows", "formatRun", "buildScraperTabs", "convertImportTab"].includes(action);
+      return NextResponse.json(
+        {
+          error: `Geen ${write ? "schrijf" : "lees"}rechten op sheet https://docs.google.com/spreadsheets/d/${id}/edit — deel hem als Bewerker met ${getServiceAccountEmail()} en probeer opnieuw.`,
+          code: "SHEET_PERMISSION",
+          sheetId: id,
+        },
+        { status: 403 }
+      );
+    }
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
