@@ -19,12 +19,13 @@ import {
 import { parseImportRows, toImportRow, IMPORT_HEADER } from "@/lib/import-format";
 import { getStoreMemory, canonOf } from "@/lib/geheugen";
 import { loadOrgMap } from "@/lib/tpk";
+import { buildScraperTabs } from "@/lib/scraper-tabs";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 // Eén route met acties: read / append / update / info / createTab / deleteTab / deleteTailRows
 export async function POST(req) {
-  const { action, sheetId, range, rows, updates, title, header, tabId, count, store } = await req
+  const { action, sheetId, range, rows, updates, title, header, tabId, count, store, overwrite, weeks } = await req
     .json()
     .catch(() => ({}));
   try {
@@ -75,6 +76,13 @@ export async function POST(req) {
         existed,
         url: `https://docs.google.com/spreadsheets/d/${id}/edit#gid=${tabId}`,
       });
+    }
+    /* Scraper W-tabs aanmaken uit de planning van de store (Keywordplan/Plan
+       of de weektabs), in de opmaak van de SSB Final Organization — zelfde
+       sheet (Sa Collective, 20-10). overwrite = bestaande Scraper W-tabs
+       opnieuw schrijven; weeks = alleen deze weeknummers. */
+    if (action === "buildScraperTabs") {
+      return NextResponse.json(await buildScraperTabs({ sheetId, store, overwrite: !!overwrite, weeks }));
     }
     /* Import-tabblad in Chaim-formaat (Keyword · Competitor · Match ·
        Productnaam · URL · Geslacht · Duplicaten · Literal-check · Store) ter

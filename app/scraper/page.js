@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import { analyzeKeyword, alternativeIsSafe, hardAttributes } from "@/lib/fashion";
 import { orgLS } from "@/lib/org-client";
 import { IMPORT_HEADER, detectImportFormat } from "@/lib/import-format";
+import { parseVerdelingSheet, parseWeekplanSheet } from "@/lib/weekplan";
 
 // Aantal winkels dat tegelijk wordt doorzocht (snelheid). 6 = ±6× sneller
 // dan één voor één; de catalogi komen uit de cache, dus dat kan veilig.
@@ -175,78 +176,9 @@ function parseKwPaste(text) {
   return out;
 }
 
-/* ---------- Organization-sheet lezen: twee formaten ----------
-   1. Verdeling-formaat (Keywords-tool): A Rank · B Keyword · C Collectie ·
-      D Groep · … · H Aantal producten · I Type · J Uitleg.
-   2. Weekplanning (Chaim-opmaak, de organization sheets die Claude maakt):
-      kopregel A "Categorie (Bet)" · B "Keyword" · C "Aantal" · D "The Play",
-      daaronder per categorie een regel "Casual Dresses (HERO)  [105]" en
-      per keyword een rij met B keyword en C aantal. De collectie staat in
-      kolom A of H (nieuwe sheets) of volgt uit de laatste categorieregel.
-   Beide leveren dezelfde rijen op: { k, n, g, col, type, uitleg }. */
-const OCCASION_RE =
-  /\b(christmas|xmas|race day|races|nye|new years?|wedding|bridesmaid|mother of the (bride|groom)|formal|cocktail|evening|party|going out|graduation|engagement|semi formal|ball|dinner|occasion|prom|gala)\b/i;
-const low = (v) => String(v || "").toLowerCase().trim();
-
-function parseVerdelingSheet(values) {
-  const h = (values[0] || []).map(low);
-  if (!h[1]?.startsWith("keyword") || !h[3]?.startsWith("groep") || !h[7]?.startsWith("aantal")) return null;
-  /* Storegeslacht uit de kop van kolom D ("Groep — alleen heren"). Bij een
-     heren-only blad is élk keyword heren — ook "shoes" zonder "mens". */
-  const storeG = /alleen heren/.test(h[3]) ? "man" : /alleen dames/.test(h[3]) ? "vrouw" : null;
-  const parsed = [];
-  for (const r of values.slice(1)) {
-    const k = String(r[1] || "").trim();
-    if (!k) continue;
-    if (k.toUpperCase().startsWith("UNDERDOG KEYWORDS")) continue; // scheidingsregel
-    if (/^keyword$/i.test(k)) continue; // koprij van het underdog-blok
-    if (!Number.isFinite(Number(r[0])) && !Number.isFinite(Number(r[7]))) continue;
-    const n = Math.max(1, Number(r[7]) || 0);
-    const g = storeG || (String(r[3] || "").trim().toUpperCase() === "M" ? "man" : "vrouw");
-    const col = String(r[2] || "").trim(); // C = Collectie — reist mee naar de importlijst
-    const type = String(r[8] || "").trim() || "Direct"; // I = Direct/Attribuut/Gelegenheid/Underdog
-    const uitleg = String(r[9] || "").trim(); // J = underdog-uitleg voor de foto-controle
-    parsed.push({ k, n, g, col, type, uitleg });
-  }
-  return { parsed, storeG, formaat: "verdeling", bron: "kop van kolom D" };
-}
-
-function parseWeekplanSheet(values) {
-  let hdr = -1;
-  for (let i = 0; i < Math.min(values.length, 8); i++) {
-    const r = values[i] || [];
-    if (low(r[0]).startsWith("categorie") && low(r[1]).startsWith("keyword") && low(r[2]).startsWith("aantal")) {
-      hdr = i;
-      break;
-    }
-  }
-  if (hdr < 0) return null;
-  // Titel + notitie boven de kopregel: "Week 1 (12 Oct-18 Oct) — 1x AUS/NZ", "alleen dames"
-  const head = values.slice(0, hdr + 1).flat().map(low).join(" ");
-  const storeG = /alleen heren|herenstore/.test(head) ? "man" : /alleen dames|dameszaak/.test(head) ? "vrouw" : null;
-  const title = head.match(/week\s*(\d+)\s*\(([^)]+)\)/);
-  let cat = "";
-  const parsed = [];
-  for (const r of values.slice(hdr + 1)) {
-    const a = String(r[0] || "").trim();
-    const b = String(r[1] || "").trim();
-    const catRow = a.match(/^(.+?)\s*\((HERO|CORE|SIDE)\)/i);
-    if (catRow && !b) {
-      cat = catRow[1].trim(); // "Casual Dresses (HERO)  [105]" → Casual Dresses
-      continue;
-    }
-    if (!b || /^keyword$/i.test(b) || /^totaal/i.test(a) || /^totaal/i.test(b)) continue;
-    const n = Number(String(r[2] || "").replace(",", "."));
-    if (!Number.isFinite(n) || n <= 0) continue;
-    const col = (a && !catRow ? a : "") || String(r[7] || "").trim() || cat;
-    const zoekterm = String(r[5] || "").trim(); // F = zoekterm (heren: "mens …")
-    const g = storeG || (/^men'?s\b/i.test(col) || /^mens\b/i.test(zoekterm) ? "man" : "vrouw");
-    const k = g === "man" && zoekterm ? zoekterm : b;
-    const type = OCCASION_RE.test(k) ? "Gelegenheid" : "Direct";
-    parsed.push({ k, n: Math.max(1, Math.round(n)), g, col, type, uitleg: "" });
-  }
-  return { parsed, storeG, formaat: "weekplanning", bron: "notitie boven de tabel", week: title ? `week ${title[1]} (${title[2]})` : "" };
-}
+/* Organization-sheet lezen (verdeling-formaat of weekplanning in Chaim-
+   opmaak): parsers staan in lib/weekplan.js — dezelfde code gebruikt de
+   server voor "Scraper W-tabs aanmaken". */
 
 function storeOf(link) {
   try {
@@ -290,6 +222,7 @@ export default function ScraperPage() {
   const [orgFilter, setOrgFilter] = useState("alles"); // "alles" | "normaal" | "underdog"
   const [orgBusy, setOrgBusy] = useState(false);
   const [orgInfo, setOrgInfo] = useState(null);
+  const [tabsBuildBusy, setTabsBuildBusy] = useState(false); // Scraper W-tabs aanmaken (zoals SSB)
   /* Store-geheugen (Keywords → Geheugen → 2 · Store-geheugen): per store staat
      daar de organization/aanvul-sheet. Store kiezen = sheet + tabbladen
      automatisch ingevuld; alleen bij LGB stond de sheet tot nu toe vast. */
@@ -979,6 +912,55 @@ export default function ScraperPage() {
       byStore[tabKey(memStore, orgSource)] = tab;
       save(LS.orgTabByStore, byStore);
       applyImportSuggestion(memEntry, tab);
+    }
+  }
+
+  /* ---------- Scraper W-tabs aanmaken (zoals SSB) ----------
+     Leest de planning van de gekozen organization-sheet (tab Keywordplan/Plan
+     of de weektabs "Week 2" …) en schrijft per week een tab "Scraper W<n>" in
+     het verdeling-formaat van de SSB Final Organization (A Rank · B Keyword ·
+     C Collectie · D Groep · E/F volume · G piek · H Aantal · I Type · J Uitleg
+     + collectie-overzicht K–N). Zelfde sheet. Bestaande Scraper-tabs blijven
+     staan, tenzij je kiest voor overschrijven. */
+  async function buildScraperTabs() {
+    if (tabsBuildBusy || running) return;
+    const sheet = orgSheet.trim();
+    if (!sheet) return alert2("Kies eerst een store (of plak de link van de organization-sheet).");
+    const existing = orgTabs.filter((t) => /^scraper w\d+/i.test(t));
+    let overwrite = false;
+    if (existing.length) {
+      overwrite = window.confirm(`Er staan al ${existing.length} Scraper-tabs in deze sheet (${existing.slice(0, 4).join(", ")}${existing.length > 4 ? ", …" : ""}). OK = opnieuw schrijven (overschrijven), Annuleren = alleen ontbrekende weken toevoegen.`);
+    } else if (!window.confirm("Scraper W-tabs aanmaken uit de planning van deze sheet (zoals bij SSB)? Per week één tab \"Scraper W<n>\".")) {
+      return;
+    }
+    setTabsBuildBusy(true);
+    try {
+      pushLog({ strong: true, text: `— Scraper W-tabs aanmaken${memStoreName ? ` voor ${memStoreName}` : ""} (zoals SSB)` });
+      const r = await sheetsCall({
+        action: "buildScraperTabs",
+        sheetId: sheet,
+        store: memEntry ? { domain: memEntry.domain, publicDomain: memEntry.publicDomain || "" } : null,
+        overwrite,
+      });
+      pushLog({ muted: true, text: `Planning gelezen uit ${r.bron} · weken ${r.weeks.join(", ")}${r.market ? ` · volumes uit het All-keywords-geheugen ${r.market} (${r.volumesFound} keywords gevonden)` : " · geen markt bekend → geen volumes"}` });
+      for (const w of r.written) {
+        pushLog({ ok: true, text: `${w.tab}${w.replaced ? " (overschreven)" : ""}: ${w.keywords} keywords · ${w.products} producten${w.men ? ` · ${w.men} heren` : ""}`, href: w.url });
+      }
+      if (r.skipped.length) pushLog({ muted: true, text: `Bestond al, overgeslagen: ${r.skipped.join(", ")}` });
+      if (!r.written.length && !r.skipped.length) pushLog({ err: true, text: "Geen weken om te schrijven (week 1 = origineel wordt overgeslagen)." });
+      // tabbladen verversen en de eerste nieuwe Scraper-tab kiezen
+      const titles = await loadOrgTabs(sheet, memStore, memEntry, "org");
+      const first = (r.written[0] && r.written[0].tab) || titles.find((t) => /^scraper w2$/i.test(t));
+      if (first) {
+        setOrgTab(first);
+        save(LS.orgTab, first);
+      }
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+    } catch (e) {
+      pushLog({ err: true, text: `Scraper-tabs aanmaken mislukt: ${e.message}` });
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+    } finally {
+      setTabsBuildBusy(false);
     }
   }
 
@@ -2605,7 +2587,7 @@ export default function ScraperPage() {
                 foto-controle kan matchen op betekenis — concurrenten zetten deze woorden zelden letterlijk
                 in hun titels.
               </div>
-              <div style={{ marginTop: 12 }}>
+              <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                 <button
                   className="btn-ghost"
                   onClick={loadVerdeling}
@@ -2613,6 +2595,17 @@ export default function ScraperPage() {
                 >
                   {orgBusy ? "Laden…" : "⇣ Laad verdeling"}
                 </button>
+                {orgSource !== "tpk" && (
+                  <button
+                    className="btn-ghost btn-small"
+                    onClick={buildScraperTabs}
+                    disabled={tabsBuildBusy || orgBusy || running || !orgSheet.trim()}
+                    type="button"
+                    title="Uit de planning (Keywordplan/Plan of de weektabs) per week een tab 'Scraper W<n>' schrijven, in de opmaak van de SSB Final Organization — zelfde sheet"
+                  >
+                    {tabsBuildBusy ? "Tabs maken…" : "⚙ Scraper W-tabs aanmaken (zoals SSB)"}
+                  </button>
+                )}
               </div>
               {orgInfo && (
                 <div className="hint" style={{ color: "var(--ink-2)" }}>
