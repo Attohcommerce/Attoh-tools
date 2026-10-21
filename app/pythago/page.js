@@ -486,7 +486,7 @@ export default function PythagoPage() {
               <div className="py-tiles">
                 {[7, 14, 30].map((w) => (
                   <div className="py-tile" key={w}>
-                    <div className="k">{w} dagen</div>
+                    <div className="k">{(result.windowDays && result.windowDays[w]) || w} dagen</div>
                     <div className="v">{money(result.totals[w].spend)}</div>
                     <div className="s">
                       omzet {money(result.totals[w].rev)} · ROAS {result.totals[w].roas == null ? "—" : result.totals[w].roas.toFixed(2)}
@@ -532,9 +532,9 @@ export default function PythagoPage() {
                   <thead>
                     <tr>
                       <th className="l" colSpan={4} />
-                      <th className="grp" colSpan={3}>7 dagen</th>
-                      <th className="grp" colSpan={3}>14 dagen</th>
-                      <th className="grp" colSpan={6}>30 dagen</th>
+                      <th className="grp" colSpan={3}>{(result.windowDays && result.windowDays[7]) || 7} dagen</th>
+                      <th className="grp" colSpan={3}>{(result.windowDays && result.windowDays[14]) || 14} dagen</th>
+                      <th className="grp" colSpan={6}>{(result.windowDays && result.windowDays[30]) || 30} dagen</th>
                       <th className="grp" />
                     </tr>
                     <tr>
