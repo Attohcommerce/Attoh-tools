@@ -20,6 +20,8 @@ import { canonOptionName, translateValue } from "@/lib/lang";
 import { repairVariantImages } from "@/lib/doctor";
 import { categoryFor, genderedTypeFor } from "@/lib/categories";
 import { resolveCategory, fillCategoryMetafields, summarizeSet } from "@/lib/category-attrs";
+import { isShapesWardrobe, guessSwType } from "@/lib/sw-product-types";
+import { classifySwTypes } from "@/lib/sw-product-types-ai";
 
 export const maxDuration = 60;
 
@@ -362,13 +364,41 @@ export async function POST(req) {
   }
   const collectionInfo = collectionInfos[0] || null;
 
+  /* SHAPES WARDROBE (23-10): product type = precies één type uit de lijst van
+     Cas (media buyer), gekozen op de eerste foto + titel ("SS - Mens - Sandals").
+     Faalt de AI, dan het vangnet op de titel — nooit een leeg type. */
+  let swType = "";
+  let swTypeWarn = "";
+  if (isShapesWardrobe(store)) {
+    try {
+      const firstImg = keptImages[0] && keptImages[0].src;
+      const { results, errors } = await classifySwTypes([
+        {
+          id: "new",
+          title: listing.title,
+          product_type: "",
+          tags: [...tagList, genderTag].join(", "),
+          imageUrl: typeof firstImg === "string" && /^https?:\/\//.test(firstImg) ? firstImg : null,
+        },
+      ]);
+      const r0 = results.get("new");
+      swType = (r0 && r0.type) || "";
+      if (r0 && r0.source === "fallback") swTypeWarn = (errors && errors[0]) || "AI koos niets uit de lijst — type uit de titel";
+    } catch (e) {
+      swTypeWarn = `AI-indeling mislukt (${String(e.message || e).slice(0, 100)}) — type uit de titel`;
+    }
+    if (!swType) swType = guessSwType({ title: listing.title }, isMen ? "men" : "women");
+  }
+
   const payload = {
     title: listing.title,
     body_html: listing.descriptionHtml,
     vendor: s.vendor || "",
     /* Product type MET geslacht ("Women's Barrel Leg Jeans") — RTM/Ana 15-10.
-       Het brontype van de concurrent ("Barrel Leg Jeans") is alleen nog fallback. */
+       Het brontype van de concurrent ("Barrel Leg Jeans") is alleen nog fallback.
+       Shapes Wardrobe: het type van Cas (hierboven). */
     product_type:
+      swType ||
       genderedTypeFor({ title: listing.title, product_type: product.productType || "" }, isMen ? "men" : "women") ||
       product.productType ||
       "",
@@ -617,6 +647,9 @@ export async function POST(req) {
 
   return NextResponse.json({
     ok: true,
+    productType: payload.product_type,
+    swType,
+    swTypeWarn,
     category: categorySet,
     categoryWarn,
     categoryAttrs: attrsSet,

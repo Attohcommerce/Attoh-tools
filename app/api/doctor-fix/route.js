@@ -4,6 +4,7 @@ import { applyDoctorFix, FIX_FIELDS } from "@/lib/doctor";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { addTab, appendRows } from "@/lib/sheets";
 import { storeGendersOf, storeShoeLabelsOf } from "@/lib/store-gender";
+import { classifySwTypes } from "@/lib/sw-product-types-ai";
 
 export const maxDuration = 60;
 
@@ -43,6 +44,8 @@ const CHUNK_FOR = {
   "gender-tags": 8,
   // per product: 1 lees-call + per nieuwe waarde een metaobject-upsert + 1 write
   "fill-category-attrs": 8,
+  // SW: één AI-call (foto + titel) voor het hele plukje + 1 write per product
+  "set-sw-type": 8,
   default: 15,
 };
 
@@ -66,6 +69,7 @@ function snapshotFor(fix, p) {
     case "set-vendor":
       return { vendor: p.vendor || "" };
     case "set-product-type":
+    case "set-sw-type":
       return { product_type: p.product_type || "" };
     case "set-category":
       return { category: p.__category || null };
@@ -166,6 +170,16 @@ export async function POST(req) {
     if ((fix === "fix-size-guides" || fix === "shoe-us-eu-labels") && pending.length) {
       const mf = await getProductMetafieldValues(store, pending.map((p) => p.id), { namespace: SG_NS, key: SG_KEY });
       if (mf.ok) for (const p of pending) p.__sizeGuide = mf.values[String(p.id)] || null;
+    }
+
+    // SW-producttype (Cas): het hele plukje in één AI-call indelen (foto + titel)
+    if (fix === "set-sw-type" && pending.length) {
+      try {
+        const { results } = await classifySwTypes(pending);
+        for (const p of pending) p.__swType = results.get(String(p.id)) || null;
+      } catch {
+        /* dan deelt de fix elk product los in */
+      }
     }
 
     // Categorie-fix: huidige categorie erbij (REST geeft die niet) — voor backup + "stond al goed"

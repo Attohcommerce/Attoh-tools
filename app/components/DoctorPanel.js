@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { MARKETS, MARKET_SIZE_GUIDE, BARE_SYSTEMS } from "@/lib/sizes";
 import { orgLS } from "@/lib/org-client";
 import { useOrgDef } from "./OrgProvider";
+import { isShapesWardrobe, SW_TYPE_SHEET } from "@/lib/sw-product-types";
 
 const LS_BACKUP = "sa_doctor_backup";
 const LS_SCOPE = "sa_doctor_scope"; // "all" | "latest"
@@ -59,6 +60,7 @@ const FIXALL_ORDER = [
   "clear-barcodes",
   "set-vendor",
   "set-product-type",
+  "set-sw-type", // alleen Shapes Wardrobe: type uit de lijst van Cas
   "set-category",
   "fill-category-attrs", // na de categorie: de velden hangen van de categorie af
   "fill-alt",
@@ -127,6 +129,12 @@ export default function DoctorPanel({ store, since }) {
   const [market, setMarket] = useState("");
   const [bareSystem, setBareSystem] = useState("");
   const [showGuide, setShowGuide] = useState(false);
+
+  /* SHAPES WARDROBE (23-10): producttypes van Cas (media buyer). Alleen bij SW
+     zichtbaar: losse knop + standaard vóór elke scan. */
+  const isSW = isShapesWardrobe(store);
+  const [swFirst, setSwFirst] = useState(true);
+  const [swInfo, setSwInfo] = useState("");
 
   useEffect(() => {
     try {
@@ -363,6 +371,84 @@ export default function DoctorPanel({ store, since }) {
       setFixBusy(null);
       setFixProg(null);
     }
+  }
+
+  /* ============ SW · PRODUCTTYPES VAN CAS ============
+     1. /api/sw-types: welke producten (zelfde selectie als de scan) hebben
+        geen exact type uit de lijst van Cas?
+     2. Die producten via de gewone Doctor-fix "set-sw-type" (chunks + backup,
+        AI kiest op foto + titel precies één type per product). */
+  async function swTypePass(skipBackup) {
+    setSwInfo("Producttypes controleren…");
+    const r = await fetch("/api/sw-types", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        store: storeBody,
+        sinceISO: since && useSince ? since : null,
+        latest: latestOn ? Math.max(1, Math.min(1000, Number(latestN) || 100)) : 0,
+        max: Number(max) || 1000,
+      }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || r.status);
+    if (!data.toFix.length) {
+      const msg = `Producttypes: alle ${data.total} producten hebben al een type uit de lijst van Cas.`;
+      setSwInfo(msg);
+      return { fixed: 0, total: data.total };
+    }
+    const why = Object.entries(data.reasons || {}).map(([k, v]) => `${v}× ${k}`).join(" · ");
+    setSwInfo(`Producttypes: ${data.toFix.length} van ${data.total} zetten (${why})…`);
+    const tot = await execFix({ id: "set-sw-type", label: "Producttypes van Cas (SW)" }, data.toFix, fixOptions(), skipBackup);
+    setSwInfo(
+      `Producttypes: ${tot.fixed} gezet · ${tot.skipped} stonden al goed · ${tot.failed} mislukt — van ${data.total} producten gecontroleerd.`
+    );
+    return tot;
+  }
+
+  async function runSwTypes() {
+    if (!store || !isSW || fixBusy || busy || aiBusy) return;
+    const b = askBackupSkip();
+    if (!b.ok) return;
+    setFixBusy("sw-types");
+    setFixLog([]);
+    setErr("");
+    stopRef.current = false;
+    try {
+      const tot = await swTypePass(b.skipBackup);
+      sfx(tot.failed ? "error" : "success");
+      if (rep) await scan({ keepAi: true, silent: true });
+    } catch (e) {
+      setErr(`Producttypes gestopt: ${String(e.message || e)}`);
+      setSwInfo("");
+      sfx("error");
+    } finally {
+      setFixBusy(null);
+      setFixProg(null);
+    }
+  }
+
+  // Scan-knop: bij SW eerst de producttypes van Cas (tenzij uitgevinkt)
+  async function scanClick() {
+    if (!store) return;
+    if (isSW && swFirst) {
+      const b = askBackupSkip();
+      if (!b.ok) return;
+      setFixBusy("sw-types");
+      setFixLog([]);
+      setErr("");
+      stopRef.current = false;
+      try {
+        await swTypePass(b.skipBackup);
+      } catch (e) {
+        setErr(`Producttypes (Cas) overgeslagen: ${String(e.message || e)} — de scan loopt gewoon door.`);
+      } finally {
+        setFixBusy(null);
+        setFixProg(null);
+      }
+      if (stopRef.current) return;
+    }
+    await scan();
   }
 
   /* ================= FIX ALLES =================
@@ -696,9 +782,33 @@ export default function DoctorPanel({ store, since }) {
         </label>
       ) : null}
 
+      {isSW ? (
+        <div className="prog-card" style={{ marginTop: 12 }}>
+          <div className="field-label" style={{ marginTop: 0 }}>
+            Producttypes van Cas <span className="opt">(alleen Shapes Wardrobe · 1 type per product, gekozen op foto + titel)</span>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button className="btn-ghost btn-small" onClick={runSwTypes} disabled={disabled}>
+              {fixBusy === "sw-types" ? "Producttypes bezig…" : "🏷 Controleer & zet producttypes"}
+            </button>
+            <label className="hint" style={{ display: "flex", gap: 6, alignItems: "center", cursor: "pointer", margin: 0 }}>
+              <input type="checkbox" checked={swFirst} onChange={(e) => setSwFirst(e.target.checked)} disabled={disabled} />
+              Automatisch vóór elke scan
+            </label>
+            <a className="linklike" href={SW_TYPE_SHEET} target="_blank" rel="noreferrer noopener">
+              lijst van Cas
+            </a>
+          </div>
+          <div className="hint" style={{ marginBottom: 0 }}>
+            {swInfo ||
+              "Elk product moet precies één type uit de sheet van Cas hebben, letterlijk gespeld (\"SS - Mens - Sandals\"). Leeg, een eigen type of het verkeerde geslacht wordt rechtgezet; een bijna-goede spelling zonder AI. Selectie = dezelfde als de scan hierboven. Oude waarden gaan eerst naar de backup-sheet."}
+          </div>
+        </div>
+      ) : null}
+
       <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <button className="btn" onClick={() => scan()} disabled={disabled}>
-          {busy ? "Scannen…" : "✚ Scan producten"}
+        <button className="btn" onClick={scanClick} disabled={disabled}>
+          {busy ? "Scannen…" : fixBusy === "sw-types" ? "Producttypes zetten…" : "✚ Scan producten"}
         </button>
         <button
           className="btn"

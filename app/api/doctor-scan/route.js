@@ -5,6 +5,7 @@ import { resolveCategory, listCategoryAttrKeys } from "@/lib/category-attrs";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { storeGendersOf, storeShoeLabelsOf } from "@/lib/store-gender";
 import { latestProductIds, productsByIdsFull, doctorExtrasByIds, LATEST_MAX } from "@/lib/doctor-latest";
+import { isShapesWardrobe } from "@/lib/sw-product-types";
 
 export const maxDuration = 120;
 
@@ -115,6 +116,8 @@ export async function POST(req) {
       attrKeys,
       storeGenders,
       shoeLabels,
+      // Shapes Wardrobe: producttype moet uit de lijst van Cas komen (23-10)
+      swTypes: isShapesWardrobe(store),
     });
 
     return NextResponse.json({

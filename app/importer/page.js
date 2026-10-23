@@ -742,6 +742,13 @@ export default function ImporterPage() {
         okCount++;
         const brandUsd = (iData.brandingAi && iData.brandingAi.usd) || 0;
         aiRunUsd += brandUsd;
+        // Shapes Wardrobe: producttype uit de lijst van Cas (23-10)
+        if (iData.swType) {
+          pushLog({ info: true, text: `${nr} · Producttype (Cas): ${iData.swType}` });
+        }
+        if (iData.swTypeWarn) {
+          pushLog({ ok: false, text: `${nr} · PRODUCTTYPE: ${iData.swTypeWarn} — check in de Store Doctor` });
+        }
         if (iData.categoryWarn) {
           pushLog({ ok: false, text: `${nr} · CATEGORIE NIET GEZET: ${iData.categoryWarn}` });
         }
