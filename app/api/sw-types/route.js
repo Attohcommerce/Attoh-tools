@@ -42,7 +42,12 @@ export async function POST(req) {
       const v = swTypeVerdict(p);
       if (v.ok) continue;
       toFix.push(p.id);
-      const key = v.canonical ? "spelling wijkt af" : v.reason.startsWith("geslacht") ? "geslacht klopt niet" : v.reason;
+      const key =
+        v.kind === "seizoen" ? "verkeerd seizoen"
+        : v.kind === "soort" ? "verkeerde soort"
+        : v.kind === "spelling" ? "spelling wijkt af"
+        : v.reason.startsWith("geslacht") ? "geslacht klopt niet"
+        : v.reason;
       reasons[key] = (reasons[key] || 0) + 1;
       if (examples.length < 6) examples.push(`${String(p.title || p.id).slice(0, 60)} — "${String(p.product_type || "").trim() || "leeg"}"`);
     }
