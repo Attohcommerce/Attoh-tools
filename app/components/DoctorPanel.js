@@ -377,9 +377,13 @@ export default function DoctorPanel({ store, since }) {
      1. /api/sw-types: welke producten (zelfde selectie als de scan) hebben
         geen exact type uit de lijst van Cas?
      2. Die producten via de gewone Doctor-fix "set-sw-type" (chunks + backup,
-        AI kiest op foto + titel precies één type per product). */
-  async function swTypePass(skipBackup) {
-    setSwInfo("Producttypes controleren…");
+        AI kiest op foto + titel precies één type per product).
+     Fotocheck (photo=true): ALLE producten uit de selectie langs de AI, ook
+     die volgens de regels goed staan — vangt titels die liegen ("Mini Shorts"
+     die een playsuit is, een "Wedge" die plat is). Alleen een andere soort op
+     de foto wordt aangepast; seizoen blijft volgens de vaste regel. */
+  async function swTypePass(skipBackup, photo = false) {
+    setSwInfo(photo ? "Fotocheck: producten ophalen…" : "Producttypes controleren…");
     const r = await fetch("/api/sw-types", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -388,6 +392,7 @@ export default function DoctorPanel({ store, since }) {
         sinceISO: since && useSince ? since : null,
         latest: latestOn ? Math.max(1, Math.min(1000, Number(latestN) || 100)) : 0,
         max: Number(max) || 1000,
+        all: photo,
       }),
     });
     const data = await r.json().catch(() => ({}));
@@ -398,16 +403,35 @@ export default function DoctorPanel({ store, since }) {
       return { fixed: 0, total: data.total };
     }
     const why = Object.entries(data.reasons || {}).map(([k, v]) => `${v}× ${k}`).join(" · ");
-    setSwInfo(`Producttypes: ${data.toFix.length} van ${data.total} zetten (${why})…`);
-    const tot = await execFix({ id: "set-sw-type", label: "Producttypes van Cas (SW)" }, data.toFix, fixOptions(), skipBackup);
     setSwInfo(
-      `Producttypes: ${tot.fixed} gezet · ${tot.skipped} stonden al goed · ${tot.failed} mislukt — van ${data.total} producten gecontroleerd.`
+      photo
+        ? `Fotocheck: AI bekijkt de foto van ${data.toFix.length} producten${data.bad ? ` (${data.bad} staan ook volgens de regels fout: ${why})` : ""}…`
+        : `Producttypes: ${data.toFix.length} van ${data.total} zetten (${why})…`
+    );
+    const tot = await execFix(
+      { id: "set-sw-type", label: photo ? "Fotocheck producttypes (SW)" : "Producttypes van Cas (SW)" },
+      data.toFix,
+      photo ? { ...fixOptions(), swPhotoCheck: true } : fixOptions(),
+      skipBackup
+    );
+    setSwInfo(
+      photo
+        ? `Fotocheck: ${tot.fixed} aangepast · ${tot.skipped} klopten al · ${tot.failed} mislukt — van ${data.total} producten. Zie het logboek voor wat er veranderd is.`
+        : `Producttypes: ${tot.fixed} gezet · ${tot.skipped} stonden al goed · ${tot.failed} mislukt — van ${data.total} producten gecontroleerd.`
     );
     return tot;
   }
 
-  async function runSwTypes() {
+  async function runSwTypes(photoArg) {
     if (!store || !isSW || fixBusy || busy || aiBusy) return;
+    const photo = photoArg === true; // onClick geeft een event mee
+    if (
+      photo &&
+      !window.confirm(
+        "Fotocheck: de AI bekijkt de foto van ELK product in de selectie (ook als het type volgens de regels al klopt) en past alleen een andere soort aan (bv. 'Mini Shorts' die een playsuit is → Casual Set). Kost wat AI-tegoed en ±1 minuut per 100 producten. Doorgaan?"
+      )
+    )
+      return;
     const b = askBackupSkip();
     if (!b.ok) return;
     setFixBusy("sw-types");
@@ -415,7 +439,7 @@ export default function DoctorPanel({ store, since }) {
     setErr("");
     stopRef.current = false;
     try {
-      const tot = await swTypePass(b.skipBackup);
+      const tot = await swTypePass(b.skipBackup, photo);
       sfx(tot.failed ? "error" : "success");
       if (rep) await scan({ keepAi: true, silent: true });
     } catch (e) {
@@ -788,8 +812,16 @@ export default function DoctorPanel({ store, since }) {
             Producttypes van Cas <span className="opt">(alleen Shapes Wardrobe · 1 type per product, gekozen op foto + titel)</span>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <button className="btn-ghost btn-small" onClick={runSwTypes} disabled={disabled}>
+            <button className="btn-ghost btn-small" onClick={() => runSwTypes(false)} disabled={disabled}>
               {fixBusy === "sw-types" ? "Producttypes bezig…" : "🏷 Controleer & zet producttypes"}
+            </button>
+            <button
+              className="btn-ghost btn-small"
+              onClick={() => runSwTypes(true)}
+              disabled={disabled}
+              title="AI bekijkt de foto van elk product en zet alleen een andere soort recht (titels die niet kloppen)"
+            >
+              📷 Fotocheck alle producten
             </button>
             <label className="hint" style={{ display: "flex", gap: 6, alignItems: "center", cursor: "pointer", margin: 0 }}>
               <input type="checkbox" checked={swFirst} onChange={(e) => setSwFirst(e.target.checked)} disabled={disabled} />
@@ -801,7 +833,7 @@ export default function DoctorPanel({ store, since }) {
           </div>
           <div className="hint" style={{ marginBottom: 0 }}>
             {swInfo ||
-              "Elk product moet precies één type uit de sheet van Cas hebben, letterlijk gespeld (\"SS - Mens - Sandals\"). Leeg, een eigen type of het verkeerde geslacht wordt rechtgezet; een bijna-goede spelling zonder AI. Selectie = dezelfde als de scan hierboven. Oude waarden gaan eerst naar de backup-sheet."}
+              "Elk product moet precies één type uit de sheet van Cas hebben, letterlijk gespeld (\"SS - Mens - Sandals\"). Leeg, een eigen type, het verkeerde geslacht of seizoen wordt rechtgezet. Seizoen = vaste regel: AS standaard; SS voor zwemkleding, sandalen, shorts, singlets, herenschoenen, linnen/Hawaiian/zon, korte-mouw overhemden. Fotocheck = AI kijkt ook bij goede types naar de foto. Selectie = dezelfde als de scan hierboven. Oude waarden gaan eerst naar de backup-sheet."}
           </div>
         </div>
       ) : null}

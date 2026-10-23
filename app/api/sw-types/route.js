@@ -12,7 +12,8 @@ export const maxDuration = 60;
    Doctor-fix "set-sw-type" (/api/doctor-fix: chunks, backup, AI op foto + titel).
    Alleen voor Shapes Wardrobe. */
 export async function POST(req) {
-  const { store, sinceISO, latest, max } = await req.json().catch(() => ({}));
+  // all: fotocheck — alle producten uit de selectie terug (AI kijkt naar elke foto)
+  const { store, sinceISO, latest, max, all } = await req.json().catch(() => ({}));
   if (!store || !store.domain) return NextResponse.json({ error: "Geen store opgegeven" }, { status: 400 });
   if (!isShapesWardrobe(store)) {
     return NextResponse.json({ error: "Producttypes van Cas gelden alleen voor Shapes Wardrobe" }, { status: 400 });
@@ -38,10 +39,13 @@ export async function POST(req) {
     const toFix = [];
     const reasons = {};
     const examples = [];
+    let bad = 0;
     for (const p of products) {
       const v = swTypeVerdict(p);
+      if (all) toFix.push(p.id);
       if (v.ok) continue;
-      toFix.push(p.id);
+      if (!all) toFix.push(p.id);
+      bad++;
       const key =
         v.kind === "seizoen" ? "verkeerd seizoen"
         : v.kind === "soort" ? "verkeerde soort"
@@ -54,7 +58,9 @@ export async function POST(req) {
     return NextResponse.json({
       ok: true,
       total: products.length,
-      good: products.length - toFix.length,
+      good: products.length - bad,
+      bad,
+      photoCheck: !!all,
       toFix,
       reasons,
       examples,

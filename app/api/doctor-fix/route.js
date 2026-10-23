@@ -175,7 +175,8 @@ export async function POST(req) {
     // SW-producttype (Cas): het hele plukje in één AI-call indelen (foto + titel)
     if (fix === "set-sw-type" && pending.length) {
       try {
-        const { results } = await classifySwTypes(pending);
+        // fotocheck: ook goede types langs de AI (alleen een andere soort telt)
+        const { results } = await classifySwTypes(pending, { photoCheck: !!options.swPhotoCheck });
         for (const p of pending) p.__swType = results.get(String(p.id)) || null;
       } catch {
         /* dan deelt de fix elk product los in */
