@@ -20,6 +20,7 @@ import { parseImportRows, toImportRow, IMPORT_HEADER } from "@/lib/import-format
 import { getStoreMemory, canonOf } from "@/lib/geheugen";
 import { loadOrgMap } from "@/lib/tpk";
 import { buildScraperTabs } from "@/lib/scraper-tabs";
+import { buildChaimTab } from "@/lib/chaim-import";
 
 export const maxDuration = 120;
 
@@ -83,6 +84,13 @@ export async function POST(req) {
        opnieuw schrijven; weeks = alleen deze weeknummers. */
     if (action === "buildScraperTabs") {
       return NextResponse.json(await buildScraperTabs({ sheetId, store, overwrite: !!overwrite, weeks }));
+    }
+    /* Chaim-importblad naast een Attoh-import-lijst (Sa Collective, 24-10):
+       "W3" → "W3 Chaim formaat" in dezelfde sheet, 5 kolommen zonder kopregel
+       (Keyword · URL · Gender · Collection · Tag) voor Chaims importer.
+       Collectie + tag uit het store-geheugen; zie lib/chaim-import.js. */
+    if (action === "buildChaimTab") {
+      return NextResponse.json(await buildChaimTab({ sheetId, title, store }));
     }
     /* Import-tabblad in Chaim-formaat (Keyword · Competitor · Match ·
        Productnaam · URL · Geslacht · Duplicaten · Literal-check · Store) ter
@@ -180,7 +188,7 @@ export async function POST(req) {
       } catch {
         id = String(sheetId || "");
       }
-      const write = ["append", "update", "createTab", "deleteTab", "deleteTailRows", "formatRun", "buildScraperTabs", "convertImportTab"].includes(action);
+      const write = ["append", "update", "createTab", "deleteTab", "deleteTailRows", "formatRun", "buildScraperTabs", "convertImportTab", "buildChaimTab"].includes(action);
       return NextResponse.json(
         {
           error: `Geen ${write ? "schrijf" : "lees"}rechten op sheet https://docs.google.com/spreadsheets/d/${id}/edit — deel hem als Bewerker met ${getServiceAccountEmail()} en probeer opnieuw.`,
@@ -190,6 +198,6 @@ export async function POST(req) {
         { status: 403 }
       );
     }
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: msg }, { status: Number(e && e.status) || 500 });
   }
 }

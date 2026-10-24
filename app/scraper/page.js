@@ -1904,12 +1904,23 @@ export default function ScraperPage() {
         await runLiteralCheck(runTabTitle);
       } catch {}
       pushLog({ ok: true, text: "Eindcontroles klaar — kolom F (geslacht), G (dubbele foto) en H (literal-twijfel) zijn gevuld." });
+      // Sa Collective: meteen het tweede blad voor Chaims importer erbij
+      if (orgDef.id === "sacollective") {
+        try {
+          await runChaimTab(runTabTitle);
+        } catch {}
+      }
     } catch (e) {
       if (e && e.stop === "save") {
         pushLog({
           strong: true,
           text: `Gestopt — alles wat gescrapet is staat veilig in tabblad "${runTabTitle}".`,
         });
+        if (orgDef.id === "sacollective" && runTabTitle) {
+          try {
+            await runChaimTab(runTabTitle);
+          } catch {}
+        }
       } else if (e && e.stop === "delete") {
         pushLog({ muted: true, text: "Gestopt — alles van deze run wordt verwijderd…" });
         try {
@@ -2241,6 +2252,60 @@ export default function ScraperPage() {
       pushLog({ ok: true, text: `Literal-check klaar — ${total} twijfelgevallen getagd in kolom H.` });
     } catch (e) {
       pushLog({ err: true, text: "Literal-check fout: " + e.message });
+    } finally {
+      setCheckBusy("");
+    }
+  }
+
+  /* Chaim-importblad (Sa Collective, 24-10): van het Attoh-blad ("W3") een
+     tweede blad "W3 Chaim formaat" maken in de opmaak van Chaims importer
+     (Keyword · URL · Gender · Collection · Tag, zonder kopregel). Collectie en
+     tag komen uit het store-geheugen van de gekozen store; draait automatisch
+     na de eindcontroles (kolom F bepaalt het geslacht) en is ook los te
+     herhalen nadat je het Attoh-blad met de hand hebt bijgewerkt. */
+  async function runChaimTab(forceTab) {
+    if (!workSheet.trim() || checkBusy) return;
+    const tab = (typeof forceTab === "string" ? forceTab : runTab).trim();
+    if (!tab) return;
+    setCheckBusy("chaim");
+    pushLog({ strong: true, text: `— Chaim-importblad maken van "${tab}"` });
+    try {
+      const d = await sheetsCall({
+        action: "buildChaimTab",
+        sheetId: workSheet,
+        title: tab,
+        store: memStore ? { domain: memStore } : undefined,
+      });
+      const src = d.sources || {};
+      const bron = [src.store ? `${src.store} uit de store` : "", src.planning ? `${src.planning} uit de planning` : "", src.kolomI ? `${src.kolomI} uit kolom I` : ""].filter(Boolean).join(" · ");
+      pushLog({
+        ok: true,
+        text: `Blad "${d.tab}" ${d.replaced ? "opnieuw geschreven" : "aangemaakt"} — ${d.count} producten, ${d.withCollection} met collectie + tag${bron ? ` (${bron})` : ""}. Plakken in Chaims importer: blad openen → alles selecteren → plakken.`,
+        href: d.url,
+      });
+      if (!d.hasMemory) {
+        pushLog({ warn: true, text: "Geen store gekozen uit het geheugen — collecties komen alleen uit kolom I en tags zijn afgeleid van de naam. Kies de store bovenaan (Store-geheugen) en klik opnieuw voor de echte tag-regels." });
+      } else if (!d.memoryTabs.org && !d.memoryTabs.collections) {
+        pushLog({ muted: true, text: `Geen snapshot in het geheugen van ${d.storeName} (ORG VROUW/MAN, STORE COLLECTIES) — tags komen uit de planning of zijn afgeleid. Draai het store-geheugen bij voor de echte tag-regels.` });
+      }
+      if (d.newCollections && d.newCollections.length) {
+        pushLog({
+          warn: true,
+          text: `Collecties die nog niet op de store staan (Chaims importer maakt ze aan): ${d.newCollections.map((c) => `${c.title} → ${c.tag} (${c.n})`).join(" · ")}`,
+        });
+      }
+      if (d.switched && d.switched.length) {
+        pushLog({ muted: true, text: `Geslacht gewisseld na de check → andere collectie: ${d.switched.map((x) => `${x.keyword} → ${x.collection}`).join(" · ")}` });
+      }
+      if (d.mismatch && d.mismatch.length) {
+        pushLog({ warn: true, text: `Even nakijken (geslacht past niet bij de collectie, geen variant op de store): ${d.mismatch.map((x) => `${x.keyword} → ${x.collection}`).join(" · ")}` });
+      }
+      if (d.missing && d.missing.length) {
+        pushLog({ err: true, text: `Zonder collectie (leeg in het Chaim-blad, zelf invullen): ${d.missing.join(", ")}` });
+      }
+      window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "ok" }));
+    } catch (e) {
+      pushLog({ err: true, text: "Chaim-importblad fout: " + e.message });
     } finally {
       setCheckBusy("");
     }
@@ -2825,6 +2890,23 @@ export default function ScraperPage() {
                 {checkBusy === "literal" ? "Bezig…" : "Literal-check"}
               </button>
             </div>
+
+            {orgDef.id === "sacollective" && (
+              <div className={secCls("chaim", false)} id="sec-chaim">
+                <SecHead id="chaim" dflt={false} sum="achteraf · blad voor Chaims importer">
+                  Chaim-importblad
+                </SecHead>
+                <div className="hint" style={{ marginTop: 0, marginBottom: 8 }}>
+                  Maakt van het blad hierboven ("W3") een tweede blad "W3 Chaim formaat": Keyword · URL · Gender · Collection ·
+                  Tag, zonder kopregel — klaar om in Chaims importer te plakken. Collectie en tag komen uit het geheugen van de
+                  gekozen store (ORG VROUW/MAN, STORE COLLECTIES, planning); collecties die nog niet bestaan krijgen een
+                  afgeleide tag. Draait na elke run automatisch; hier opnieuw na handmatige aanpassingen in het Attoh-blad.
+                </div>
+                <button className="btn-ghost" onClick={() => runChaimTab()} disabled={!workSheet.trim() || !runTab.trim() || !!busy}>
+                  {checkBusy === "chaim" ? "Bezig…" : "Chaim-importblad (opnieuw) maken"}
+                </button>
+              </div>
+            )}
 
             <div className={secCls("settings", false)} id="sec-settings">
               <SecHead id="settings" dflt={false} sum={`${proofMode === "alles" ? "alles" : proofMode === "kansrijk" ? "bewezen + kansrijk" : "alleen bewezen"} · ${spreadMode === "vol" ? "vol" : "gespreid"} · ${fastMode ? "snelmodus" : "met reviews"}`}>
