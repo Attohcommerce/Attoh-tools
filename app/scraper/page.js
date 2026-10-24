@@ -134,8 +134,8 @@ const LS_TRANS = "sa_kw_trans_v1"; // taal → {keyword: [zoektermen]}
 
 // Vaste geheugen-sheet — staat altijd automatisch ingevuld, ook na Reset
 // session, nieuwe logins of een andere browser. Per ORGANISATIE (lib/org.js,
-// 20-10): Attoh = "Attoh — Geheugen", Sa Collective = Chaims "Producten
-// scraper · geheugen" (zelfde sheet als zijn tool). Zie useOrgDef() hieronder.
+// 20-10): Attoh = "Attoh — Geheugen", Sa Collective = "GEHEUGEN CHAIM"
+// (sinds 24-10, voor elke Sa Collective-store). Zie useOrgDef() hieronder.
 
 // Vaste import-werksheet (de import-lijst) — automatisch ingevuld;
 // alleen de bladnaam per run kies je zelf.
@@ -2830,7 +2830,7 @@ export default function ScraperPage() {
                 Staat altijd op <b>{orgDef.memorySheet.name}</b> — ook na herladen, Reset session of een nieuwe login (leegmaken
                 zet hem meteen terug). Voorkomt dat dezelfde producten terugkomen.
                 {orgDef.memorySheet.format === "chaim"
-                  ? " Dit is de geheugen-sheet van Chaims eigen scraper (tab Geheugen): beide tools slaan elkaars producten over; wij schrijven er in zijn formaat bij."
+                  ? " Eén geheugen voor elke Sa Collective-store (tab Geheugen, Chaim-formaat: Keyword · Competitor · Match · Productnaam · URL): wat erin staat wordt overgeslagen, nieuwe producten schrijven we er in hetzelfde formaat bij."
                   : ""}{" "}
                 <a className="linklike" href={DEFAULT_MEM_SHEET} target="_blank" rel="noreferrer noopener">
                   Openen ↗
