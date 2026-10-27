@@ -163,6 +163,39 @@ export default function ImporterPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, memStores]);
 
+  /* 27-10 (LGB AUS → USA): de store-koppeling in de browser bewaarde valuta en
+     publiek domein van het moment van toevoegen. LGB stond zo nog op AUD zonder
+     publiek domein → markt "via valuta AUD" → AUS-geheugen. Bij elke keuze van
+     een store (1× per sessie) halen we valuta + domein opnieuw op bij Shopify. */
+  const refreshedRef = useRef(new Set());
+  useEffect(() => {
+    const st = stores.find((x) => x.domain === selected);
+    if (!st || refreshedRef.current.has(st.domain)) return;
+    const creds = st.token ? { token: st.token } : st.clientId ? { clientId: st.clientId, clientSecret: st.clientSecret } : null;
+    if (!creds) return;
+    refreshedRef.current.add(st.domain);
+    fetch("/api/shopify-test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ domain: st.domain, ...creds }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data || !data.shop) return;
+        const currency = data.shop.currency || st.currency;
+        const publicDomain =
+          String(data.shop.domain || "").replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase() || st.publicDomain || "";
+        if (currency === st.currency && publicDomain === (st.publicDomain || "")) return;
+        setStores((prev) => {
+          const next = prev.map((x) => (x.domain === st.domain ? { ...x, currency, publicDomain } : x));
+          save(LS.stores, next);
+          return next;
+        });
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, stores]);
+
   const urls = useMemo(() => {
     // Dubbele URL's binnen één batch overslaan — zelfde product 2× importeren
     // geeft 2 identieke producten op de store (GMC duplicate-risico).
@@ -500,6 +533,9 @@ export default function ImporterPage() {
         const src = boomRef.current.source ? ` · ${boomRef.current.source}` : "";
         const sg = boomRef.current.storeGenders === "V" ? " · alleen vrouw (dameszaak)" : boomRef.current.storeGenders === "M" ? " · alleen man (herenzaak)" : "";
         pushLog({ info: true, text: `Trend-keywords aan: geheugen ${boomRef.current.market}${via}${src}${sg}, venster ${boomRef.current.window || "?"} (${boomRef.current.rows.length} booming zoektermen) — waar passend verwerkt de AI ze in de omschrijving.` });
+        if (boomRef.current.market === "USA" && selectedStore.currency && selectedStore.currency !== "USD") {
+          pushLog({ ok: false, text: `Let op: markt USA, maar de store-valuta in Shopify is ${selectedStore.currency}. Prijzen worden in ${selectedStore.currency} opgeslagen en door Shopify Markets omgerekend — zet de store-valuta op USD voor nette $X4,95/X9,95-prijzen.` });
+        }
       } else {
         pushLog({ muted: true, text: `Trend-keywords: geen geheugen gebruikt — ${boomMissRef.current || "markt onbekend of geheugen leeg"}. Omschrijvingen draaien gewoon zonder.` });
       }
