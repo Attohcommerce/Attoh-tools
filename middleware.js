@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions } from "./lib/session";
+import { reisSessionOptions } from "./lib/reis/session";
 import { ORG_COOKIE, normOrg, toolAllowed } from "./lib/org";
 
 // /kw = statische keyword-CSV's die Google Sheets via IMPORTDATA mag ophalen
@@ -8,8 +9,26 @@ import { ORG_COOKIE, normOrg, toolAllowed } from "./lib/org";
 // (server → server, geen sessie); de route eist zelf het job-geheim.
 const PUBLIC_PATHS = ["/login", "/api/auth/login", "/kw", "/api/size-guide/job/tick"];
 
+// Reisplanner (27-10-2026): /reis + /api/reis hebben een EIGEN login
+// (cookie attoh_reis_session, gebruikers Justin + Quinty) en staan los van
+// de store-tools. Open: de loginpagina, de login-API en de dagelijkse cron
+// (die eist zelf CRON_SECRET).
+const REIS_PUBLIC = ["/reis/login", "/api/reis/login", "/api/reis/cron"];
+const isReis = (p) => p === "/reis" || p.startsWith("/reis/") || p.startsWith("/api/reis/");
+
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
+
+  if (isReis(pathname)) {
+    if (REIS_PUBLIC.some((p) => pathname === p || pathname.startsWith(p + "/"))) return NextResponse.next();
+    const res = NextResponse.next();
+    const rs = await getIronSession(req, res, reisSessionOptions);
+    if (!rs.user) {
+      if (pathname.startsWith("/api/")) return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
+      return NextResponse.redirect(new URL("/reis/login", req.url));
+    }
+    return res;
+  }
 
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return NextResponse.next();

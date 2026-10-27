@@ -21,6 +21,24 @@ Eén Attoh Tools, twee werkruimtes — de switch staat links in de topbar en zet
 
 Gedeeld tussen beide: het markt-geheugen (All keywords per markt + batch-geheugen — dezelfde All batch-sheets, `geh:all:*`, `kwmem:*`), concurrentenlijst + catalogi-cache, To Do-board, size-guide-cache. Bills, Niche kiezen, Size Guide en GMC Checklist bestaan niet in Sa Collective (directe link → homepage). Code: `lib/org.js` (definities), `lib/org-server.js` (`rkey()` voor Redis), `lib/org-client.js` (`orgLS` voor localStorage), `app/components/OrgProvider.js` (context uit de root layout).
 
+## Attoh Reisplanner (27-10-2026)
+
+Aparte app binnen dezelfde deployment: **/reis**. Eigen login (cookie `attoh_reis_session`), eigen gebruikers (Justin + Quinty), eigen look (Justin wit, Quinty roze). Staat volledig los van de store-tools. Zoekt de goedkoopste **losse** vakantie: vluchten van elk vertrekvliegveld × bestemmingen × datums, met bagage en reiskosten naar het vliegveld erbij, daarna hotels voor precies die datums (sterren, review, zwembad, maaltijd) + AI-fotocheck. Boeken gaat via links (Skyscanner, Google Flights, Booking, Expedia, pakketreizen).
+
+Code: `lib/reis/*` (engine, bronnen, bestemmingen-database, opslag), `app/reis/*` (interface), `app/api/reis/*` (API), `vercel.json` (dagelijkse prijsalert-cron).
+
+| Variabele | Verplicht | Waarde |
+|---|---|---|
+| `REIS_JUSTIN_PASSWORD` | ja | Wachtwoord Justin (e-mail: justinattoh.veerman@gmail.com) |
+| `REIS_QUINTY_PASSWORD` | ja | Wachtwoord Quinty (e-mail: quintygbr@gmail.com) |
+| `TRAVELPAYOUTS_TOKEN` | nee* | Gratis — travelpayouts.com → Aviasales Data API. Live vluchtprijzen voor honderden routes |
+| `LITEAPI_KEY` | nee* | liteapi.travel — live hotelprijzen, faciliteiten en foto's |
+| `DUFFEL_TOKEN` | nee | duffel.com — live controle van de top-5 vluchten mét bagage-info |
+| `RESEND_API_KEY` | nee | resend.com — mail bij prijsdaling van een bewaarde reis |
+| `CRON_SECRET` | nee | Beveiligt `/api/reis/cron` (Vercel stuurt hem automatisch mee) |
+
+\* Zonder deze keys werkt alles, maar met geschatte prijzen (duidelijk gemarkeerd). Redis en `ANTHROPIC_API_KEY` worden gedeeld met de rest van Attoh Tools.
+
 ## Environment variables
 
 Zet deze in Vercel → Project → Settings → Environment Variables.
