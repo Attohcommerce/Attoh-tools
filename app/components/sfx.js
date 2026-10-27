@@ -109,7 +109,8 @@ export default function SoundFX() {
       const t = e.target.closest(
         "button, a, .switch, .store-item, .seg button, .hud-sync"
       );
-      if (t) sfx("click");
+      // Reisplanner (.rp) heeft eigen geluiden (app/reis/ReisSound.js)
+      if (t && !t.closest(".rp")) sfx("click");
     };
 
     const onOver = (e) => {

@@ -5,6 +5,7 @@
 // Tab "Onze reizen" = gedeelde opgeslagen reizen (bij Justin / bij Quinty).
 import { useEffect, useMemo, useRef, useState } from "react";
 import { VIBES, DESTINATIONS, ORIGINS } from "@/lib/reis/destinations";
+import { rsfx, reisSoundOn, setReisSound } from "./ReisSound";
 
 const DAYS = ["zo", "ma", "di", "wo", "do", "vr", "za"];
 const MON = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
@@ -56,6 +57,8 @@ export default function ReisPlanner() {
   const [liked, setLiked] = useState({});
   const [trips, setTrips] = useState([]);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [sound, setSound] = useState(true);
+  useEffect(() => { setSound(reisSoundOn()); }, []);
   const resultsRef = useRef(null);
 
   useEffect(() => {
@@ -92,6 +95,7 @@ export default function ReisPlanner() {
     setOut(null);
     setHidden({});
     setPanelOpen(false);
+    rsfx("takeoff");
     setProgress({ stage: "Zoekopdracht starten", routes: 0, flightOptions: 0, matches: 0, destinations: 0 });
     setTimeout(() => resultsRef.current && resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     const body = { ...form, minTemp: form.useTemp ? form.minTemp : null, budget: Number(form.budget) || null };
@@ -113,12 +117,13 @@ export default function ReisPlanner() {
           const ev = JSON.parse(line);
           if (ev.type === "stage") setProgress((p) => ({ ...p, stage: ev.label }));
           else if (ev.type === "count") setProgress((p) => ({ ...p, ...ev }));
-          else if (ev.type === "done") { setOut(ev); lsSet(LS_KEY + "_last", ev); }
+          else if (ev.type === "done") { setOut(ev); lsSet(LS_KEY + "_last", ev); rsfx(ev.results && ev.results.length ? "chime" : "nope"); }
           else if (ev.type === "error") throw new Error(ev.error);
         }
       }
     } catch (e) {
       setErr(e.message || "Zoeken mislukt");
+      rsfx("error");
     } finally {
       setBusy(false);
       setProgress(null);
@@ -127,11 +132,11 @@ export default function ReisPlanner() {
 
   async function saveTrip(result, owner) {
     const r = await fetch("/api/reis/trips", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ owner, result, search: out && out.query }) });
-    if (r.ok) loadTrips();
+    if (r.ok) { rsfx("save"); loadTrips(); }
   }
   async function feedback(result, weight) {
-    if (weight < 0) setHidden((h) => ({ ...h, [result.id]: true }));
-    else setLiked((l) => ({ ...l, [result.id]: !l[result.id] }));
+    if (weight < 0) { rsfx("nope"); setHidden((h) => ({ ...h, [result.id]: true })); }
+    else { if (!liked[result.id]) rsfx("heart"); setLiked((l) => ({ ...l, [result.id]: !l[result.id] })); }
     fetch("/api/reis/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ destId: result.destId, tags: result.tags, weight }) }).catch(() => {});
   }
 
@@ -153,7 +158,7 @@ export default function ReisPlanner() {
   return (
     <>
       <header className="rp-top">
-        <div className="rp-brand"><PlaneIcon /> Attoh <small>Reisplanner</small></div>
+        <div className="rp-brand"><PlaneIcon /> Attoh <small>Ultra Reisplanner</small></div>
         <nav className="rp-tabs">
           <button className={"rp-tab" + (tab === "zoeken" ? " on" : "")} onClick={() => setTab("zoeken")}>Zoeken</button>
           <button className={"rp-tab" + (tab === "reizen" ? " on" : "")} onClick={() => setTab("reizen")}>
@@ -163,6 +168,9 @@ export default function ReisPlanner() {
         <span className="rp-spacer" />
         {user && (
           <div className="rp-user">
+            <button className={"rp-iconbtn rp-sound" + (sound ? " on" : "")} data-sfx="own" onClick={() => { const n = !sound; setSound(n); setReisSound(n); if (n) rsfx("toggle"); }} aria-label={sound ? "Geluid uit" : "Geluid aan"} title={sound ? "Geluid uit" : "Geluid aan"}>
+              <SoundIcon on={sound} />
+            </button>
             <span className="rp-avatar" aria-hidden="true">{user.name[0]}</span>
             <span className="nm">{user.name}</span>
             <button className="rp-link" onClick={logout}>Uitloggen</button>
@@ -405,7 +413,7 @@ function SearchForm({ form, set, toggleIn, onSearch, busy }) {
         </div>
       </details>
 
-      <button className="rp-go" onClick={onSearch} disabled={busy}>
+      <button className="rp-go" data-sfx="own" onClick={onSearch} disabled={busy}>
         {busy ? "Bezig met zoeken" : "Zoek de goedkoopste reis"}
       </button>
     </div>
@@ -454,7 +462,7 @@ function Progress({ p, live }) {
 function Empty({ user, live }) {
   return (
     <div className="rp-empty">
-      <h2>{user ? `Hoi ${user.name}.` : "Hoi."} Waar gaan jullie naartoe?</h2>
+      <h2>{user ? `Hoi ${user.name}.` : "Hoi."} Waar gaan we heen?</h2>
       <p>Kies links wanneer jullie weg willen en waar je zin in hebt. De tool legt vluchten en hotels los van elkaar naast elkaar en zoekt de goedkoopste combinatie die aan jullie eisen voldoet.</p>
       <ol className="rp-how">
         <li><i>1</i><span><b>Vluchten van elk vliegveld.</b> Schiphol tot Düsseldorf, elke vertrekdag, met bagage en reiskosten erbij opgeteld.</span></li>
@@ -475,6 +483,7 @@ function Empty({ user, live }) {
 function Results({ out, results, sort, setSort, user, savedIds, liked, onSave, onFeedback }) {
   const anyEst = results.some((r) => r.flight.estimate || r.hotelEstimate);
   const st = out.stats || {};
+  const proef = out.live && !out.live.flights && !out.live.hotels;
   if (!results.length) {
     return (
       <div className="rp-empty">
@@ -487,8 +496,10 @@ function Results({ out, results, sort, setSort, user, savedIds, liked, onSave, o
     <div>
       <div className="rp-results-head">
         <div>
-          <h2>{results.length} reizen gevonden</h2>
-          <p>{(st.flightOptions || 0).toLocaleString("nl-NL")} vluchtopties vergeleken in {Math.max(1, Math.round((st.ms || 0) / 1000))} seconden</p>
+          <h2>{proef ? "Proefmodus: nog geen echte prijzen" : `${results.length} ${results.length === 1 ? "reis" : "reizen"} gevonden`}</h2>
+          <p>{proef
+            ? "De prijsbronnen zijn nog niet gekoppeld. De bedragen hieronder zijn ruwe indicaties, geen gevonden aanbiedingen."
+            : `${(st.flightOptions || 0).toLocaleString("nl-NL")} echte vluchtopties en ${(st.hotelsChecked || 0).toLocaleString("nl-NL")} hotels vergeleken in ${Math.max(1, Math.round((st.ms || 0) / 1000))} seconden`}</p>
         </div>
         <div className="rp-seg" style={{ minWidth: 240 }}>
           <button className={sort === "prijs" ? "on" : ""} onClick={() => setSort("prijs")}>Goedkoopst</button>
@@ -496,7 +507,7 @@ function Results({ out, results, sort, setSort, user, savedIds, liked, onSave, o
         </div>
       </div>
       {out.message && <div className="rp-note"><span>{out.message}</span></div>}
-      {anyEst && (
+      {anyEst && !proef && (
         <div className="rp-note">
           <span><b>Sommige prijzen zijn schattingen.</b> Die zijn gemarkeerd. Klik door naar Skyscanner of Booking voor de echte prijs. Zodra de prijsbronnen gekoppeld zijn, rekent de tool met live prijzen.</span>
         </div>
@@ -597,8 +608,8 @@ function Ticket({ r, user, saved, liked, onSave, onFeedback }) {
       <div className="rp-ticket-stub">
         <div className="rp-stubtop">
           <div>
-            <div className="rp-price">{eur(r.total)}</div>
-            <div className="rp-pp">{eur(r.perPerson)} per persoon, alles samen</div>
+            <div className="rp-price">{(f.estimate || r.hotelEstimate) ? "± " : ""}{eur(r.total)}</div>
+            <div className="rp-pp">{(f.estimate || r.hotelEstimate) ? "indicatie, nog geen echte prijs" : `${eur(r.perPerson)} per persoon, alles samen`}</div>
             {r.overBudget && <div className="rp-over">Boven jullie budget</div>}
           </div>
         </div>
@@ -625,13 +636,13 @@ function Ticket({ r, user, saved, liked, onSave, onFeedback }) {
               {menu === "save" && (
                 <div className="rp-menu-list">
                   <h4>Bewaren bij</h4>
-                  <button onClick={() => { onSave(r, "justin"); setMenu(null); }}>Justin</button>
-                  <button onClick={() => { onSave(r, "quinty"); setMenu(null); }}>Quinty</button>
+                  <button data-sfx="own" onClick={() => { onSave(r, "justin"); setMenu(null); }}>Justin</button>
+                  <button data-sfx="own" onClick={() => { onSave(r, "quinty"); setMenu(null); }}>Quinty</button>
                 </div>
               )}
             </div>
-            <button className={"rp-iconbtn" + (liked ? " on" : "")} onClick={() => onFeedback(r, 1)} aria-label="Leuk, meer zoals dit" title="Leuk, meer zoals dit"><HeartIcon filled={liked} /></button>
-            <button className="rp-iconbtn" onClick={() => onFeedback(r, -1)} aria-label="Niet voor ons" title="Niet voor ons">✕</button>
+            <button className={"rp-iconbtn" + (liked ? " on" : "")} data-sfx="own" onClick={() => onFeedback(r, 1)} aria-label="Leuk, meer zoals dit" title="Leuk, meer zoals dit"><HeartIcon filled={liked} /></button>
+            <button className="rp-iconbtn" data-sfx="own" onClick={() => onFeedback(r, -1)} aria-label="Niet voor ons" title="Niet voor ons">✕</button>
           </div>
           {r.links.packages && r.links.packages.length > 0 && (
             <div className="rp-menu">
@@ -758,6 +769,14 @@ function BedIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M3 18V6M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5" />
       <circle cx="7" cy="11" r="2" />
+    </svg>
+  );
+}
+function SoundIcon({ on }) {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9.5v5h3.6L12 18.6V5.4L7.6 9.5H4Z" />
+      {on ? <path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 6.7a7.4 7.4 0 0 1 0 10.6" /> : <path d="m16 9.5 5 5M21 9.5l-5 5" />}
     </svg>
   );
 }

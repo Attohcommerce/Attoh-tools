@@ -1,8 +1,9 @@
 import "./reis.css";
 import { getReisSession } from "@/lib/reis/session";
+import ReisSound from "./ReisSound";
 
 export const metadata = {
-  title: "Attoh Reisplanner",
+  title: "Attoh Ultra Reisplanner",
   description: "De goedkoopste losse vakantie: vlucht en hotel apart vergeleken",
 };
 
@@ -20,6 +21,7 @@ export default async function ReisLayout({ children }) {
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap"
       />
+      <ReisSound />
       {children}
     </div>
   );
