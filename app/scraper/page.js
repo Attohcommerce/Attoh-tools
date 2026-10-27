@@ -142,10 +142,12 @@ const LS_TRANS = "sa_kw_trans_v1"; // taal → {keyword: [zoektermen]}
 const DEFAULT_WORK_SHEET =
   "https://docs.google.com/spreadsheets/d/1Y3wg8X5ivuwaUTfUapzgUOIMzVqr0KRs6g2FR1COuKE/edit";
 
-// Vaste "Collection & Product organization"-sheet — automatisch ingevuld;
-// de exacte bladnaam geef je zelf door (niet automatisch).
-const DEFAULT_ORG_SHEET =
-  "https://docs.google.com/spreadsheets/d/1MaVHQ76s54lrZkNPfr-J32y7GvjJpLfV2j-m0MvXO3g/edit";
+// Organization-sheet: geen vaste sheet meer (27-10-2026). Dit was de
+// AUS-organization van Lady Glam Boutique; LGB is naar de USA verhuisd en
+// begint met een leeg geheugen. De sheet komt nu uit het store-geheugen
+// (store kiezen) of je plakt hem zelf.
+const DEFAULT_ORG_SHEET = "";
+const RETIRED_ORG_SHEETS = ["1MaVHQ76s54lrZkNPfr-J32y7GvjJpLfV2j-m0MvXO3g"];
 
 /**
  * Geplakte keyword-lijsten parsen — snapt alles:
@@ -341,7 +343,13 @@ export default function ScraperPage() {
     save(LS.memSheet, DEFAULT_MEM_SHEET);
     setRunTab(load(LS.runTab, ""));
     setNewTabName(load(LS.newTab, ""));
-    setOrgSheet(load(LS.orgSheet, "") || DEFAULT_ORG_SHEET);
+    {
+      // oude LGB-AUS-sheet uit de browser vergeten
+      const savedOrg = load(LS.orgSheet, "") || "";
+      const retired = RETIRED_ORG_SHEETS.some((id) => String(savedOrg).includes(id));
+      if (retired) save(LS.orgSheet, "");
+      setOrgSheet(retired ? DEFAULT_ORG_SHEET : savedOrg || DEFAULT_ORG_SHEET);
+    }
     setCompSheet(load(LS_COMP_SHEET, "") || DEFAULT_COMP_SHEET);
     setCompTab(load(LS_COMP_TAB, ""));
     setCompMeta(load(LS_COMP_META, {}));

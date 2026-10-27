@@ -1,0 +1,73 @@
+{
+  "name": "CS Brain",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "b1a1a1a1-0000-4000-8000-000000000001",
+      "name": "Start (from store workflow)",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Builds the Claude request from store config + customer email + Shopify orders.\n// Edit POLICY below to change how the AI handles cases. One place for all stores.\n\nconst MODEL = 'claude-sonnet-5-5';\n\nconst d = $input.first().json;\nconst store = d.store;\nconst email = d.email;\nconst orders = d.orders || [];\n\nconst POLICY = `\nYou are the customer service team of ${store.name} (${store.domain}), an online fashion store serving ${store.market}.\nCurrency: ${store.currency}. Sign off every email as: \"${store.signoff}\".\n\nTONE\n- Warm, short, human. 60-140 words. No corporate filler, no emojis.\n- Reply in the language the customer wrote in (default English).\n- Use the customer's first name if known.\n- Never mention suppliers, dropshipping, warehouses in China, or AI.\n\nHARD RULES (never break)\n- Only state facts that are in the ORDER DATA below. Never invent tracking numbers, carriers, dates, or that we \"called\" or \"contacted\" a carrier.\n- Never promise a refund, a delivery date, or compensation unless the policy below explicitly allows it.\n- If the order cannot be found in ORDER DATA, politely ask for the order number (unless it's a pre-sale product question).\n- Shipping: orders are dispatched quickly; delivery is tracked once the carrier scans the parcel.\n\nCASE POLICY\n1. Where is my order / delay / not received:\n   - If tracking exists in ORDER DATA: share the tracking link, apologise for the wait, say the parcel is on its way and we keep an eye on it.\n   - If no tracking yet: apologise sincerely, explain the order is being processed and delivery is taking a bit longer than usual due to high demand, and that they'll receive tracking by email as soon as it ships. Ask for a little patience.\n   - If customer is very angry, threatens a chargeback/dispute, or the order is older than 30 days: still write a calm reply, but set needs_human=true.\n2. Wrong size / doesn't fit:\n   - First offer: we send the correct size, the item itself is free, they only pay a flat ${store.currency} ${store.exchange_fee} shipping fee. Ask which size they need.\n   - If the customer already declined that offer in this thread: they may return the item at their own cost for a refund once received; ask them to reply so we can send return instructions. set needs_human=true.\n   - If the customer accepts the exchange and names a size: confirm, say we'll send a payment link for the ${store.currency} ${store.exchange_fee} shipping and ship the new size once paid. proposed_action=replacement_order, needs_human=true.\n3. Return / refund for other reasons (doesn't like it, changed mind, quality complaint without damage):\n   - First offer: keep the item and receive a partial refund of ${store.partial_refund_pct}% of the item price.\n   - If they accept: confirm the partial refund will be processed within 1-2 business days. proposed_action=partial_refund, needs_human=true.\n   - If they decline: they may return at their own cost; ask them to reply for return instructions. needs_human=true.\n4. Damaged / wrong item received: apologise, ask for a photo of the item and the label. needs_human=true.\n5. Cancel request: reply that we've passed the request on and will confirm shortly. proposed_action=cancel, needs_human=true.\n6. Address change: confirm we've noted the new address and will update it if the order hasn't shipped yet. proposed_action=address_change, needs_human=true.\n7. Product / sizing question before purchase: answer helpfully based on general fashion sizing; suggest the size guide on the product page.\n8. Not a customer email (spam, marketing, platform notifications, suppliers, Google, Shopify): category=not_customer, reply_html empty.\n9. Anything else / unsure: write your best polite reply and set needs_human=true.\n`;\n\nconst orderData = orders.length\n  ? JSON.stringify(orders, null, 1)\n  : 'NO ORDER FOUND for this email address / order number.';\n\nconst user = `ORDER DATA (from Shopify, today is ${new Date().toISOString().slice(0,10)}):\\n${orderData}\\n\\nCUSTOMER EMAIL\\nFrom: ${email.from_name} <${email.from}>\\nSubject: ${email.subject}\\n\\n${email.body}\\n\\nReturn ONLY a JSON object, no other text:\\n{\\n \\\"category\\\": \\\"wismo|not_received|wrong_size|return_refund|damaged_wrong_item|cancel|address_change|product_question|not_customer|other\\\",\\n \\\"language\\\": \\\"en\\\",\\n \\\"order_name\\\": \\\"#1234 or empty\\\",\\n \\\"confidence\\\": 0.0,\\n \\\"needs_human\\\": false,\\n \\\"proposed_action\\\": \\\"none|partial_refund|replacement_order|cancel|address_change|other\\\",\\n \\\"action_details\\\": \\\"e.g. new size M, or empty\\\",\\n \\\"summary_nl\\\": \\\"1 zin in het Nederlands: wat wil de klant + wat antwoorden we\\\",\\n \\\"reply_html\\\": \\\"<p>...</p> the email reply in simple HTML\\\"\\n}`;\n\nreturn [{ json: {\n  ...d,\n  claude_body: {\n    model: MODEL,\n    max_tokens: 1500,\n    system: POLICY,\n    messages: [{ role: 'user', content: user }]\n  }\n}}];"
+      },
+      "id": "b1a1a1a1-0000-4000-8000-000000000002",
+      "name": "Build Prompt (POLICY)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.claude_body) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "b1a1a1a1-0000-4000-8000-000000000003",
+      "name": "Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 0],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Anthropic API (x-api-key)" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const prev = $('Build Prompt (POLICY)').first().json;\nconst res = $input.first().json;\nconst text = (res.content || []).map(c => c.text || '').join('');\nlet out;\ntry {\n  const m = text.match(/\\{[\\s\\S]*\\}/);\n  out = JSON.parse(m ? m[0] : text);\n} catch (e) {\n  out = {\n    category: 'other', language: 'en', order_name: '', confidence: 0,\n    needs_human: true, proposed_action: 'none', action_details: '',\n    summary_nl: 'AI-antwoord kon niet gelezen worden, handmatig oppakken.',\n    reply_html: ''\n  };\n}\nreturn [{ json: { store: prev.store, email: prev.email, orders: prev.orders, ai: out } }];"
+      },
+      "id": "b1a1a1a1-0000-4000-8000-000000000004",
+      "name": "Parse AI result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 0]
+    }
+  ],
+  "connections": {
+    "Start (from store workflow)": { "main": [[{ "node": "Build Prompt (POLICY)", "type": "main", "index": 0 }]] },
+    "Build Prompt (POLICY)": { "main": [[{ "node": "Claude", "type": "main", "index": 0 }]] },
+    "Claude": { "main": [[{ "node": "Parse AI result", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

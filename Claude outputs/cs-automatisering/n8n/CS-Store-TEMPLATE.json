@@ -1,0 +1,189 @@
+{
+  "name": "CS - STORE NAAM",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": { "item": [ { "mode": "everyX", "value": 5, "unit": "minutes" } ] },
+        "simple": false,
+        "filters": {
+          "labelIds": ["INBOX"],
+          "q": "-from:me -category:promotions -category:social -category:updates"
+        },
+        "options": {}
+      },
+      "id": "c2b2b2b2-0000-4000-8000-000000000001",
+      "name": "Gmail: nieuwe mail",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "credentials": {
+        "gmailOAuth2": { "id": "", "name": "Gmail - STORE" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== STORE CONFIG — alleen dit blok aanpassen per store =====\nconst STORE = {\n  name: 'Store Name',                    // bv. 'Lady Glam Boutique'\n  domain: 'store.com',                   // publiek domein\n  shop: 'xxxxx.myshopify.com',           // myshopify-domein\n  client_id: 'SHOPIFY_CLIENT_ID',        // Dev Dashboard app\n  client_secret: 'SHOPIFY_CLIENT_SECRET',\n  market: 'customers in the USA',        // bv. 'customers in Australia and New Zealand'\n  currency: 'USD',\n  exchange_fee: '10',                    // vaste verzendkosten bij maatruil\n  partial_refund_pct: '20',              // % partial refund bij 'houden'\n  signoff: 'The Store Name Team',\n  slack_channel: '#cs-alerts'\n};\n// ==============================================================\n\nconst SKIP_SENDERS = /(no-?reply|mailer-daemon|postmaster|notifications?@|@shopify\\.com|@google\\.com|@facebookmail|@klaviyo|@paypal|@stripe|@tiktok|@trackbee)/i;\n\nconst out = [];\nfor (const item of $input.all()) {\n  const m = item.json;\n  const fromObj = (m.from && m.from.value && m.from.value[0]) || {};\n  const from = (fromObj.address || '').toLowerCase();\n  if (!from || SKIP_SENDERS.test(from)) continue;\n\n  let body = m.text || (m.html || '').replace(/<[^>]+>/g, ' ');\n  body = body.replace(/\\s+\\n/g, '\\n').slice(0, 6000);\n  const subject = m.subject || '';\n  const numMatch = (subject + ' ' + body).match(/#?\\b(\\d{4,6})\\b/);\n\n  out.push({ json: {\n    store: STORE,\n    email: {\n      id: m.id,\n      threadId: m.threadId,\n      from,\n      from_name: fromObj.name || '',\n      subject,\n      reply_subject: /^re:/i.test(subject) ? subject : 'Re: ' + subject,\n      body,\n      order_number_guess: numMatch ? numMatch[1] : ''\n    }\n  }});\n}\nreturn out;"
+      },
+      "id": "c2b2b2b2-0000-4000-8000-000000000002",
+      "name": "Store Config + filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $json.store.shop }}/admin/oauth/access_token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "grant_type", "value": "client_credentials" },
+            { "name": "client_id", "value": "={{ $json.store.client_id }}" },
+            { "name": "client_secret", "value": "={{ $json.store.client_secret }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c2b2b2b2-0000-4000-8000-000000000003",
+      "name": "Shopify token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $('Store Config + filter').item.json.store.shop }}/admin/api/2025-10/graphql.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Shopify-Access-Token", "value": "={{ $json.access_token }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ query: 'query($q:String!){ orders(first:5, query:$q, sortKey:CREATED_AT, reverse:true){ nodes{ id name createdAt displayFinancialStatus displayFulfillmentStatus cancelledAt totalPriceSet{shopMoney{amount currencyCode}} customer{firstName lastName} shippingAddress{city countryCodeV2} lineItems(first:10){nodes{title variantTitle quantity}} fulfillments(first:5){status createdAt trackingInfo{company number url}} } } }', variables: { q: ($('Store Config + filter').item.json.email.order_number_guess ? 'name:#' + $('Store Config + filter').item.json.email.order_number_guess + ' OR ' : '') + 'email:' + $('Store Config + filter').item.json.email.from } }) }}",
+        "options": {}
+      },
+      "id": "c2b2b2b2-0000-4000-8000-000000000004",
+      "name": "Shopify: orders klant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Store Config + filter').item.json;\nconst orders = ($json.data && $json.data.orders && $json.data.orders.nodes) || [];\nconst slim = orders.map(o => ({\n  order: o.name,\n  shopify_id: o.id,\n  date: o.createdAt.slice(0,10),\n  paid: o.displayFinancialStatus,\n  fulfillment: o.displayFulfillmentStatus,\n  cancelled: !!o.cancelledAt,\n  total: o.totalPriceSet.shopMoney.amount + ' ' + o.totalPriceSet.shopMoney.currencyCode,\n  customer: [o.customer?.firstName, o.customer?.lastName].filter(Boolean).join(' '),\n  ship_to: o.shippingAddress ? o.shippingAddress.city + ', ' + o.shippingAddress.countryCodeV2 : '',\n  items: o.lineItems.nodes.map(li => `${li.quantity}x ${li.title}${li.variantTitle ? ' (' + li.variantTitle + ')' : ''}`),\n  tracking: o.fulfillments.flatMap(f => f.trackingInfo.map(t => ({ company: t.company, number: t.number, url: t.url, shipped: f.createdAt.slice(0,10) })))\n}));\nreturn [{ json: { store: base.store, email: base.email, orders: slim } }];"
+      },
+      "id": "c2b2b2b2-0000-4000-8000-000000000005",
+      "name": "Order-context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 0]
+    },
+    {
+      "parameters": {
+        "workflowId": { "__rl": true, "mode": "list", "value": "" },
+        "options": { "waitForSubWorkflow": true }
+      },
+      "id": "c2b2b2b2-0000-4000-8000-000000000006",
+      "name": "CS Brain",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [1200, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "f1",
+              "leftValue": "={{ $json.ai.category !== 'not_customer' && !!$json.ai.reply_html }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c2b2b2b2-0000-4000-8000-000000000007",
+      "name": "Klantmail?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1440, 0]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $json.email.reply_subject }}",
+        "emailType": "html",
+        "message": "={{ $json.ai.reply_html }}",
+        "options": {
+          "threadId": "={{ $json.email.threadId }}",
+          "sendTo": "={{ $json.email.from }}"
+        }
+      },
+      "id": "c2b2b2b2-0000-4000-8000-000000000008",
+      "name": "Gmail: concept in thread",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1680, -100],
+      "credentials": {
+        "gmailOAuth2": { "id": "", "name": "Gmail - STORE" }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "f2",
+              "leftValue": "={{ $('CS Brain').item.json.ai.needs_human === true || $('CS Brain').item.json.ai.proposed_action !== 'none' || $('CS Brain').item.json.ai.confidence < 0.7 }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c2b2b2b2-0000-4000-8000-000000000009",
+      "name": "Actie nodig?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1920, -100]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": { "__rl": true, "mode": "name", "value": "={{ $('CS Brain').item.json.store.slack_channel }}" },
+        "text": "={{ '*' + $('CS Brain').item.json.store.name + '* · ' + ($('CS Brain').item.json.ai.order_name || 'geen order') + ' · ' + $('CS Brain').item.json.ai.category + '\\n' + $('CS Brain').item.json.ai.summary_nl + '\\nActie: *' + $('CS Brain').item.json.ai.proposed_action + '* ' + ($('CS Brain').item.json.ai.action_details || '') + '\\nKlant: ' + $('CS Brain').item.json.email.from + '\\nConcept staat klaar in Gmail.' }}",
+        "otherOptions": {}
+      },
+      "id": "c2b2b2b2-0000-4000-8000-000000000010",
+      "name": "Slack: melding",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [2160, -200],
+      "credentials": {
+        "slackOAuth2Api": { "id": "", "name": "Slack" }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail: nieuwe mail": { "main": [[{ "node": "Store Config + filter", "type": "main", "index": 0 }]] },
+    "Store Config + filter": { "main": [[{ "node": "Shopify token", "type": "main", "index": 0 }]] },
+    "Shopify token": { "main": [[{ "node": "Shopify: orders klant", "type": "main", "index": 0 }]] },
+    "Shopify: orders klant": { "main": [[{ "node": "Order-context", "type": "main", "index": 0 }]] },
+    "Order-context": { "main": [[{ "node": "CS Brain", "type": "main", "index": 0 }]] },
+    "CS Brain": { "main": [[{ "node": "Klantmail?", "type": "main", "index": 0 }]] },
+    "Klantmail?": { "main": [[{ "node": "Gmail: concept in thread", "type": "main", "index": 0 }], []] },
+    "Gmail: concept in thread": { "main": [[{ "node": "Actie nodig?", "type": "main", "index": 0 }]] },
+    "Actie nodig?": { "main": [[{ "node": "Slack: melding", "type": "main", "index": 0 }], []] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
