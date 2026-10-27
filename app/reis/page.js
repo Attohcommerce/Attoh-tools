@@ -4,7 +4,9 @@
 // Links het zoekpaneel, rechts de resultaten als instapkaarten.
 // Tab "Onze reizen" = gedeelde opgeslagen reizen (bij Justin / bij Quinty).
 import { useEffect, useMemo, useRef, useState } from "react";
-import { VIBES, DESTINATIONS, ORIGINS } from "@/lib/reis/destinations";
+import { VIBES, DESTINATIONS, ORIGINS, DEST_BY_ID } from "@/lib/reis/destinations";
+import Home from "./Home";
+import Explore from "./Explore";
 import { rsfx, reisSoundOn, setReisSound } from "./ReisSound";
 
 const DAYS = ["zo", "ma", "di", "wo", "do", "vr", "za"];
@@ -40,13 +42,16 @@ const DEFAULT_FORM = () => ({
   packages: true,
 });
 
+const searchBody = (f) => ({ ...f, minTemp: f.useTemp ? f.minTemp : null, budget: Number(f.budget) || null });
+
 const LS_KEY = "attoh_reis_form_v1";
 const lsGet = (k) => { try { return JSON.parse(window.localStorage.getItem(k) || "null"); } catch { return null; } };
 const lsSet = (k, v) => { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 
 export default function ReisPlanner() {
   const [me, setMe] = useState(null);
-  const [tab, setTab] = useState("zoeken");
+  const [tab, setTab] = useState("home");
+  const [explore, setExplore] = useState(null);
   const [form, setForm] = useState(DEFAULT_FORM);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(null);
@@ -89,7 +94,9 @@ export default function ReisPlanner() {
     });
   const toggleIn = (path, v) => set(path, (arr) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]));
 
-  async function search() {
+  async function search(override) {
+    const f = override || form;
+    setTab("zoeken");
     setBusy(true);
     setErr("");
     setOut(null);
@@ -98,7 +105,7 @@ export default function ReisPlanner() {
     rsfx("takeoff");
     setProgress({ stage: "Zoekopdracht starten", routes: 0, flightOptions: 0, matches: 0, destinations: 0 });
     setTimeout(() => resultsRef.current && resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
-    const body = { ...form, minTemp: form.useTemp ? form.minTemp : null, budget: Number(form.budget) || null };
+    const body = searchBody(f);
     try {
       const res = await fetch("/api/reis/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok || !res.body) throw new Error((await res.text()).slice(0, 200) || "Zoeken mislukt");
@@ -128,6 +135,19 @@ export default function ReisPlanner() {
       setBusy(false);
       setProgress(null);
     }
+  }
+
+  function surprise() {
+    const f = { ...form, surprise: true, dests: [] };
+    setForm(f);
+    search(f);
+  }
+  function openDest(d, monthKey) {
+    const b = searchBody(form);
+    setExplore({ dest: d, search: { ...b, when: { mode: "maanden", months: [monthKey] }, dests: [d.id] }, initial: null });
+  }
+  function openResult(r) {
+    setExplore({ dest: DEST_BY_ID[r.destId], search: out && out.query, initial: { depart: r.depart, ret: r.ret, nights: r.nights, flightUrl: (r.links.flight[0] || {}).url } });
   }
 
   async function saveTrip(result, owner) {
@@ -160,6 +180,7 @@ export default function ReisPlanner() {
       <header className="rp-top">
         <div className="rp-brand"><PlaneIcon /> Attoh <small>Ultra Reisplanner</small></div>
         <nav className="rp-tabs">
+          <button className={"rp-tab" + (tab === "home" ? " on" : "")} onClick={() => setTab("home")}>Home</button>
           <button className={"rp-tab" + (tab === "zoeken" ? " on" : "")} onClick={() => setTab("zoeken")}>Zoeken</button>
           <button className={"rp-tab" + (tab === "reizen" ? " on" : "")} onClick={() => setTab("reizen")}>
             Onze reizen{trips.length ? <span className="count">{trips.length}</span> : null}
@@ -178,10 +199,13 @@ export default function ReisPlanner() {
         )}
       </header>
 
-      {tab === "zoeken" ? (
+      {tab === "home" && (
+        <Home user={user} live={me && me.live} trips={trips} onSearchTab={() => setTab("zoeken")} onSurprise={surprise} onOpenDest={openDest} onTripsTab={() => setTab("reizen")} />
+      )}
+      {tab === "zoeken" && (
         <main className={"rp-main" + (out || busy ? " has-results" : "")}>
           <aside className={"rp-panel" + (panelOpen ? " open" : "")}>
-            <SearchForm form={form} set={set} toggleIn={toggleIn} onSearch={search} busy={busy} />
+            <SearchForm form={form} set={set} toggleIn={toggleIn} onSearch={() => search()} busy={busy} />
           </aside>
           <section ref={resultsRef} style={{ minWidth: 0, scrollMarginTop: 80 }}>
             {(out || busy) && (
@@ -203,17 +227,21 @@ export default function ReisPlanner() {
                 liked={liked}
                 onSave={saveTrip}
                 onFeedback={feedback}
+                onOpen={openResult}
               />
             )}
           </section>
         </main>
-      ) : (
-        <Saved trips={trips} reload={loadTrips} user={user} />
+      )}
+      {tab === "reizen" && <Saved trips={trips} reload={loadTrips} user={user} />}
+      {explore && explore.dest && (
+        <Explore dest={explore.dest} search={explore.search} initial={explore.initial} onClose={() => setExplore(null)} onSave={(r, owner) => saveTrip(r, owner)} />
       )}
 
       <nav className="rp-bottomnav">
+        <button className={tab === "home" ? "on" : ""} onClick={() => setTab("home")}>Home</button>
         <button className={tab === "zoeken" ? "on" : ""} onClick={() => setTab("zoeken")}>Zoeken</button>
-        <button className={tab === "reizen" ? "on" : ""} onClick={() => setTab("reizen")}>Onze reizen{trips.length ? ` (${trips.length})` : ""}</button>
+        <button className={tab === "reizen" ? "on" : ""} onClick={() => setTab("reizen")}>Reizen{trips.length ? ` (${trips.length})` : ""}</button>
       </nav>
     </>
   );
@@ -480,7 +508,7 @@ function Empty({ user, live }) {
 }
 
 // ── Resultaten ──────────────────────────────────────────────────────
-function Results({ out, results, sort, setSort, user, savedIds, liked, onSave, onFeedback }) {
+function Results({ out, results, sort, setSort, user, savedIds, liked, onSave, onFeedback, onOpen }) {
   const anyEst = results.some((r) => r.flight.estimate || r.hotelEstimate);
   const st = out.stats || {};
   const proef = out.live && !out.live.flights && !out.live.hotels;
@@ -516,13 +544,13 @@ function Results({ out, results, sort, setSort, user, savedIds, liked, onSave, o
         <div className="rp-note" style={{ background: "var(--surface)" }}><span>Niet elke bron reageerde: {st.errors[0]}</span></div>
       )}
       {results.map((r) => (
-        <Ticket key={r.id} r={r} user={user} saved={savedIds.has(r.id)} liked={liked[r.id]} onSave={onSave} onFeedback={onFeedback} />
+        <Ticket key={r.id} r={r} user={user} saved={savedIds.has(r.id)} liked={liked[r.id]} onSave={onSave} onFeedback={onFeedback} onOpen={onOpen} />
       ))}
     </div>
   );
 }
 
-function Ticket({ r, user, saved, liked, onSave, onFeedback }) {
+function Ticket({ r, user, saved, liked, onSave, onFeedback, onOpen }) {
   const [menu, setMenu] = useState(null);
   const ref = useRef(null);
   useEffect(() => {
@@ -540,7 +568,7 @@ function Ticket({ r, user, saved, liked, onSave, onFeedback }) {
       {r.badge && <span className={"rp-badge" + (r.badge === "Beste deal" ? " deal" : "")}>{r.badge}</span>}
       <div className="rp-ticket-main">
         <div className="rp-dest">
-          <span className="rp-city">{r.city}</span>
+          <button className="rp-city rp-city-btn" onClick={() => onOpen(r)}>{r.city}</button>
           <span className="rp-country">{r.country}</span>
         </div>
         <div className="rp-meta">
@@ -592,6 +620,8 @@ function Ticket({ r, user, saved, liked, onSave, onFeedback }) {
             </div>
           </div>
         </div>
+
+        <button className="rp-btn acc rp-open" onClick={() => onOpen(r)}>Bekijk alle vluchten en hotels</button>
 
         {r.alts && r.alts.length > 0 && (
           <div className="rp-alts">
