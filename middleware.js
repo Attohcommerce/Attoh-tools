@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { sessionOptions } from "./lib/session";
 import { reisSessionOptions } from "./lib/reis/session";
+import { TP_VERIFY_HTML } from "./lib/tp-verify";
 import { ORG_COOKIE, normOrg, toolAllowed } from "./lib/org";
 
 // /kw = statische keyword-CSV's die Google Sheets via IMPORTDATA mag ophalen
@@ -19,6 +20,11 @@ const isReis = (p) => p === "/reis" || p.startsWith("/reis/") || p.startsWith("/
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
+
+  // Travelpayouts-verificatie: kale HTML met hun script in de <head>
+  if (pathname === "/tp") {
+    return new NextResponse(TP_VERIFY_HTML, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+  }
 
   // App-icoon + manifest van de reisplanner (beginscherm telefoon) zijn openbaar
   if (pathname === "/reis-manifest.json" || pathname.startsWith("/reis-icon-")) return NextResponse.next();
