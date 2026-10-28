@@ -19,6 +19,9 @@ const isReis = (p) => p === "/reis" || p.startsWith("/reis/") || p.startsWith("/
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
 
+  // App-icoon + manifest van de reisplanner (beginscherm telefoon) zijn openbaar
+  if (pathname === "/reis-manifest.json" || pathname.startsWith("/reis-icon-")) return NextResponse.next();
+
   if (isReis(pathname)) {
     if (REIS_PUBLIC.some((p) => pathname === p || pathname.startsWith(p + "/"))) return NextResponse.next();
     const res = NextResponse.next();

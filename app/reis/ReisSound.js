@@ -103,6 +103,9 @@ const SOUNDS = {
   nope: () => pop(500, 260, { vol: 0.22, dur: 0.12 }),
   save: () => { bell(784, { vol: 0.32, dur: 0.5 }); bell(988, { vol: 0.3, dur: 0.5, when: 0.08 }); bell(1175, { vol: 0.32, dur: 0.9, when: 0.16 }); },
   error: () => { bell(330, { vol: 0.35, dur: 0.5 }); bell(262, { vol: 0.35, dur: 0.7, when: 0.18 }); },
+  // geboekt! — vrolijk loopje omhoog
+  fanfare: () => { [523, 659, 784, 1047].forEach((f, i) => bell(f, { vol: 0.32, dur: 0.6, when: i * 0.09 })); bell(1319, { vol: 0.34, dur: 1.4, when: 0.4 }); },
+  check: () => pop(880, 1320, { vol: 0.18, dur: 0.05 }),
   hello: () => { bell(659, { vol: 0.3, dur: 0.6 }); bell(880, { vol: 0.3, dur: 0.6, when: 0.1 }); bell(1319, { vol: 0.28, dur: 1.1, when: 0.2 }); },
 };
 

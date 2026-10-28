@@ -3,9 +3,10 @@
 // Homescreen: begroeting + vertrekbord, snelle knoppen, waar het de komende
 // maanden warm is (klik = alle opties), jullie bewaarde reizen en of de
 // prijsbronnen live zijn.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DESTINATIONS } from "@/lib/reis/destinations";
 import FlapBoard from "./FlapBoard";
+import { daysUntil } from "./fmt";
 
 const MON_LONG = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
 const DAYS = ["zo", "ma", "di", "wo", "do", "vr", "za"];
@@ -41,7 +42,7 @@ function greeting() {
   return "Goedenavond";
 }
 
-export default function Home({ user, live, trips, onSearchTab, onSurprise, onOpenDest, onTripsTab }) {
+export default function Home({ user, live, trips, fresh = [], recent = [], onRerun, onOpenTrip, onSearchTab, onSurprise, onOpenDest, onTripsTab }) {
   const months = useMemo(() => {
     const n = new Date();
     return [1, 2, 3].map((i) => {
@@ -58,7 +59,13 @@ export default function Home({ user, live, trips, onSearchTab, onSurprise, onOpe
         .slice(0, 12),
     [month]
   );
-  const recent = trips.slice(0, 3);
+  const isMatch = (t) => t.votes && t.votes.justin && t.votes.quinty;
+  const shortlist = [...trips].sort((a, b) => (isMatch(b) ? 1 : 0) - (isMatch(a) ? 1 : 0)).slice(0, 4);
+  const next = trips
+    .filter((t) => t.status === "geboekt" && daysUntil(t.result.depart) >= 0)
+    .sort((a, b) => (a.result.depart < b.result.depart ? -1 : 1))[0];
+  const nextDays = next ? daysUntil(next.result.depart) : null;
+  const packed = next && next.packing ? next.packing.filter((x) => x.done).length : 0;
   const drops = trips.filter((t) => {
     const h = (t.priceHistory || []).map((p) => p.total).filter(Boolean);
     return h.length > 1 && h[h.length - 1] < h[0];
@@ -66,6 +73,38 @@ export default function Home({ user, live, trips, onSearchTab, onSurprise, onOpe
 
   return (
     <div className="rp-home">
+
+      {fresh.length > 0 && (
+        <button className="rp-fresh" onClick={onTripsTab}>
+          <span className={"rp-owner " + fresh[0].savedBy}><i>{fresh[0].savedBy === "quinty" ? "Q" : "J"}</i></span>
+          <span>
+            <b>{fresh[0].savedBy === "quinty" ? "Quinty" : "Justin"} heeft {fresh.length === 1 ? "een nieuwe reis" : `${fresh.length} nieuwe reizen`} bewaard</b>
+            <span>{fresh.slice(0, 3).map((t) => t.result.city).join(", ")}. Stem mee met een hartje.</span>
+          </span>
+          <span className="rp-fresh-go">Bekijken</span>
+        </button>
+      )}
+
+      {next && (
+        <button className="rp-next" onClick={() => onOpenTrip(next)}>
+          <span className="rp-next-num">{nextDays}</span>
+          <span className="rp-next-txt">
+            <b>{nextDays === 0 ? `Vandaag naar ${next.result.city}!` : `${nextDays === 1 ? "dag" : "dagen"} tot ${next.result.city}`}</b>
+            <span>{fmtDay(next.result.depart)} tot {fmtDay(next.result.ret)}, vanaf {next.result.originName}</span>
+          </span>
+          <span className="rp-next-pack">
+            {next.packing ? (
+              <>
+                <span>Paklijst {packed}/{next.packing.length}</span>
+                <span className="rp-bar"><i style={{ width: Math.round((packed / Math.max(1, next.packing.length)) * 100) + "%" }} /></span>
+              </>
+            ) : (
+              <span>Paklijst maken</span>
+            )}
+          </span>
+        </button>
+      )}
+
       <section className="rp-hero">
         <div className="rp-hero-copy">
           <p className="rp-hello">{greeting()}{user ? `, ${user.name}` : ""}</p>
@@ -80,6 +119,19 @@ export default function Home({ user, live, trips, onSearchTab, onSurprise, onOpe
           <FlapBoard rows={5} />
         </div>
       </section>
+
+      {recent.length > 0 && (
+        <section className="rp-home-sec">
+          <div className="rp-home-sec-head"><h2>Nog eens zoeken</h2></div>
+          <div className="rp-chips">
+            {recent.map((r) => (
+              <button key={r.at} className="rp-chip rp-recent" onClick={() => onRerun(r.form)}>
+                <RefreshIcon />{r.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="rp-home-sec">
         <div className="rp-home-sec-head">
@@ -118,18 +170,23 @@ export default function Home({ user, live, trips, onSearchTab, onSurprise, onOpe
             <h2>Onze reizen</h2>
             {trips.length > 0 && <button className="rp-link" onClick={onTripsTab}>Alles bekijken ({trips.length})</button>}
           </div>
-          {recent.length === 0 ? (
+          {shortlist.length === 0 ? (
             <p className="rp-lede" style={{ margin: 0 }}>Nog niets bewaard. Vind een reis en druk op Bewaren, dan staat hij hier voor jullie allebei.</p>
           ) : (
             <ul className="rp-mini">
-              {recent.map((t) => {
+              {shortlist.map((t) => {
                 const h = (t.priceHistory || []).map((p) => p.total).filter(Boolean);
                 const now = h[h.length - 1] || t.result.total;
                 return (
                   <li key={t.id}>
-                    <span className={"rp-owner " + t.owner}><i>{t.owner === "quinty" ? "Q" : "J"}</i></span>
-                    <span className="rp-mini-main"><b>{t.result.city}</b><span>{fmtDay(t.result.depart)} tot {fmtDay(t.result.ret)}</span></span>
-                    <span className="rp-mini-price">{eur(now)}</span>
+                    <button className="rp-mini-btn" onClick={() => onOpenTrip(t)}>
+                      <span className={"rp-owner " + t.owner}><i>{t.owner === "quinty" ? "Q" : "J"}</i></span>
+                      <span className="rp-mini-main">
+                        <b>{t.result.city}{isMatch(t) ? <em className="rp-match-tag">Match</em> : null}{t.status === "geboekt" ? <em className="rp-match-tag booked">Geboekt</em> : null}</b>
+                        <span>{fmtDay(t.result.depart)} tot {fmtDay(t.result.ret)}</span>
+                      </span>
+                      <span className="rp-mini-price">{eur(now)}</span>
+                    </button>
                   </li>
                 );
               })}
@@ -146,8 +203,36 @@ export default function Home({ user, live, trips, onSearchTab, onSurprise, onOpe
             <li><span className={"dot" + (live && live.vision ? " on" : "")} />AI-fotocheck<span>{live && live.vision ? "aan" : "uit"}</span></li>
             <li><span className={"dot" + (live && live.duffel ? " on" : "")} />Live controle top 5<span>{live && live.duffel ? "aan" : "optioneel (Duffel)"}</span></li>
           </ul>
+          <InstallTip />
         </div>
       </section>
     </div>
+  );
+}
+
+function RefreshIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5" />
+    </svg>
+  );
+}
+
+// Tip om de planner als app op het beginscherm te zetten (alleen tonen als
+// hij nog niet als app geopend is).
+function InstallTip() {
+  const [show, setShow] = useState(false);
+  const [ios, setIos] = useState(false);
+  useEffect(() => {
+    const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone;
+    setShow(!standalone);
+    setIos(/iphone|ipad|ipod/i.test(navigator.userAgent));
+  }, []);
+  if (!show) return null;
+  return (
+    <p className="rp-install">
+      <b>Tip:</b> zet de planner op je beginscherm, dan opent hij als app.{" "}
+      {ios ? "iPhone: tik op Deel en dan op Zet op beginscherm." : "Android: menu (drie puntjes) en dan App installeren of Toevoegen aan startscherm."}
+    </p>
   );
 }

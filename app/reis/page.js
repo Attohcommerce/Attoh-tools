@@ -8,6 +8,9 @@ import { VIBES, DESTINATIONS, ORIGINS, DEST_BY_ID } from "@/lib/reis/destination
 import Home from "./Home";
 import Explore from "./Explore";
 import { rsfx, reisSoundOn, setReisSound } from "./ReisSound";
+import TripSheet from "./TripSheet";
+import { confetti } from "./confetti";
+import { countdownLabel, whatsappUrl, leaveDays } from "./fmt";
 
 const DAYS = ["zo", "ma", "di", "wo", "do", "vr", "za"];
 const MON = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
@@ -44,6 +47,19 @@ const DEFAULT_FORM = () => ({
 
 const searchBody = (f) => ({ ...f, minTemp: f.useTemp ? f.minTemp : null, budget: Number(f.budget) || null });
 
+// Korte omschrijving van een zoekopdracht ("dec, jan · zon, strand")
+function searchLabel(f) {
+  const w = f.when || {};
+  let when = "";
+  if (w.mode === "vast" && w.depart) when = `${fmtDay(w.depart)} tot ${w.ret ? fmtDay(w.ret) : "?"}`;
+  else if (w.mode === "periode" && w.from) when = `${fmtDay(w.from)} tot ${w.to ? fmtDay(w.to) : "?"}`;
+  else when = (w.months || []).map((m) => MON[Number(m.slice(5, 7)) - 1] + " " + m.slice(2, 4)).join(", ") || "komende maanden";
+  const what = f.dests && f.dests.length
+    ? f.dests.map((id) => (DESTINATIONS.find((d) => d.id === id) || {}).city).filter(Boolean).join(", ")
+    : f.surprise ? "verras ons" : (f.vibes || []).map((v) => (VIBES.find((x) => x.id === v) || {}).label).filter(Boolean).join(", ").toLowerCase() || "overal";
+  return `${when}: ${what}`;
+}
+
 const LS_KEY = "attoh_reis_form_v1";
 const lsGet = (k) => { try { return JSON.parse(window.localStorage.getItem(k) || "null"); } catch { return null; } };
 const lsSet = (k, v) => { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -52,6 +68,9 @@ export default function ReisPlanner() {
   const [me, setMe] = useState(null);
   const [tab, setTab] = useState("home");
   const [explore, setExplore] = useState(null);
+  const [openTripId, setOpenTripId] = useState(null);
+  const [recent, setRecent] = useState([]);
+  const [seenAt, setSeenAt] = useState(null);
   const [form, setForm] = useState(DEFAULT_FORM);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(null);
@@ -70,11 +89,21 @@ export default function ReisPlanner() {
     fetch("/api/reis/me").then((r) => (r.status === 401 ? (window.location.href = "/reis/login") : r.json())).then((d) => d && setMe(d)).catch(() => {});
     const saved = lsGet(LS_KEY);
     if (saved && saved.when) setForm({ ...DEFAULT_FORM(), ...saved });
+    setRecent(lsGet(LS_KEY + "_recent") || []);
+    setSeenAt(lsGet(LS_KEY + "_seen") || new Date(0).toISOString());
     const last = lsGet(LS_KEY + "_last");
     if (last && last.results) setOut(last);
     loadTrips();
   }, []);
   useEffect(() => { lsSet(LS_KEY, form); }, [form]);
+  // Elke 45 sec (en bij terugkomen in de app) de gedeelde reizen verversen,
+  // zodat jullie elkaars stemmen, paklijst-vinkjes en notities zien.
+  useEffect(() => {
+    const tick = () => document.visibilityState === "visible" && loadTrips();
+    const iv = setInterval(tick, 45000);
+    document.addEventListener("visibilitychange", tick);
+    return () => { clearInterval(iv); document.removeEventListener("visibilitychange", tick); };
+  }, []);
 
   async function loadTrips() {
     try {
@@ -106,6 +135,7 @@ export default function ReisPlanner() {
     setProgress({ stage: "Zoekopdracht starten", routes: 0, flightOptions: 0, matches: 0, destinations: 0 });
     setTimeout(() => resultsRef.current && resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     const body = searchBody(f);
+    rememberSearch(f);
     try {
       const res = await fetch("/api/reis/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok || !res.body) throw new Error((await res.text()).slice(0, 200) || "Zoeken mislukt");
@@ -135,6 +165,18 @@ export default function ReisPlanner() {
       setBusy(false);
       setProgress(null);
     }
+  }
+
+  function rememberSearch(f) {
+    const label = searchLabel(f);
+    const next = [{ at: new Date().toISOString(), label, form: f }, ...(lsGet(LS_KEY + "_recent") || []).filter((x) => x.label !== label)].slice(0, 6);
+    lsSet(LS_KEY + "_recent", next);
+    setRecent(next);
+  }
+  function rerun(f) {
+    const merged = { ...DEFAULT_FORM(), ...f };
+    setForm(merged);
+    search(merged);
   }
 
   function surprise() {
@@ -172,6 +214,18 @@ export default function ReisPlanner() {
     return [...list].sort((a, b) => a.total - b.total);
   }, [out, hidden, sort]);
 
+  // Nieuw van de ander sinds je laatst in "Onze reizen" keek
+  const fresh = useMemo(
+    () => (me && me.user && seenAt ? trips.filter((t) => t.savedBy && t.savedBy !== me.user.id && t.createdAt > seenAt) : []),
+    [trips, seenAt, me]
+  );
+  useEffect(() => {
+    if (tab !== "reizen") return;
+    const now = new Date().toISOString();
+    const t = setTimeout(() => { lsSet(LS_KEY + "_seen", now); setSeenAt(now); }, 4000);
+    return () => clearTimeout(t);
+  }, [tab]);
+
   const savedIds = useMemo(() => new Set(trips.map((t) => t.result && t.result.id)), [trips]);
   const user = me && me.user;
 
@@ -183,7 +237,7 @@ export default function ReisPlanner() {
           <button className={"rp-tab" + (tab === "home" ? " on" : "")} onClick={() => setTab("home")}>Home</button>
           <button className={"rp-tab" + (tab === "zoeken" ? " on" : "")} onClick={() => setTab("zoeken")}>Zoeken</button>
           <button className={"rp-tab" + (tab === "reizen" ? " on" : "")} onClick={() => setTab("reizen")}>
-            Onze reizen{trips.length ? <span className="count">{trips.length}</span> : null}
+            Onze reizen{fresh.length ? <span className="count new">{fresh.length} nieuw</span> : trips.length ? <span className="count">{trips.length}</span> : null}
           </button>
         </nav>
         <span className="rp-spacer" />
@@ -200,7 +254,7 @@ export default function ReisPlanner() {
       </header>
 
       {tab === "home" && (
-        <Home user={user} live={me && me.live} trips={trips} onSearchTab={() => setTab("zoeken")} onSurprise={surprise} onOpenDest={openDest} onTripsTab={() => setTab("reizen")} />
+        <Home user={user} live={me && me.live} trips={trips} fresh={fresh} recent={recent} onRerun={rerun} onOpenTrip={(t) => setOpenTripId(t.id)} onSearchTab={() => setTab("zoeken")} onSurprise={surprise} onOpenDest={openDest} onTripsTab={() => setTab("reizen")} />
       )}
       {tab === "zoeken" && (
         <main className={"rp-main" + (out || busy ? " has-results" : "")}>
@@ -233,7 +287,15 @@ export default function ReisPlanner() {
           </section>
         </main>
       )}
-      {tab === "reizen" && <Saved trips={trips} reload={loadTrips} user={user} />}
+      {tab === "reizen" && <Saved trips={trips} reload={loadTrips} user={user} onOpen={(t) => setOpenTripId(t.id)} />}
+      {openTripId && trips.find((t) => t.id === openTripId) && (
+        <TripSheet
+          trip={trips.find((t) => t.id === openTripId)}
+          user={user}
+          onClose={() => { setOpenTripId(null); loadTrips(); }}
+          onChanged={(nt) => setTrips((list) => list.map((x) => (x.id === nt.id ? nt : x)))}
+        />
+      )}
       {explore && explore.dest && (
         <Explore dest={explore.dest} search={explore.search} initial={explore.initial} onClose={() => setExplore(null)} onSave={(r, owner) => saveTrip(r, owner)} />
       )}
@@ -569,12 +631,13 @@ function Ticket({ r, user, saved, liked, onSave, onFeedback, onOpen }) {
       <div className="rp-ticket-main">
         <div className="rp-dest">
           <button className="rp-city rp-city-btn" onClick={() => onOpen(r)}>{r.city}</button>
-          <span className="rp-country">{r.country}</span>
+          {r.country !== r.city && <span className="rp-country">{r.country}</span>}
         </div>
         <div className="rp-meta">
           {r.temp != null && <span className="rp-pill temp">{r.temp}° overdag</span>}
           {r.beach >= 8 && <span className="rp-pill">Mooi strand</span>}
           <span className="rp-pill">{Math.round(r.hours)} uur vliegen</span>
+          <span className="rp-pill" title="Werkdagen vrij nemen (feestdagen niet meegeteld)">{leaveDays(r.depart, r.ret)} verlofdagen</span>
           {r.match >= 80 && <span className="rp-pill ok">Past bij jullie wensen</span>}
         </div>
 
@@ -668,6 +731,8 @@ function Ticket({ r, user, saved, liked, onSave, onFeedback, onOpen }) {
                   <h4>Bewaren bij</h4>
                   <button data-sfx="own" onClick={() => { onSave(r, "justin"); setMenu(null); }}>Justin</button>
                   <button data-sfx="own" onClick={() => { onSave(r, "quinty"); setMenu(null); }}>Quinty</button>
+                  <h4>Of deel hem</h4>
+                  <a href={whatsappUrl(r)} target="_blank" rel="noopener noreferrer">Via WhatsApp</a>
                 </div>
               )}
             </div>
@@ -698,15 +763,28 @@ function LinkMenu({ title, links }) {
 }
 
 // ── Onze reizen ─────────────────────────────────────────────────────
-function Saved({ trips, reload, user }) {
+function Saved({ trips, reload, user, onOpen }) {
   const [who, setWho] = useState("alle");
-  const list = trips.filter((t) => who === "alle" || t.owner === who);
+  const [filter, setFilter] = useState("alles");
+  const [confirmDel, setConfirmDel] = useState(null);
+  const isMatch = (t) => t.votes && t.votes.justin && t.votes.quinty;
+  const rank = (t) => (t.status === "geboekt" ? 0 : isMatch(t) ? 1 : t.status === "favoriet" ? 2 : 3);
+  const list = trips
+    .filter((t) => who === "alle" || t.owner === who)
+    .filter((t) => filter === "alles" || (filter === "matches" ? isMatch(t) : (t.status || "idee") === filter))
+    .sort((a, b) => rank(a) - rank(b) || (a.result.depart < b.result.depart ? -1 : 1));
+  const counts = {
+    matches: trips.filter(isMatch).length,
+    favoriet: trips.filter((t) => t.status === "favoriet").length,
+    geboekt: trips.filter((t) => t.status === "geboekt").length,
+  };
   async function patch(id, p) {
     await fetch("/api/reis/trips", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...p }) });
     reload();
   }
   async function remove(id) {
     await fetch("/api/reis/trips", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    setConfirmDel(null);
     reload();
   }
   return (
@@ -714,7 +792,7 @@ function Saved({ trips, reload, user }) {
       <div className="rp-saved-head">
         <div>
           <h1>Onze reizen</h1>
-          <p className="rp-lede" style={{ margin: 0 }}>Alles wat jullie bewaard hebben. Met prijsalert aan wordt elke dag gecheckt of de prijs gezakt is.</p>
+          <p className="rp-lede" style={{ margin: 0 }}>Stem allebei op de reizen die je wilt. Twee hartjes is een match. Met prijsalert aan wordt elke dag gecheckt of de prijs gezakt is.</p>
         </div>
         <div className="rp-seg" style={{ minWidth: 260 }}>
           {[["alle", "Allebei"], ["justin", "Justin"], ["quinty", "Quinty"]].map(([id, l]) => (
@@ -722,23 +800,38 @@ function Saved({ trips, reload, user }) {
           ))}
         </div>
       </div>
+      <Lot trips={trips.filter((t) => isMatch(t) || t.status === "favoriet")} onPick={onOpen} />
+      <div className="rp-chips" style={{ marginBottom: 18 }}>
+        {[["alles", "Alles"], ["matches", `Matches${counts.matches ? ` (${counts.matches})` : ""}`], ["favoriet", `Favoriet${counts.favoriet ? ` (${counts.favoriet})` : ""}`], ["geboekt", `Geboekt${counts.geboekt ? ` (${counts.geboekt})` : ""}`]].map(([id, l]) => (
+          <button key={id} className={"rp-chip sm" + (filter === id ? " on" : "")} onClick={() => setFilter(id)}>{l}</button>
+        ))}
+      </div>
       {!list.length && (
         <div className="rp-empty" style={{ paddingTop: 20 }}>
-          <h2 style={{ fontSize: 30 }}>Nog niets bewaard</h2>
-          <p>Zoek een reis en druk op Bewaren. Daarna staat hij hier, bij Justin of bij Quinty, en zien jullie hem allebei.</p>
+          <h2 style={{ fontSize: 30 }}>{trips.length ? "Niets in deze selectie" : "Nog niets bewaard"}</h2>
+          <p>{trips.length ? "Kies een ander filter bovenaan." : "Zoek een reis en druk op Bewaren. Daarna staat hij hier, bij Justin of bij Quinty, en zien jullie hem allebei."}</p>
         </div>
       )}
       {list.map((t) => {
         const r = t.result;
         const hist = (t.priceHistory || []).map((p) => p.total).filter(Boolean);
         const first = hist[0], last = hist[hist.length - 1];
+        const myVote = Boolean(t.votes && t.votes[user && user.id]);
+        const st = t.status || "idee";
         return (
-          <article key={t.id} className="rp-ticket">
+          <article key={t.id} className={"rp-ticket" + (st === "geboekt" ? " booked" : "")}>
+            {isMatch(t) && st !== "geboekt" && <span className="rp-badge deal">Match</span>}
+            {st === "geboekt" && <span className="rp-badge">{countdownLabel(r.depart)}</span>}
             <div className="rp-ticket-main">
               <div className="rp-dest">
-                <span className="rp-city">{r.city}</span>
-                <span className="rp-country">{r.country}</span>
+                <button className="rp-city rp-city-btn" onClick={() => onOpen(t)}>{r.city}</button>
+                {r.country !== r.city && <span className="rp-country">{r.country}</span>}
+              </div>
+              <div className="rp-meta">
+                <span className={"rp-status-pill " + st}>{st === "geboekt" ? "Geboekt" : st === "favoriet" ? "Favoriet" : "Idee"}</span>
                 <span className={"rp-owner " + t.owner}><i>{t.owner === "quinty" ? "Q" : "J"}</i>bij {t.owner === "quinty" ? "Quinty" : "Justin"}</span>
+                {["justin", "quinty"].map((p) => (t.votes && t.votes[p] ? <span key={p} className={"rp-heart " + p} title={`${p === "quinty" ? "Quinty" : "Justin"} wil`}>♥ {p === "quinty" ? "Q" : "J"}</span> : null))}
+                {t.packing && <span className="rp-pill">Paklijst {t.packing.filter((x) => x.done).length}/{t.packing.length}</span>}
               </div>
               <div className="rp-dates">
                 <div className="rp-date"><b>{fmtDay(r.depart)}</b><span>{r.originName}</span></div>
@@ -749,6 +842,7 @@ function Saved({ trips, reload, user }) {
                 <div className="rp-leg"><span className="rp-leg-ic"><PlaneIcon size={17} /></span><div><div className="rp-leg-t">{r.origin} naar {r.airport}</div><div className="rp-leg-s">{r.flight.airlineName}</div></div></div>
                 <div className="rp-leg"><span className="rp-leg-ic"><BedIcon /></span><div><div className="rp-leg-t">{r.hotel ? r.hotel.name : "Hotel nog kiezen"}</div><div className="rp-leg-s">{r.hotel ? `${r.hotel.stars} sterren` : "Schatting"}</div></div></div>
               </div>
+              {t.note && <p className="rp-notepeek">{t.note.length > 140 ? t.note.slice(0, 140) + "…" : t.note}</p>}
               <div className="rp-alts" style={{ marginTop: 16 }}>
                 <span>Bewaard door {t.savedBy === "quinty" ? "Quinty" : "Justin"} op {fmtDay(t.createdAt.slice(0, 10))}</span>
               </div>
@@ -759,19 +853,74 @@ function Saved({ trips, reload, user }) {
               {first && last && last < first && <div className="rp-drop">{eur(first - last)} goedkoper dan bij bewaren</div>}
               <label className="rp-toggle" style={{ fontSize: 14 }}><span>Prijsalert</span><Switch checked={t.alert} onChange={(v) => patch(t.id, { alert: v })} /></label>
               <div className="rp-actions">
+                <button className="rp-btn pri" onClick={() => onOpen(t)}>{st === "geboekt" ? "Paklijst en details" : "Openen"}</button>
                 <div className="rp-btnrow">
-                  <a className="rp-btn pri" href={(r.links.flight.find((l) => l.primary) || r.links.flight[0]).url} target="_blank" rel="noopener noreferrer">Vlucht</a>
-                  <a className="rp-btn pri" href={r.links.hotel[0].url} target="_blank" rel="noopener noreferrer">Hotel</a>
+                  <button
+                    className={"rp-btn" + (myVote ? " acc" : "")}
+                    data-sfx="own"
+                    onClick={() => {
+                      if (!myVote) rsfx("heart");
+                      const both = !myVote && t.votes && t.votes[user.id === "justin" ? "quinty" : "justin"];
+                      if (both) confetti();
+                      patch(t.id, { vote: !myVote });
+                    }}
+                  >
+                    {myVote ? "♥ Ik wil" : "Ik wil"}
+                  </button>
+                  {confirmDel === t.id ? (
+                    <button className="rp-btn rp-danger" onClick={() => remove(t.id)}>Zeker weten?</button>
+                  ) : (
+                    <button className="rp-btn" onClick={() => setConfirmDel(t.id)}>Verwijderen</button>
+                  )}
                 </div>
-                <div className="rp-btnrow">
-                  <button className="rp-btn" onClick={() => patch(t.id, { owner: t.owner === "quinty" ? "justin" : "quinty" })}>Naar {t.owner === "quinty" ? "Justin" : "Quinty"}</button>
-                  <button className="rp-btn" onClick={() => remove(t.id)}>Verwijderen</button>
-                </div>
+                <button className="rp-link" style={{ fontSize: 13 }} onClick={() => patch(t.id, { owner: t.owner === "quinty" ? "justin" : "quinty" })}>Verplaats naar {t.owner === "quinty" ? "Justin" : "Quinty"}</button>
               </div>
             </div>
           </article>
         );
       })}
+    </div>
+  );
+}
+
+// "Laat het lot beslissen": bij 2+ matches/favorieten draait een rad met
+// steden en kiest er één (eerlijk willekeurig).
+function Lot({ trips, onPick }) {
+  const [spin, setSpin] = useState(null);
+  if (trips.length < 2) return null;
+  function go() {
+    rsfx("takeoff");
+    const winner = trips[Math.floor(Math.random() * trips.length)];
+    let i = 0;
+    const names = trips.map((t) => t.result.city);
+    const iv = setInterval(() => {
+      setSpin({ name: names[i++ % names.length], done: false });
+    }, 90);
+    setTimeout(() => {
+      clearInterval(iv);
+      setSpin({ name: winner.result.city, done: true, trip: winner });
+      rsfx("fanfare");
+      confetti();
+    }, 1900);
+  }
+  return (
+    <div className="rp-lot">
+      {spin ? (
+        <>
+          <span className={"rp-lot-name" + (spin.done ? " done" : "")}>{spin.name}</span>
+          {spin.done ? (
+            <span className="rp-lot-actions">
+              <button className="rp-btn pri" onClick={() => onPick(spin.trip)}>Bekijk deze reis</button>
+              <button className="rp-btn" data-sfx="own" onClick={go}>Nog een keer</button>
+            </span>
+          ) : <span className="rp-muted">Het lot beslist…</span>}
+        </>
+      ) : (
+        <>
+          <span><b>Kunnen jullie niet kiezen?</b> {trips.length} matches en favorieten.</span>
+          <button className="rp-btn acc" data-sfx="own" onClick={go}>Laat het lot beslissen</button>
+        </>
+      )}
     </div>
   );
 }

@@ -26,6 +26,8 @@ export async function PATCH(req) {
   const user = await requireReisUser();
   if (!user) return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
   const { id, ...patch } = await req.json().catch(() => ({}));
+  // stemmen gaat altijd op naam van wie ingelogd is
+  if (patch.vote !== undefined) patch.vote = { user: user.id, value: Boolean(patch.vote) };
   try {
     return NextResponse.json({ trip: await updateTrip(id, patch) });
   } catch (e) {

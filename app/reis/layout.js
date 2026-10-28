@@ -5,7 +5,13 @@ import ReisSound from "./ReisSound";
 export const metadata = {
   title: "Attoh Ultra Reisplanner",
   description: "De goedkoopste losse vakantie: vlucht en hotel apart vergeleken",
+  // Op de telefoon: "Zet op beginscherm" → opent als eigen app met icoon
+  manifest: "/reis-manifest.json",
+  icons: { icon: "/reis-icon-192.png", apple: "/reis-icon-180.png" },
+  appleWebApp: { capable: true, title: "Reisplanner", statusBarStyle: "default" },
 };
+
+export const viewport = { themeColor: "#121830" };
 
 export const dynamic = "force-dynamic";
 

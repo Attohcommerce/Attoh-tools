@@ -4,6 +4,8 @@
 // het totaal + boekknoppen. Zo simpel als een reisbureau-folder.
 import { useEffect, useMemo, useState } from "react";
 import { rsfx } from "./ReisSound";
+import { countryInfo } from "@/lib/reis/countryinfo";
+import { leaveDays } from "./fmt";
 
 const DAYS = ["zo", "ma", "di", "wo", "do", "vr", "za"];
 const MON = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
@@ -23,6 +25,7 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
   const [err, setErr] = useState("");
   const [nightsFilter, setNightsFilter] = useState("alle");
   const [showAll, setShowAll] = useState(false);
+  const [view, setView] = useState("lijst");
 
   // Escape sluit, achtergrond niet laten scrollen
   useEffect(() => {
@@ -76,7 +79,8 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
     if (!sel || !sel.cost || !hotelSel) return;
     onSave({
       id: `${dest.id}-${sel.depart}-${sel.ret}-${sel.origin}-${hotelSel.id}`,
-      destId: dest.id, city: dest.city, country: dest.country, tags: dest.tags, hours: dest.hours,
+      destId: dest.id, cc: dest.cc, city: dest.city, country: dest.country, tags: dest.tags, hours: dest.hours, beach: dest.beach,
+      temp: dest.temp[new Date(sel.depart + "T12:00:00Z").getUTCMonth()],
       origin: sel.origin, originName: sel.originName, airport: sel.airport,
       depart: sel.depart, ret: sel.ret, nights: sel.nights,
       flight: { estimate: false, airline: sel.airline, airlineName: sel.airlineName, stopsOut: sel.stopsOut, stopsBack: sel.stopsBack, ticket: sel.ticket, bag: sel.bag, toAirport: sel.toAirport, cost: sel.cost, departTime: sel.departTime, returnTime: sel.returnTime },
@@ -94,13 +98,15 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
         <header className="rp-sheet-head">
           <div>
             <div className="rp-city">{dest.city}</div>
-            <div className="rp-country">{dest.country}, {Math.round(dest.hours)} uur vliegen</div>
+            <div className="rp-country">{dest.country !== dest.city ? `${dest.country}, ` : ""}{Math.round(dest.hours)} uur vliegen</div>
           </div>
           <button className="rp-iconbtn" onClick={onClose} aria-label="Sluiten">✕</button>
         </header>
 
         <div className="rp-sheet-body">
           {err && <div className="rp-note"><span>{err}</span></div>}
+
+          <DestInfo dest={dest} date={sel ? sel.depart : (search && search.when && search.when.months && search.when.months[0] ? search.when.months[0] + "-15" : null)} />
 
           <section>
             <h3 className="rp-step"><i>1</i>Kies jullie vlucht</h3>
@@ -113,6 +119,10 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
             {flights && flightLive && flights.length === 0 && <div className="rp-note"><span>Geen vluchten gevonden die aan jullie eisen voldoen in deze periode. Probeer een andere maand of sta 1 overstap toe.</span></div>}
             {flights && flightLive && flights.length > 0 && (
               <>
+                <div className="rp-seg rp-viewseg">
+                  <button className={view === "lijst" ? "on" : ""} onClick={() => setView("lijst")}>Lijst</button>
+                  <button className={view === "kalender" ? "on" : ""} onClick={() => setView("kalender")}>Prijskalender</button>
+                </div>
                 {nightsOptions.length > 1 && (
                   <div className="rp-chips" style={{ marginBottom: 12 }}>
                     <button className={"rp-chip sm" + (nightsFilter === "alle" ? " on" : "")} onClick={() => setNightsFilter("alle")}>Alle lengtes</button>
@@ -121,19 +131,20 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
                     ))}
                   </div>
                 )}
-                <div className="rp-flights">
+                {view === "kalender" && <PriceCalendar flights={shownFlights} sel={sel} onPick={setSel} />}
+                {view === "lijst" && <div className="rp-flights">
                   {visible.map((f, i) => (
                     <button key={f.id} className={"rp-fopt" + (sel && sel.id === f.id ? " on" : "")} onClick={() => setSel(f)}>
                       <span className="rp-fopt-dates"><b>{fmtDay(f.depart)}</b><span>tot {fmtDay(f.ret)}</span></span>
                       <span className="rp-fopt-mid">
                         <span>{f.nights} nachten, vanaf {f.originName}</span>
-                        <span className="rp-muted">{f.airlineName}, {f.stopsOut === 0 && f.stopsBack === 0 ? "direct" : "1 overstap"}{f.departTime ? `, vertrek ${f.departTime}` : ""}</span>
+                        <span className="rp-muted">{f.airlineName}, {f.stopsOut === 0 && f.stopsBack === 0 ? "direct" : "1 overstap"}{f.departTime ? `, vertrek ${f.departTime}` : ""}, {leaveDays(f.depart, f.ret)} verlofdagen</span>
                       </span>
                       <span className="rp-fopt-price">{eur(f.cost)}{i === 0 && nightsFilter === "alle" && <small>goedkoopst</small>}</span>
                     </button>
                   ))}
-                </div>
-                {shownFlights.length > 8 && !showAll && <button className="rp-btn" style={{ marginTop: 10, width: "100%" }} onClick={() => setShowAll(true)}>Toon alle {shownFlights.length} vluchten</button>}
+                </div>}
+                {view === "lijst" && shownFlights.length > 8 && !showAll && <button className="rp-btn" style={{ marginTop: 10, width: "100%" }} onClick={() => setShowAll(true)}>Toon alle {shownFlights.length} vluchten</button>}
                 <p className="rp-hint">Prijs voor 2 personen, inclusief ruimbagage en reiskosten naar het vliegveld.</p>
               </>
             )}
@@ -233,3 +244,86 @@ function Loading({ label }) {
     </div>
   );
 }
+
+// Klimaat (gem. max per maand) + praktische landinfo
+function DestInfo({ dest, date }) {
+  const info = countryInfo(dest, date);
+  const [rate, setRate] = useState(null);
+  useEffect(() => {
+    let off = false;
+    fetch(`/api/reis/info?dest=${encodeURIComponent(dest.id)}`).then((x) => x.json()).then((d) => !off && setRate(d.rate || null)).catch(() => {});
+    return () => { off = true; };
+  }, [dest.id]);
+  const m = date ? new Date(date.slice(0, 10) + "T12:00:00Z").getUTCMonth() : -1;
+  const max = Math.max(...dest.temp), min = Math.min(...dest.temp, 0);
+  return (
+    <section className="rp-destinfo">
+      <div className="rp-climate" aria-label="Gemiddelde maximumtemperatuur per maand">
+        {dest.temp.map((t, i) => (
+          <div key={i} className={"rp-climate-col" + (i === m ? " on" : "")} title={`${MON[i]}: ${t}°`}>
+            <span className="v">{t}°</span>
+            <span className="b" style={{ height: Math.max(8, ((t - min) / Math.max(1, max - min)) * 56) + "px" }} />
+            <span className="l">{MON[i].slice(0, 1)}</span>
+          </div>
+        ))}
+      </div>
+      {info && (
+        <div className="rp-infopills">
+          <span className="rp-pill">{info.diffLabel}</span>
+          <span className="rp-pill">{info.currency}{rate ? `, 1 euro = ${Number(rate.perEur) >= 100 ? Math.round(rate.perEur).toLocaleString("nl-NL") : Number(rate.perEur).toLocaleString("nl-NL", { maximumFractionDigits: 2 })} ${rate.code}` : ""}</span>
+          <span className={"rp-pill" + (info.needsAdapter ? " temp" : "")}>{info.plug}</span>
+          <a className="rp-pill rp-pill-link" href={info.advies} target="_blank" rel="noopener noreferrer">Reisadvies</a>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Kalender: per vertrekdag de goedkoopste vlucht, gekleurd van goedkoop
+// (groen) naar duur. Klik = die vlucht kiezen.
+function PriceCalendar({ flights, sel, onPick }) {
+  const byDay = new Map();
+  for (const f of flights) {
+    const cur = byDay.get(f.depart);
+    if (!cur || f.cost < cur.cost) byDay.set(f.depart, f);
+  }
+  if (!byDay.size) return null;
+  const costs = [...byDay.values()].map((f) => f.cost);
+  const lo = Math.min(...costs), hi = Math.max(...costs);
+  const months = [...new Set([...byDay.keys()].map((d) => d.slice(0, 7)))].sort();
+  return (
+    <div className="rp-cal-wrap">
+      {months.map((mk) => {
+        const [y, mo] = mk.split("-").map(Number);
+        const first = new Date(Date.UTC(y, mo - 1, 1));
+        const days = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+        const lead = (first.getUTCDay() + 6) % 7; // maandag eerst
+        const cells = [];
+        for (let i = 0; i < lead; i++) cells.push(<span key={"x" + i} />);
+        for (let d = 1; d <= days; d++) {
+          const iso = `${mk}-${String(d).padStart(2, "0")}`;
+          const f = byDay.get(iso);
+          if (!f) { cells.push(<span key={iso} className="rp-cal-day off">{d}</span>); continue; }
+          const lvl = hi === lo ? 0 : Math.min(4, Math.floor(((f.cost - lo) / (hi - lo)) * 5));
+          cells.push(
+            <button key={iso} className={"rp-cal-day lv" + lvl + (sel && sel.depart === iso ? " on" : "")} onClick={() => onPick(f)} title={`${d} ${MON[mo - 1]}: ${eur(f.cost)}, ${f.nights} nachten`}>
+              <b>{d}</b>
+              <span>{eur(f.cost).replace("€", "")}</span>
+            </button>
+          );
+        }
+        return (
+          <div key={mk} className="rp-cal">
+            <h4>{MONTHS_LONG[mo - 1]} {y}</h4>
+            <div className="rp-cal-grid">
+              {["ma", "di", "wo", "do", "vr", "za", "zo"].map((d) => <span key={d} className="rp-cal-dow">{d}</span>)}
+              {cells}
+            </div>
+          </div>
+        );
+      })}
+      <div className="rp-cal-legend"><span className="lv0" />goedkoop<span className="lv4" />duurder</div>
+    </div>
+  );
+}
+const MONTHS_LONG = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];

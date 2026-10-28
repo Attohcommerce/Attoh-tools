@@ -801,6 +801,154 @@ details.rp-more .inner { padding-bottom: 16px; display: grid; gap: 14px; }
 .rp .rp-city-btn:hover { color: var(--accent); }
 .rp .rp-open { margin-top: 16px; width: 100%; }
 
+
+/* ── Volgende reis (aftellen) ───────────────────────── */
+.rp .rp-next {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(160px, 240px);
+  gap: 22px;
+  align-items: center;
+  text-align: left;
+  padding: 22px 28px;
+  border-radius: 24px;
+  background: var(--sun-soft);
+  border: 1.5px solid color-mix(in srgb, var(--sun) 45%, transparent);
+}
+.rp .rp-next:hover { border-color: var(--sun); }
+.rp-next-num { font-family: var(--display); font-size: 72px; font-weight: 800; letter-spacing: -0.05em; line-height: .9; color: var(--ink); font-variant-numeric: tabular-nums; }
+.rp-next-txt { display: grid; gap: 2px; }
+.rp-next-txt b { font-family: var(--display); font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.rp-next-txt span { color: var(--ink-2); font-size: 14px; }
+.rp-next-pack { display: grid; gap: 6px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.rp-bar { display: block; height: 8px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+.rp-bar i { display: block; height: 100%; border-radius: 8px; background: var(--good); transition: width .3s; }
+
+.rp .rp-recent { gap: 8px; }
+.rp .rp-recent svg { color: var(--muted); }
+
+.rp .rp-mini-btn { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; width: 100%; text-align: left; }
+.rp-mini li { padding: 0; background: none; }
+.rp .rp-mini-btn { padding: 10px 12px; border-radius: 14px; background: var(--surface); }
+.rp .rp-mini-btn:hover { background: var(--chip); }
+.rp-match-tag { font-style: normal; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: var(--good-soft); color: var(--good); font-size: 12px; font-weight: 700; vertical-align: 2px; }
+.rp-match-tag.booked { background: var(--sun-soft); color: #7a4b00; }
+
+/* ── Bewaarde reizen extra ──────────────────────────── */
+.rp-status-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--chip); color: var(--ink-2); }
+.rp-status-pill.favoriet { background: var(--accent-soft); color: var(--accent); }
+.rp-status-pill.geboekt { background: var(--sun-soft); color: #7a4b00; }
+.rp-heart { display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff; }
+.rp-heart.justin { background: #2160e8; }
+.rp-heart.quinty { background: #e0457b; }
+.rp-ticket.booked { border-color: color-mix(in srgb, var(--sun) 60%, var(--line)); }
+.rp-notepeek { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--surface); color: var(--ink-2); font-size: 14px; white-space: pre-line; }
+.rp .rp-danger { border-color: var(--warn); color: var(--warn); }
+
+/* ── Reisdetail ─────────────────────────────────────── */
+.rp-trip .rp-sheet-body { gap: 22px; }
+.rp-trip-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.rp-trip-top .rp-seg { min-width: 300px; }
+.rp-countdown { display: flex; align-items: baseline; gap: 8px; }
+.rp-countdown b { font-family: var(--display); font-size: 44px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+.rp-countdown span { color: var(--muted); }
+.rp-subtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+.rp .rp-subtabs button { padding: 10px 14px; font-weight: 600; color: var(--muted); border-bottom: 2.5px solid transparent; margin-bottom: -1px; }
+.rp .rp-subtabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+.rp-trip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+.rp-card-h { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+.rp-votes { display: grid; gap: 8px; }
+.rp-vote { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--surface); color: var(--muted); font-size: 14.5px; }
+.rp-vote i { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 12px; color: #fff; background: var(--line-2); }
+.rp-vote.yes { color: var(--ink); font-weight: 600; }
+.rp-vote.justin.yes i { background: #2160e8; }
+.rp-vote.quinty.yes i { background: #e0457b; }
+.rp-match { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--good-soft); color: var(--good); font-weight: 700; }
+.rp-facts { list-style: none; display: grid; gap: 8px; }
+.rp-facts li { display: grid; grid-template-columns: 70px 1fr; gap: 10px; font-size: 14px; }
+.rp-facts li span { color: var(--muted); }
+.rp-facts li b { font-weight: 600; }
+.rp .rp-notes { min-height: 260px; resize: vertical; line-height: 1.6; font-family: inherit; }
+.rp-toast { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 10px 18px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 600; font-size: 14px; box-shadow: 0 10px 30px -10px rgba(0,0,0,.4); }
+
+/* Paklijst */
+.rp-pack-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.rp-pack-head > div { flex: 1; min-width: 200px; display: grid; gap: 8px; }
+.rp-pack-add { display: grid; grid-template-columns: 1fr 170px auto; gap: 8px; margin: 10px 0 20px; }
+.rp-pack-add .rp-btn { padding: 0 16px; }
+.rp-pack-cat { margin-bottom: 18px; }
+.rp-pack-cat h4 { font-size: 13.5px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+.rp-pack-cat ul { list-style: none; display: grid; gap: 2px; }
+.rp-pack-cat li { display: flex; align-items: center; gap: 8px; border-radius: 10px; }
+.rp-pack-cat li:hover { background: var(--surface); }
+.rp-pack-cat label { flex: 1; display: flex; align-items: center; gap: 12px; padding: 9px 10px; cursor: pointer; min-height: 44px; }
+.rp-pack-cat input[type="checkbox"] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.rp-check { width: 22px; height: 22px; flex: none; border-radius: 7px; border: 2px solid var(--line-2); display: grid; place-items: center; transition: background .15s, border-color .15s; }
+.rp-pack-cat input:checked + .rp-check { background: var(--good); border-color: var(--good); }
+.rp-pack-cat input:checked + .rp-check::after { content: ""; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg) translate(-1px, -1px); }
+.rp-pack-cat input:focus-visible + .rp-check { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+.rp-pack-cat li.done .txt { color: var(--muted); text-decoration: line-through; }
+.rp-by { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; margin-left: auto; }
+.rp-by.justin { background: #2160e8; }
+.rp-by.quinty { background: #e0457b; }
+.rp .rp-x { width: 34px; height: 34px; border-radius: 8px; color: var(--muted); opacity: 0; }
+.rp-pack-cat li:hover .rp-x, .rp .rp-x:focus-visible { opacity: 1; }
+@media (hover: none) { .rp .rp-x { opacity: .5; } }
+
+/* ── Bestemming: klimaat + info + kalender ──────────── */
+.rp-destinfo { display: grid; gap: 14px; padding: 16px; border-radius: 18px; background: var(--surface); }
+.rp-climate { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; align-items: end; height: 96px; }
+.rp-climate-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; height: 100%; }
+.rp-climate-col .v { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rp-climate-col .b { width: 100%; max-width: 26px; border-radius: 6px 6px 3px 3px; background: color-mix(in srgb, var(--sun) 55%, var(--line)); }
+.rp-climate-col .l { font-size: 11px; color: var(--muted); }
+.rp-climate-col.on .b { background: var(--sun); }
+.rp-climate-col.on .v, .rp-climate-col.on .l { color: var(--ink); font-weight: 700; }
+.rp-infopills { display: flex; flex-wrap: wrap; gap: 6px; }
+.rp-infopills .rp-pill { background: var(--card); white-space: normal; }
+.rp .rp-pill-link { text-decoration: underline; text-underline-offset: 2px; }
+.rp-viewseg { max-width: 300px; margin-bottom: 12px; }
+
+.rp-cal-wrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 360px)); gap: 22px; }
+.rp-cal h4 { font-weight: 700; margin-bottom: 8px; text-transform: none; }
+.rp-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.rp-cal-dow { font-size: 12px; color: var(--muted); text-align: center; padding-bottom: 2px; }
+.rp-cal-day { aspect-ratio: 1 / 1; border-radius: 10px; display: grid; place-items: center; align-content: center; font-size: 13px; line-height: 1.1; }
+.rp-cal-day.off { color: var(--line-2); }
+.rp .rp-cal-day b { font-weight: 700; }
+.rp .rp-cal-day span { font-size: 10.5px; font-variant-numeric: tabular-nums; }
+.rp .rp-cal-day.lv0 { background: #d6f5e8; color: #0b5e47; }
+.rp .rp-cal-day.lv1 { background: #e8f6d5; color: #3f5f0b; }
+.rp .rp-cal-day.lv2 { background: #fff2cc; color: #6b4e00; }
+.rp .rp-cal-day.lv3 { background: #ffe1c7; color: #7a3a00; }
+.rp .rp-cal-day.lv4 { background: #ffd3d3; color: #7a1d1d; }
+.rp .rp-cal-day.on { outline: 2.5px solid var(--accent); outline-offset: 1px; }
+.rp-cal-legend { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.rp-cal-legend span { width: 14px; height: 14px; border-radius: 4px; margin-left: 8px; }
+.rp-cal-legend .lv0 { background: #d6f5e8; }
+.rp-cal-legend .lv4 { background: #ffd3d3; }
+
+.rp-forecast { display: flex; gap: 6px; overflow-x: auto; margin-top: 14px; padding-bottom: 4px; }
+.rp-forecast > div { flex: none; width: 58px; padding: 8px 4px; border-radius: 12px; background: var(--surface); display: grid; justify-items: center; gap: 2px; font-size: 12px; }
+.rp-forecast .d { color: var(--muted); }
+.rp-forecast .i { font-size: 20px; }
+.rp-forecast b { font-size: 15px; }
+.rp-forecast .r { color: #2c7be5; font-size: 11px; }
+.rp-install { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--ink-2); }
+
+.rp-tab .count.new { background: var(--good); }
+.rp .rp-fresh { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; text-align: left; padding: 16px 20px; border-radius: 20px; background: var(--good-soft); border: 1.5px solid color-mix(in srgb, var(--good) 35%, transparent); }
+.rp .rp-fresh:hover { border-color: var(--good); }
+.rp-fresh b { display: block; font-weight: 700; }
+.rp-fresh > span:nth-child(2) > span { color: var(--ink-2); font-size: 14px; }
+.rp-fresh .rp-owner { padding: 3px; }
+.rp-fresh-go { font-weight: 700; color: var(--good); }
+
+.rp-lot { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 14px 18px; margin-bottom: 16px; border-radius: 18px; background: var(--accent-soft); min-height: 70px; }
+.rp-lot .rp-btn { padding: 0 16px; }
+.rp-lot-name { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -0.03em; }
+.rp-lot-name.done { color: var(--accent); }
+.rp-lot-actions { display: flex; gap: 8px; }
+
 /* ── Mobiel ─────────────────────────────────────────── */
 .rp-bottomnav { display: none; }
 .rp-mobile-only { display: none; }
@@ -842,6 +990,12 @@ details.rp-more .inner { padding-bottom: 16px; display: grid; gap: 14px; }
   .rp-hero { grid-template-columns: 1fr; border-radius: 22px; padding: 26px 18px; gap: 26px; }
   .rp-hero-board .rp-board { width: 100%; }
   .rp-home-grid { grid-template-columns: 1fr; }
+  .rp .rp-next { grid-template-columns: auto 1fr; padding: 18px; gap: 14px; }
+  .rp-next-num { font-size: 56px; }
+  .rp-next-pack { grid-column: 1 / -1; }
+  .rp-trip-top .rp-seg { min-width: 0; width: 100%; }
+  .rp-pack-add { grid-template-columns: 1fr auto; }
+  .rp-pack-add .rp-select { grid-column: 1 / -1; grid-row: 2; }
   .rp-sheet-head { padding: 14px 16px; }
   .rp-sheet-body { padding: 18px 16px 30px; }
   .rp-sheet-foot { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }

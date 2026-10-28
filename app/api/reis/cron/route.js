@@ -28,7 +28,7 @@ export async function GET(req) {
     return NextResponse.json({ error: "Geen toegang" }, { status: 401 });
   }
   if (!hasTravelpayouts()) return NextResponse.json({ ok: true, skipped: "Geen TRAVELPAYOUTS_TOKEN" });
-  const trips = (await listTrips()).filter((t) => t.alert && t.result && !t.result.flight.estimate);
+  const trips = (await listTrips()).filter((t) => t.alert && t.status !== "geboekt" && t.result && !t.result.flight.estimate);
   const today = new Date().toISOString().slice(0, 10);
   const drops = [];
   for (const t of trips.slice(0, 40)) {
