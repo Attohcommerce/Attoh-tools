@@ -7,7 +7,8 @@ import { ORG_COOKIE, normOrg, toolAllowed } from "./lib/org";
 // /kw = statische keyword-CSV's die Google Sheets via IMPORTDATA mag ophalen
 // /api/size-guide/job/tick = cloud-run van de Size Guide roept zichzelf aan
 // (server → server, geen sessie); de route eist zelf het job-geheim.
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/kw", "/api/size-guide/job/tick"];
+// /tp = lege verificatiepagina voor Travelpayouts (vluchtprijzen reisplanner)
+const PUBLIC_PATHS = ["/login", "/api/auth/login", "/kw", "/api/size-guide/job/tick", "/tp"];
 
 // Reisplanner (27-10-2026): /reis + /api/reis hebben een EIGEN login
 // (cookie attoh_reis_session, gebruikers Justin + Quinty) en staan los van
