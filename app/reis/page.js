@@ -11,6 +11,7 @@ import { rsfx, reisSoundOn, setReisSound } from "./ReisSound";
 import TripSheet from "./TripSheet";
 import DestPicker from "./DestPicker";
 import { HotelMapModal, LocationLink } from "./HotelMap";
+import PriceKiller, { PriceKillerButton } from "./PriceKiller";
 import { confetti } from "./confetti";
 import { countdownLabel, whatsappUrl, leaveDays } from "./fmt";
 
@@ -71,6 +72,7 @@ export default function ReisPlanner() {
   const [tab, setTab] = useState("home");
   const [explore, setExplore] = useState(null);
   const [openTripId, setOpenTripId] = useState(null);
+  const [killId, setKillId] = useState(null);
   const [recent, setRecent] = useState([]);
   const [seenAt, setSeenAt] = useState(null);
   const [form, setForm] = useState(DEFAULT_FORM);
@@ -307,13 +309,17 @@ export default function ReisPlanner() {
           </section>
         </main>
       )}
-      {tab === "reizen" && <Saved trips={trips} reload={loadTrips} user={user} onOpen={(t) => setOpenTripId(t.id)} />}
+      {tab === "reizen" && <Saved trips={trips} reload={loadTrips} user={user} onOpen={(t) => setOpenTripId(t.id)} onKill={(t) => setKillId(t.id)} />}
+      {killId && trips.find((t) => t.id === killId) && (
+        <PriceKiller trip={trips.find((t) => t.id === killId)} onClose={() => { setKillId(null); loadTrips(); }} onReplaced={loadTrips} onSavedNew={loadTrips} />
+      )}
       {openTripId && trips.find((t) => t.id === openTripId) && (
         <TripSheet
           trip={trips.find((t) => t.id === openTripId)}
           user={user}
           onClose={() => { setOpenTripId(null); loadTrips(); }}
           onChanged={(nt) => setTrips((list) => list.map((x) => (x.id === nt.id ? nt : x)))}
+          onKill={(t) => setKillId(t.id)}
         />
       )}
       {explore && explore.dest && (
@@ -784,7 +790,7 @@ function LinkMenu({ title, links }) {
 }
 
 // ── Onze reizen ─────────────────────────────────────────────────────
-function Saved({ trips, reload, user, onOpen }) {
+function Saved({ trips, reload, user, onOpen, onKill }) {
   const [who, setWho] = useState("alle");
   const [filter, setFilter] = useState("alles");
   const [confirmDel, setConfirmDel] = useState(null);
@@ -874,6 +880,7 @@ function Saved({ trips, reload, user, onOpen }) {
               {first && last && last < first && <div className="rp-drop">{eur(first - last)} goedkoper dan bij bewaren</div>}
               <label className="rp-toggle" style={{ fontSize: 14 }}><span>Prijsalert</span><Switch checked={t.alert} onChange={(v) => patch(t.id, { alert: v })} /></label>
               <div className="rp-actions">
+                {st !== "geboekt" && <PriceKillerButton onClick={() => onKill(t)} />}
                 <button className="rp-btn pri" onClick={() => onOpen(t)}>{st === "geboekt" ? "Paklijst en details" : "Openen"}</button>
                 <div className="rp-btnrow">
                   <button

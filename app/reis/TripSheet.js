@@ -10,6 +10,7 @@ import { eur, fmtDay, countdownLabel, daysUntil, whatsappUrl, shareTrip, PEOPLE,
 import { rsfx } from "./ReisSound";
 import { confetti } from "./confetti";
 import { HotelMapModal, LocationLink } from "./HotelMap";
+import { PriceKillerButton } from "./PriceKiller";
 
 const STATUS = [
   ["idee", "Idee"],
@@ -17,7 +18,7 @@ const STATUS = [
   ["geboekt", "Geboekt"],
 ];
 
-export default function TripSheet({ trip, user, onClose, onChanged }) {
+export default function TripSheet({ trip, user, onClose, onChanged, onKill }) {
   const [t, setT] = useState(trip);
   const [tab, setTab] = useState(trip.status === "geboekt" ? "paklijst" : "overzicht");
   const [toast, setToast] = useState("");
@@ -112,6 +113,8 @@ export default function TripSheet({ trip, user, onClose, onChanged }) {
                   <div><span>Vlucht {r.origin} → {r.airport}{r.flight.airlineName ? `, ${r.flight.airlineName}` : ""}</span><span>{eur(r.flight.cost)}</span></div>
                   <div><span>{r.hotel && r.hotel.name ? r.hotel.name : "Hotel"}</span><span>{eur(r.hotelTotal)}</span></div>
                 </div>
+                {t.status !== "geboekt" && onKill && <div style={{ marginTop: 14 }}><PriceKillerButton onClick={() => onKill(t)} /></div>}
+                {t.previous && <p className="rp-hint">Vervangen door de Prijskiller. Was {eur(t.previous.total)} ({fmtDay(t.previous.depart)} tot {fmtDay(t.previous.ret)}{t.previous.hotel ? `, ${t.previous.hotel}` : ""}).</p>}
                 <div className="rp-btnrow" style={{ marginTop: 14 }}>
                   <a className="rp-btn pri" href={(r.links.flight.find((l) => l.primary) || r.links.flight[0]).url} target="_blank" rel="noopener noreferrer">Boek vlucht</a>
                   <a className="rp-btn pri" href={r.links.hotel[0].url} target="_blank" rel="noopener noreferrer">Boek hotel</a>
