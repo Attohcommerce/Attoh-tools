@@ -189,7 +189,7 @@ export default function ReisPlanner() {
     setExplore({ dest: d, search: { ...b, when: { mode: "maanden", months: [monthKey] }, dests: [d.id] }, initial: null });
   }
   function openResult(r) {
-    setExplore({ dest: DEST_BY_ID[r.destId], search: out && out.query, initial: { depart: r.depart, ret: r.ret, nights: r.nights, flightUrl: (r.links.flight[0] || {}).url } });
+    setExplore({ dest: DEST_BY_ID[r.destId], search: out && out.query, initial: { depart: r.depart, ret: r.ret, nights: r.nights, flightUrl: (r.links.flight[0] || {}).url, flightLinks: r.links.flight } });
   }
 
   async function saveTrip(result, owner) {

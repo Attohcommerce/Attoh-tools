@@ -116,6 +116,13 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
                 <span><b>Nog geen echte vluchtprijzen.</b> Koppel Travelpayouts in Vercel, dan staan hier alle vluchten met datum, tijden en prijs. Tot die tijd kun je zoeken op {initial ? `${fmtDay(initial.depart)} tot ${fmtDay(initial.ret)}` : "jullie data"} via de knoppen hieronder.</span>
               </div>
             )}
+            {flights && !flightLive && (
+              <div className="rp-btnrow" style={{ flexWrap: "wrap" }}>
+                {(initial && initial.flightLinks ? initial.flightLinks : monthFlightLinks(dest, search)).map((l) => (
+                  <a key={l.label} className="rp-btn" href={l.url} target="_blank" rel="noopener noreferrer">{l.label}</a>
+                ))}
+              </div>
+            )}
             {flights && flightLive && flights.length === 0 && <div className="rp-note"><span>Geen vluchten gevonden die aan jullie eisen voldoen in deze periode. Probeer een andere maand of sta 1 overstap toe.</span></div>}
             {flights && flightLive && flights.length > 0 && (
               <>
@@ -327,3 +334,15 @@ function PriceCalendar({ flights, sel, onPick }) {
   );
 }
 const MONTHS_LONG = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
+
+// Zoeklinks voor een hele maand (als er nog geen vaste data zijn)
+function monthFlightLinks(dest, search) {
+  const m = (search && search.when && search.when.months && search.when.months[0]) || new Date().toISOString().slice(0, 7);
+  const [y, mo] = m.split("-").map(Number);
+  const label = `${MONTHS_LONG[mo - 1]} ${y}`;
+  const q = encodeURIComponent(`Flights from Amsterdam to ${dest.city.split(" ·")[0]} in ${["January","February","March","April","May","June","July","August","September","October","November","December"][mo - 1]} ${y}`);
+  return [
+    { label: `Google Flights (${label})`, url: `https://www.google.com/travel/flights?hl=nl&curr=EUR&q=${q}` },
+    { label: `Skyscanner (${label})`, url: `https://www.skyscanner.nl/transport/vluchten/ams/${dest.iata[0].toLowerCase()}/?adultsv2=2&cabinclass=economy&rtn=1&oym=${String(y).slice(2)}${String(mo).padStart(2, "0")}&iym=${String(y).slice(2)}${String(mo).padStart(2, "0")}` },
+  ];
+}
