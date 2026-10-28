@@ -231,6 +231,7 @@ function HotelCard({ h, on, onPick }) {
           {h.refundable && <span className="rp-pill ok">Gratis annuleren</span>}
         </div>
         {h.ai && h.ai.reden && <p className="rp-hint" style={{ marginTop: 8 }}>{h.ai.reden}</p>}
+        <Reviews hotelId={h.id} />
         <div className="rp-hotel-foot">
           <div>
             <div className="rp-hotel-price">{eur(h.price)}</div>
@@ -345,4 +346,48 @@ function monthFlightLinks(dest, search) {
     { label: `Google Flights (${label})`, url: `https://www.google.com/travel/flights?hl=nl&curr=EUR&q=${q}` },
     { label: `Skyscanner (${label})`, url: `https://www.skyscanner.nl/transport/vluchten/ams/${dest.iata[0].toLowerCase()}/?adultsv2=2&cabinclass=economy&rtn=1&oym=${String(y).slice(2)}${String(mo).padStart(2, "0")}&iym=${String(y).slice(2)}${String(mo).padStart(2, "0")}` },
   ];
+}
+
+// Echte gastenreviews: pluspunten, minpunten en een paar recente reviews
+function Reviews({ hotelId }) {
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState(null);
+  function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next && !data) {
+      fetch(`/api/reis/reviews?hotelId=${encodeURIComponent(hotelId)}`)
+        .then((r) => r.json())
+        .then(setData)
+        .catch(() => setData({ reviews: [], pros: [], cons: [] }));
+    }
+  }
+  return (
+    <div className="rp-rev">
+      <button className="rp-link" onClick={toggle} aria-expanded={open}>{open ? "Reviews verbergen" : "Lees wat gasten zeggen"}</button>
+      {open && !data && <p className="rp-hint">Reviews laden…</p>}
+      {open && data && (
+        <div className="rp-rev-body">
+          {data.pros && data.pros.length > 0 && (
+            <ul className="rp-rev-list pro">{data.pros.map((p, i) => <li key={i}>{p}</li>)}</ul>
+          )}
+          {data.cons && data.cons.length > 0 && (
+            <ul className="rp-rev-list con">{data.cons.map((p, i) => <li key={i}>{p}</li>)}</ul>
+          )}
+          {(data.reviews || []).slice(0, 3).map((r, i) => (
+            <div key={i} className="rp-rev-item">
+              <div className="rp-rev-top">
+                {r.score != null && <b>{String(r.score).replace(".", ",")}</b>}
+                <span>{[r.name, r.type, r.date].filter(Boolean).join(", ")}</span>
+              </div>
+              {r.headline && <div className="rp-rev-head">"{r.headline}"</div>}
+              {r.pros && <div className="rp-rev-pc pro">{r.pros}</div>}
+              {r.cons && <div className="rp-rev-pc con">{r.cons}</div>}
+            </div>
+          ))}
+          {!(data.reviews || []).length && !(data.pros || []).length && <p className="rp-hint">Nog geen reviews beschikbaar voor dit hotel.</p>}
+        </div>
+      )}
+    </div>
+  );
 }

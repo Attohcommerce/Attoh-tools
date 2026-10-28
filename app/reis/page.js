@@ -9,6 +9,7 @@ import Home from "./Home";
 import Explore from "./Explore";
 import { rsfx, reisSoundOn, setReisSound } from "./ReisSound";
 import TripSheet from "./TripSheet";
+import DestPicker from "./DestPicker";
 import { confetti } from "./confetti";
 import { countdownLabel, whatsappUrl, leaveDays } from "./fmt";
 
@@ -39,7 +40,7 @@ const DEFAULT_FORM = () => ({
   useTemp: false,
   minTemp: 26,
   origins: ORIGINS.filter((o) => o.def).map((o) => o.code),
-  flight: { shortHaulStops: 0, bags: true, noUlcc: false },
+  flight: { stops: "ver", bags: true, noUlcc: false },
   hotel: { minStars: 4, pool: true, board: "geen", minReview: 8, aiCheck: true },
   budget: "",
   packages: true,
@@ -88,7 +89,11 @@ export default function ReisPlanner() {
   useEffect(() => {
     fetch("/api/reis/me").then((r) => (r.status === 401 ? (window.location.href = "/reis/login") : r.json())).then((d) => d && setMe(d)).catch(() => {});
     const saved = lsGet(LS_KEY);
-    if (saved && saved.when) setForm({ ...DEFAULT_FORM(), ...saved });
+    if (saved && saved.when) {
+      const f = { ...DEFAULT_FORM(), ...saved };
+      if (!f.flight.stops) f.flight = { ...f.flight, stops: f.flight.shortHaulStops ? "altijd" : "ver" };
+      setForm(f);
+    }
     setRecent(lsGet(LS_KEY + "_recent") || []);
     setSeenAt(lsGet(LS_KEY + "_seen") || new Date(0).toISOString());
     const last = lsGet(LS_KEY + "_last");
@@ -179,6 +184,18 @@ export default function ReisPlanner() {
     search(merged);
   }
 
+  // Alles wissen: filters terug naar standaard, resultaten weg
+  function resetAll() {
+    rsfx("nope");
+    setForm(DEFAULT_FORM());
+    setOut(null);
+    setErr("");
+    setHidden({});
+    setLiked({});
+    setPanelOpen(true);
+    lsSet(LS_KEY + "_last", null);
+  }
+
   function surprise() {
     const f = { ...form, surprise: true, dests: [] };
     setForm(f);
@@ -259,7 +276,7 @@ export default function ReisPlanner() {
       {tab === "zoeken" && (
         <main className={"rp-main" + (out || busy ? " has-results" : "")}>
           <aside className={"rp-panel" + (panelOpen ? " open" : "")}>
-            <SearchForm form={form} set={set} toggleIn={toggleIn} onSearch={() => search()} busy={busy} />
+            <SearchForm form={form} set={set} toggleIn={toggleIn} onSearch={() => search()} onReset={resetAll} busy={busy} />
           </aside>
           <section ref={resultsRef} style={{ minWidth: 0, scrollMarginTop: 80 }}>
             {(out || busy) && (
@@ -310,16 +327,15 @@ export default function ReisPlanner() {
 }
 
 // ── Zoekformulier ───────────────────────────────────────────────────
-function SearchForm({ form, set, toggleIn, onSearch, busy }) {
+function SearchForm({ form, set, toggleIn, onSearch, onReset, busy }) {
   const months = useMemo(() => nextMonths(12), []);
   const [blk, setBlk] = useState({ from: "", to: "" });
-  const [destQ, setDestQ] = useState("");
   const w = form.when;
 
   const flightSum = [
     form.origins.length + " vliegvelden",
     form.flight.bags ? "met ruimbagage" : "handbagage",
-    form.flight.shortHaulStops ? "overstap oké" : "direct",
+    { nooit: "altijd direct", ver: "direct, ver max 1 overstap", altijd: "max 1 overstap" }[form.flight.stops || "ver"],
   ].join(", ");
   const hotelSum = [
     form.hotel.minStars + "+ sterren",
@@ -328,13 +344,19 @@ function SearchForm({ form, set, toggleIn, onSearch, busy }) {
     form.hotel.minReview ? form.hotel.minReview + "+" : null,
   ].filter(Boolean).join(", ");
 
-  const destMatches = destQ
-    ? DESTINATIONS.filter((d) => (d.city + " " + d.country).toLowerCase().includes(destQ.toLowerCase())).slice(0, 8)
-    : [];
+  // maand voor de temperaturen in de bestemmingskiezer
+  const pickerMonth = (() => {
+    const iso = w.mode === "vast" ? w.depart : w.mode === "periode" ? w.from : (w.months && w.months[0] ? w.months[0] + "-15" : "");
+    return iso ? new Date(iso.slice(0, 10) + "T12:00:00Z").getUTCMonth() : null;
+  })();
+
 
   return (
     <div>
-      <h1 className="rp-h1">Waar gaan we heen?</h1>
+      <div className="rp-form-head">
+        <h1 className="rp-h1">Waar gaan we heen?</h1>
+        <button className="rp-reset" onClick={onReset} title="Alle filters terug naar standaard en resultaten wissen">Alles wissen</button>
+      </div>
       <p className="rp-lede">Vul zo weinig of zo veel in als je wilt. Hoe vrijer, hoe goedkoper hij kan zoeken.</p>
 
       <div className="rp-sec">
@@ -409,30 +431,15 @@ function SearchForm({ form, set, toggleIn, onSearch, busy }) {
       </div>
 
       <details className="rp-more">
-        <summary>Bestemming <span className="sum">{form.dests.length ? form.dests.length + " gekozen" : "overal"}</span></summary>
+        <summary><span className="ttl"><i aria-hidden="true">◎</i>Bestemming</span> <span className="sum">{form.dests.length ? form.dests.map((id) => (DESTINATIONS.find((d) => d.id === id) || {}).city).filter(Boolean).slice(0, 3).join(", ") + (form.dests.length > 3 ? ` +${form.dests.length - 3}` : "") : "overal"}</span></summary>
         <div className="inner">
-          <input className="rp-input" placeholder="Zoek een land of stad" value={destQ} onChange={(e) => setDestQ(e.target.value)} />
-          {destMatches.length > 0 && (
-            <div className="rp-chips">
-              {destMatches.map((d) => (
-                <button key={d.id} className={"rp-chip sm" + (form.dests.includes(d.id) ? " on" : "")} onClick={() => toggleIn("dests", d.id)}>{d.city}</button>
-              ))}
-            </div>
-          )}
-          {form.dests.length > 0 && (
-            <div className="rp-chips">
-              {form.dests.map((id) => {
-                const d = DESTINATIONS.find((x) => x.id === id);
-                return <button key={id} className="rp-chip sm on" onClick={() => toggleIn("dests", id)} aria-label={`${d.city} verwijderen`}>{d.city} ✕</button>;
-              })}
-            </div>
-          )}
-          <p className="rp-hint">Leeg laten = de tool kiest uit {DESTINATIONS.length} bestemmingen.</p>
+          <DestPicker selected={form.dests} onChange={(v) => set("dests", v)} month={pickerMonth} />
+          <p className="rp-hint">Niets aangevinkt = de tool kiest zelf uit alle {DESTINATIONS.length} bestemmingen. De temperatuur is het gemiddelde overdag in jullie reismaand.</p>
         </div>
       </details>
 
       <details className="rp-more">
-        <summary>Weer en data die niet kunnen <span className="sum">{[form.useTemp ? form.minTemp + "°+" : null, form.blocked.length ? form.blocked.length + " geblokkeerd" : null].filter(Boolean).join(", ") || "geen eisen"}</span></summary>
+        <summary><span className="ttl"><i aria-hidden="true">☀</i>Weer en data die niet kunnen</span> <span className="sum">{[form.useTemp ? form.minTemp + "°+" : null, form.blocked.length ? form.blocked.length + " geblokkeerd" : null].filter(Boolean).join(", ") || "geen eisen"}</span></summary>
         <div className="inner">
           <label className="rp-toggle">
             <span>Minimaal {form.minTemp}°C overdag</span>
@@ -441,10 +448,10 @@ function SearchForm({ form, set, toggleIn, onSearch, busy }) {
           {form.useTemp && <input type="range" className="rp-range" min={18} max={35} value={form.minTemp} onChange={(e) => set("minTemp", Number(e.target.value))} aria-label="Minimum temperatuur" />}
           <div>
             <div style={{ fontSize: 14.5, marginBottom: 8 }}>We kunnen niet weg tussen</div>
-            <div className="rp-row">
+            <div className="rp-blockrow">
               <input type="date" className="rp-input" value={blk.from} onChange={(e) => setBlk({ ...blk, from: e.target.value })} aria-label="Vanaf" />
               <input type="date" className="rp-input" value={blk.to} onChange={(e) => setBlk({ ...blk, to: e.target.value })} aria-label="Tot en met" />
-              <button className="rp-iconbtn" style={{ flex: "none" }} aria-label="Toevoegen" onClick={() => { if (blk.from) { set("blocked", (b) => [...b, { from: blk.from, to: blk.to || blk.from }]); setBlk({ from: "", to: "" }); } }}>+</button>
+              <button className="rp-btn pri" aria-label="Toevoegen" onClick={() => { if (blk.from) { set("blocked", (b) => [...b, { from: blk.from, to: blk.to || blk.from }]); setBlk({ from: "", to: "" }); } }}>Blokkeren</button>
             </div>
             {form.blocked.length > 0 && (
               <ul className="rp-blocked">
@@ -458,7 +465,7 @@ function SearchForm({ form, set, toggleIn, onSearch, busy }) {
       </details>
 
       <details className="rp-more">
-        <summary>Vliegen <span className="sum">{flightSum}</span></summary>
+        <summary><span className="ttl"><i aria-hidden="true">✈</i>Vliegen</span> <span className="sum">{flightSum}</span></summary>
         <div className="inner">
           <div className="rp-chips">
             {ORIGINS.map((o) => (
@@ -467,13 +474,21 @@ function SearchForm({ form, set, toggleIn, onSearch, busy }) {
           </div>
           <p className="rp-hint" style={{ marginTop: -4 }}>Reiskosten naar het vliegveld tellen mee in de totaalprijs.</p>
           <label className="rp-toggle"><span>Ruimbagage<small>Wordt bij elke prijs opgeteld</small></span><Switch checked={form.flight.bags} onChange={(v) => set("flight.bags", v)} /></label>
-          <label className="rp-toggle"><span>Overstap bij korte vluchten<small>Verre reizen: altijd max 1 overstap</small></span><Switch checked={form.flight.shortHaulStops === 1} onChange={(v) => set("flight.shortHaulStops", v ? 1 : 0)} /></label>
+          <div>
+            <div className="rp-sublabel">Overstappen</div>
+            <div className="rp-seg rp-seg-wrap">
+              {[["nooit", "Nooit"], ["ver", "Alleen bij verre reis"], ["altijd", "Maakt niet uit"]].map(([id, l]) => (
+                <button key={id} className={(form.flight.stops || "ver") === id ? "on" : ""} onClick={() => set("flight.stops", id)}>{l}</button>
+              ))}
+            </div>
+            <p className="rp-hint">{{ nooit: "Alleen directe vluchten, ook naar verre bestemmingen. Bestemmingen zonder directe vlucht vallen af.", ver: "Korte vluchten altijd direct. Verder dan 6 uur vliegen mag 1 overstap.", altijd: "Max 1 overstap op alle vluchten. Vaak goedkoper." }[form.flight.stops || "ver"]}</p>
+          </div>
           <label className="rp-toggle"><span>Geen Ryanair en Wizz Air</span><Switch checked={form.flight.noUlcc} onChange={(v) => set("flight.noUlcc", v)} /></label>
         </div>
       </details>
 
       <details className="rp-more">
-        <summary>Hotel <span className="sum">{hotelSum}</span></summary>
+        <summary><span className="ttl"><i aria-hidden="true">⌂</i>Hotel</span> <span className="sum">{hotelSum}</span></summary>
         <div className="inner">
           <div className="rp-seg">
             {[4, 5].map((s) => <button key={s} className={form.hotel.minStars === s ? "on" : ""} onClick={() => set("hotel.minStars", s)}>{s === 4 ? "4 of 5 sterren" : "Alleen 5 sterren"}</button>)}
@@ -494,7 +509,7 @@ function SearchForm({ form, set, toggleIn, onSearch, busy }) {
       </details>
 
       <details className="rp-more">
-        <summary>Budget <span className="sum">{form.budget ? "max " + eur(form.budget) : "zo goedkoop mogelijk"}</span></summary>
+        <summary><span className="ttl"><i aria-hidden="true">€</i>Budget</span> <span className="sum">{form.budget ? "max " + eur(form.budget) : "zo goedkoop mogelijk"}</span></summary>
         <div className="inner">
           <label className="rp-field">Maximaal voor 2 personen, alles inbegrepen
             <input className="rp-input" inputMode="numeric" placeholder="Bijvoorbeeld 2000" value={form.budget} onChange={(e) => set("budget", e.target.value.replace(/\D/g, ""))} />

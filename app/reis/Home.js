@@ -52,6 +52,7 @@ export default function Home({ user, live, trips, fresh = [], recent = [], onRer
   }, []);
   const [mi, setMi] = useState(0);
   const month = months[mi];
+  const [from, setFrom] = useState({});
   const warm = useMemo(
     () =>
       DESTINATIONS.filter((d) => d.temp[month.m] >= 26 && d.tags.some((t) => t === "strand" || t === "zon"))
@@ -59,6 +60,19 @@ export default function Home({ user, live, trips, fresh = [], recent = [], onRer
         .slice(0, 12),
     [month]
   );
+  // Echte "vanaf"-vluchtprijzen per kaartje (als Travelpayouts gekoppeld is)
+  useEffect(() => {
+    if (!live || !live.flights || !warm.length) return;
+    let off = false;
+    const key = month.key;
+    fetch(`/api/reis/fromprices?month=${key}&ids=${warm.map((d) => d.id).join(",")}`)
+      .then((r) => r.json())
+      .then((d) => !off && d && d.prices && setFrom((f) => ({ ...f, [key]: d.prices })))
+      .catch(() => {});
+    return () => { off = true; };
+  }, [month.key, live && live.flights, warm]);
+  const fromNow = from[month.key] || {};
+
   const isMatch = (t) => t.votes && t.votes.justin && t.votes.quinty;
   const shortlist = [...trips].sort((a, b) => (isMatch(b) ? 1 : 0) - (isMatch(a) ? 1 : 0)).slice(0, 4);
   const next = trips
@@ -156,6 +170,7 @@ export default function Home({ user, live, trips, fresh = [], recent = [], onRer
                   <span className="rp-destcard-meta">
                     {Math.round(d.hours)} uur vliegen{d.beach >= 8 ? ", mooi strand" : ""}
                   </span>
+                  {fromNow[d.id] ? <span className="rp-destcard-from">vlucht vanaf <b>€{fromNow[d.id]}</b> p.p.</span> : null}
                 </span>
               </button>
             );
