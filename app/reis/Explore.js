@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { rsfx } from "./ReisSound";
 import { countryInfo } from "@/lib/reis/countryinfo";
 import { leaveDays } from "./fmt";
+import HotelMap, { HotelMapModal, LocationLink } from "./HotelMap";
 
 const DAYS = ["zo", "ma", "di", "wo", "do", "vr", "za"];
 const MON = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
@@ -26,10 +27,28 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
   const [nightsFilter, setNightsFilter] = useState("alle");
   const [showAll, setShowAll] = useState(false);
   const [view, setView] = useState("lijst");
+  const [saved, setSaved] = useState(null);
+  const [hoverId, setHoverId] = useState(null);
+  const [mapHotel, setMapHotel] = useState(null);
+  const [showMap, setShowMap] = useState(true);
+  const [places, setPlaces] = useState({});
+  // wijknamen ophalen zodra de hotels er zijn
+  useEffect(() => {
+    if (!hotels || !hotels.length) return;
+    const pts = hotels.filter((h) => Number.isFinite(h.lat) && Number.isFinite(h.lng) && !places[h.id]).map((h) => ({ id: h.id, lat: h.lat, lng: h.lng }));
+    if (!pts.length) return;
+    let off = false;
+    fetch("/api/reis/places", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ points: pts }) })
+      .then((r) => r.json())
+      .then((d) => !off && d && d.places && setPlaces((p) => ({ ...p, ...Object.fromEntries(Object.entries(d.places).map(([k, v]) => [k, v.label])) })))
+      .catch(() => {});
+    return () => { off = true; };
+  }, [hotels]); // eslint-disable-line
 
   // Escape sluit, achtergrond niet laten scrollen
   useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && onClose();
+    // Escape sluit dit scherm, tenzij er een kaart-pop-up open staat (die sluit eerst)
+    const onKey = (e) => e.key === "Escape" && !document.querySelector(".rp-mapmodal") && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -75,20 +94,22 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
   const visible = showAll ? shownFlights : shownFlights.slice(0, 8);
   const total = (sel && sel.cost ? sel.cost : 0) + (hotelSel ? hotelSel.price : 0);
 
-  function save(owner) {
+  async function save(owner) {
     if (!sel || !sel.cost || !hotelSel) return;
-    onSave({
+    setSaved({ owner, state: "busy", key: sel.id + hotelSel.id });
+    const ok = await onSave({
       id: `${dest.id}-${sel.depart}-${sel.ret}-${sel.origin}-${hotelSel.id}`,
       destId: dest.id, cc: dest.cc, city: dest.city, country: dest.country, tags: dest.tags, hours: dest.hours, beach: dest.beach,
       temp: dest.temp[new Date(sel.depart + "T12:00:00Z").getUTCMonth()],
       origin: sel.origin, originName: sel.originName, airport: sel.airport,
       depart: sel.depart, ret: sel.ret, nights: sel.nights,
       flight: { estimate: false, airline: sel.airline, airlineName: sel.airlineName, stopsOut: sel.stopsOut, stopsBack: sel.stopsBack, ticket: sel.ticket, bag: sel.bag, toAirport: sel.toAirport, cost: sel.cost, departTime: sel.departTime, returnTime: sel.returnTime },
-      hotel: { id: hotelSel.id, name: hotelSel.name, stars: hotelSel.stars, rating: hotelSel.rating, boardLabel: hotelSel.boardLabel, photo: hotelSel.photos[0] },
+      hotel: { id: hotelSel.id, name: hotelSel.name, stars: hotelSel.stars, rating: hotelSel.rating, boardLabel: hotelSel.boardLabel, photo: hotelSel.photos[0], lat: hotelSel.lat, lng: hotelSel.lng, address: hotelSel.address, place: places[hotelSel.id] || "" },
       hotelTotal: hotelSel.price, hotelEstimate: false,
       total, perPerson: Math.round(total / 2), alts: [],
       links: { flight: sel.links, hotel: hotelSel.links, packages: [] },
     }, owner);
+    setSaved({ owner, state: ok ? "ok" : "err", key: sel.id + hotelSel.id });
   }
 
   return (
@@ -172,11 +193,33 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
             )}
             {hotels && hotelInfo.live && hotels.length === 0 && <div className="rp-note"><span>Geen hotels gevonden met deze eisen. Zet de reviewscore lager of kies "Maakt niet uit" bij maaltijden.</span></div>}
             {hotels && hotels.length > 0 && (
-              <div className="rp-hotels">
-                {hotels.map((h) => (
-                  <HotelCard key={h.id} h={h} on={hotelSel && hotelSel.id === h.id} onPick={() => setHotelSel(h)} />
-                ))}
-              </div>
+              <>
+                {hotels.some((h) => h.lat) && (
+                  <div className="rp-hotels-map">
+                    <div className="rp-hotels-map-head">
+                      <span>Waar liggen de hotels? Klik op een prijs om dat hotel te kiezen.</span>
+                      <button className="rp-link" onClick={() => setShowMap((v) => !v)}>{showMap ? "Kaart verbergen" : "Kaart tonen"}</button>
+                    </div>
+                    {showMap && (
+                      <HotelMap
+                        hotels={hotels}
+                        selectedId={hotelSel && hotelSel.id}
+                        hoverId={hoverId}
+                        onPick={(h) => {
+                          setHotelSel(h);
+                          const el = document.getElementById("hotel-" + h.id);
+                          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
+                <div className="rp-hotels">
+                  {hotels.map((h) => (
+                    <HotelCard key={h.id} h={h} place={places[h.id]} city={dest.lite} on={hotelSel && hotelSel.id === h.id} onPick={() => setHotelSel(h)} onHover={setHoverId} onMap={() => setMapHotel(h)} />
+                  ))}
+                </div>
+              </>
             )}
           </section>
         </div>
@@ -191,22 +234,38 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
             <a className={"rp-btn pri" + (!hotelSel && !(hotelInfo.searchLinks || [])[0] ? " dis" : "")} href={hotelSel ? hotelSel.links[0].url : ((hotelInfo.searchLinks || [])[0] || {}).url || "#"} target="_blank" rel="noopener noreferrer">Boek hotel</a>
             {sel && sel.cost && hotelSel && (
               <>
-                <button className="rp-btn" data-sfx="own" onClick={() => save("justin")}>Bewaar bij Justin</button>
-                <button className="rp-btn" data-sfx="own" onClick={() => save("quinty")}>Bewaar bij Quinty</button>
+                {["justin", "quinty"].map((who) => {
+                  const cur = saved && saved.key === sel.id + hotelSel.id && saved.owner === who ? saved.state : null;
+                  const name = who === "quinty" ? "Quinty" : "Justin";
+                  return (
+                    <button key={who} className={"rp-btn" + (cur === "ok" ? " acc" : "")} data-sfx="own" disabled={cur === "busy"} onClick={() => save(who)}>
+                      {cur === "busy" ? "Bezig…" : cur === "ok" ? `✓ Bewaard bij ${name}` : cur === "err" ? "Mislukt, probeer opnieuw" : `Bewaar bij ${name}`}
+                    </button>
+                  );
+                })}
               </>
             )}
           </div>
         </footer>
       </div>
+      {mapHotel && <HotelMapModal hotel={mapHotel} city={dest.lite} place={places[mapHotel.id]} onClose={() => setMapHotel(null)} />}
     </div>
   );
 }
 
-function HotelCard({ h, on, onPick }) {
+function PinIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z" />
+    </svg>
+  );
+}
+
+function HotelCard({ h, on, onPick, onHover, onMap, place, city }) {
   const [i, setI] = useState(0);
   const photos = h.photos.length ? h.photos : [""];
   return (
-    <article className={"rp-hotel" + (on ? " on" : "")}>
+    <article id={"hotel-" + h.id} className={"rp-hotel" + (on ? " on" : "")} onMouseEnter={() => onHover && onHover(h.id)} onMouseLeave={() => onHover && onHover(null)}>
       <div className="rp-hotel-img">
         {photos[i] ? <img src={photos[i]} alt={h.name} loading="lazy" /> : <div className="rp-hotel-noimg" />}
         {photos.length > 1 && (
@@ -217,9 +276,11 @@ function HotelCard({ h, on, onPick }) {
           </>
         )}
         {h.ai && <span className={"rp-img-ai" + (h.ai.score < 6 ? " lo" : "")}>Foto's {h.ai.score}/10</span>}
+        {h.lat ? <button className="rp-img-map" onClick={onMap}><PinIcon /> Op de kaart</button> : null}
       </div>
       <div className="rp-hotel-body">
         <div className="rp-hotel-name">{h.name}</div>
+        <LocationLink hotel={h} city={city} place={place} onOpen={onMap} />
         <div className="rp-leg-s">
           <span className="rp-stars">{"★".repeat(Math.round(h.stars || 0))}</span>
           {h.rating ? ` ${String(h.rating).replace(".", ",")}` : ""}{h.reviews ? ` (${h.reviews} reviews)` : ""}

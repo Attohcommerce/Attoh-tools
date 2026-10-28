@@ -10,6 +10,7 @@ import Explore from "./Explore";
 import { rsfx, reisSoundOn, setReisSound } from "./ReisSound";
 import TripSheet from "./TripSheet";
 import DestPicker from "./DestPicker";
+import { HotelMapModal, LocationLink } from "./HotelMap";
 import { confetti } from "./confetti";
 import { countdownLabel, whatsappUrl, leaveDays } from "./fmt";
 
@@ -211,7 +212,9 @@ export default function ReisPlanner() {
 
   async function saveTrip(result, owner) {
     const r = await fetch("/api/reis/trips", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ owner, result, search: out && out.query }) });
-    if (r.ok) { rsfx("save"); loadTrips(); }
+    if (r.ok) { rsfx("save"); loadTrips(); return true; }
+    rsfx("error");
+    return false;
   }
   async function feedback(result, weight) {
     if (weight < 0) { rsfx("nope"); setHidden((h) => ({ ...h, [result.id]: true })); }
@@ -629,6 +632,7 @@ function Results({ out, results, sort, setSort, user, savedIds, liked, onSave, o
 
 function Ticket({ r, user, saved, liked, onSave, onFeedback, onOpen }) {
   const [menu, setMenu] = useState(null);
+  const [mapOpen, setMapOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
     if (!menu) return;
@@ -680,6 +684,7 @@ function Ticket({ r, user, saved, liked, onSave, onFeedback, onOpen }) {
               {h ? (
                 <>
                   <div className="rp-leg-t">{h.name}</div>
+                  <LocationLink hotel={h} city={r.city} place={h.place} onOpen={() => setMapOpen(true)} />
                   <div className="rp-leg-s">
                     <span className="rp-stars" aria-label={`${h.stars} sterren`}>{"★".repeat(Math.round(h.stars || 0))}</span>
                     {h.rating ? `  ${String(h.rating).replace(".", ",")} review` : ""}
@@ -762,6 +767,7 @@ function Ticket({ r, user, saved, liked, onSave, onFeedback, onOpen }) {
           )}
         </div>
       </div>
+      {mapOpen && h && <HotelMapModal hotel={h} city={r.city} place={h.place} onClose={() => setMapOpen(false)} />}
     </article>
   );
 }

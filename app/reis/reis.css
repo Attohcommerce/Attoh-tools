@@ -1026,6 +1026,46 @@ details.rp-more .inner { padding: 14px; display: grid; gap: 14px; min-width: 0; 
 .rp-rev-pc.pro { color: var(--ink-2); }
 .rp-rev-pc.con { color: var(--muted); }
 
+/* ── Kaarten ─────────────────────────────────────── */
+.rp-map-wrap { position: relative; }
+.rp-map { width: 100%; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: #e8eef2; z-index: 0; }
+.rp-hotels-map { margin-bottom: 16px; display: grid; gap: 8px; }
+.rp-hotels-map-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13.5px; color: var(--muted); flex-wrap: wrap; }
+.rp-pin-wrap { background: none; border: 0; }
+.rp-pin {
+  display: inline-block;
+  transform: translate(-50%, -100%);
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #fff;
+  color: #141a2e;
+  font: 700 12.5px/1.2 "Inter", system-ui, sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  border: 1.5px solid rgba(20,26,46,.15);
+  position: relative;
+  transition: transform .12s;
+}
+.rp-pin::after { content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
+.rp-pin-wrap.hover .rp-pin { transform: translate(-50%, -100%) scale(1.15); background: #141a2e; color: #fff; }
+.rp-pin-wrap.hover .rp-pin::after { border-top-color: #141a2e; }
+.rp-pin-wrap.on .rp-pin { background: var(--accent); color: #fff; border-color: var(--accent); }
+.rp-pin-wrap.on .rp-pin::after { border-top-color: var(--accent); }
+.rp .rp-img-map { position: absolute; left: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,.94); color: #141a2e; font-size: 12.5px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+.rp .rp-img-map:hover { background: #fff; }
+.rp-mapmodal { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 16px; }
+.rp-mapmodal-box { position: relative; width: min(760px, 100%); background: var(--card); border-radius: 22px; padding: 16px; display: grid; gap: 12px; box-shadow: 0 30px 70px -20px rgba(0,0,0,.5); }
+.rp-mapmodal-box header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.rp-mapmodal-box header b { display: block; font-family: var(--display); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.rp-mapmodal-box header span { color: var(--muted); font-size: 13.5px; }
+.rp-mapmodal-box footer { display: flex; justify-content: flex-end; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rp-mapmodal-box footer .rp-btn { padding: 0 16px; }
+.rp .leaflet-container { font-family: "Inter", system-ui, sans-serif; }
+.rp .rp-loc { display: inline-flex; align-items: center; gap: 4px; margin-top: 3px; max-width: 100%; color: var(--accent); font-size: 13px; font-weight: 600; text-align: left; }
+.rp .rp-loc span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); text-underline-offset: 3px; }
+.rp .rp-loc:hover span { text-decoration-color: var(--accent); }
+.rp-maplink { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--accent); }
+
 /* ── Mobiel ─────────────────────────────────────────── */
 .rp-bottomnav { display: none; }
 .rp-mobile-only { display: none; }
@@ -1073,6 +1113,9 @@ details.rp-more .inner { padding: 14px; display: grid; gap: 14px; min-width: 0; 
   .rp-trip-top .rp-seg { min-width: 0; width: 100%; }
   .rp-pack-add { grid-template-columns: 1fr auto; }
   .rp-pack-add .rp-select { grid-column: 1 / -1; grid-row: 2; }
+  .rp-mapmodal { padding: 0; place-items: end stretch; }
+  .rp-mapmodal-box { border-radius: 22px 22px 0 0; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .rp-mapmodal-box footer .rp-btn { flex: 1 1 100%; }
   .rp-sheet-head { padding: 14px 16px; }
   .rp-sheet-body { padding: 18px 16px 30px; }
   .rp-sheet-foot { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }

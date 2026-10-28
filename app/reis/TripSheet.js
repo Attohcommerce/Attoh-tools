@@ -9,6 +9,7 @@ import { makePackingList, PACK_CATS } from "@/lib/reis/packing";
 import { eur, fmtDay, countdownLabel, daysUntil, whatsappUrl, shareTrip, PEOPLE, leaveDays } from "./fmt";
 import { rsfx } from "./ReisSound";
 import { confetti } from "./confetti";
+import { HotelMapModal, LocationLink } from "./HotelMap";
 
 const STATUS = [
   ["idee", "Idee"],
@@ -20,9 +21,10 @@ export default function TripSheet({ trip, user, onClose, onChanged }) {
   const [t, setT] = useState(trip);
   const [tab, setTab] = useState(trip.status === "geboekt" ? "paklijst" : "overzicht");
   const [toast, setToast] = useState("");
+  const [mapOpen, setMapOpen] = useState(false);
   useEffect(() => setT(trip), [trip]);
   useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && onClose();
+    const onKey = (e) => e.key === "Escape" && !document.querySelector(".rp-mapmodal") && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -101,6 +103,11 @@ export default function TripSheet({ trip, user, onClose, onChanged }) {
               <section className="rp-home-card">
                 <div className="rp-price">{eur(r.total)}</div>
                 <div className="rp-pp">{eur(r.total / 2)} per persoon, alles samen</div>
+                {r.hotel && r.hotel.name && (
+                  <div style={{ marginTop: 10 }}>
+                    <LocationLink hotel={r.hotel} city={r.city} place={r.hotel.place} onOpen={() => setMapOpen(true)} />
+                  </div>
+                )}
                 <div className="rp-break" style={{ marginTop: 12 }}>
                   <div><span>Vlucht {r.origin} → {r.airport}{r.flight.airlineName ? `, ${r.flight.airlineName}` : ""}</span><span>{eur(r.flight.cost)}</span></div>
                   <div><span>{r.hotel && r.hotel.name ? r.hotel.name : "Hotel"}</span><span>{eur(r.hotelTotal)}</span></div>
@@ -178,6 +185,7 @@ export default function TripSheet({ trip, user, onClose, onChanged }) {
           {tab === "notities" && <Notes t={t} onSave={(note) => { patch({ note }); flash("Opgeslagen"); }} />}
         </div>
         {toast && <div className="rp-toast" role="status">{toast}</div>}
+        {mapOpen && r.hotel && <HotelMapModal hotel={r.hotel} city={r.city} place={r.hotel.place} onClose={() => setMapOpen(false)} />}
       </div>
     </div>
   );
