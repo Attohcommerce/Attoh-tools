@@ -10,6 +10,7 @@ import { useOrg } from "./OrgProvider";
 
 const NAV = [
   { href: "/", label: "Home" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/importer", label: "Importer" },
   { href: "/scraper", label: "Product Scraper" },
   { href: "/keywords", label: "Keywords" },

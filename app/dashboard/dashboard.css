@@ -1,0 +1,113 @@
+/* Omzet-dashboard — scoped onder .dd, zelfde donkere stijl als de rest */
+.dd { gap: 18px; }
+
+.dd-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.dd-days { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dd-day, .dd-arrow {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.dd-arrow { padding: 8px 12px; font-size: 15px; line-height: 1; }
+.dd-day:hover, .dd-arrow:hover:not(:disabled) { border-color: var(--line-hi); color: var(--ink); }
+.dd-day.on { background: var(--accent-dim); border-color: var(--accent); color: var(--accent-hi); }
+.dd-arrow:disabled { opacity: .35; cursor: default; }
+.dd .dd-date { width: auto; padding: 7px 10px; font-size: 13px; color-scheme: dark; }
+
+.dd-status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dd-label { font-weight: 600; font-size: 15px; color: var(--ink); text-transform: capitalize; }
+
+.dd-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.dd-chip {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.dd-chip strong { color: inherit; font-weight: 650; }
+.dd-chip .dd-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
+.dd-chip.on { color: var(--ink); border-color: var(--line-hi); background: var(--panel-hi); }
+.dd-chip.on .dd-dot { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-dim); }
+.dd-chip.dd-gear { margin-left: auto; }
+
+.dd-keys { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px 16px; }
+.dd-keyrow { display: grid; grid-template-columns: 1fr 90px; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-2); }
+
+.dd-error {
+  border: 1px solid var(--err);
+  background: var(--err-dim);
+  color: var(--ink);
+  border-radius: var(--radius-sm, 10px);
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.dd-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dd-kpi {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius, 14px);
+  padding: 16px 16px 14px;
+  min-width: 0;
+}
+.dd-kpi-label { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.dd-kpi-value { font-size: 26px; font-weight: 650; color: var(--ink); margin: 6px 0 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dd-kpi-sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.dd-delta { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dd-delta.up { color: var(--ok); }
+.dd-delta.down { color: var(--err); }
+.dd-delta.flat { color: var(--faint); }
+
+.dd-tablewrap { overflow-x: auto; }
+.dd-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.dd-table th {
+  text-align: right;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0 10px 10px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.dd-table th:first-child, .dd-table td:first-child { text-align: left; }
+.dd-table td {
+  text-align: right;
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.dd-table tr:last-child td { border-bottom: 0; }
+.dd-val { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dd-store { display: flex; flex-direction: column; gap: 2px; min-width: 190px; }
+.dd-store strong { color: var(--ink); }
+.dd-note { font-size: 11.5px; color: var(--warn); max-width: 320px; }
+
+@media (max-width: 900px) {
+  .dd-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dd-kpi-value { font-size: 21px; }
+  .dd-chip.dd-gear { margin-left: 0; }
+}
