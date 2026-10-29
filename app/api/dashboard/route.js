@@ -31,6 +31,7 @@ export async function POST(req) {
   return NextResponse.json({
     ok: true, date: ymd, prevDate: prev, from, today,
     nowHour: Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", hour12: false }).format(new Date())) % 24,
+    nowMinute: new Date().getUTCMinutes(),
     stores: results, at: new Date().toISOString(),
   });
 }

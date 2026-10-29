@@ -1,6 +1,6 @@
 "use client";
 
-// OMZET-DASHBOARD (29-10-2026, v2) — alle eigen Attoh-stores op één scherm,
+// OMZET-DASHBOARD (29-10-2026, v3 — live vs gisteren zelfde tijd + klikbare KPI-pop-ups) — alle eigen Attoh-stores op één scherm,
 // in Shopify-stijl: omzet per uur (gekozen dag vs dag ervoor), KPI-tegels met
 // 14-dagen-sparkline, 14-dagen-trend omzet vs ad spend, en een kaart per store.
 //
@@ -13,6 +13,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 import { orgLS } from "@/lib/org-client";
 import { LineChart, Sparkline } from "./charts";
+import MetricModal from "./MetricModal";
+import {
+  nf2, ok, gbp, gbpAxis, metrics, sumDays, upTo, TILES, METRIC, STORE_STATS, RATIO_IDS, ADS_IDS, Delta, HOURS, hhmm,
+} from "./metrics";
 import "./dashboard.css";
 
 const LS_STORES = "sa_stores";
@@ -72,87 +76,6 @@ function dayLabel(ymd, today) {
   return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
 }
 
-const nf2 = new Intl.NumberFormat("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const nf0 = new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 0 });
-const ok = (v) => v != null && Number.isFinite(v);
-const gbp = (v) => (ok(v) ? "£" + nf2.format(v) : "—");
-const nf1 = new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 1 });
-const gbpAxis = (v) => (ok(v) ? "£" + (v >= 1000 ? nf1.format(v / 1000) + "k" : nf0.format(v)) : "");
-const int = (v) => (ok(v) ? nf0.format(v) : "—");
-const pct = (v) => (ok(v) ? nf2.format(v * 100) + "%" : "—");
-const ratio = (v) => (ok(v) ? nf2.format(v) + "×" : "—");
-const div = (a, b) => (b ? a / b : null);
-
-/* Afgeleide cijfers voor één dag (één store of opgeteld). */
-function metrics(d) {
-  if (!d) return {};
-  const ads = d.ads;
-  const cost = ads ? ads.cost : null;
-  return {
-    revenue: d.revenue,
-    orders: d.orders,
-    aov: d.orders ? d.revenue / d.orders : null,
-    sessions: d.sessions,
-    cvr: d.sessions ? div(d.orders, d.sessions) : null,
-    cost,
-    roasReal: ads && cost ? div(d.revenue || 0, cost) : null,
-    roasGoogle: ads && cost ? div(ads.convValue, cost) : null,
-    cpc: ads && ads.clicks ? div(cost, ads.clicks) : null,
-    cpm: ads && ads.impressions ? (cost / ads.impressions) * 1000 : null,
-  };
-}
-
-function sumDays(list) {
-  const t = { revenue: 0, orders: 0, sessions: 0, sessOrders: 0, hasSess: false, ads: null, adsRevenue: 0, any: false };
-  for (const d of list) {
-    if (!d) continue;
-    t.any = true;
-    t.revenue += d.revenue || 0;
-    t.orders += d.orders || 0;
-    if (d.sessions != null) {
-      t.hasSess = true;
-      t.sessions += d.sessions;
-      t.sessOrders += d.orders || 0;
-    }
-    if (d.ads) {
-      if (!t.ads) t.ads = { cost: 0, clicks: 0, impressions: 0, conversions: 0, convValue: 0 };
-      for (const k of Object.keys(t.ads)) t.ads[k] += d.ads[k] || 0;
-      t.adsRevenue += d.revenue || 0;
-    }
-  }
-  if (!t.any) return {};
-  const m = metrics({ revenue: t.revenue, orders: t.orders, sessions: t.hasSess ? t.sessions : null, ads: t.ads });
-  m.cvr = t.hasSess && t.sessions ? t.sessOrders / t.sessions : null;
-  m.roasReal = t.ads && t.ads.cost ? t.adsRevenue / t.ads.cost : null;
-  return m;
-}
-
-const TILES = [
-  { id: "orders", label: "Orders", fmt: int },
-  { id: "aov", label: "Gem. orderwaarde", fmt: gbp },
-  { id: "cvr", label: "Conversie", fmt: pct },
-  { id: "cost", label: "Ad spend", fmt: gbp, lowerIsBetter: true },
-  { id: "roasReal", label: "ROAS (Shopify)", fmt: ratio, hint: "Shopify-omzet in £ / Google Ads-kosten" },
-  { id: "roasGoogle", label: "ROAS (Google)", fmt: ratio, hint: "Conversiewaarde in Google Ads / kosten" },
-  { id: "cpc", label: "CPC", fmt: gbp, lowerIsBetter: true, hint: "Kosten / kliks, alle campagnes samen" },
-  { id: "cpm", label: "CPM", fmt: gbp, lowerIsBetter: true, hint: "Kosten per 1.000 vertoningen" },
-];
-const STORE_STATS = ["orders", "cvr", "cost", "roasReal", "cpc", "cpm"];
-const TILE_BY_ID = Object.fromEntries(TILES.map((t) => [t.id, t]));
-
-function Delta({ cur, prev, lowerIsBetter }) {
-  if (!ok(cur) || !ok(prev)) return <span className="dd-delta flat">—</span>;
-  if (prev === 0) return <span className="dd-delta flat">{cur === 0 ? "0%" : "nieuw"}</span>;
-  const ch = (cur - prev) / Math.abs(prev);
-  if (Math.abs(ch) < 0.0005) return <span className="dd-delta flat">0%</span>;
-  const good = lowerIsBetter ? ch < 0 : ch > 0;
-  return (
-    <span className={"dd-delta " + (good ? "up" : "down")}>
-      {ch > 0 ? "↑" : "↓"} {nf0.format(Math.abs(ch) * 100)}%
-    </span>
-  );
-}
-
 /** Uur-reeks → cumulatief; uren na "nu" (alleen vandaag) worden null. */
 function cumulative(arr, cutAfter) {
   let run = 0;
@@ -162,7 +85,6 @@ function cumulative(arr, cutAfter) {
     return Math.round(run * 100) / 100;
   });
 }
-const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0") + ":00");
 
 export default function DashboardPage() {
   const [stores, setStores] = useState([]);
@@ -175,6 +97,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [showIssues, setShowIssues] = useState(false);
+  const [modal, setModal] = useState(null); // { id, scope }
   const reqId = useRef(0);
 
   useEffect(() => {
@@ -276,9 +199,40 @@ export default function DashboardPage() {
     () => Object.fromEntries(dates.map((d) => [d, sumDays(rows.map((r) => r.days && r.days[d]))])),
     [dates, rows]
   );
+  const isToday = Boolean(data && data.date === data.today);
+  const ctx = useMemo(() => {
+    if (!data) return null;
+    const minute = isToday ? Number(data.nowMinute) || 0 : 59;
+    return {
+      isToday,
+      cut: isToday ? data.nowHour : 23,
+      minute,
+      frac: isToday ? Math.min(1, (minute + 1) / 60) : 1,
+      // Ads per uur alleen meenemen als élke store met Ads ook uurdata heeft
+      adsHourlyAll: rows.some((r) => r.adsHourly) && rows.every((r) => !(r.days && r.days[data.date] && r.days[data.date].ads) || r.adsHourly),
+    };
+  }, [data, rows, isToday]);
+
+  /** Vorige dag om te vergelijken: vandaag → gisteren t/m hetzelfde tijdstip. */
+  const lflPrev = useCallback(
+    (list) => {
+      if (!data) return {};
+      const full = sumDays(list.map((r) => r.days && r.days[data.prevDate]));
+      if (!ctx.isToday) return full;
+      const part = sumDays(list.map((r) => upTo(r.hours && r.hours[data.prevDate], ctx.cut, ctx.frac, ctx.adsHourlyAll)));
+      const out = {};
+      for (const id of Object.keys(METRIC)) {
+        if (ok(part[id]) && (!ADS_IDS.has(id) || ctx.adsHourlyAll)) out[id] = part[id];
+        else out[id] = RATIO_IDS.has(id) ? full[id] : null; // ratio mag met hele dag; absolute cijfers niet
+      }
+      return out;
+    },
+    [data, ctx]
+  );
   const sel = (data && totalsByDate[data.date]) || {};
-  const prv = (data && totalsByDate[data.prevDate]) || {};
-  const isToday = data && data.date === data.today;
+  const prv = useMemo(() => (data ? lflPrev(rows) : {}), [data, rows, lflPrev]);
+  const prvFull = (data && totalsByDate[data.prevDate]) || {};
+  const vsLabel = data ? (isToday ? `vs gisteren t/m ${hhmm(ctx.cut, ctx.minute)}` : `vs ${dayLabel(data.prevDate, data.today).toLowerCase()}`) : "";
 
   const hourly = useMemo(() => {
     if (!data) return null;
@@ -286,7 +240,7 @@ export default function DashboardPage() {
       const out = new Array(24).fill(0);
       for (const r of rows) {
         const h = r.hours && r.hours[d];
-        if (h) h.forEach((v, i) => (out[i] += v || 0));
+        if (h && h.revenue) h.revenue.forEach((v, i) => (out[i] += v || 0));
       }
       return out;
     };
@@ -295,6 +249,15 @@ export default function DashboardPage() {
       prev: cumulative(sumHours(data.prevDate), null),
     };
   }, [data, rows, isToday]);
+
+  /* Laatste uur: omzet + orders in het lopende uur vs dezelfde 60 min gisteren */
+  const lastHour = useMemo(() => {
+    if (!data || !ctx.isToday) return null;
+    const tot = (d, h, f) => sumDays(rows.map((r) => upTo(r.hours && r.hours[d], h, f, false)));
+    const now = tot(data.date, ctx.cut, 1);
+    const back = tot(data.date, ctx.cut - 1, ctx.frac);
+    return { revenue: (now.revenue || 0) - (back.revenue || 0), orders: (now.orders || 0) - (back.orders || 0) };
+  }, [data, rows, ctx]);
 
   const trend = useMemo(
     () => ({
@@ -426,15 +389,23 @@ export default function DashboardPage() {
         {data && (
           <>
             {/* Hoofdgrafiek: omzet per uur */}
-            <section className="dd-card dd-hero">
+            <section className="dd-card dd-hero dd-click" onClick={() => setModal({ id: "revenue" })} title="Klik voor details">
               <div className="dd-hero-head">
                 <div>
                   <div className="dd-eyebrow">Totale omzet · {dayLabel(data.date, data.today)}</div>
                   <div className="dd-big">{gbp(sel.revenue)}</div>
                   <div className="dd-hero-sub">
                     <Delta cur={sel.revenue} prev={prv.revenue} />
-                    <span className="muted">vs {dayLabel(data.prevDate, data.today).toLowerCase()} {gbp(prv.revenue)}</span>
+                    <span className="muted">{vsLabel} {gbp(prv.revenue)}</span>
+                    {isToday ? <span className="muted">· hele dag gisteren {gbp(prvFull.revenue)}</span> : null}
                   </div>
+                  {lastHour && (
+                    <div className="dd-hero-sub dd-lasthour">
+                      <span className="dd-livedot sm" />
+                      <span>Laatste uur: <b>{gbp(lastHour.revenue)}</b> · <b>{lastHour.orders === 1 ? "1 order" : `${Math.round(lastHour.orders)} orders`}</b></span>
+                    </div>
+                  )}
+
                 </div>
                 <div className="dd-legend">
                   <span><i style={{ background: "#3987e5" }} />{dayLabel(data.date, data.today)}</span>
@@ -461,15 +432,15 @@ export default function DashboardPage() {
               {TILES.map((t) => {
                 const series = dates.map((d) => (totalsByDate[d] ? totalsByDate[d][t.id] : null));
                 return (
-                  <div key={t.id} className="dd-tile" title={t.hint || ""}>
+                  <button key={t.id} className="dd-tile dd-click" title={(t.hint ? t.hint + " · " : "") + "Klik voor details"} onClick={() => setModal({ id: t.id })}>
                     <div className="dd-tile-top">
                       <span className="dd-tile-label">{t.label}</span>
                       <Delta cur={sel[t.id]} prev={prv[t.id]} lowerIsBetter={t.lowerIsBetter} />
                     </div>
                     <div className="dd-tile-value">{t.fmt(sel[t.id])}</div>
                     <Sparkline values={series} color={t.lowerIsBetter ? "#d95926" : "#3987e5"} />
-                    <div className="dd-tile-foot muted small">14 dagen</div>
-                  </div>
+                    <div className="dd-tile-foot muted small">{isToday ? `vs gisteren t/m ${hhmm(ctx.cut, ctx.minute)}` : "14 dagen"}</div>
+                  </button>
                 );
               })}
             </div>
@@ -504,10 +475,10 @@ export default function DashboardPage() {
                 const d = r.days && r.days[data.date];
                 const p = r.days && r.days[data.prevDate];
                 const m = metrics(d);
-                const pm = metrics(p);
+                const pm = lflPrev([r]);
                 const color = colorOf(r.key, i);
-                const hDay = cumulative(r.hours && r.hours[data.date], isToday ? data.nowHour : null);
-                const hPrev = cumulative(r.hours && r.hours[data.prevDate], null);
+                const hDay = cumulative(r.hours && r.hours[data.date] && r.hours[data.date].revenue, isToday ? data.nowHour : null);
+                const hPrev = cumulative(r.hours && r.hours[data.prevDate] && r.hours[data.prevDate].revenue, null);
                 return (
                   <section key={r.domain} className="dd-card dd-store">
                     <div className="dd-store-head">
@@ -518,7 +489,7 @@ export default function DashboardPage() {
                         <span className="dd-pill">{r.currency} {nf2.format(d.revenueLocal)}</span>
                       ) : null}
                     </div>
-                    <div className="dd-store-main">
+                    <div className="dd-store-main dd-click" onClick={() => setModal({ id: "revenue", scope: r.domain })} title="Klik voor details">
                       <div>
                         <div className="dd-mid">{gbp(m.revenue)}</div>
                         <Delta cur={m.revenue} prev={pm.revenue} />
@@ -539,13 +510,13 @@ export default function DashboardPage() {
                     </div>
                     <div className="dd-store-stats">
                       {STORE_STATS.map((id) => {
-                        const t = TILE_BY_ID[id];
+                        const t = METRIC[id];
                         return (
-                          <div key={id} className="dd-stat" title={t.hint || ""}>
+                          <button key={id} className="dd-stat dd-click" title={(t.hint ? t.hint + " · " : "") + "Klik voor details"} onClick={() => setModal({ id, scope: r.domain })}>
                             <span className="dd-stat-label">{t.label}</span>
                             <span className="dd-stat-value">{t.fmt(m[id])}</span>
                             <Delta cur={m[id]} prev={pm[id]} lowerIsBetter={t.lowerIsBetter} />
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
@@ -554,6 +525,19 @@ export default function DashboardPage() {
               })}
             </div>
           </>
+        )}
+
+        {modal && data && (
+          <MetricModal
+            metricId={modal.id}
+            initialScope={modal.scope}
+            data={data}
+            rows={rows}
+            ctx={ctx}
+            colorOf={colorOf}
+            dayLabel={(d) => dayLabel(d, data.today)}
+            onClose={() => setModal(null)}
+          />
         )}
 
         {!busy && !error && active.length === 0 && stores.length > 0 && (
