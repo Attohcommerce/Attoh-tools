@@ -1,10 +1,8 @@
 "use client";
 
-// OMZET-DASHBOARD (29-10-2026) — alle eigen Attoh-stores op één scherm:
-// omzet in £ (live omgerekend), orders, conversie, en per store de Google
-// Ads-cijfers van het hele account (ad spend, CPC, CPM, ROAS). Dagen
-// navigeren met Vandaag / Gisteren / Eergisteren of de datumkiezer; elk
-// cijfer toont het verschil met de dag ervoor. Stores aan/uit met chips.
+// OMZET-DASHBOARD (29-10-2026, v2) — alle eigen Attoh-stores op één scherm,
+// in Shopify-stijl: omzet per uur (gekozen dag vs dag ervoor), KPI-tegels met
+// 14-dagen-sparkline, 14-dagen-trend omzet vs ad spend, en een kaart per store.
 //
 // Bronnen:
 //  - Shopify via de Orders-app per store (dezelfde sleutels als Bills:
@@ -14,13 +12,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 import { orgLS } from "@/lib/org-client";
+import { LineChart, Sparkline } from "./charts";
 import "./dashboard.css";
 
 const LS_STORES = "sa_stores";
 const LS_ORDERS_APP = "sa_orders_app::";
 const LS_CFG = "attoh_dash_cfg"; // domein → { key, on }
 const LS_SHEET = "attoh_dash_ads_sheet";
+const DEFAULT_ADS_SHEET = "1xac7M4--kCb2DKShQy7s2A13sgfl4NxW8CXbLGW4H8o"; // Attoh Ads Live
 const REFRESH_MS = 2 * 60 * 1000;
+
+// Vaste kleur per store (volgt de store, nooit de positie)
+const STORE_COLOR = { SSB: "#3987e5", LGB: "#d95926", EMC: "#199e70", SW: "#c98500" };
+const EXTRA_COLORS = ["#9085e9", "#d55181", "#008300", "#e66767"];
+const PREV_COLOR = "#6b6b78";
 
 const KNOWN = [
   { key: "SSB", match: /soul\s*society|0d6n10-zj/i },
@@ -55,6 +60,10 @@ function addDays(ymd, n) {
   const [y, m, d] = ymd.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d + n, 12)).toISOString().slice(0, 10);
 }
+function shortDate(ymd) {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString("nl-NL", { day: "numeric", month: "short", timeZone: "UTC" });
+}
 function dayLabel(ymd, today) {
   if (ymd === today) return "Vandaag";
   if (ymd === addDays(today, -1)) return "Gisteren";
@@ -65,13 +74,16 @@ function dayLabel(ymd, today) {
 
 const nf2 = new Intl.NumberFormat("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const nf0 = new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 0 });
-const gbp = (v) => (v == null || !Number.isFinite(v) ? "—" : "£" + nf2.format(v));
-const int = (v) => (v == null || !Number.isFinite(v) ? "—" : nf0.format(v));
-const pct = (v) => (v == null || !Number.isFinite(v) ? "—" : nf2.format(v * 100) + "%");
-const ratio = (v) => (v == null || !Number.isFinite(v) ? "—" : nf2.format(v));
+const ok = (v) => v != null && Number.isFinite(v);
+const gbp = (v) => (ok(v) ? "£" + nf2.format(v) : "—");
+const nf1 = new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 1 });
+const gbpAxis = (v) => (ok(v) ? "£" + (v >= 1000 ? nf1.format(v / 1000) + "k" : nf0.format(v)) : "");
+const int = (v) => (ok(v) ? nf0.format(v) : "—");
+const pct = (v) => (ok(v) ? nf2.format(v * 100) + "%" : "—");
+const ratio = (v) => (ok(v) ? nf2.format(v) + "×" : "—");
 const div = (a, b) => (b ? a / b : null);
 
-/* Alle afgeleide cijfers voor één dag van één store (of een totaal). */
+/* Afgeleide cijfers voor één dag (één store of opgeteld). */
 function metrics(d) {
   if (!d) return {};
   const ads = d.ads;
@@ -79,6 +91,7 @@ function metrics(d) {
   return {
     revenue: d.revenue,
     orders: d.orders,
+    aov: d.orders ? d.revenue / d.orders : null,
     sessions: d.sessions,
     cvr: d.sessions ? div(d.orders, d.sessions) : null,
     cost,
@@ -90,9 +103,10 @@ function metrics(d) {
 }
 
 function sumDays(list) {
-  const t = { revenue: 0, orders: 0, sessions: 0, sessOrders: 0, hasSess: false, ads: null, adsRevenue: 0 };
+  const t = { revenue: 0, orders: 0, sessions: 0, sessOrders: 0, hasSess: false, ads: null, adsRevenue: 0, any: false };
   for (const d of list) {
     if (!d) continue;
+    t.any = true;
     t.revenue += d.revenue || 0;
     t.orders += d.orders || 0;
     if (d.sessions != null) {
@@ -106,16 +120,16 @@ function sumDays(list) {
       t.adsRevenue += d.revenue || 0;
     }
   }
+  if (!t.any) return {};
   const m = metrics({ revenue: t.revenue, orders: t.orders, sessions: t.hasSess ? t.sessions : null, ads: t.ads });
-  // conversie alleen over stores mét sessies, echte ROAS alleen over stores mét ads
   m.cvr = t.hasSess && t.sessions ? t.sessOrders / t.sessions : null;
   m.roasReal = t.ads && t.ads.cost ? t.adsRevenue / t.ads.cost : null;
   return m;
 }
 
-const COLS = [
-  { id: "revenue", label: "Omzet", fmt: gbp },
+const TILES = [
   { id: "orders", label: "Orders", fmt: int },
+  { id: "aov", label: "Gem. orderwaarde", fmt: gbp },
   { id: "cvr", label: "Conversie", fmt: pct },
   { id: "cost", label: "Ad spend", fmt: gbp, lowerIsBetter: true },
   { id: "roasReal", label: "ROAS (Shopify)", fmt: ratio, hint: "Shopify-omzet in £ / Google Ads-kosten" },
@@ -123,30 +137,44 @@ const COLS = [
   { id: "cpc", label: "CPC", fmt: gbp, lowerIsBetter: true, hint: "Kosten / kliks, alle campagnes samen" },
   { id: "cpm", label: "CPM", fmt: gbp, lowerIsBetter: true, hint: "Kosten per 1.000 vertoningen" },
 ];
+const STORE_STATS = ["orders", "cvr", "cost", "roasReal", "cpc", "cpm"];
+const TILE_BY_ID = Object.fromEntries(TILES.map((t) => [t.id, t]));
 
 function Delta({ cur, prev, lowerIsBetter }) {
-  if (cur == null || prev == null || !Number.isFinite(cur) || !Number.isFinite(prev)) return <span className="dd-delta flat">—</span>;
+  if (!ok(cur) || !ok(prev)) return <span className="dd-delta flat">—</span>;
   if (prev === 0) return <span className="dd-delta flat">{cur === 0 ? "0%" : "nieuw"}</span>;
   const ch = (cur - prev) / Math.abs(prev);
   if (Math.abs(ch) < 0.0005) return <span className="dd-delta flat">0%</span>;
   const good = lowerIsBetter ? ch < 0 : ch > 0;
   return (
     <span className={"dd-delta " + (good ? "up" : "down")}>
-      {ch > 0 ? "▲" : "▼"} {nf0.format(Math.abs(ch) * 100)}%
+      {ch > 0 ? "↑" : "↓"} {nf0.format(Math.abs(ch) * 100)}%
     </span>
   );
 }
 
+/** Uur-reeks → cumulatief; uren na "nu" (alleen vandaag) worden null. */
+function cumulative(arr, cutAfter) {
+  let run = 0;
+  return (arr || new Array(24).fill(0)).map((v, h) => {
+    if (cutAfter != null && h > cutAfter) return null;
+    run += v || 0;
+    return Math.round(run * 100) / 100;
+  });
+}
+const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0") + ":00");
+
 export default function DashboardPage() {
   const [stores, setStores] = useState([]);
   const [cfg, setCfg] = useState({});
-  const [sheet, setSheet] = useState("");
+  const [sheet, setSheet] = useState(DEFAULT_ADS_SHEET);
   const [today, setToday] = useState(londonDay());
   const [date, setDate] = useState(londonDay());
   const [data, setData] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [showIssues, setShowIssues] = useState(false);
   const reqId = useRef(0);
 
   useEffect(() => {
@@ -156,12 +184,11 @@ export default function DashboardPage() {
     const next = {};
     for (const s of list) {
       const prev = saved[s.domain] || {};
-      const key = prev.key != null ? prev.key : guessKey(s);
+      const key = prev.key != null && prev.key !== "" ? prev.key : guessKey(s);
       next[s.domain] = { key, on: prev.on != null ? prev.on : Boolean(key) };
     }
     setCfg(next);
-    setSheet(load(LS_SHEET, ""));
-    if (!load(LS_SHEET, "")) setShowSettings(true);
+    setSheet(load(LS_SHEET, "") || DEFAULT_ADS_SHEET);
   }, []);
 
   function patchCfg(domain, patch) {
@@ -173,6 +200,10 @@ export default function DashboardPage() {
   }
 
   const active = useMemo(() => stores.filter((s) => cfg[s.domain] && cfg[s.domain].on), [stores, cfg]);
+  const colorOf = useCallback(
+    (key, i) => STORE_COLOR[key] || EXTRA_COLORS[i % EXTRA_COLORS.length],
+    []
+  );
 
   const refresh = useCallback(async () => {
     if (!active.length) {
@@ -222,7 +253,6 @@ export default function DashboardPage() {
     refresh();
   }, [refresh]);
 
-  // Vandaag = live: elke 2 minuten verversen, en bij terugkeren op het tabblad
   useEffect(() => {
     if (date !== today) return;
     const t = setInterval(refresh, REFRESH_MS);
@@ -234,15 +264,73 @@ export default function DashboardPage() {
     };
   }, [date, today, refresh]);
 
+  /* ---------- Afgeleide data ---------- */
   const rows = (data && data.stores) || [];
-  const totDay = useMemo(() => sumDays(rows.map((r) => r.day)), [rows]);
-  const totPrev = useMemo(() => sumDays(rows.map((r) => r.prev)), [rows]);
-  const lastAds = useMemo(() => {
-    const ts = rows.map((r) => r.day && r.day.ads && r.day.ads.updated).filter(Boolean).sort();
-    return ts.length ? ts[ts.length - 1] : "";
+  const dates = useMemo(() => {
+    if (!data) return [];
+    const out = [];
+    for (let d = data.from; d <= data.date; d = addDays(d, 1)) out.push(d);
+    return out;
+  }, [data]);
+  const totalsByDate = useMemo(
+    () => Object.fromEntries(dates.map((d) => [d, sumDays(rows.map((r) => r.days && r.days[d]))])),
+    [dates, rows]
+  );
+  const sel = (data && totalsByDate[data.date]) || {};
+  const prv = (data && totalsByDate[data.prevDate]) || {};
+  const isToday = data && data.date === data.today;
+
+  const hourly = useMemo(() => {
+    if (!data) return null;
+    const sumHours = (d) => {
+      const out = new Array(24).fill(0);
+      for (const r of rows) {
+        const h = r.hours && r.hours[d];
+        if (h) h.forEach((v, i) => (out[i] += v || 0));
+      }
+      return out;
+    };
+    return {
+      day: cumulative(sumHours(data.date), isToday ? data.nowHour : null),
+      prev: cumulative(sumHours(data.prevDate), null),
+    };
+  }, [data, rows, isToday]);
+
+  const trend = useMemo(
+    () => ({
+      revenue: dates.map((d) => (totalsByDate[d] && ok(totalsByDate[d].revenue) ? totalsByDate[d].revenue : null)),
+      cost: dates.map((d) => (totalsByDate[d] && ok(totalsByDate[d].cost) ? totalsByDate[d].cost : null)),
+    }),
+    [dates, totalsByDate]
+  );
+  const hasAds = trend.cost.some((v) => v != null);
+
+  const issues = useMemo(() => {
+    const groups = {};
+    const add = (title, store) => {
+      groups[title] = groups[title] || [];
+      groups[title].push(store);
+    };
+    for (const r of rows) {
+      const k = r.key || r.name;
+      if (r.sessionsError) {
+        if (/read_reports|Level 2|protected/i.test(r.sessionsError)) add("Conversie: de Orders-app mist read_reports + toegang tot protected customer data (Level 2)", k);
+        else add("Conversie: " + r.sessionsError, k);
+      }
+      if (r.adsError) {
+        if (/bestaat nog niet/i.test(r.adsError)) add("Google Ads: script draait nog niet in dit account (geen tab Ads_" + (r.key || "?") + ")", k);
+        else add("Google Ads: " + r.adsError, k);
+      }
+      for (const e of r.errors || []) add(e, k);
+    }
+    return Object.entries(groups);
   }, [rows]);
 
   const quick = [today, addDays(today, -1), addDays(today, -2)];
+  const lastAds = useMemo(() => {
+    const ts = rows.flatMap((r) => Object.values(r.days || {}).map((d) => d.ads && d.ads.updated)).filter(Boolean).sort();
+    return ts.length ? ts[ts.length - 1] : "";
+  }, [rows]);
 
   return (
     <>
@@ -257,55 +345,50 @@ export default function DashboardPage() {
                 {["Vandaag", "Gisteren", "Eergisteren"][i]}
               </button>
             ))}
-            <button
-              className="dd-arrow"
-              onClick={() => setDate(addDays(date, 1) > today ? today : addDays(date, 1))}
-              disabled={date >= today}
-              aria-label="Volgende dag"
-            >›</button>
-            <input
-              type="date"
-              className="dd-date"
-              value={date}
-              max={today}
-              onChange={(e) => e.target.value && setDate(e.target.value)}
-            />
+            <button className="dd-arrow" onClick={() => setDate(addDays(date, 1) > today ? today : addDays(date, 1))} disabled={date >= today} aria-label="Volgende dag">›</button>
+            <input type="date" className="dd-date" value={date} max={today} onChange={(e) => e.target.value && setDate(e.target.value)} />
           </div>
           <div className="dd-status">
-            <span className="dd-label">{dayLabel(date, today)}</span>
-            <span className="muted small">
-              vs {data ? dayLabel(data.prevDate, today).toLowerCase() : "vorige dag"}
-              {date === today ? " · live, ververst elke 2 min" : ""}
-              {lastAds ? ` · Ads bijgewerkt ${lastAds}` : ""}
-            </span>
-            <button className="btn btn-ghost btn-small" onClick={refresh} disabled={busy}>
-              {busy ? "Laden…" : "Verversen"}
+            {date === today ? <span className="dd-live"><span className="dd-livedot" />Live</span> : null}
+            <span className="muted small">{lastAds ? `Ads bijgewerkt ${lastAds.slice(11)}` : ""}</span>
+            <button className="dd-refresh" onClick={refresh} disabled={busy} title="Verversen">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={busy ? "spin" : ""}>
+                <path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4" />
+              </svg>
             </button>
           </div>
         </div>
 
         {/* Stores aan/uit */}
         <div className="dd-chips">
-          {stores.length === 0 && <span className="muted">Koppel eerst je stores in de Importer.</span>}
-          {stores.map((s) => {
+          {stores.map((s, i) => {
             const c = cfg[s.domain] || {};
             return (
-              <button
-                key={s.domain}
-                className={"dd-chip" + (c.on ? " on" : "")}
-                onClick={() => patchCfg(s.domain, { on: !c.on })}
-                title={s.domain}
-              >
-                <span className="dd-dot" />
-                {c.key ? <strong>{c.key}</strong> : null}
-                <span>{s.name}</span>
+              <button key={s.domain} className={"dd-chip" + (c.on ? " on" : "")} onClick={() => patchCfg(s.domain, { on: !c.on })} title={s.domain}>
+                <span className="dd-dot" style={c.on ? { background: colorOf(c.key, i) } : null} />
+                {c.key || s.name}
               </button>
             );
           })}
-          <button className="dd-chip dd-gear" onClick={() => setShowSettings((v) => !v)}>
-            {showSettings ? "Instellingen sluiten" : "Instellingen"}
-          </button>
+          <span className="dd-flex" />
+          {issues.length > 0 && (
+            <button className={"dd-chip dd-warnchip" + (showIssues ? " on" : "")} onClick={() => setShowIssues((v) => !v)}>
+              ⚠ {issues.length} {issues.length === 1 ? "melding" : "meldingen"}
+            </button>
+          )}
+          <button className="dd-chip dd-gear" onClick={() => setShowSettings((v) => !v)} title="Instellingen">⚙</button>
         </div>
+
+        {showIssues && issues.length > 0 && (
+          <div className="dd-issues">
+            {issues.map(([title, list]) => (
+              <div key={title} className="dd-issue">
+                <span>{title}</span>
+                <span className="muted small">{list.join(" · ")}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {showSettings && (
           <div className="card">
@@ -314,17 +397,13 @@ export default function DashboardPage() {
             <input
               type="text"
               value={sheet}
-              placeholder="https://docs.google.com/spreadsheets/d/…"
               onChange={(e) => {
-                setSheet(e.target.value.trim());
-                save(LS_SHEET, e.target.value.trim());
+                const v = e.target.value.trim();
+                setSheet(v || DEFAULT_ADS_SHEET);
+                save(LS_SHEET, v);
               }}
             />
-            <div className="hint">
-              Elk Google Ads-account schrijft elk uur naar tabblad <code>Ads_&lt;SLEUTEL&gt;</code> van deze sheet.
-              Deel de sheet als bewerker met het service account van Attoh Tools.
-            </div>
-            <div className="field-label">Sleutel per store <span className="opt">moet gelijk zijn aan STORE in het Ads-script</span></div>
+            <div className="field-label">Sleutel per store <span className="opt">gelijk aan STORE in het Ads-script</span></div>
             <div className="dd-keys">
               {stores.map((s) => (
                 <label key={s.domain} className="dd-keyrow">
@@ -338,85 +417,149 @@ export default function DashboardPage() {
                 </label>
               ))}
             </div>
-            <div className="hint">
-              Omzet en orders komen uit de Orders-app van elke store (dezelfde sleutels als bij Bills). Voor
-              conversie heeft die app ook de scope <code>read_reports</code> nodig.
-            </div>
           </div>
         )}
 
         {error && <div className="dd-error">{error}</div>}
+        {!data && busy && <div className="dd-skeleton" />}
 
-        {/* Totaal */}
-        {rows.length > 0 && (
-          <div className="dd-kpis">
-            {COLS.map((c) => (
-              <div key={c.id} className="dd-kpi" title={c.hint || ""}>
-                <div className="dd-kpi-label">{c.label}</div>
-                <div className="dd-kpi-value">{c.fmt(totDay[c.id])}</div>
-                <div className="dd-kpi-sub">
-                  <Delta cur={totDay[c.id]} prev={totPrev[c.id]} lowerIsBetter={c.lowerIsBetter} />
-                  <span className="muted small">vorige: {c.fmt(totPrev[c.id])}</span>
+        {data && (
+          <>
+            {/* Hoofdgrafiek: omzet per uur */}
+            <section className="dd-card dd-hero">
+              <div className="dd-hero-head">
+                <div>
+                  <div className="dd-eyebrow">Totale omzet · {dayLabel(data.date, data.today)}</div>
+                  <div className="dd-big">{gbp(sel.revenue)}</div>
+                  <div className="dd-hero-sub">
+                    <Delta cur={sel.revenue} prev={prv.revenue} />
+                    <span className="muted">vs {dayLabel(data.prevDate, data.today).toLowerCase()} {gbp(prv.revenue)}</span>
+                  </div>
+                </div>
+                <div className="dd-legend">
+                  <span><i style={{ background: "#3987e5" }} />{dayLabel(data.date, data.today)}</span>
+                  <span><i className="dashed" />{dayLabel(data.prevDate, data.today)}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+              {hourly && (
+                <LineChart
+                  height={280}
+                  labels={HOURS}
+                  xEvery={3}
+                  fmt={(v, axis) => (axis ? gbpAxis(v) : gbp(v))}
+                  tooltipTitle={(i) => `t/m ${HOURS[i].replace(":00", ":59")}`}
+                  series={[
+                    { name: dayLabel(data.date, data.today), color: "#3987e5", values: hourly.day },
+                    { name: dayLabel(data.prevDate, data.today), color: PREV_COLOR, values: hourly.prev, dashed: true, muted: true },
+                  ]}
+                />
+              )}
+            </section>
 
-        {/* Per store */}
-        {rows.length > 0 && (
-          <div className="card dd-tablecard">
-            <h2>Per store</h2>
-            <div className="dd-tablewrap">
-              <table className="dd-table">
-                <thead>
-                  <tr>
-                    <th>Store</th>
-                    {COLS.map((c) => (
-                      <th key={c.id} title={c.hint || ""}>{c.label}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => {
-                    const m = metrics(r.day);
-                    const p = metrics(r.prev);
-                    const notes = [...(r.errors || [])];
-                    if (r.sessionsError) notes.push(r.sessionsError);
-                    if (r.adsError) notes.push(r.adsError);
-                    return (
-                      <tr key={r.domain}>
-                        <td className="dd-store">
-                          <strong>{r.key || r.name}</strong>
-                          <span className="muted small">{r.name}</span>
-                          {r.adsId ? <span className="muted small">Ads {r.adsId}</span> : null}
-                          {r.currency && r.currency !== "GBP" && r.day && r.day.fx ? (
-                            <span className="muted small">
-                              {r.currency} {nf2.format(r.day.revenueLocal)} · koers {nf2.format(r.day.fx)}
-                            </span>
-                          ) : null}
-                          {notes.map((n, i) => (
-                            <span key={i} className="dd-note">{n}</span>
-                          ))}
-                        </td>
-                        {COLS.map((c) => (
-                          <td key={c.id}>
-                            <div className="dd-val">{c.fmt(m[c.id])}</div>
-                            <Delta cur={m[c.id]} prev={p[c.id]} lowerIsBetter={c.lowerIsBetter} />
-                          </td>
-                        ))}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            {/* KPI-tegels */}
+            <div className="dd-tiles">
+              {TILES.map((t) => {
+                const series = dates.map((d) => (totalsByDate[d] ? totalsByDate[d][t.id] : null));
+                return (
+                  <div key={t.id} className="dd-tile" title={t.hint || ""}>
+                    <div className="dd-tile-top">
+                      <span className="dd-tile-label">{t.label}</span>
+                      <Delta cur={sel[t.id]} prev={prv[t.id]} lowerIsBetter={t.lowerIsBetter} />
+                    </div>
+                    <div className="dd-tile-value">{t.fmt(sel[t.id])}</div>
+                    <Sparkline values={series} color={t.lowerIsBetter ? "#d95926" : "#3987e5"} />
+                    <div className="dd-tile-foot muted small">14 dagen</div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+
+            {/* Trend 14 dagen */}
+            <section className="dd-card">
+              <div className="dd-hero-head">
+                <div>
+                  <div className="dd-eyebrow">Laatste 14 dagen</div>
+                  <div className="dd-mid">Omzet {hasAds ? "vs ad spend" : ""}</div>
+                </div>
+                <div className="dd-legend">
+                  <span><i style={{ background: "#3987e5" }} />Omzet</span>
+                  {hasAds ? <span><i style={{ background: "#d95926" }} />Ad spend</span> : null}
+                </div>
+              </div>
+              <LineChart
+                height={240}
+                labels={dates.map(shortDate)}
+                xEvery={2}
+                fmt={(v, axis) => (axis ? gbpAxis(v) : gbp(v))}
+                series={[
+                  { name: "Omzet", color: "#3987e5", values: trend.revenue },
+                  ...(hasAds ? [{ name: "Ad spend", color: "#d95926", values: trend.cost, noFill: true }] : []),
+                ]}
+              />
+            </section>
+
+            {/* Per store */}
+            <div className="dd-stores">
+              {rows.map((r, i) => {
+                const d = r.days && r.days[data.date];
+                const p = r.days && r.days[data.prevDate];
+                const m = metrics(d);
+                const pm = metrics(p);
+                const color = colorOf(r.key, i);
+                const hDay = cumulative(r.hours && r.hours[data.date], isToday ? data.nowHour : null);
+                const hPrev = cumulative(r.hours && r.hours[data.prevDate], null);
+                return (
+                  <section key={r.domain} className="dd-card dd-store">
+                    <div className="dd-store-head">
+                      <span className="dd-store-dot" style={{ background: color }} />
+                      <strong>{r.key || r.name}</strong>
+                      <span className="muted small">{r.name}</span>
+                      {r.currency && r.currency !== "GBP" && d && d.fx ? (
+                        <span className="dd-pill">{r.currency} {nf2.format(d.revenueLocal)}</span>
+                      ) : null}
+                    </div>
+                    <div className="dd-store-main">
+                      <div>
+                        <div className="dd-mid">{gbp(m.revenue)}</div>
+                        <Delta cur={m.revenue} prev={pm.revenue} />
+                      </div>
+                      <div className="dd-store-chart">
+                        <LineChart
+                          height={96}
+                          compact
+                          labels={HOURS}
+                          xEvery={6}
+                          fmt={(v, axis) => (axis ? gbpAxis(v) : gbp(v))}
+                          series={[
+                            { name: dayLabel(data.date, data.today), color, values: hDay },
+                            { name: dayLabel(data.prevDate, data.today), color: PREV_COLOR, values: hPrev, dashed: true, muted: true },
+                          ]}
+                        />
+                      </div>
+                    </div>
+                    <div className="dd-store-stats">
+                      {STORE_STATS.map((id) => {
+                        const t = TILE_BY_ID[id];
+                        return (
+                          <div key={id} className="dd-stat" title={t.hint || ""}>
+                            <span className="dd-stat-label">{t.label}</span>
+                            <span className="dd-stat-value">{t.fmt(m[id])}</span>
+                            <Delta cur={m[id]} prev={pm[id]} lowerIsBetter={t.lowerIsBetter} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {!busy && !error && active.length === 0 && stores.length > 0 && (
           <div className="center-note">Zet hierboven minstens één store aan.</div>
         )}
+        {stores.length === 0 && <div className="center-note">Koppel eerst je stores in de Importer.</div>}
       </div>
     </>
   );
