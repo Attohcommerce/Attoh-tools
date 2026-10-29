@@ -9,6 +9,7 @@ import Home from "./Home";
 import Explore from "./Explore";
 import { rsfx, reisSoundOn, setReisSound } from "./ReisSound";
 import TripSheet from "./TripSheet";
+import BookingGuide from "./BookingGuide";
 import DestPicker from "./DestPicker";
 import { HotelMapModal, LocationLink } from "./HotelMap";
 import PriceKiller, { PriceKillerButton } from "./PriceKiller";
@@ -208,6 +209,30 @@ export default function ReisPlanner() {
     const b = searchBody(form);
     setExplore({ dest: d, search: { ...b, when: { mode: "maanden", months: [monthKey] }, dests: [d.id] }, initial: null });
   }
+  // Bewaarde reis openen = hetzelfde scherm als bij zoeken, met jullie data
+  // en hotel al gekozen; maand ervoor t/m maand erna om te kunnen schuiven.
+  function openTrip(t) {
+    const r = t.result;
+    const d = DEST_BY_ID[r.destId];
+    if (!d) return setOpenTripId(t.id);
+    const m = r.depart.slice(0, 7);
+    const shift = (n) => { const [y, mo] = m.split("-").map(Number); return new Date(Date.UTC(y, mo - 1 + n, 1)).toISOString().slice(0, 7); };
+    const now = new Date().toISOString().slice(0, 7);
+    const base = searchBody({ ...DEFAULT_FORM(), ...(t.search || {}) });
+    setExplore({
+      dest: d,
+      trip: t,
+      search: { ...base, dests: [d.id], when: { mode: "maanden", months: [shift(-1), m, shift(1)].filter((x) => x >= now) } },
+      initial: { depart: r.depart, ret: r.ret, nights: r.nights, hotelId: r.hotel && r.hotel.id, flightUrl: (r.links.flight[0] || {}).url, flightLinks: r.links.flight },
+    });
+  }
+  async function replaceTrip(id, result) {
+    const res = await fetch("/api/reis/trips", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, result }) });
+    if (res.ok) { rsfx("save"); loadTrips(); return true; }
+    rsfx("error");
+    return false;
+  }
+
   function openResult(r) {
     setExplore({ dest: DEST_BY_ID[r.destId], search: out && out.query, initial: { depart: r.depart, ret: r.ret, nights: r.nights, flightUrl: (r.links.flight[0] || {}).url, flightLinks: r.links.flight } });
   }
@@ -309,7 +334,7 @@ export default function ReisPlanner() {
           </section>
         </main>
       )}
-      {tab === "reizen" && <Saved trips={trips} reload={loadTrips} user={user} onOpen={(t) => setOpenTripId(t.id)} onKill={(t) => setKillId(t.id)} />}
+      {tab === "reizen" && <Saved trips={trips} reload={loadTrips} user={user} onOpen={openTrip} onDetails={(t) => setOpenTripId(t.id)} onKill={(t) => setKillId(t.id)} />}
       {killId && trips.find((t) => t.id === killId) && (
         <PriceKiller trip={trips.find((t) => t.id === killId)} onClose={() => { setKillId(null); loadTrips(); }} onReplaced={loadTrips} onSavedNew={loadTrips} />
       )}
@@ -320,10 +345,11 @@ export default function ReisPlanner() {
           onClose={() => { setOpenTripId(null); loadTrips(); }}
           onChanged={(nt) => setTrips((list) => list.map((x) => (x.id === nt.id ? nt : x)))}
           onKill={(t) => setKillId(t.id)}
+          onAdjust={(t) => { setOpenTripId(null); openTrip(t); }}
         />
       )}
       {explore && explore.dest && (
-        <Explore dest={explore.dest} search={explore.search} initial={explore.initial} onClose={() => setExplore(null)} onSave={(r, owner) => saveTrip(r, owner)} />
+        <Explore dest={explore.dest} search={explore.search} initial={explore.initial} trip={explore.trip} onReplace={replaceTrip} onBooked={loadTrips} onClose={() => setExplore(null)} onSave={(r, owner) => saveTrip(r, owner)} />
       )}
 
       <nav className="rp-bottomnav">
@@ -638,6 +664,7 @@ function Results({ out, results, sort, setSort, user, savedIds, liked, onSave, o
 
 function Ticket({ r, user, saved, liked, onSave, onFeedback, onOpen }) {
   const [menu, setMenu] = useState(null);
+  const [guide, setGuide] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -739,16 +766,8 @@ function Ticket({ r, user, saved, liked, onSave, onFeedback, onOpen }) {
           <div><span>Naar {r.originName}</span><span>{eur(f.toAirport)}</span></div>
         </div>
         <div className="rp-actions">
-          <div className="rp-btnrow">
-            <div className="rp-menu">
-              <button className="rp-btn pri" style={{ width: "100%" }} onClick={() => setMenu(menu === "flight" ? null : "flight")} aria-expanded={menu === "flight"}>Vlucht</button>
-              {menu === "flight" && <LinkMenu title="Vlucht boeken bij" links={r.links.flight} />}
-            </div>
-            <div className="rp-menu">
-              <button className="rp-btn pri" style={{ width: "100%" }} onClick={() => setMenu(menu === "hotel" ? null : "hotel")} aria-expanded={menu === "hotel"}>Hotel</button>
-              {menu === "hotel" && <LinkMenu title="Hotel boeken bij" links={r.links.hotel} />}
-            </div>
-          </div>
+          <button className="rp-btn pri" style={{ width: "100%" }} onClick={() => setGuide(true)}>Boeken, stap voor stap</button>
+          {guide && <BookingGuide r={r} onClose={() => setGuide(false)} />}
           <div className="rp-btnrow" style={{ flex: "none" }}>
             <div className="rp-menu" style={{ flex: 1 }}>
               <button className={"rp-btn" + (saved ? " acc" : "")} style={{ width: "100%" }} onClick={() => setMenu(menu === "save" ? null : "save")}>{saved ? "Bewaard" : "Bewaren"}</button>
@@ -790,7 +809,7 @@ function LinkMenu({ title, links }) {
 }
 
 // ── Onze reizen ─────────────────────────────────────────────────────
-function Saved({ trips, reload, user, onOpen, onKill }) {
+function Saved({ trips, reload, user, onOpen, onDetails, onKill }) {
   const [who, setWho] = useState("alle");
   const [filter, setFilter] = useState("alles");
   const [confirmDel, setConfirmDel] = useState(null);
@@ -846,7 +865,8 @@ function Saved({ trips, reload, user, onOpen, onKill }) {
         const myVote = Boolean(t.votes && t.votes[user && user.id]);
         const st = t.status || "idee";
         return (
-          <article key={t.id} className={"rp-ticket" + (st === "geboekt" ? " booked" : "")}>
+          <article key={t.id} className={"rp-ticket has-photo" + (st === "geboekt" ? " booked" : "")}>
+            <TripPhoto r={r} onClick={() => onOpen(t)} />
             {isMatch(t) && st !== "geboekt" && <span className="rp-badge deal">Match</span>}
             {st === "geboekt" && <span className="rp-badge">{countdownLabel(r.depart)}</span>}
             <div className="rp-ticket-main">
@@ -881,7 +901,14 @@ function Saved({ trips, reload, user, onOpen, onKill }) {
               <label className="rp-toggle" style={{ fontSize: 14 }}><span>Prijsalert</span><Switch checked={t.alert} onChange={(v) => patch(t.id, { alert: v })} /></label>
               <div className="rp-actions">
                 {st !== "geboekt" && <PriceKillerButton onClick={() => onKill(t)} />}
-                <button className="rp-btn pri" onClick={() => onOpen(t)}>{st === "geboekt" ? "Paklijst en details" : "Openen"}</button>
+                {st === "geboekt" ? (
+                  <button className="rp-btn pri" onClick={() => onDetails(t)}>Paklijst en details</button>
+                ) : (
+                  <div className="rp-btnrow">
+                    <button className="rp-btn pri" onClick={() => onOpen(t)}>Openen en aanpassen</button>
+                  </div>
+                )}
+                <button className="rp-btn" onClick={() => (st === "geboekt" ? onOpen(t) : onDetails(t))}>{st === "geboekt" ? "Vluchten en hotels bekijken" : "Paklijst, notities en stemmen"}</button>
                 <div className="rp-btnrow">
                   <button
                     className={"rp-btn" + (myVote ? " acc" : "")}
@@ -950,6 +977,24 @@ function Lot({ trips, onPick }) {
         </>
       )}
     </div>
+  );
+}
+
+// Foto van het hotel (of, als die er niet is, een kleurvlak met de stad)
+function TripPhoto({ r, onClick }) {
+  const [src, setSrc] = useState((r.hotel && r.hotel.photo) || "");
+  useEffect(() => {
+    if (src || !r.hotel || !r.hotel.id) return;
+    let off = false;
+    fetch(`/api/reis/hotelphoto?id=${encodeURIComponent(r.hotel.id)}`)
+      .then((x) => x.json()).then((d) => !off && d.photo && setSrc(d.photo)).catch(() => {});
+    return () => { off = true; };
+  }, [r.hotel && r.hotel.id]); // eslint-disable-line
+  return (
+    <button className="rp-trip-photo" onClick={onClick} aria-label={`${r.city} openen`}>
+      {src ? <img src={src} alt={r.hotel ? r.hotel.name : r.city} loading="lazy" /> : <span className="ph">{r.city}</span>}
+      <span className="temp">{r.temp != null ? `${r.temp}°` : ""}</span>
+    </button>
   );
 }
 

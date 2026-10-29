@@ -2,6 +2,7 @@
 
 // Bewaarde reis openen: status (idee → favoriet → geboekt), aftellen,
 // stemmen, landinfo, delen, boekingsnummers, gedeelde paklijst, notities.
+import BookingGuide from "./BookingGuide";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DEST_BY_ID } from "@/lib/reis/destinations";
 import { countryInfo } from "@/lib/reis/countryinfo";
@@ -18,14 +19,15 @@ const STATUS = [
   ["geboekt", "Geboekt"],
 ];
 
-export default function TripSheet({ trip, user, onClose, onChanged, onKill }) {
+export default function TripSheet({ trip, user, onClose, onChanged, onKill, onAdjust }) {
   const [t, setT] = useState(trip);
   const [tab, setTab] = useState(trip.status === "geboekt" ? "paklijst" : "overzicht");
   const [toast, setToast] = useState("");
+  const [guide, setGuide] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   useEffect(() => setT(trip), [trip]);
   useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && !document.querySelector(".rp-mapmodal") && onClose();
+    const onKey = (e) => e.key === "Escape" && !document.querySelector(".rp-mapmodal, .rp-guide") && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -114,11 +116,14 @@ export default function TripSheet({ trip, user, onClose, onChanged, onKill }) {
                   <div><span>{r.hotel && r.hotel.name ? r.hotel.name : "Hotel"}</span><span>{eur(r.hotelTotal)}</span></div>
                 </div>
                 {t.status !== "geboekt" && onKill && <div style={{ marginTop: 14 }}><PriceKillerButton onClick={() => onKill(t)} /></div>}
+                {onAdjust && <button className="rp-btn" style={{ marginTop: 8, width: "100%" }} onClick={() => onAdjust(t)}>Data of hotel aanpassen</button>}
                 {t.previous && <p className="rp-hint">Vervangen door de Prijskiller. Was {eur(t.previous.total)} ({fmtDay(t.previous.depart)} tot {fmtDay(t.previous.ret)}{t.previous.hotel ? `, ${t.previous.hotel}` : ""}).</p>}
-                <div className="rp-btnrow" style={{ marginTop: 14 }}>
-                  <a className="rp-btn pri" href={(r.links.flight.find((l) => l.primary) || r.links.flight[0]).url} target="_blank" rel="noopener noreferrer">Boek vlucht</a>
-                  <a className="rp-btn pri" href={r.links.hotel[0].url} target="_blank" rel="noopener noreferrer">Boek hotel</a>
-                </div>
+                {t.status !== "geboekt" ? (
+                  <button className="rp-btn pri" style={{ marginTop: 14, width: "100%" }} onClick={() => setGuide(true)}>Boeken, stap voor stap</button>
+                ) : (
+                  <button className="rp-btn" style={{ marginTop: 14, width: "100%" }} onClick={() => setGuide(true)}>Boekgegevens en links</button>
+                )}
+                {guide && <BookingGuide r={r} trip={t} start={t.status === "geboekt" ? "klaar" : "vlucht"} onClose={() => setGuide(false)} onBooked={onChanged} />}
               </section>
 
               <section className="rp-home-card">

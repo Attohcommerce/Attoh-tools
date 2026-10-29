@@ -2,11 +2,12 @@
 
 // Bestemming openen: stap 1 vlucht kiezen, stap 2 hotel kiezen, onderaan
 // het totaal + boekknoppen. Zo simpel als een reisbureau-folder.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { rsfx } from "./ReisSound";
 import { countryInfo } from "@/lib/reis/countryinfo";
 import { leaveDays } from "./fmt";
 import HotelMap, { HotelMapModal, LocationLink } from "./HotelMap";
+import BookingGuide from "./BookingGuide";
 
 const DAYS = ["zo", "ma", "di", "wo", "do", "vr", "za"];
 const MON = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
@@ -16,7 +17,7 @@ const fmtDay = (iso) => {
   return `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}`;
 };
 
-export default function Explore({ dest, search, initial, onClose, onSave }) {
+export default function Explore({ dest, search, initial, onClose, onSave, trip, onReplace, onBooked }) {
   const [flights, setFlights] = useState(null);
   const [flightLive, setFlightLive] = useState(true);
   const [sel, setSel] = useState(null);
@@ -32,6 +33,18 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
   const [mapHotel, setMapHotel] = useState(null);
   const [showMap, setShowMap] = useState(true);
   const [places, setPlaces] = useState({});
+  const [wide, setWide] = useState(false);
+  const [meta, setMeta] = useState({});
+  const [guide, setGuide] = useState(null);
+  const [fSort, setFSort] = useState("prijs");
+  const [originF, setOriginF] = useState("alle");
+  const [losOk, setLosOk] = useState(true);
+  const [directOnly, setDirectOnly] = useState(false);
+  const [dayF, setDayF] = useState("alle");
+  const [hWide, setHWide] = useState(false);
+  const [hSort, setHSort] = useState("prijs");
+  const [hFilt, setHFilt] = useState({});
+  const [hCount, setHCount] = useState(12);
   // wijknamen ophalen zodra de hotels er zijn
   useEffect(() => {
     if (!hotels || !hotels.length) return;
@@ -48,7 +61,7 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
   // Escape sluit, achtergrond niet laten scrollen
   useEffect(() => {
     // Escape sluit dit scherm, tenzij er een kaart-pop-up open staat (die sluit eerst)
-    const onKey = (e) => e.key === "Escape" && !document.querySelector(".rp-mapmodal") && onClose();
+    const onKey = (e) => e.key === "Escape" && !document.querySelector(".rp-mapmodal, .rp-guide") && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -56,61 +69,106 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
   useEffect(() => {
     let off = false;
     setFlights(null);
-    fetch("/api/reis/explore", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ search, destId: dest.id, what: "flights" }) })
+    fetch("/api/reis/explore", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ search, destId: dest.id, what: "flights", wide }) })
       .then((r) => r.json())
       .then((d) => {
         if (off) return;
         if (d.error) throw new Error(d.error);
         setFlights(d.flights || []);
         setFlightLive(d.live !== false);
-        const pick = (initial && (d.flights || []).find((f) => f.depart === initial.depart && f.ret === initial.ret)) || (d.flights || [])[0];
+        setMeta({ checked: d.checked, sources: d.sources, losCount: d.losCount, origins: d.origins });
+        const keepSel = sel && (d.flights || []).find((f) => f.id === sel.id);
+        const pick = keepSel || (initial && (d.flights || []).find((f) => f.depart === initial.depart && f.ret === initial.ret)) || (d.flights || [])[0];
         if (pick) setSel(pick);
         else if (initial) setSel({ id: "init", depart: initial.depart, ret: initial.ret, nights: initial.nights, estimate: true });
       })
       .catch((e) => !off && setErr(e.message));
     return () => { off = true; };
-  }, [dest.id]); // eslint-disable-line
+  }, [dest.id, wide]); // eslint-disable-line
 
   useEffect(() => {
     if (!sel) return;
     let off = false;
     setHotels(null);
     setHotelSel(null);
-    fetch("/api/reis/explore", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ search, destId: dest.id, what: "hotels", checkin: sel.depart, checkout: sel.ret }) })
+    fetch("/api/reis/explore", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ search, destId: dest.id, what: "hotels", checkin: sel.depart, checkout: sel.ret, wide: hWide }) })
       .then((r) => r.json())
       .then((d) => {
         if (off) return;
         if (d.error) throw new Error(d.error);
         setHotels(d.hotels || []);
-        setHotelInfo({ live: d.live !== false, searchLinks: d.searchLinks || [], nights: d.nights });
-        if (d.hotels && d.hotels[0]) setHotelSel(d.hotels[0]);
+        setHotelInfo({ live: d.live !== false, searchLinks: d.searchLinks || [], nights: d.nights, checked: d.checked });
+        setHCount(12);
+        // geopend vanuit een bewaarde reis: jullie hotel blijft gekozen als het er is
+        const keep = (initial && initial.hotelId && (d.hotels || []).find((h) => h.id === initial.hotelId)) || (prevHotel.current && (d.hotels || []).find((h) => h.id === prevHotel.current));
+        if (keep) setHotelSel(keep);
+        else if (d.hotels && d.hotels[0]) setHotelSel(d.hotels[0]);
       })
       .catch((e) => !off && setErr(e.message));
     return () => { off = true; };
-  }, [sel && sel.depart, sel && sel.ret]); // eslint-disable-line
+  }, [sel && sel.depart, sel && sel.ret, hWide]); // eslint-disable-line
+  const prevHotel = useRef(null);
+  useEffect(() => { if (hotelSel) prevHotel.current = hotelSel.id; }, [hotelSel]);
 
   const nightsOptions = useMemo(() => [...new Set((flights || []).map((f) => f.nights))].sort((a, b) => a - b), [flights]);
-  const shownFlights = (flights || []).filter((f) => nightsFilter === "alle" || f.nights === nightsFilter);
-  const visible = showAll ? shownFlights : shownFlights.slice(0, 8);
+  const originOptions = useMemo(() => [...new Set((flights || []).map((f) => f.origin))], [flights]);
+  const shownFlights = useMemo(() => {
+    let l = (flights || []).filter((f) =>
+      (nightsFilter === "alle" || f.nights === nightsFilter) &&
+      (originF === "alle" || f.origin === originF) &&
+      (losOk || f.kind !== "los") &&
+      (!directOnly || (f.stopsOut === 0 && f.stopsBack === 0)) &&
+      (dayF === "alle" || (dayF === "weekend" ? [4, 5, 6].includes(new Date(f.depart + "T12:00:00Z").getUTCDay()) : [1, 2, 3].includes(new Date(f.depart + "T12:00:00Z").getUTCDay()))));
+    const hr = (t) => (t ? Number(t.slice(0, 2)) : 12);
+    if (fSort === "tijden") l = [...l].sort((a, b) => (a.cost + (hr(a.departTime) < 7 ? 120 : 0) + (hr(a.returnTime) < 7 ? 80 : 0)) - (b.cost + (hr(b.departTime) < 7 ? 120 : 0) + (hr(b.returnTime) < 7 ? 80 : 0)));
+    if (fSort === "netjes") l = [...l].sort((a, b) => a.tier - b.tier || a.cost - b.cost);
+    if (fSort === "verlof") l = [...l].sort((a, b) => leaveDays(a.depart, a.ret) / Math.max(1, a.nights) - leaveDays(b.depart, b.ret) / Math.max(1, b.nights) || a.cost - b.cost);
+    if (fSort === "vroeg") l = [...l].sort((a, b) => (a.depart < b.depart ? -1 : a.depart > b.depart ? 1 : a.cost - b.cost));
+    return l;
+  }, [flights, nightsFilter, originF, losOk, directOnly, fSort, dayF]);
+  const [fCount, setFCount] = useState(10);
+  const visible = showAll ? shownFlights : shownFlights.slice(0, fCount);
+  const hotelsShown = useMemo(() => {
+    let l = (hotels || []).filter((h) =>
+      (!hFilt.refund || h.refundable || h.refundPrice) &&
+      (!hFilt.beach || h.beachfront) &&
+      (!hFilt.ai || (h.allInclusive || (h.boards || []).some((b) => b.code === "AI"))) &&
+      (!hFilt.five || h.stars >= 5) &&
+      (!hFilt.nine || h.rating >= 9));
+    if (hSort === "review") l = [...l].sort((a, b) => b.rating - a.rating || a.price - b.price);
+    if (hSort === "waarde") l = [...l].sort((a, b) => a.perNight / Math.max(1, a.rating - 6) - b.perNight / Math.max(1, b.rating - 6));
+    if (hSort === "foto") l = [...l].sort((a, b) => ((b.ai && b.ai.score) || 0) - ((a.ai && a.ai.score) || 0) || a.price - b.price);
+    return l;
+  }, [hotels, hFilt, hSort]);
   const total = (sel && sel.cost ? sel.cost : 0) + (hotelSel ? hotelSel.price : 0);
 
-  async function save(owner) {
-    if (!sel || !sel.cost || !hotelSel) return;
-    setSaved({ owner, state: "busy", key: sel.id + hotelSel.id });
-    const ok = await onSave({
+  const buildResult = () => ({
       id: `${dest.id}-${sel.depart}-${sel.ret}-${sel.origin}-${hotelSel.id}`,
       destId: dest.id, cc: dest.cc, city: dest.city, country: dest.country, tags: dest.tags, hours: dest.hours, beach: dest.beach,
       temp: dest.temp[new Date(sel.depart + "T12:00:00Z").getUTCMonth()],
       origin: sel.origin, originName: sel.originName, airport: sel.airport,
       depart: sel.depart, ret: sel.ret, nights: sel.nights,
-      flight: { estimate: false, airline: sel.airline, airlineName: sel.airlineName, stopsOut: sel.stopsOut, stopsBack: sel.stopsBack, ticket: sel.ticket, bag: sel.bag, toAirport: sel.toAirport, cost: sel.cost, departTime: sel.departTime, returnTime: sel.returnTime },
-      hotel: { id: hotelSel.id, name: hotelSel.name, stars: hotelSel.stars, rating: hotelSel.rating, boardLabel: hotelSel.boardLabel, photo: hotelSel.photos[0], lat: hotelSel.lat, lng: hotelSel.lng, address: hotelSel.address, place: places[hotelSel.id] || "" },
+      backTo: sel.backTo || sel.origin, backToName: sel.backToName || sel.originName,
+      flight: { estimate: false, kind: sel.kind || "retour", airline: sel.airline, airlineName: sel.airlineName, flightNumber: sel.flightNumber || "", legs: sel.legs || null, stopsOut: sel.stopsOut, stopsBack: sel.stopsBack, ticket: sel.ticket, bag: sel.bag, toAirport: sel.toAirport, cost: sel.cost, departTime: sel.departTime, returnTime: sel.returnTime },
+      hotel: { id: hotelSel.id, name: hotelSel.name, stars: hotelSel.stars, rating: hotelSel.rating, boardLabel: hotelSel.boardLabel, room: hotelSel.room || "", refundable: hotelSel.refundable, photo: hotelSel.photos[0], lat: hotelSel.lat, lng: hotelSel.lng, address: hotelSel.address, place: places[hotelSel.id] || "" },
       hotelTotal: hotelSel.price, hotelEstimate: false,
       total, perPerson: Math.round(total / 2), alts: [],
       links: { flight: sel.links, hotel: hotelSel.links, packages: [] },
-    }, owner);
+  });
+  async function save(owner) {
+    if (!sel || !sel.cost || !hotelSel) return;
+    setSaved({ owner, state: "busy", key: sel.id + hotelSel.id });
+    const ok = await onSave(buildResult(), owner);
     setSaved({ owner, state: ok ? "ok" : "err", key: sel.id + hotelSel.id });
   }
+  // Geopend vanuit "Onze reizen": de bewaarde reis bijwerken met de nieuwe keuze
+  async function replace() {
+    if (!sel || !sel.cost || !hotelSel || !trip) return;
+    setSaved({ owner: "replace", state: "busy", key: sel.id + hotelSel.id });
+    const ok = await onReplace(trip.id, buildResult());
+    setSaved({ owner: "replace", state: ok ? "ok" : "err", key: sel.id + hotelSel.id });
+  }
+  const unchanged = trip && sel && hotelSel && sel.depart === trip.result.depart && sel.ret === trip.result.ret && hotelSel.id === (trip.result.hotel && trip.result.hotel.id);
 
   return (
     <div className="rp-sheet-wrap" role="dialog" aria-modal="true" aria-label={`Alle opties voor ${dest.city}`}>
@@ -119,7 +177,9 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
         <header className="rp-sheet-head">
           <div>
             <div className="rp-city">{dest.city}</div>
-            <div className="rp-country">{dest.country !== dest.city ? `${dest.country}, ` : ""}{Math.round(dest.hours)} uur vliegen</div>
+            <div className="rp-country">
+              {trip ? `Jullie reis aanpassen: nu ${fmtDay(trip.result.depart)} tot ${fmtDay(trip.result.ret)}, ${eur(trip.result.total)}` : `${dest.country !== dest.city ? `${dest.country}, ` : ""}${Math.round(dest.hours)} uur vliegen`}
+            </div>
           </div>
           <button className="rp-iconbtn" onClick={onClose} aria-label="Sluiten">✕</button>
         </header>
@@ -131,7 +191,7 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
 
           <section>
             <h3 className="rp-step"><i>1</i>Kies jullie vlucht</h3>
-            {!flights && <Loading label="Alle vertrekdagen en vliegvelden afzoeken" />}
+            {!flights && <Loading label={wide ? "Ook Weeze, Keulen en Charleroi afzoeken" : "Retours, losse tickets en alle vertrekdagen afzoeken"} />}
             {flights && !flightLive && (
               <div className="rp-note">
                 <span><b>Nog geen echte vluchtprijzen.</b> Koppel Travelpayouts in Vercel, dan staan hier alle vluchten met datum, tijden en prijs. Tot die tijd kun je zoeken op {initial ? `${fmtDay(initial.depart)} tot ${fmtDay(initial.ret)}` : "jullie data"} via de knoppen hieronder.</span>
@@ -144,12 +204,57 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
                 ))}
               </div>
             )}
-            {flights && flightLive && flights.length === 0 && <div className="rp-note"><span>Geen vluchten gevonden die aan jullie eisen voldoen in deze periode. Probeer een andere maand of sta 1 overstap toe.</span></div>}
+            {flights && flightLive && flights.length === 0 && (
+              <div className="rp-note"><span>Geen vluchten gevonden die aan jullie eisen voldoen in deze periode. {!wide ? "Zoek ook vanaf verdere vliegvelden, of " : ""}probeer een andere maand of sta 1 overstap toe.</span></div>
+            )}
+            {flights && flightLive && (
+              <div className="rp-scanbar">
+                <span>
+                  <b>{flights.length}</b> opties uit {(meta.checked || 0).toLocaleString("nl-NL")} gevonden prijzen{meta.losCount ? `, waarvan ${meta.losCount} met 2 losse tickets (vaak goedkoper)` : ""}.
+                </span>
+                {!wide ? (
+                  <button className="rp-btn sm" onClick={() => { setWide(true); rsfx("takeoff"); }}>Zoek ook vanaf Weeze, Keulen en Charleroi</button>
+                ) : (
+                  <span className="rp-pill ok">Alle 8 vliegvelden doorzocht</span>
+                )}
+              </div>
+            )}
             {flights && flightLive && flights.length > 0 && (
               <>
                 <div className="rp-seg rp-viewseg">
                   <button className={view === "lijst" ? "on" : ""} onClick={() => setView("lijst")}>Lijst</button>
                   <button className={view === "kalender" ? "on" : ""} onClick={() => setView("kalender")}>Prijskalender</button>
+                </div>
+                <div className="rp-fbar">
+                  <label className="rp-mini">
+                    Sorteer
+                    <select value={fSort} onChange={(e) => setFSort(e.target.value)}>
+                      <option value="prijs">Goedkoopst</option>
+                      <option value="tijden">Fijne tijden (niet midden in de nacht)</option>
+                      <option value="netjes">Beste maatschappij</option>
+                      <option value="verlof">Minste verlofdagen per nacht</option>
+                      <option value="vroeg">Vroegste vertrek</option>
+                    </select>
+                  </label>
+                  <label className="rp-mini">
+                    Vertrek op
+                    <select value={dayF} onChange={(e) => setDayF(e.target.value)}>
+                      <option value="alle">Elke dag</option>
+                      <option value="weekend">Do, vr of za</option>
+                      <option value="week">Ma, di of wo</option>
+                    </select>
+                  </label>
+                  {originOptions.length > 1 && (
+                    <label className="rp-mini">
+                      Vliegveld
+                      <select value={originF} onChange={(e) => setOriginF(e.target.value)}>
+                        <option value="alle">Alle vliegvelden</option>
+                        {originOptions.map((o) => <option key={o} value={o}>{(flights.find((f) => f.origin === o) || {}).originName || o}</option>)}
+                      </select>
+                    </label>
+                  )}
+                  <button className={"rp-chip sm" + (directOnly ? " on" : "")} onClick={() => setDirectOnly((v) => !v)}>Alleen direct</button>
+                  {meta.losCount > 0 && <button className={"rp-chip sm" + (losOk ? " on" : "")} onClick={() => setLosOk((v) => !v)}>Ook 2 losse tickets</button>}
                 </div>
                 {nightsOptions.length > 1 && (
                   <div className="rp-chips" style={{ marginBottom: 12 }}>
@@ -165,14 +270,21 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
                     <button key={f.id} className={"rp-fopt" + (sel && sel.id === f.id ? " on" : "")} onClick={() => setSel(f)}>
                       <span className="rp-fopt-dates"><b>{fmtDay(f.depart)}</b><span>tot {fmtDay(f.ret)}</span></span>
                       <span className="rp-fopt-mid">
-                        <span>{f.nights} nachten, vanaf {f.originName}</span>
-                        <span className="rp-muted">{f.airlineName}, {f.stopsOut === 0 && f.stopsBack === 0 ? "direct" : "1 overstap"}{f.departTime ? `, vertrek ${f.departTime}` : ""}, {leaveDays(f.depart, f.ret)} verlofdagen</span>
+                        <span>{f.nights} nachten, vanaf {f.originName}{f.backTo && f.backTo !== f.origin ? `, terug op ${f.backToName}` : ""}</span>
+                        <span className="rp-muted">{f.airlineName}{f.flightNumber ? ` ${f.flightNumber}` : ""}, {f.stopsOut === 0 && f.stopsBack === 0 ? "direct" : "1 overstap"}{f.departTime ? `, vertrek ${f.departTime}` : ""}{f.returnTime ? `, terug ${f.returnTime}` : ""}, {leaveDays(f.depart, f.ret)} verlofdagen</span>
+                        {f.kind === "los" && <span className="rp-tag los">2 losse tickets</span>}
                       </span>
-                      <span className="rp-fopt-price">{eur(f.cost)}{i === 0 && nightsFilter === "alle" && <small>goedkoopst</small>}</span>
+                      <span className="rp-fopt-price">{eur(f.cost)}{f.cheapest && <small>goedkoopst</small>}</span>
                     </button>
                   ))}
                 </div>}
-                {view === "lijst" && shownFlights.length > 8 && !showAll && <button className="rp-btn" style={{ marginTop: 10, width: "100%" }} onClick={() => setShowAll(true)}>Toon alle {shownFlights.length} vluchten</button>}
+                {view === "lijst" && shownFlights.length === 0 && <div className="rp-note"><span>Geen vluchten met deze filters. Zet een filter uit.</span></div>}
+                {view === "lijst" && shownFlights.length > fCount && !showAll && (
+                  <div className="rp-btnrow" style={{ marginTop: 10 }}>
+                    <button className="rp-btn" style={{ flex: 1 }} onClick={() => setFCount((c) => c + 20)}>Toon 20 meer</button>
+                    <button className="rp-btn" style={{ flex: 1 }} onClick={() => setShowAll(true)}>Toon alle {shownFlights.length}</button>
+                  </div>
+                )}
                 <p className="rp-hint">Prijs voor 2 personen, inclusief ruimbagage en reiskosten naar het vliegveld.</p>
               </>
             )}
@@ -191,7 +303,33 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
                 {(hotelInfo.searchLinks || []).map((l) => <a key={l.label} className="rp-btn" href={l.url} target="_blank" rel="noopener noreferrer">{l.label}</a>)}
               </div>
             )}
-            {hotels && hotelInfo.live && hotels.length === 0 && <div className="rp-note"><span>Geen hotels gevonden met deze eisen. Zet de reviewscore lager of kies "Maakt niet uit" bij maaltijden.</span></div>}
+            {hotels && hotelInfo.live && hotels.length === 0 && <div className="rp-note"><span>Geen hotels gevonden met deze eisen. {!hWide ? "Zoek ruimer (hieronder), of " : ""}kies "Maakt niet uit" bij maaltijden.</span></div>}
+            {hotels && hotelInfo.live && (
+              <div className="rp-scanbar">
+                <span><b>{hotels.length}</b> hotels met een prijs voor deze data{hotelInfo.checked ? "" : ""}.</span>
+                {!hWide ? (
+                  <button className="rp-btn sm" onClick={() => { setHWide(true); rsfx("click"); }}>Meer hotels (ook 7,5+ en zonder bevestigd zwembad)</button>
+                ) : (
+                  <span className="rp-pill ok">Ruim gezocht</span>
+                )}
+              </div>
+            )}
+            {hotels && hotels.length > 0 && (
+              <div className="rp-fbar">
+                <label className="rp-mini">
+                  Sorteer
+                  <select value={hSort} onChange={(e) => setHSort(e.target.value)}>
+                    <option value="prijs">Goedkoopst</option>
+                    <option value="waarde">Beste prijs/kwaliteit</option>
+                    <option value="review">Hoogste review</option>
+                    <option value="foto">Mooiste foto's (AI)</option>
+                  </select>
+                </label>
+                {[["refund", "Gratis annuleren"], ["beach", "Aan het strand"], ["ai", "All-inclusive mogelijk"], ["five", "5 sterren"], ["nine", "Review 9+"]].map(([k, l]) => (
+                  <button key={k} className={"rp-chip sm" + (hFilt[k] ? " on" : "")} onClick={() => setHFilt((f) => ({ ...f, [k]: !f[k] }))}>{l}</button>
+                ))}
+              </div>
+            )}
             {hotels && hotels.length > 0 && (
               <>
                 {hotels.some((h) => h.lat) && (
@@ -202,7 +340,7 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
                     </div>
                     {showMap && (
                       <HotelMap
-                        hotels={hotels}
+                        hotels={hotelsShown.slice(0, Math.max(hCount, 30))}
                         selectedId={hotelSel && hotelSel.id}
                         hoverId={hoverId}
                         onPick={(h) => {
@@ -215,10 +353,12 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
                   </div>
                 )}
                 <div className="rp-hotels">
-                  {hotels.map((h) => (
+                  {hotelsShown.slice(0, hCount).map((h) => (
                     <HotelCard key={h.id} h={h} place={places[h.id]} city={dest.lite} on={hotelSel && hotelSel.id === h.id} onPick={() => setHotelSel(h)} onHover={setHoverId} onMap={() => setMapHotel(h)} />
                   ))}
                 </div>
+                {hotelsShown.length === 0 && <div className="rp-note"><span>Geen hotels met deze filters. Zet een filter uit.</span></div>}
+                {hotelsShown.length > hCount && <button className="rp-btn" style={{ marginTop: 12, width: "100%" }} onClick={() => setHCount((c) => c + 12)}>Toon 12 meer hotels (nog {hotelsShown.length - hCount})</button>}
               </>
             )}
           </section>
@@ -230,9 +370,23 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
             <div className="rp-pp">{sel && sel.cost && hotelSel ? `${eur(total / 2)} per persoon, vlucht + hotel` : "Kies een vlucht en een hotel"}</div>
           </div>
           <div className="rp-foot-actions">
-            <a className={"rp-btn pri" + (!sel ? " dis" : "")} href={sel && sel.links ? (sel.links.find((l) => l.primary) || sel.links[0]).url : (initial && initial.flightUrl) || "#"} target="_blank" rel="noopener noreferrer">Boek vlucht</a>
-            <a className={"rp-btn pri" + (!hotelSel && !(hotelInfo.searchLinks || [])[0] ? " dis" : "")} href={hotelSel ? hotelSel.links[0].url : ((hotelInfo.searchLinks || [])[0] || {}).url || "#"} target="_blank" rel="noopener noreferrer">Boek hotel</a>
-            {sel && sel.cost && hotelSel && (
+            {sel && sel.cost && hotelSel ? (
+              <button className="rp-btn pri rp-bookbtn" onClick={() => { setGuide("vlucht"); rsfx("takeoff"); }}>Boeken, stap voor stap</button>
+            ) : (
+              <>
+                <a className={"rp-btn pri" + (!sel ? " dis" : "")} href={sel && sel.links ? (sel.links.find((l) => l.primary) || sel.links[0]).url : (initial && initial.flightUrl) || "#"} target="_blank" rel="noopener noreferrer">Zoek vlucht</a>
+                <a className={"rp-btn pri" + (!hotelSel && !(hotelInfo.searchLinks || [])[0] ? " dis" : "")} href={hotelSel ? hotelSel.links[0].url : ((hotelInfo.searchLinks || [])[0] || {}).url || "#"} target="_blank" rel="noopener noreferrer">Zoek hotel</a>
+              </>
+            )}
+            {trip && sel && sel.cost && hotelSel && (() => {
+              const cur = saved && saved.owner === "replace" && saved.key === sel.id + hotelSel.id ? saved.state : null;
+              return (
+                <button className={"rp-btn" + (cur === "ok" ? " acc" : " pri")} data-sfx="own" disabled={unchanged || cur === "busy"} onClick={replace}>
+                  {unchanged ? "Dit is jullie reis" : cur === "busy" ? "Bezig…" : cur === "ok" ? "✓ Reis bijgewerkt" : cur === "err" ? "Mislukt, probeer opnieuw" : "Wijzigingen opslaan"}
+                </button>
+              );
+            })()}
+            {!trip && sel && sel.cost && hotelSel && (
               <>
                 {["justin", "quinty"].map((who) => {
                   const cur = saved && saved.key === sel.id + hotelSel.id && saved.owner === who ? saved.state : null;
@@ -248,6 +402,7 @@ export default function Explore({ dest, search, initial, onClose, onSave }) {
           </div>
         </footer>
       </div>
+      {guide && sel && hotelSel && <BookingGuide r={buildResult()} trip={trip} start={guide} onClose={() => setGuide(null)} onBooked={onBooked} />}
       {mapHotel && <HotelMapModal hotel={mapHotel} city={dest.lite} place={places[mapHotel.id]} onClose={() => setMapHotel(null)} />}
     </div>
   );
@@ -290,7 +445,16 @@ function HotelCard({ h, on, onPick, onHover, onMap, place, city }) {
           {h.pool && <span className="rp-pill">Zwembad</span>}
           {h.beachfront && <span className="rp-pill">Aan het strand</span>}
           {h.refundable && <span className="rp-pill ok">Gratis annuleren</span>}
+          {h.deal && <span className="rp-pill deal">Topdeal</span>}
         </div>
+        {(h.boards || []).length > 1 && (
+          <div className="rp-boards">
+            {h.boards.slice(0, 4).map((b) => (
+              <span key={b.code}>{b.label} <b>{eur(b.price)}</b></span>
+            ))}
+          </div>
+        )}
+        {!h.refundable && h.refundPrice ? <p className="rp-hint" style={{ marginTop: 6 }}>Met gratis annuleren: {eur(h.refundPrice)} (+{eur(h.refundPrice - h.price)})</p> : null}
         {h.ai && h.ai.reden && <p className="rp-hint" style={{ marginTop: 8 }}>{h.ai.reden}</p>}
         <Reviews hotelId={h.id} />
         <div className="rp-hotel-foot">
