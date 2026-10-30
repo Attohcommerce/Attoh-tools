@@ -1,0 +1,299 @@
+{%- liquid
+  assign s = section.settings
+  assign rating = s.rating | strip
+  assign count = s.review_count | strip
+  assign has_rating = false
+  assign r = 0
+  if s.show_rating and rating != blank and count != blank
+    assign has_rating = true
+    assign r = rating | replace: ',', '.' | plus: 0
+    if r > 5
+      assign r = 5
+    endif
+  endif
+  assign rating_e = rating | escape
+  assign count_e = count | escape
+  assign rating_label = s.rating_label | escape | replace: '[rating]', rating_e | replace: '[count]', count_e
+  assign claim = s.claim_text | escape | replace: '[rating]', rating_e | replace: '[count]', count_e
+  assign has_claim = false
+  if has_rating and s.mobile_claim and s.claim_text != blank
+    assign has_claim = true
+  endif
+  assign shown = 0
+  for block in section.blocks
+    if block.settings.body != blank
+      assign shown = shown | plus: 1
+    endif
+  endfor
+  assign pad_top_m = s.pad_top | times: 0.75 | round
+  assign pad_bottom_m = s.pad_bottom | times: 0.75 | round
+  assign hide_from = s.mobile_visible | plus: 1
+-%}
+
+{%- capture star_base -%}<svg class="cr-star__base" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 17.27 6.18 21l1.64-7.03L2 9.24l7.19-.62L12 2l2.81 6.62 7.19.62-5.82 4.73L17.82 21z"/></svg>{%- endcapture -%}
+{%- capture star_svg -%}<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 17.27 6.18 21l1.64-7.03L2 9.24l7.19-.62L12 2l2.81 6.62 7.19.62-5.82 4.73L17.82 21z"/></svg>{%- endcapture -%}
+{%- capture check_svg -%}<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>{%- endcapture -%}
+
+<style>
+  #cr-{{ section.id }} {
+    --cr-star: {{ s.star_color }};
+    --cr-empty: {{ s.star_empty }};
+    --cr-card: {{ s.card_bg }};
+    --cr-border: {{ s.card_border }};
+    --cr-text: {{ s.text_color }};
+    --cr-muted: {{ s.muted_color }};
+    --cr-verified: {{ s.verified_color }};
+    background: {{ s.bg }};
+    color: var(--cr-text);
+    padding: {{ s.pad_top }}px 0 {{ s.pad_bottom }}px;
+  }
+  #cr-{{ section.id }} .cr-grid { grid-template-columns: repeat({{ s.columns }}, minmax(0, 1fr)); }
+  @media (max-width: 989px) {
+    #cr-{{ section.id }} .cr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 749px) {
+    #cr-{{ section.id }} { padding: {{ pad_top_m }}px 0 {{ pad_bottom_m }}px; }
+    #cr-{{ section.id }} .cr-grid { grid-template-columns: minmax(0, 1fr); }
+    #cr-{{ section.id }} .cr-grid:not(.is-all) > .cr-card:nth-child(n+{{ hide_from }}) { display: none; }
+  }
+
+  .cr { box-sizing: border-box; }
+  .cr *, .cr *::before, .cr *::after { box-sizing: border-box; }
+  .cr-wrap { max-width: 1360px; margin: 0 auto; padding: 0 20px; }
+  @media (min-width: 750px) { .cr-wrap { padding: 0 32px; } }
+
+  .cr-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+  .cr-eyebrow { margin: 0 0 10px; font-size: 13px; line-height: 1.3; letter-spacing: .08em; text-transform: uppercase; color: var(--cr-muted); }
+  .cr-h { margin: 0; font-family: var(--font-heading-family, inherit); font-size: clamp(24px, 2.2vw, 32px); font-weight: 500; line-height: 1.15; letter-spacing: .02em; text-transform: uppercase; color: var(--cr-text); }
+  .cr-h__claim { display: none; }
+
+  .cr-rated { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; font-size: 15px; line-height: 1.3; color: var(--cr-text); }
+  .cr-rated__word { text-transform: uppercase; letter-spacing: .06em; }
+  .cr-rated__short { display: none; text-transform: uppercase; letter-spacing: .06em; font-size: 13px; }
+  .cr-rated__label { opacity: .85; }
+
+  .cr-stars { display: inline-flex; gap: 2px; flex: none; }
+  .cr-star { position: relative; display: block; width: var(--cr-s, 20px); height: var(--cr-s, 20px); flex: none; }
+  .cr-star svg { display: block; width: var(--cr-s, 20px); height: var(--cr-s, 20px); }
+  .cr-star__base { fill: var(--cr-empty); }
+  .cr-star__fill { position: absolute; top: 0; left: 0; height: 100%; width: var(--fill); overflow: hidden; }
+  .cr-star__fill svg { fill: var(--cr-star); }
+  .cr-stars--tiles .cr-star { background: linear-gradient(90deg, var(--cr-star) var(--fill), var(--cr-empty) var(--fill)); }
+  .cr-stars--tiles .cr-star__base { fill: #fff; transform: scale(.74); }
+  .cr-stars--tiles .cr-star__fill { display: none; }
+
+  .cr-grid { display: grid; gap: 16px; }
+  .cr-card { display: flex; flex-direction: column; padding: 20px 20px 22px; background: var(--cr-card); border: 1px solid var(--cr-border); }
+  .cr-card .cr-stars { margin-bottom: 14px; }
+  .cr-meta { margin: 0 0 14px; font-size: 14px; line-height: 1.45; }
+  .cr-id { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 8px; }
+  .cr-name { font-weight: 600; color: var(--cr-text); }
+  .cr-verified { display: inline-flex; align-items: center; gap: 3px; font-weight: 500; color: var(--cr-verified); }
+  .cr-verified svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .cr-when { display: block; color: var(--cr-muted); }
+  .cr-sep { margin: 0 6px; }
+  .cr-title { margin: 0 0 8px; font-family: var(--font-heading-family, inherit); font-size: 15px; font-weight: 700; line-height: 1.35; letter-spacing: .03em; text-transform: uppercase; color: var(--cr-text); }
+  .cr-body { margin: 0; font-size: 14px; line-height: 1.5; color: var(--cr-muted); }
+
+  .cr-more { display: none; }
+
+  .cr-anim .cr-card { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+  .cr-anim.is-in .cr-card { opacity: 1; transform: none; }
+  .cr-anim .cr-card:nth-child(4n+2) { transition-delay: .06s; }
+  .cr-anim .cr-card:nth-child(4n+3) { transition-delay: .12s; }
+  .cr-anim .cr-card:nth-child(4n+4) { transition-delay: .18s; }
+
+  @media (max-width: 749px) {
+    .cr-head { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 24px; }
+    .cr-h--swap .cr-h__default { display: none; }
+    .cr-h--swap .cr-h__claim { display: inline; }
+    .cr-rated__word, .cr-rated__label { display: none; }
+    .cr-rated__short { display: inline; }
+    .cr-more { display: block; width: 100%; margin: 20px 0 0; padding: 14px 24px; font: inherit; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--cr-text); background: transparent; border: 1px solid var(--cr-text); cursor: pointer; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cr-anim .cr-card { opacity: 1; transform: none; transition: none; }
+  }
+</style>
+
+<div class="cr" id="cr-{{ section.id }}">
+  <div class="cr-wrap">
+    {%- if s.eyebrow != blank or s.heading != blank or has_rating -%}
+      <div class="cr-head">
+        <div class="cr-lead">
+          {%- if s.eyebrow != blank -%}
+            <p class="cr-eyebrow">{{ s.eyebrow | escape }}</p>
+          {%- endif -%}
+          {%- if s.heading != blank or has_claim -%}
+            <h2 class="cr-h{% if has_claim %} cr-h--swap{% endif %}">
+              <span class="cr-h__default">{{ s.heading | escape }}</span>
+              {%- if has_claim -%}<span class="cr-h__claim">{{ claim }}</span>{%- endif -%}
+            </h2>
+          {%- endif -%}
+        </div>
+
+        {%- if has_rating -%}
+          <div class="cr-rated">
+            {%- if s.rating_word != blank -%}
+              <span class="cr-rated__word">{{ s.rating_word | escape }}</span>
+            {%- endif -%}
+            <span class="cr-stars cr-stars--{{ s.star_style }}" style="--cr-s: 24px" role="img" aria-label="Rated {{ rating_e }} out of 5">
+              {%- for i in (1..5) -%}
+                {%- liquid
+                  assign im1 = i | minus: 1
+                  if r >= i
+                    assign fill = 100
+                  elsif r > im1
+                    assign fill = r | minus: im1 | times: 100 | round
+                  else
+                    assign fill = 0
+                  endif
+                -%}
+                <span class="cr-star" style="--fill: {{ fill }}%">{{ star_base }}<span class="cr-star__fill">{{ star_svg }}</span></span>
+              {%- endfor -%}
+            </span>
+            {%- if s.rating_word_mobile != blank -%}
+              <span class="cr-rated__short">{{ s.rating_word_mobile | escape }}</span>
+            {%- endif -%}
+            <span class="cr-rated__label">{{ rating_label }}</span>
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div class="cr-grid">
+      {%- for block in section.blocks -%}
+        {%- assign b = block.settings -%}
+        {%- if b.body == blank -%}{%- continue -%}{%- endif -%}
+        <article class="cr-card" {{ block.shopify_attributes }}>
+          <div class="cr-stars cr-stars--{{ s.star_style }}" role="img" aria-label="Rated {{ b.stars }} out of 5 stars">
+            {%- for i in (1..5) -%}
+              {%- if i <= b.stars -%}{%- assign fill = 100 -%}{%- else -%}{%- assign fill = 0 -%}{%- endif -%}
+              <span class="cr-star" style="--fill: {{ fill }}%">{{ star_base }}<span class="cr-star__fill">{{ star_svg }}</span></span>
+            {%- endfor -%}
+          </div>
+          <p class="cr-meta">
+            <span class="cr-id">
+              {%- if b.name != blank -%}<span class="cr-name">{{ b.name | escape }}</span>{%- endif -%}
+              {%- if b.verified -%}<span class="cr-verified">{{ check_svg }}{{ s.verified_label | escape }}</span>{%- endif -%}
+            </span>
+            {%- if b.country != blank or b.date != blank -%}
+              <span class="cr-when">
+                {%- if b.country != blank -%}<span>{{ b.country | escape }}</span>{%- endif -%}
+                {%- if b.country != blank and b.date != blank -%}<span class="cr-sep" aria-hidden="true">–</span>{%- endif -%}
+                {%- if b.date != blank -%}<span>{{ b.date | escape }}</span>{%- endif -%}
+              </span>
+            {%- endif -%}
+          </p>
+          {%- if b.title != blank -%}
+            <h3 class="cr-title">{{ b.title | escape }}</h3>
+          {%- endif -%}
+          <p class="cr-body">{{ b.body | escape | newline_to_br }}</p>
+        </article>
+      {%- endfor -%}
+    </div>
+    {%- if shown > s.mobile_visible and s.more_label != blank -%}
+      <button type="button" class="cr-more" onclick="this.previousElementSibling.classList.add('is-all');this.remove();">{{ s.more_label | escape }}</button>
+    {%- endif -%}
+  </div>
+</div>
+
+{%- if s.animate -%}
+  <script>
+    (function () {
+      var root = document.getElementById('cr-{{ section.id }}');
+      if (!root || !('IntersectionObserver' in window)) return;
+      if (window.Shopify && window.Shopify.designMode) return;
+      var grid = root.querySelector('.cr-grid');
+      if (!grid) return;
+      grid.classList.add('cr-anim');
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { grid.classList.add('is-in'); io.disconnect(); }
+        });
+      }, { threshold: 0.15 });
+      io.observe(grid);
+    })();
+  </script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Customer reviews",
+  "tag": "section",
+  "class": "section-customer-reviews",
+  "settings": [
+    { "type": "header", "content": "Heading" },
+    { "type": "text", "id": "eyebrow", "label": "Small heading", "default": "Reviews" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "What our customers say" },
+    { "type": "header", "content": "Overall rating" },
+    { "type": "paragraph", "content": "Fill in your real average and number of reviews (for example from Judge.me). The rating row stays hidden while one of them is empty." },
+    { "type": "checkbox", "id": "show_rating", "label": "Show overall rating", "default": true },
+    { "type": "text", "id": "rating", "label": "Average rating", "info": "For example 4.8" },
+    { "type": "text", "id": "review_count", "label": "Number of reviews", "info": "For example 1,250+" },
+    { "type": "text", "id": "rating_word", "label": "Rating word", "default": "Excellent" },
+    { "type": "text", "id": "rating_label", "label": "Rating sentence", "default": "Rated [rating] / 5 based on [count] reviews", "info": "[rating] and [count] are filled in automatically" },
+    { "type": "checkbox", "id": "mobile_claim", "label": "On mobile, show the rating as the heading", "default": true },
+    { "type": "text", "id": "claim_text", "label": "Mobile heading", "default": "Rated [rating] by [count] reviews" },
+    { "type": "text", "id": "rating_word_mobile", "label": "Mobile rating word", "default": "Rated excellent" },
+    { "type": "text", "id": "verified_label", "label": "Verified label", "default": "Verified" },
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "columns", "min": 2, "max": 4, "step": 1, "default": 4, "label": "Cards per row on desktop" },
+    { "type": "range", "id": "mobile_visible", "min": 2, "max": 8, "step": 1, "default": 3, "label": "Cards visible on mobile" },
+    { "type": "text", "id": "more_label", "label": "Show more button", "default": "Show more reviews" },
+    { "type": "checkbox", "id": "animate", "label": "Fade in cards on scroll", "default": true },
+    { "type": "range", "id": "pad_top", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Top padding", "default": 64 },
+    { "type": "range", "id": "pad_bottom", "min": 0, "max": 120, "step": 4, "unit": "px", "label": "Bottom padding", "default": 64 },
+    { "type": "header", "content": "Colors" },
+    {
+      "type": "select",
+      "id": "star_style",
+      "label": "Star style",
+      "options": [
+        { "value": "plain", "label": "Plain stars" },
+        { "value": "tiles", "label": "Stars in squares" }
+      ],
+      "default": "plain"
+    },
+    { "type": "color", "id": "star_color", "label": "Stars", "default": "#1a1a1a" },
+    { "type": "color", "id": "star_empty", "label": "Empty stars", "default": "#dcdce6" },
+    { "type": "color", "id": "bg", "label": "Background", "default": "#ffffff" },
+    { "type": "color", "id": "card_bg", "label": "Card background", "default": "#f8f7f5" },
+    { "type": "color", "id": "card_border", "label": "Card border", "default": "#e8e6e3" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#1a1a1a" },
+    { "type": "color", "id": "muted_color", "label": "Secondary text", "default": "#5f5f5f" },
+    { "type": "color", "id": "verified_color", "label": "Verified label", "default": "#2b3a67" }
+  ],
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Review",
+      "settings": [
+        { "type": "range", "id": "stars", "min": 1, "max": 5, "step": 1, "default": 5, "label": "Stars" },
+        { "type": "text", "id": "name", "label": "Customer name", "default": "Customer name" },
+        { "type": "checkbox", "id": "verified", "label": "Show Verified", "default": false },
+        { "type": "text", "id": "country", "label": "Country code", "default": "US" },
+        { "type": "text", "id": "date", "label": "Date", "default": "Month D YYYY" },
+        { "type": "text", "id": "title", "label": "Title (optional)" },
+        { "type": "textarea", "id": "body", "label": "Review text", "default": "Paste a real review from one of your customers here." }
+      ]
+    }
+  ],
+  "max_blocks": 12,
+  "presets": [
+    {
+      "name": "Customer reviews",
+      "blocks": [
+        { "type": "review" },
+        { "type": "review" },
+        { "type": "review" },
+        { "type": "review" },
+        { "type": "review" },
+        { "type": "review" },
+        { "type": "review" },
+        { "type": "review" }
+      ]
+    }
+  ]
+}
+{% endschema %}

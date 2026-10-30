@@ -1084,14 +1084,29 @@ export default function ScraperPage() {
 
   // ---------- Scrape-run ----------
   async function sheetsCall(body) {
-    const res = await fetch("/api/sheets", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || res.status);
-    return data;
+    /* 30-10: een korte netwerk-hapering (laptop slaapstand, wifi-wissel)
+       gaf "Failed to fetch" en stopte de hele run halverwege. Nu probeert
+       hij het tot 3 keer opnieuw (na 3, 8 en 15 sec) voordat hij opgeeft. */
+    const waits = [3000, 8000, 15000];
+    for (let attempt = 0; ; attempt++) {
+      let res;
+      try {
+        res = await fetch("/api/sheets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      } catch (e) {
+        if (attempt < waits.length) {
+          await new Promise((r) => setTimeout(r, waits[attempt]));
+          continue;
+        }
+        throw e;
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      return data;
+    }
   }
 
   async function start() {
@@ -1204,6 +1219,46 @@ export default function ScraperPage() {
           ? [kwNow, storeOf(m.link) || m._store || "", m.literal || "Literal", m.title || "", m.link, g === "Man" ? "Man" : g === "Vrouw" ? "Vrouw" : ""]
           : [m.link, kwNow, new Date().toISOString().slice(0, 10)];
       pushLog({ muted: true, text: `${exclude.size} bekende links worden overgeslagen (geheugen${memFormat === "chaim" ? ", Chaim-formaat" : ""}).` });
+
+      /* AL IN DIT TABBLAD (30-10): draai je dezelfde lijst opnieuw op een
+         bestaand tabblad, dan telt de tool per keyword + geslacht hoeveel
+         producten er al staan. Keyword vol → overslaan. Deels gevuld →
+         alleen het restant zoeken. Wat er al staat blijft gewoon staan. */
+      const haveInTab = new Map(); // "keyword|Vrouw" → aantal
+      let haveRows = 0;
+      if (tabRes.existed) {
+        const tabNow = await sheetsCall({ action: "read", sheetId: workSheet, range: `'${tabRes.title}'!A:F` }).catch(() => null);
+        if (!tabNow) {
+          pushLog({ err: true, text: `Kon tabblad "${tabRes.title}" niet uitlezen — de tool kan nu niet zien wat er al staat en zoekt alles opnieuw.` });
+        }
+        for (const r of (tabNow && tabNow.values) || []) {
+          const link = String((r && r[0]) || "").trim();
+          if (!link.startsWith("http")) continue;
+          const kwCell = String(r[2] || "").trim().toLowerCase();
+          if (!kwCell) continue;
+          const key = `${kwCell}|${String(r[5] || "").trim()}`;
+          haveInTab.set(key, (haveInTab.get(key) || 0) + 1);
+          exclude.add(link.toLowerCase().replace(/\/$/, ""));
+          haveRows++;
+        }
+        if (haveRows) {
+          pushLog({ ok: true, text: `${haveRows} producten staan al in "${tabRes.title}" — keywords die al vol zijn worden overgeslagen, de rest zoekt alleen wat nog ontbreekt.` });
+        }
+      }
+      // Pakt het aantal dat al in het tabblad staat (max = doel van dit keyword)
+      const takeFromTab = (kw, g, max) => {
+        const kl = String(kw).trim().toLowerCase();
+        let got = 0;
+        for (const key of [`${kl}|${g}`, `${kl}|`]) {
+          const c = haveInTab.get(key) || 0;
+          const use = Math.min(c, max - got);
+          if (use > 0) {
+            haveInTab.set(key, c - use);
+            got += use;
+          }
+        }
+        return got;
+      };
 
       /* Spreiding over concurrenten + ontdubbeling op producttitel.
          Bij dropshipping verkopen tien winkels exact hetzelfde artikel; de
@@ -1455,10 +1510,21 @@ export default function ScraperPage() {
       }
 
       let grandTotal = 0;
+      let preFilled = 0; // producten die al in het tabblad stonden
       const hardKeywords = []; // bleef op 0 ondanks alles
       for (const [gender, rows] of groups) {
         for (const { k, n, col, type } of rows) {
-          let needed = Number(n) || 10;
+          const fullTarget = Number(n) || 10;
+          const already = takeFromTab(k, gender, fullTarget);
+          if (already >= fullTarget) {
+            preFilled += fullTarget;
+            kwDone++;
+            pushLog({ muted: true, text: `✓ ${gender} · "${k}" staat al ${already}/${fullTarget} in het tabblad — overgeslagen.` });
+            setProg((p) => ({ ...p, kwDone, found: grandTotal + preFilled }));
+            continue;
+          }
+          preFilled += already;
+          let needed = fullTarget - already;
           const target = needed;
           const udProfile = type === "Underdog" ? udProfiles[k.toLowerCase()] || null : null;
           /* Bij een underdog vervangt het profiel de gewone briefing: de
@@ -1476,7 +1542,7 @@ export default function ScraperPage() {
               ? "Attribuut"
               : "Direct");
           const isOccasion = kwType === "Gelegenheid" || (kwBrief && kwBrief.kwType === "occasion");
-          pushLog({ strong: true, text: `— ${gender} · "${k}" · ${target} producten · ${kwType}` });
+          pushLog({ strong: true, text: `— ${gender} · "${k}" · ${target} producten${already ? ` (${already} stonden er al)` : ""} · ${kwType}` });
           if (kwBrief && kwBrief.definition) {
             pushLog({ muted: true, text: `Wat is een "${k}"? ${kwBrief.definition}` });
             if (kwBrief.not && kwBrief.not.length) {
@@ -1784,7 +1850,7 @@ export default function ScraperPage() {
                 for (const m of take) exclude.add(m.link.toLowerCase().replace(/\/$/, ""));
                 needed -= take.length;
                 grandTotal += take.length;
-                setProg((p) => ({ ...p, found: grandTotal, kwFound: target - needed }));
+                setProg((p) => ({ ...p, found: grandTotal + preFilled, kwFound: target - needed }));
                 const altTerm = take.find((m) => m._term.toLowerCase() !== kwLower);
                 if (altTerm) {
                   altHits[kwLower] = altTerm._term.toLowerCase();
@@ -1873,10 +1939,10 @@ export default function ScraperPage() {
             pushLog({ ok: true, text: `"${k}": ${target}/${target} compleet.` });
           }
           kwDone++;
-          setProg((p) => ({ ...p, kwDone, found: grandTotal }));
+          setProg((p) => ({ ...p, kwDone, found: grandTotal + preFilled }));
         }
       }
-      pushLog({ strong: true, text: `Klaar — ${grandTotal} producten in tabblad "${runTitle}".`, href: tabRes.url });
+      pushLog({ strong: true, text: `Klaar — ${grandTotal} nieuwe producten in tabblad "${runTitle}"${preFilled ? ` (${preFilled} stonden er al)` : ""}.`, href: tabRes.url });
       if (hardKeywords.length) {
         pushLog({ warn: true, text: `Moeilijke keywords (0 resultaat of overgeslagen): ${hardKeywords.join(", ")}` });
       }
