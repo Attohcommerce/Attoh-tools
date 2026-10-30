@@ -42,6 +42,9 @@ const CHUNK_FOR = {
   "shoe-us-eu-labels": 8,
   "fix-gender-from-title": 8,
   "gender-tags": 8,
+  "fix-collection-fit": 8,
+  "archive-products": 15,
+  "set-prices": 10,
   // per product: 1 lees-call + per nieuwe waarde een metaobject-upsert + 1 write
   "fill-category-attrs": 8,
   // SW: één AI-call (foto + titel) voor het hele plukje + 1 write per product
@@ -77,6 +80,7 @@ function snapshotFor(fix, p) {
       return { note: "alleen lege shopify.*-metafields gevuld (niets overschreven)" };
     case "clean-titles":
       return { title: p.title || "" };
+    case "set-prices":
     case "fix-compareat":
     case "remix-compareat":
     case "unify-variant-prices":
@@ -94,7 +98,11 @@ function snapshotFor(fix, p) {
       return { product: { id: p.id, title: p.title, handle: p.handle, status: p.status, tags: p.tags } };
     case "gender-tags":
     case "fix-gender-from-title":
-      return { tags: p.tags || "", template_suffix: p.template_suffix || "" };
+      return { title: p.title || "", product_type: p.product_type || "", tags: p.tags || "", template_suffix: p.template_suffix || "" };
+    case "archive-products":
+      return { status: p.status || "", title: p.title || "" };
+    case "fix-collection-fit":
+      return { tags: p.tags || "" };
     case "delete-flagged-images":
       return { images: (p.images || []).map((im) => [im.id, im.src]) };
     case "fix-size-guides":

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
-import { listProductsByIds } from "@/lib/shopify";
+import { listProductsByIds, storeRequest } from "@/lib/shopify";
+import { storeGendersOf } from "@/lib/store-gender";
+import { GARMENTS, auditVerdict } from "@/lib/photo-audit";
 import {
+  auditPhotosBatch,
   classifyGenderDeep,
   checkColorPhotoBatch,
   findForeignTextBatch,
@@ -32,7 +35,45 @@ export async function POST(req) {
     let aiUsd = 0;
     const results = [];
 
-    if (check === "gender") {
+    if (check === "photo-audit") {
+      /* FOTO-AUDIT: de foto is de baas. Man op de foto bij een "Women's"-product
+         (of andersom) = misgenderd; jas in "Tank Tops" = verkeerde collectie. */
+      const r = await listProductsByIds(store, ids, "id,title,tags,images,status");
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
+      const products = (r.products || []).filter((p) => p.status !== "archived");
+      const storeGenders = await storeGendersOf(store).catch(() => null);
+      // Collectienamen = tag-conventie van de store ("Blouses", "Men's Shirts" …)
+      const knownTags = new Set();
+      for (const kind of ["smart_collections", "custom_collections"]) {
+        const c = await storeRequest(store, `/${kind}.json?fields=title&limit=250`);
+        if (c.ok) for (const x of (c.data && c.data[kind]) || []) if (x.title) knownTags.add(String(x.title).trim());
+      }
+      const items = products.map((p, i) => ({
+        index: i,
+        urls: (p.images || []).slice(0, 2).map((im) => im.src).filter((u) => typeof u === "string" && /^https?:\/\//.test(u)),
+      }));
+      const out = await auditPhotosBatch(items.filter((x) => x.urls.length), GARMENTS);
+      aiUsd += (out.ai && out.ai.usd) || 0;
+      for (const a of out.results) {
+        const p = products[a.index];
+        if (!p) continue;
+        const v = auditVerdict(p, a, { storeGenders, knownTags });
+        if (v.gender) {
+          results.push({
+            id: p.id, title: p.title, kind: "gender",
+            current: v.gender.current, suggested: v.gender.photo, singleGenderStore: v.gender.singleGenderStore,
+            why: `foto toont een ${a.person === "man" ? "man" : "vrouw"} (${Math.round((a.sure || 0) * 100)}%), product staat als ${v.gender.current}`,
+          });
+        }
+        if (v.fit) {
+          results.push({
+            id: p.id, title: p.title, kind: "fit",
+            drop: v.fit.drop, add: v.fit.add, garment: v.fit.garment,
+            why: `foto = ${v.fit.garment}, hangt in ${v.fit.drop.join(", ")}${v.fit.add ? ` → ${v.fit.add}` : ""}`,
+          });
+        }
+      }
+    } else if (check === "gender") {
       // GRONDIGE MODUS: titel + omschrijving + eerste productfoto tegelijk.
       // Vangt ook producten die in BEIDE collecties hangen (Men+Women-tags).
       const r = await listProductsByIds(store, ids, "id,title,body_html,tags,images");

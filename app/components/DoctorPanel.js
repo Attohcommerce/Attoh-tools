@@ -34,10 +34,11 @@ const CUR_MARKET = { USD: "USA", GBP: "UK", AUD: "AUS+NZ", NZD: "AUS+NZ", CAD: "
 // Chunk per AI-check (server verwerkt per call precies dit plukje).
 // Gender staat op 6: grondige modus met foto's — titel + omschrijving +
 // eerste productfoto per product.
-const AI_CHUNK = { gender: 6, language: 25, "color-photo": 8, watermark: 4, sample: 12 };
+const AI_CHUNK = { "photo-audit": 5, gender: 6, language: 25, "color-photo": 8, watermark: 4, sample: 12 };
 // Ruwe kostenraming per product (haiku-tarieven) — alleen voor de knop-tekst
-const AI_EST = { gender: 0.002, language: 0.0007, "color-photo": 0.002, watermark: 0.004 };
+const AI_EST = { "photo-audit": 0.003, gender: 0.002, language: 0.0007, "color-photo": 0.002, watermark: 0.004 };
 const AI_META = {
+  "photo-audit": { label: "Foto-audit (streng) — geslacht + collectie", desc: "Kijkt alleen naar de foto: man op de foto bij een Women's-product (of andersom) = misgenderd; jas/longsleeve in Tank Tops = verkeerde collectie" },
   gender: { label: "Geslacht-check (grondig)", desc: "Beoordeelt élk product op titel + omschrijving + foto: Men of Women — vangt ook producten die in beide collecties hangen" },
   "color-photo": { label: "Kleur ↔ foto-check", desc: "Toont de gekoppelde foto écht de kleur van de variant? (per kleurgroep beoordeeld)" },
   watermark: { label: "Watermerk/branding-check", desc: "Logo's, watermerken of tekst op bestaande productfoto's" },
@@ -125,6 +126,8 @@ export default function DoctorPanel({ store, since }) {
   const [aiRes, setAiRes] = useState({});
   const [aiUsd, setAiUsd] = useState({});
   const [verslag, setVerslag] = useState(null); // eindverslag van FIX ALLES
+  const [pricePlan, setPricePlan] = useState(null); // goedgekeurd prijsplan (public/price-plans)
+  const [planName, setPlanName] = useState("");
 
   const [market, setMarket] = useState("");
   const [bareSystem, setBareSystem] = useState("");
@@ -373,6 +376,40 @@ export default function DoctorPanel({ store, since }) {
     }
   }
 
+  /* ============ PRIJSPLAN TOEPASSEN (30-10) ============
+     Een goedgekeurd plan (public/price-plans/<naam>.json, gemaakt door Claude
+     uit de prijsvoorstel-sheet) via de gewone Doctor-fix "set-prices":
+     chunks, tijdbudget, backup-tabblad — en producten waarvan de prijs
+     intussen handmatig is veranderd worden overgeslagen. */
+  async function loadPricePlan() {
+    const name = String(planName || "").trim().replace(/\.json$/i, "");
+    if (!name) return;
+    setErr("");
+    try {
+      const r = await fetch(`/price-plans/${encodeURIComponent(name)}.json`, { cache: "no-store" });
+      if (!r.ok) throw new Error(`plan "${name}" niet gevonden (${r.status})`);
+      const plan = await r.json();
+      if (!Array.isArray(plan.items) || !plan.items.length) throw new Error("plan is leeg");
+      setPricePlan(plan);
+    } catch (e) {
+      setPricePlan(null);
+      setErr(`Prijsplan: ${String(e.message || e)}`);
+    }
+  }
+
+  function applyPricePlan() {
+    if (!pricePlan || !store) return;
+    const hay = `${store.name || ""} ${store.domain || ""} ${store.publicDomain || ""}`.toLowerCase();
+    const want = String(pricePlan.domain || "").toLowerCase().replace(/\.(com|co\.uk|com\.au)$/, "");
+    if (want && !hay.includes(want.replace(/[^a-z0-9]/g, "").slice(0, 8)) && !hay.replace(/[^a-z0-9]/g, "").includes(want.replace(/[^a-z0-9]/g, ""))) {
+      if (!window.confirm(`Dit plan is voor ${pricePlan.store || pricePlan.domain}, maar de gekozen store is ${store.name || store.domain}. Toch doorgaan?`)) return;
+    }
+    if (!window.confirm(`${pricePlan.items.length} producten krijgen een nieuwe prijs (${pricePlan.note || pricePlan.store}). Starten?`)) return;
+    const prices = {};
+    for (const it of pricePlan.items) prices[String(it.id)] = { price: it.price, compareAt: it.compareAt, from: it.from };
+    runFix("price-plan", { id: "set-prices", label: `Prijsplan ${pricePlan.store || ""} ${pricePlan.date || ""}`.trim() }, pricePlan.items.map((it) => it.id), { prices });
+  }
+
   /* ============ SW · PRODUCTTYPES VAN CAS ============
      1. /api/sw-types: welke producten (zelfde selectie als de scan) hebben
         geen exact type uit de lijst van Cas?
@@ -493,11 +530,11 @@ export default function DoctorPanel({ store, since }) {
   async function fixAll() {
     if (!store || fixBusy || busy || aiBusy) return;
     const n = rep ? (rep.productIds || []).length : Number(max) || 1000;
-    const aiEst = (n * (AI_EST.gender + AI_EST.language + AI_EST.watermark + AI_EST["color-photo"]) + 0.05).toFixed(2);
+    const aiEst = (n * (AI_EST["photo-audit"] + AI_EST.gender + AI_EST.language + AI_EST.watermark + AI_EST["color-photo"]) + 0.05).toFixed(2);
     const zeker = window.confirm(
       `FIX ALLES over ${rep ? n : "max " + n} producten (markt: ${market || "—"}):\n\n` +
         `1. Alle veilige fixes — foto's her-koppelen, gender uit titel (incl. dubbele Men+Women-tags), opties vertalen, maten klant-logisch maken, variant-prijzen gelijktrekken, barcodes, vendor, product type, alt-teksten, maten-volgorde, templates, publiceren, doorstreepprijzen, titels opschonen\n` +
-        `2. Alle AI-controles (geschat ±$${aiEst}) — geslacht op titel+omschrijving+foto (wordt direct toegepast), taal, watermerk, kleur↔foto, steekproef\n` +
+        `2. Alle AI-controles (geschat ±$${aiEst}) — eerst de strenge foto-audit (man op de foto bij een Women's-product = eruit/gearchiveerd; jas in Tank Tops = uit die collectie), dan geslacht, taal, watermerk, kleur↔foto, steekproef\n` +
         `3. Eindverslag — verwijderen doe ik NOOIT automatisch; dat komt als beslissing in het verslag\n\n` +
         `Pauzeren kan altijd; daarna werk je gewoon per onderdeel verder. Starten?`
     );
@@ -536,7 +573,27 @@ export default function DoctorPanel({ store, since }) {
 
       /* FASE 2 — AI-controles over de hele selectie */
       setFixProg(null); // voortgang is nu zichtbaar bij de AI-knoppen zelf
-      const allIds = report.productIds || [];
+      let allIds = report.productIds || [];
+      if (!stopRef.current && allIds.length) {
+        /* Foto-audit eerst: misgenderd = eruit (archiveren), verkeerde collectie = tag eraf */
+        const pa = await runAiCore("photo-audit", allIds);
+        V.usd += pa.usd;
+        const mis = pa.results.filter((m) => m.kind === "gender");
+        const fitList = pa.results.filter((m) => m.kind === "fit" && !mis.some((x) => x.id === m.id));
+        if (mis.length) {
+          const tot = await execFix({ id: "archive-products", label: "Misgenderde producten eruit (archiveren)" }, mis.map((m) => m.id), fixOptions(), b.skipBackup);
+          V.ai.push(`Foto-audit: ${mis.length} misgenderd product(en) → ${tot.fixed} gearchiveerd (terug te zetten via Products → Archived)`);
+          const gone = new Set(mis.map((m) => String(m.id)));
+          allIds = allIds.filter((id) => !gone.has(String(id)));
+        }
+        if (fitList.length) {
+          const fit = {};
+          for (const m of fitList) fit[String(m.id)] = { drop: m.drop, add: m.add };
+          const tot = await execFix({ id: "fix-collection-fit", label: "Uit verkeerde collecties halen" }, fitList.map((m) => m.id), fixOptions({ fit }), b.skipBackup);
+          V.ai.push(`Foto-audit: ${fitList.length} product(en) in een verkeerde collectie → ${tot.fixed} rechtgezet`);
+        }
+        if (!mis.length && !fitList.length) V.ai.push("Foto-audit: geslacht en collecties kloppen met de foto's");
+      }
       if (!stopRef.current && allIds.length) {
         const g = await runAiCore("gender", allIds);
         V.usd += g.usd;
@@ -660,6 +717,26 @@ export default function DoctorPanel({ store, since }) {
     const labels = {};
     for (const m of list) labels[String(m.id)] = m.suggested;
     runFix("ai-gender", { id: "gender-tags", label: "Zet gender-tags goed" }, list.map((m) => m.id), { labels });
+  }
+
+  function applyPhotoGender(mode) {
+    const list = (aiRes["photo-audit"] || []).filter((m) => m.kind === "gender");
+    if (!list.length) return;
+    if (mode === "archive") {
+      runFix("ai-photo-archive", { id: "archive-products", label: "Misgenderde producten eruit (archiveren)" }, list.map((m) => m.id), {});
+    } else {
+      const labels = {};
+      for (const m of list) labels[String(m.id)] = m.suggested;
+      runFix("ai-photo-flip", { id: "gender-tags", label: "Omzetten naar het geslacht op de foto (titel + tags)" }, list.map((m) => m.id), { labels });
+    }
+  }
+
+  function applyCollectionFit() {
+    const list = (aiRes["photo-audit"] || []).filter((m) => m.kind === "fit");
+    if (!list.length) return;
+    const fit = {};
+    for (const m of list) fit[String(m.id)] = { drop: m.drop, add: m.add };
+    runFix("ai-photo-fit", { id: "fix-collection-fit", label: "Uit verkeerde collecties halen" }, list.map((m) => m.id), { fit });
   }
 
   function applyWatermarkFix() {
@@ -1034,6 +1111,26 @@ export default function DoctorPanel({ store, since }) {
         </div>
       )}
 
+      {store && (
+        <div style={{ marginTop: 14 }}>
+          <div className="field-label">Prijsplan toepassen <span className="opt">goedgekeurd voorstel van Claude, bv. ssb-2026-10-30</span></div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+            <input type="text" value={planName} placeholder="naam van het plan" onChange={(e) => setPlanName(e.target.value)} style={{ maxWidth: 260 }} />
+            <button className="btn-ghost btn-small" disabled={!planName.trim() || !!fixBusy || busy} onClick={loadPricePlan}>Laad plan</button>
+            {pricePlan && (
+              <button className="btn-ghost btn-small" disabled={!!fixBusy || busy || !!aiBusy} onClick={applyPricePlan}>
+                ⚡ Zet {pricePlan.items.length} nieuwe prijzen door
+              </button>
+            )}
+          </div>
+          {pricePlan && (
+            <div className="hint">
+              {pricePlan.store} · {pricePlan.date} · {pricePlan.note} — voorbeeld: {pricePlan.items.slice(0, 3).map((it) => `"${String(it.title).split("|")[0].trim()}" $${it.from} → $${it.price}`).join(" · ")}
+            </div>
+          )}
+        </div>
+      )}
+
       {rep && (
         <div style={{ marginTop: 14 }}>
           <div className="field-label">AI-checks (goedkoop model — kosten vooraf in beeld)</div>
@@ -1057,6 +1154,26 @@ export default function DoctorPanel({ store, since }) {
                   )}
                   {aiRes[check].length > 0 && (
                     <>
+                      {check === "photo-audit" && aiRes[check].some((m) => m.kind === "gender") && (
+                        <>
+                          <button
+                            className="btn-ghost btn-small"
+                            style={{ color: "var(--err)", borderColor: "var(--err)" }}
+                            disabled={disabled}
+                            onClick={() => applyPhotoGender("archive")}
+                          >
+                            ⚡ Haal {aiRes[check].filter((m) => m.kind === "gender").length} misgenderd(e) eruit (archiveren)
+                          </button>{" "}
+                          <button className="btn-ghost btn-small" disabled={disabled} onClick={() => applyPhotoGender("flip")}>
+                            Of: zet om naar foto-geslacht
+                          </button>{" "}
+                        </>
+                      )}
+                      {check === "photo-audit" && aiRes[check].some((m) => m.kind === "fit") && (
+                        <button className="btn-ghost btn-small" disabled={disabled} onClick={applyCollectionFit}>
+                          ⚡ Haal {aiRes[check].filter((m) => m.kind === "fit").length} uit verkeerde collectie(s)
+                        </button>
+                      )}
                       {check === "gender" && (
                         <button className="btn-ghost btn-small" disabled={disabled} onClick={applyGenderFix}>
                           ⚡ Zet {aiRes.gender.length} gender-tag(s) goed
@@ -1083,6 +1200,7 @@ export default function DoctorPanel({ store, since }) {
                               <strong>{m.title}</strong>
                             )}
                             <span className="muted">
+                              {check === "photo-audit" && ` — ${m.kind === "gender" ? "⚠ misgenderd: " : "collectie: "}${m.why}`}
                               {check === "gender" && ` — ${m.current} → ${m.suggested}`}
                               {check === "color-photo" && ` — "${m.color}": ${m.why}`}
                               {check === "watermark" && ` — ${m.reason}`}
