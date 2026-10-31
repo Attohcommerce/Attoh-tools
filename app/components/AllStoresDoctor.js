@@ -70,6 +70,8 @@ export default function AllStoresDoctor({ stores, onOpenStore }) {
   const [latestN, setLatestN] = useState("100");
   const [withAi, setWithAi] = useState(true);
   const [rows, setRows] = useState({}); // domain → { market, include, check, status, rep, repAt, verslag, error, usd, fixed }
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
   const [openRow, setOpenRow] = useState({});
 
   // instellingen + markt per store (gedeeld met het losse paneel)
@@ -170,20 +172,27 @@ export default function AllStoresDoctor({ stores, onOpenStore }) {
     if (!res.ok) throw new Error(`Controle mislukt: ${res.error}`);
     const byDomain = {};
     for (const c of res.data.stores || []) byDomain[c.domain] = c;
+    // Eerst zelf uitrekenen (niet in de setRows-updater: React voert die soms pas
+    // later uit, en dan was `merged` nog leeg → "reading 'check'" bij Fix alle stores).
     const merged = {};
+    const now = rowsRef.current || {};
+    for (const s of list) {
+      const c = byDomain[s.domain] || { ok: false, problems: [{ level: "block", text: "geen antwoord voor deze store" }] };
+      const row = { ...(now[s.domain] || {}), check: c, status: "idle" };
+      // nog geen eigen markt-keuze? dan wint het store-profiel
+      if (!row.marketSaved && c.profile && c.profile.market) row.market = c.profile.market;
+      merged[s.domain] = row;
+    }
     setRows((cur) => {
       const nx = { ...cur };
       for (const s of list) {
-        const c = byDomain[s.domain] || { ok: false, problems: [{ level: "block", text: "geen antwoord voor deze store" }] };
-        const row = { ...nx[s.domain], check: c, status: "idle" };
-        // nog geen eigen markt-keuze? dan wint het store-profiel
-        if (!row.marketSaved && c.profile && c.profile.market) row.market = c.profile.market;
+        const m = merged[s.domain];
+        const row = { ...(nx[s.domain] || {}), check: m.check, status: "idle" };
+        if (!row.marketSaved && m.check.profile && m.check.profile.market) row.market = m.check.profile.market;
         nx[s.domain] = row;
-        merged[s.domain] = row;
       }
       return nx;
     });
-    await new Promise((r) => setTimeout(r, 0));
     let blocks = 0;
     let warns = 0;
     for (const s of list) {
