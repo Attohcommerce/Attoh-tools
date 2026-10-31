@@ -176,15 +176,22 @@ export async function POST(req) {
     // Backup-tabblad klaarzetten bij de eerste chunk
     if (backupOn && cursor === 0) {
       const t = await addTab(backup.sheetId, backup.tab, { rows: ids.length + 10, cols: 5 });
-      if (!t.ok) {
+      /* Bestaat het tabblad al, dan is dit een nieuwe poging van dezelfde run
+         (de eerste poging liep in een time-out nadat het tabblad er al stond).
+         De naam bevat fix + tijdstempel, dus het is ons eigen tabblad: gewoon
+         verder schrijven in plaats van stoppen met "bestaat al". */
+      const exists = !t.ok && /bestaat al/i.test(String(t.error || ""));
+      if (!t.ok && !exists) {
         return NextResponse.json({ error: t.error || "backup-tabblad aanmaken mislukt" }, { status: 422 });
       }
-      await appendRows(
-        backup.sheetId,
-        `'${backup.tab}'!A:E`,
-        [["Datum", "Product ID", "Titel", "Fix", "Oude waarde (JSON)"]],
-        "RAW"
-      );
+      if (t.ok) {
+        await appendRows(
+          backup.sheetId,
+          `'${backup.tab}'!A:E`,
+          [["Datum", "Product ID", "Titel", "Fix", "Oude waarde (JSON)"]],
+          "RAW"
+        );
+      }
     }
 
     if (!slice.length) {

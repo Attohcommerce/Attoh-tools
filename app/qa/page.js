@@ -7,11 +7,13 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import DoctorPanel from "../components/DoctorPanel";
+import AllStoresDoctor from "../components/AllStoresDoctor";
 import { orgLS } from "@/lib/org-client";
 import { useOrgDef } from "../components/OrgProvider";
 
 const LS_STORES = "sa_stores";
 const LS_SELECTED = "sa_selected_store";
+const LS_ALLVIEW = "sa_doctor_allview";
 
 function load(key, fallback) {
   try {
@@ -25,20 +27,62 @@ function load(key, fallback) {
 export default function QaPage() {
   const [stores, setStores] = useState([]);
   const [selected, setSelected] = useState(null);
+  // 31-10: "Alle stores" — scan / fix alle gekoppelde stores in één run
+  const [showAll, setShowAll] = useState(false);
   // Organisatie (20-10): Sa Collective = alleen laatste producten, zonder maattabellen
   const orgDoc = useOrgDef().doctor;
 
   useEffect(() => {
     setStores(load(LS_STORES, []));
     setSelected(load(LS_SELECTED, null));
+    try {
+      setShowAll(orgLS.getItem(LS_ALLVIEW) === "1");
+    } catch {}
   }, []);
+
+  function toggleAll() {
+    setShowAll((v) => {
+      try {
+        orgLS.setItem(LS_ALLVIEW, v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
+  }
+  function openStore(domain) {
+    setSelected(domain);
+    try {
+      orgLS.setItem(LS_SELECTED, JSON.stringify(domain));
+    } catch {}
+    setTimeout(() => {
+      const el = document.getElementById("sd-single");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
 
   const store = stores.find((s) => s.domain === selected) || null;
 
   return (
     <>
       <Header icon="+" title="Store Doctor" subtitle="Checks & 1-tik fixes" />
-      <div className="page layout-2col">
+      <div className="page">
+        <div className="sd-topbar">
+          <div>
+            <div className="sd-eyebrow">Alle stores in één keer</div>
+            <div className="sd-topbar__txt">
+              Controleer koppeling, valuta en markt van elke store, scan ze allemaal en laat FIX ALLES per store achter elkaar lopen.
+            </div>
+          </div>
+          <button type="button" className={`sd-btn ${showAll ? "sd-btn--ghost" : "sd-btn--gold"}`} onClick={toggleAll} disabled={!stores.length}>
+            {showAll ? "Verberg alle stores" : "⚡ Scan alle stores"}
+          </button>
+        </div>
+        {showAll && stores.length > 0 && (
+          <div className="card sd-allcard">
+            <AllStoresDoctor stores={stores} onOpenStore={openStore} />
+          </div>
+        )}
+      </div>
+      <div className="page layout-2col" id="sd-single">
         <div>
           <div className="card">
             <h2>Store</h2>

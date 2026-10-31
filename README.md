@@ -57,6 +57,37 @@ Veiligheid (`lib/change-plan.js`): elk veld heeft een "from" — is een product 
   - Slippers, clogs, booties, oxfords, brogues en moccasins tellen nu ook als schoen.
 - **Clove & Cloth** heeft een store-profiel (USA, man + vrouw).
 
+## Store Doctor v2: dashboard, alle stores en geen vastlopers meer (31-10-2026)
+- **Live dashboard** (`app/components/RunDashboard.js`). Plakt bovenin tijdens elke scan, fix of FIX ALLES en toont:
+  - de fases (Scan → Fixes → AI-controles → Eindscan);
+  - de huidige stap met voortgangsbalk, looptijd en verwachte resttijd;
+  - tellers (aangepast, al goed, mislukt, AI-kosten);
+  - een live logboek.
+  Er is een pauzeknop die na de lopende stap stopt.
+- **Strakker overzicht** in `DoctorPanel.js`. Bovenin staan de store-kaart met markt, valuta, scope en backup, plus 🔍 Scan en ⚡ FIX ALLES. Daaronder volgen:
+  - het eindverslag (vóór → na);
+  - een score-ring;
+  - een filter (Alles / Fouten / Waarschuwingen);
+  - compacte bevindingen met een eigen ⚡ Fix-knop.
+  De instellingen, het logboek per fix en de plannen staan ingeklapt.
+- **Alle stores** (`app/components/AllStoresDoctor.js`, knop "⚡ Scan alle stores" bovenin de Store Doctor):
+  - ✓ Controleer laat elke store zien met valuta, markt (aanpasbaar, wordt onthouden), profiel en schrijfrechten. Rood (geen verbinding of geen `write_products`) wordt overgeslagen. Oranje: valuta en markt kloppen niet.
+  - 🔍 Scan alle stores scant ze één voor één.
+  - ⚡ Fix alle stores doet controleren → scannen → één bevestiging met de echte aantallen per store → FIX ALLES per store, met een eigen backup-tabblad per fix.
+  - Een fout in één store stopt de rest niet.
+  - API: `app/api/doctor-stores` (shopinfo, profiel, scopes).
+- **Motor zonder UI** (`lib/doctor-engine.js`), gedeeld door beide schermen: `postJSON`, `scanStore`, `runFixLoop`, `runAiLoop`, `fixAllStore`.
+  - Geen JSON, 502/503/504 of een netwerkfout → opnieuw proberen.
+  - Fixes en AI-checks: de stap halveren tot één product. Lukt dat ook niet, dan wordt alleen dat product overgeslagen.
+  - Een echte fout stopt alleen die ene fix. FIX ALLES gaat door en zet de fout in het verslag.
+- **Scan met tijdsbudget** (`app/api/doctor-scan`, `DOCTOR_SCAN_BUDGET_MS`, standaard 40 s). Bij tijdgebrek worden eerst de fijne categorieën, attributen en de thema-check overgeslagen (`partial` in het antwoord). Bij een time-out volgt nog één "lichte" scan.
+- **AI-foutjes opgelost**:
+  - "Unable to download the file": een foto die Anthropic niet kan ophalen, wordt zelf opgehaald en als base64 meegestuurd. Lukt dat niet, dan gaat er tekst mee in plaats van de foto (`lib/ai.js`).
+  - "Geen bruikbare JSON in AI-antwoord": nog één keer proberen, daarna een kleiner plukje, daarna dat ene product overslaan.
+- **Geen verkeerde gender-flips**. FIX ALLES zet gender-tags alleen automatisch als de titel het niet tegenspreekt. Bij "Men's Cargo Pants" waar de AI Women zegt, wordt niets aangepast; zo'n product komt bij "Voor jou om te beslissen".
+- **Maten met inch-teken** ("30\"", "32 in") worden als 30/32 gelezen (`normalizeSizeLabel`), zodat herenbroeken weer een standaardtabel krijgen.
+- **Backup bij een nieuwe poging**. Loopt de eerste stap in een time-out nadat het backup-tabblad er al stond, dan schrijft de nieuwe poging gewoon verder in hetzelfde tabblad. Hij stopt niet meer met "bestaat al".
+
 ## Environment variables
 
 Zet deze in Vercel → Project → Settings → Environment Variables.

@@ -20,6 +20,8 @@ import { orgLS } from "@/lib/org-client";
 import { useOrgDef } from "./OrgProvider";
 import { isShapesWardrobe, SW_TYPE_SHEET } from "@/lib/sw-product-types";
 import { mergePlanItems, groupCounts, planMatchesStore } from "@/lib/change-plan";
+import { AI_EST, CUR_MARKET, aiEstimate, scanStore, runFixLoop, runAiLoop, fixAllStore, titleSex } from "@/lib/doctor-engine";
+import RunDashboard, { useRun, ScoreRing } from "./RunDashboard";
 
 const LS_BACKUP = "sa_doctor_backup";
 const LS_SCOPE = "sa_doctor_scope"; // "all" | "latest"
@@ -29,15 +31,8 @@ const LS_MARKET = "sa_doctor_market::"; // + store-domein
 const LS_BARESYS = "sa_doctor_baresys::"; // + store-domein — wat kale maat-nummers zijn (us/uk/au/eu)
 const WERKBOEK = "1Y3wg8X5ivuwaUTfUapzgUOIMzVqr0KRs6g2FR1COuKE"; // Import-werkboek (default)
 
-// Slimme default: de store-valuta verraadt de markt
-const CUR_MARKET = { USD: "USA", GBP: "UK", AUD: "AUS+NZ", NZD: "AUS+NZ", CAD: "CAN" };
-
-// Chunk per AI-check (server verwerkt per call precies dit plukje).
-// Gender staat op 6: grondige modus met foto's — titel + omschrijving +
-// eerste productfoto per product.
-const AI_CHUNK = { "photo-audit": 5, gender: 6, language: 25, "color-photo": 8, watermark: 4, sample: 12 };
-// Ruwe kostenraming per product (haiku-tarieven) — alleen voor de knop-tekst
-const AI_EST = { "photo-audit": 0.003, gender: 0.002, language: 0.0007, "color-photo": 0.002, watermark: 0.004 };
+// CUR_MARKET, AI_CHUNK, AI_EST en FIXALL_ORDER staan sinds 31-10 in lib/doctor-engine.js
+// (gedeeld met "Alle stores").
 const AI_META = {
   "photo-audit": { label: "Foto-audit (streng) — geslacht + collectie", desc: "Kijkt alleen naar de foto: man op de foto bij een Women's-product (of andersom) = misgenderd; jas/longsleeve in Tank Tops = verkeerde collectie" },
   gender: { label: "Geslacht-check (grondig)", desc: "Beoordeelt élk product op titel + omschrijving + foto: Men of Women — vangt ook producten die in beide collecties hangen" },
@@ -47,35 +42,8 @@ const AI_META = {
   sample: { label: "AI-steekproef — patronen", desc: "12 producten uit alle hoeken in samenhang; zoekt fouten die zich herhalen (groot model)" },
 };
 
-/* FIX ALLES — volgorde van de automatische fase. Bewust logisch geordend:
-   eerst foto's her-koppelen (voedt alt-teksten), dan gender (voedt de
-   template-fixes), dan taal/maten, dan de rest. Verwijder-acties zitten er
-   NOOIT in — die landen in het eindverslag. */
-const FIXALL_ORDER = [
-  "relink-photos",
-  "fix-gender-from-title",
-  "translate-options",
-  "clean-size-labels",
-  "convert-sizes",
-  "shoe-us-eu-labels",
-  "unify-variant-prices",
-  "clear-barcodes",
-  "set-vendor",
-  "set-product-type",
-  "set-sw-type", // alleen Shapes Wardrobe: type uit de lijst van Cas
-  "set-category",
-  "fill-category-attrs", // na de categorie: de velden hangen van de categorie af
-  "fill-alt",
-  "fix-size-order",
-  "fix-men-template",
-  "fix-women-template",
-  "publish-products",
-  "fix-compareat",
-  "clean-titles",
-  "fix-size-guides",
-  "tidy-size-guides", // ná het herbouwen: hele getallen + geen dubbele US-kolom (31-10)
-  "theme-round-size-guide", // maattabel-snippet in het thema op hele getallen (met backup-kopie)
-];
+/* FIX ALLES — de volgorde staat in lib/doctor-engine.js (FIXALL_ORDER). Verwijder-
+   acties zitten er NOOIT in — die landen in het eindverslag. */
 
 function sfx(kind) {
   try {
@@ -107,6 +75,16 @@ export default function DoctorPanel({ store, since }) {
   const blockSeq = useRef(0);
   const stopRef = useRef(false);
   const [repAt, setRepAt] = useState(null);
+  // Live dashboard (31-10): wat doet de Doctor nu, hoe ver, hoe lang nog
+  const { run, api: runApi } = useRun();
+  const [pausing, setPausing] = useState(false);
+  const [flt, setFlt] = useState("all"); // rapport-filter: all | error | warn
+  function pause() {
+    stopRef.current = true;
+    setPausing(true);
+    runApi.log("Pauze gevraagd — de lopende stap maakt netjes af", "warn");
+  }
+  const isAlarm = (l) => /MISLUKT|time-out|LET OP|gestopt|mislukt/i.test(String(l));
 
   function newBlock(label, total) {
     const id = ++blockSeq.current;
@@ -222,6 +200,20 @@ export default function DoctorPanel({ store, since }) {
 
   /* ---------------- SCAN ---------------- */
 
+  // Scan-parameters (zelfde selectie voor scan, FIX ALLES en de eindscan)
+  function scanParamsNow() {
+    return {
+      max: Number(max) || 1000,
+      sinceISO: since && useSince ? since : null,
+      latest: latestOn ? Math.max(1, Math.min(1000, Number(latestN) || 100)) : 0,
+      vendorName: store.name || "",
+      market,
+      bareSystem,
+      sizeGuides: orgDoc.sizeGuides, // false (Sa Collective) = maattabellen niet ophalen/checken
+    };
+  }
+
+  // opts: keepAi (AI-resultaten laten staan) · silent (geen geluid) · inRun (geen eigen dashboard)
   async function scan(opts = {}) {
     if (!store) return null;
     setBusy(true);
@@ -231,29 +223,23 @@ export default function DoctorPanel({ store, since }) {
       setAiRes({});
       setAiUsd({});
     }
+    const own = !opts.inRun && !opts.silent;
+    if (own) runApi.start(`Scan · ${store.name || store.domain}`, { phases: [{ key: "scan", label: "Scan" }], sub: `markt ${market || "—"}` });
     try {
-      const r = await fetch("/api/doctor-scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          store: storeBody,
-          max: Number(max) || 1000,
-          sinceISO: since && useSince ? since : null,
-          latest: latestOn ? Math.max(1, Math.min(1000, Number(latestN) || 100)) : 0,
-          vendorName: store.name || "",
-          market,
-          bareSystem,
-          sizeGuides: orgDoc.sizeGuides, // false (Sa Collective) = maattabellen niet ophalen/checken
-        }),
+      const data = await scanStore(storeBody, scanParamsNow(), {
+        onRetry: (n, why) => runApi.log(`${why}${n ? ` — opnieuw (${n + 1})` : ""}`, "warn"),
       });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || r.status);
       setRep(data);
       setRepAt(new Date());
+      runApi.log(`Scan klaar: ${data.scanned} producten · ${data.stats.errors} fouten · score ${String(data.stats.score).replace(".", ",")}`, data.stats.errors ? "warn" : "ok");
+      if (data.partial && data.partial.length) runApi.log(`Let op: ${data.partial.join(" · ")}`, "warn");
       if (!opts.silent) sfx(data.stats.errors ? "error" : "success");
+      if (own) runApi.finish("done", "Scan klaar");
       return data;
     } catch (e) {
       setErr(String(e.message || e));
+      runApi.log(String(e.message || e), "err");
+      if (own) runApi.finish("error");
       return null;
     } finally {
       setBusy(false);
@@ -287,83 +273,48 @@ export default function DoctorPanel({ store, since }) {
     return { ok: skip, skipBackup: skip };
   }
 
-  // Kern: één fix over een id-lijst, in chunks tot done. Gooit bij een fout.
-  //
-  // Vercel-timeout-guard: als de server géén JSON teruggeeft (Vercel's
-  // "An error occurred with your deployment"-pagina bij een timeout, of een
-  // 502/504 van de gateway) is de chunk te zwaar. Dan: zelfde cursor opnieuw
-  // met een half zo grote chunk; bij chunk 1 nog steeds mis → dat ene
-  // product overslaan (telt als mislukt) en doorgaan. Nooit meer een run die
-  // halverwege dood valt op "Unexpected token 'A' … is not valid JSON".
+  // Kern: één fix over een id-lijst, in stappen tot klaar (lib/doctor-engine.js:
+  // time-outs → opnieuw en kleinere stap; één hardnekkig product → overslaan).
+  // Gooit alleen bij een échte fout (bv. backup-sheet niet bereikbaar).
   async function execFix(fix, ids, options, skipBackup) {
     const backup = skipBackup ? null : backupPlanFor(fix.id);
     const blockId = newBlock(fix.label, ids.length);
-    const tot = { done: 0, total: ids.length, fixed: 0, failed: 0, skipped: 0, label: fix.label };
-    setFixProg({ ...tot });
-    let cursor = 0;
-    let chunk = null; // null = server-standaard
-    let gatewayFails = 0;
+    runApi.step(fix.label, { total: ids.length });
+    let last = { fixed: 0, skipped: 0, failed: 0 };
+    setFixProg({ done: 0, total: ids.length, fixed: 0, failed: 0, skipped: 0, label: fix.label });
+    let tot;
     try {
-      for (;;) {
-        if (stopRef.current) break;
-        let r;
-        let data = null;
-        try {
-          r = await fetch("/api/doctor-fix", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ store: storeBody, fix: fix.id, ids, options, cursor, backup, skipBackup, chunk }),
-          });
-          const text = await r.text();
-          try {
-            data = JSON.parse(text);
-          } catch {
-            data = null;
-          }
-        } catch (e) {
-          data = null; // netwerkfout → zelfde pad als gateway-fout
-        }
-
-        const gatewayError = !data || (!r.ok && [502, 503, 504].includes(r.status));
-        if (gatewayError) {
-          gatewayFails++;
-          if (gatewayFails > 12) throw new Error("server blijft time-outen — probeer later opnieuw of kies een kleinere selectie");
-          const current = chunk || (data && data.chunk) || 8;
-          if (current > 1) {
-            chunk = Math.max(1, Math.floor(current / 2));
-            blockDetail(blockId, [`server-timeout (Vercel) — chunk verkleind naar ${chunk}, zelfde positie opnieuw`]);
-            continue;
-          }
-          // chunk 1 en nog steeds mis: dit ene product overslaan
-          tot.failed += 1;
-          tot.done = cursor + 1;
-          setFixProg({ ...tot });
-          blockDetail(blockId, [`product ${ids[cursor]}: server-timeout ook als losse stap — overgeslagen`]);
-          cursor += 1;
-          if (cursor >= ids.length) break;
-          continue;
-        }
-
-        if (!r.ok) throw new Error(data.error || r.status);
-        tot.done = data.nextCursor != null ? data.nextCursor : tot.total;
-        tot.fixed += data.fixed || 0;
-        tot.failed += data.failed || 0;
-        tot.skipped += data.skipped || 0;
-        setFixProg({ ...tot });
-        if (data.notes && data.notes.length) blockDetail(blockId, data.notes);
-        if (data.done) break;
-        cursor = data.nextCursor;
-      }
+      tot = await runFixLoop(storeBody, fix, ids, {
+        options,
+        backup,
+        skipBackup,
+        shouldStop: () => stopRef.current,
+        onProgress: (t) => {
+          setFixProg({ ...t, label: fix.label });
+          runApi.progress(t.done, t.total);
+          runApi.count({ fixed: t.fixed - last.fixed, skipped: t.skipped - last.skipped, failed: t.failed - last.failed });
+          last = t;
+        },
+        onNotes: (lines) => {
+          blockDetail(blockId, lines);
+          lines.filter(isAlarm).slice(0, 3).forEach((l) => runApi.log(`${fix.label}: ${l}`, "warn"));
+        },
+      });
     } catch (e) {
-      blockDone(blockId, `gestopt: ${String(e.message || e).slice(0, 120)}`, tot.failed + 1);
+      const msg = String(e.message || e);
+      blockDone(blockId, `gestopt: ${msg.slice(0, 120)}`, 1);
+      runApi.log(`${fix.label} gestopt: ${msg}`, "err");
       throw e;
     }
     const backupTxt = backup ? ` · backup "${backup.tab}"` : " · zonder backup";
+    let sum;
     if (options && options.dryRun) {
-      blockDone(blockId, `controle: ${tot.fixed} zouden veranderen · ${tot.skipped} al goed of overgeslagen · ${tot.failed} mislukt — er is niets aangepast`, tot.failed);
+      sum = `controle: ${tot.fixed} zouden veranderen · ${tot.skipped} al goed of overgeslagen · ${tot.failed} mislukt — er is niets aangepast`;
     } else {
-      blockDone(blockId, `${tot.fixed} aangepast · ${tot.skipped} overgeslagen · ${tot.failed} mislukt${backupTxt}`, tot.failed);
+      sum = `${tot.fixed} aangepast · ${tot.skipped} overgeslagen · ${tot.failed} mislukt${backupTxt}${tot.stopped ? " · gepauzeerd" : ""}`;
     }
+    blockDone(blockId, sum, tot.failed);
+    runApi.log(`${fix.label}: ${sum}`, tot.failed ? "warn" : "ok");
     return tot;
   }
 
@@ -381,17 +332,24 @@ export default function DoctorPanel({ store, since }) {
     setFixLog([]);
     setErr("");
     stopRef.current = false;
+    setPausing(false);
+    runApi.start(fix.label, { phases: [{ key: "fixes", label: "Fix" }, { key: "final", label: "Herscan" }], sub: `${ids.length} product(en) · ${store.name || store.domain}` });
+    runApi.phase("fixes", fix.label);
     try {
       const tot = await execFix(fix, ids, fixOptions(extraOptions), b.skipBackup);
       sfx(tot.failed ? "error" : "success");
       // teller verversen — AI-resultaten blijven staan voor vervolg-acties
-      await scan({ keepAi: true, silent: true });
+      runApi.phase("final", "Rapport verversen");
+      await scan({ keepAi: true, silent: true, inRun: true });
+      runApi.finish(stopRef.current ? "paused" : "done");
     } catch (e) {
       setErr(`Fix gestopt: ${String(e.message || e)}`);
+      runApi.finish("error");
       sfx("error");
     } finally {
       setFixBusy(null);
       setFixProg(null);
+      setPausing(false);
     }
   }
 
@@ -480,6 +438,7 @@ export default function DoctorPanel({ store, since }) {
     setFixLog([]);
     setErr("");
     stopRef.current = false;
+    runApi.start(`Controle wijzigingsplan ${cp.name || cpName}`, { phases: [{ key: "fixes", label: "Controle" }], sub: "droge run — er verandert niets" });
     try {
       const tot = await execFix(
         { id: "apply-change-plan", label: `Controle "${cp.name || cpName}" — verandert niets` },
@@ -488,9 +447,11 @@ export default function DoctorPanel({ store, since }) {
         true
       );
       setCpCheck(tot);
+      runApi.finish("done", "Controle klaar");
       sfx(tot.failed ? "error" : "success");
     } catch (e) {
       setErr(`Controle gestopt: ${String(e.message || e)}`);
+      runApi.finish("error");
       sfx("error");
     } finally {
       setFixBusy(null);
@@ -587,13 +548,17 @@ export default function DoctorPanel({ store, since }) {
     setFixLog([]);
     setErr("");
     stopRef.current = false;
+    runApi.start(photo ? "Fotocheck producttypes (SW)" : "Producttypes van Cas (SW)", { phases: [{ key: "fixes", label: "Producttypes" }, { key: "final", label: "Herscan" }] });
     try {
       const tot = await swTypePass(b.skipBackup, photo);
       sfx(tot.failed ? "error" : "success");
-      if (rep) await scan({ keepAi: true, silent: true });
+      runApi.phase("final", "Rapport verversen");
+      if (rep) await scan({ keepAi: true, silent: true, inRun: true });
+      runApi.finish("done");
     } catch (e) {
       setErr(`Producttypes gestopt: ${String(e.message || e)}`);
       setSwInfo("");
+      runApi.finish("error");
       sfx("error");
     } finally {
       setFixBusy(null);
@@ -611,15 +576,21 @@ export default function DoctorPanel({ store, since }) {
       setFixLog([]);
       setErr("");
       stopRef.current = false;
+      runApi.start(`Scan · ${store.name || store.domain}`, { phases: [{ key: "fixes", label: "Producttypes" }, { key: "scan", label: "Scan" }] });
+      runApi.phase("fixes", "Producttypes van Cas");
       try {
         await swTypePass(b.skipBackup);
       } catch (e) {
         setErr(`Producttypes (Cas) overgeslagen: ${String(e.message || e)} — de scan loopt gewoon door.`);
+        runApi.log(`Producttypes overgeslagen: ${String(e.message || e)}`, "warn");
       } finally {
         setFixBusy(null);
         setFixProg(null);
       }
-      if (stopRef.current) return;
+      if (stopRef.current) return runApi.finish("paused");
+      runApi.phase("scan", "Producten scannen");
+      const r = await scan({ inRun: true });
+      return runApi.finish(r ? "done" : "error", r ? "Scan klaar" : undefined);
     }
     await scan();
   }
@@ -642,13 +613,14 @@ export default function DoctorPanel({ store, since }) {
   async function fixAll() {
     if (!store || fixBusy || busy || aiBusy) return;
     const n = rep ? (rep.productIds || []).length : Number(max) || 1000;
-    const aiEst = (n * (AI_EST["photo-audit"] + AI_EST.gender + AI_EST.language + AI_EST.watermark + AI_EST["color-photo"]) + 0.05).toFixed(2);
+    const aiEst = aiEstimate(n).toFixed(2);
     const zeker = window.confirm(
       `FIX ALLES over ${rep ? n : "max " + n} producten (markt: ${market || "—"}):\n\n` +
-        `1. Alle veilige fixes — foto's her-koppelen, gender uit titel (incl. dubbele Men+Women-tags), opties vertalen, maten klant-logisch maken, variant-prijzen gelijktrekken, barcodes, vendor, product type, alt-teksten, maten-volgorde, templates, publiceren, doorstreepprijzen, titels opschonen\n` +
-        `2. Alle AI-controles (geschat ±$${aiEst}) — eerst de strenge foto-audit (man op de foto bij een Women's-product = eruit/gearchiveerd; jas in Tank Tops = uit die collectie), dan geslacht, taal, watermerk, kleur↔foto, steekproef\n` +
-        `3. Eindverslag — verwijderen doe ik NOOIT automatisch; dat komt als beslissing in het verslag\n\n` +
-        `Pauzeren kan altijd; daarna werk je gewoon per onderdeel verder. Starten?`
+        `1. Verse scan\n` +
+        `2. Alle veilige fixes — foto's her-koppelen, gender uit titel, opties vertalen, maten klant-logisch, variant-prijzen, barcodes, vendor, product type, categorie, alt-teksten, maten-volgorde, templates, publiceren, doorstreepprijzen, titels, maattabellen\n` +
+        `3. Alle AI-controles (geschat ±$${aiEst}) — foto-audit, geslacht, taal, watermerk, kleur↔foto, steekproef\n` +
+        `4. Eindscan + verslag — verwijderen doe ik NOOIT automatisch\n\n` +
+        `Bovenaan zie je live wat hij doet. Pauzeren kan altijd. Starten?`
     );
     if (!zeker) return;
     const b = askBackupSkip();
@@ -657,109 +629,97 @@ export default function DoctorPanel({ store, since }) {
     setErr("");
     setVerslag(null);
     setFixLog([]);
+    setPausing(false);
     stopRef.current = false;
-    const V = { auto: [], ai: [], open: [], usd: 0, paused: false };
+    runApi.start(`FIX ALLES · ${store.name || store.domain}`, { sub: `markt ${market || "—"} · ${latestOn ? `laatste ${latestN} producten` : "hele store"}` });
+    let usdTotal = 0;
     try {
-      /* ALTIJD vers scannen — een oud rapport op het scherm (bv. van vóór
-         een deploy of van een andere run) mag nooit het fix-plan sturen. */
-      const report = await scan({ silent: true });
-      if (!report) throw new Error("scan mislukt");
-
-      /* FASE 1 — veilige fixes in logische volgorde */
-      const jobs = new Map();
-      for (const f of report.findings) {
-        for (const fx of f.fixes || []) {
-          if (!FIXALL_ORDER.includes(fx.id)) continue;
-          if (!orgDoc.sizeGuides && /size-guide/.test(fx.id)) continue; // Sa Collective: geen maattabellen
-          if (!jobs.has(fx.id)) jobs.set(fx.id, { fix: fx, ids: new Set() });
-          for (const id of f.ids) jobs.get(fx.id).ids.add(id);
-        }
-      }
-      for (const fid of FIXALL_ORDER) {
-        if (stopRef.current) break;
-        const j = jobs.get(fid);
-        if (!j) continue;
-        const tot = await execFix(j.fix, [...j.ids], fixOptions(), b.skipBackup);
-        V.auto.push({ label: j.fix.label, fixed: tot.fixed, skipped: tot.skipped, failed: tot.failed });
-      }
-
-      /* FASE 2 — AI-controles over de hele selectie */
-      setFixProg(null); // voortgang is nu zichtbaar bij de AI-knoppen zelf
-      let allIds = report.productIds || [];
-      if (!stopRef.current && allIds.length) {
-        /* Foto-audit eerst: misgenderd = eruit (archiveren), verkeerde collectie = tag eraf */
-        const pa = await runAiCore("photo-audit", allIds);
-        V.usd += pa.usd;
-        const mis = pa.results.filter((m) => m.kind === "gender");
-        const fitList = pa.results.filter((m) => m.kind === "fit" && !mis.some((x) => x.id === m.id));
-        if (mis.length) {
-          const tot = await execFix({ id: "archive-products", label: "Misgenderde producten eruit (archiveren)" }, mis.map((m) => m.id), fixOptions(), b.skipBackup);
-          V.ai.push(`Foto-audit: ${mis.length} misgenderd product(en) → ${tot.fixed} gearchiveerd (terug te zetten via Products → Archived)`);
-          const gone = new Set(mis.map((m) => String(m.id)));
-          allIds = allIds.filter((id) => !gone.has(String(id)));
-        }
-        if (fitList.length) {
-          const fit = {};
-          for (const m of fitList) fit[String(m.id)] = { drop: m.drop, add: m.add };
-          const tot = await execFix({ id: "fix-collection-fit", label: "Uit verkeerde collecties halen" }, fitList.map((m) => m.id), fixOptions({ fit }), b.skipBackup);
-          V.ai.push(`Foto-audit: ${fitList.length} product(en) in een verkeerde collectie → ${tot.fixed} rechtgezet`);
-        }
-        if (!mis.length && !fitList.length) V.ai.push("Foto-audit: geslacht en collecties kloppen met de foto's");
-      }
-      if (!stopRef.current && allIds.length) {
-        const g = await runAiCore("gender", allIds);
-        V.usd += g.usd;
-        if (g.results.length) {
-          const labels = {};
-          for (const m of g.results) labels[String(m.id)] = m.suggested;
-          const tot = await execFix(
-            { id: "gender-tags", label: "Gender rechtzetten (AI: titel + omschrijving + foto)" },
-            g.results.map((m) => m.id),
-            fixOptions({ labels }),
-            b.skipBackup
-          );
-          V.ai.push(`Geslacht: ${g.results.length} product(en) fout ingedeeld → ${tot.fixed} rechtgezet, incl. dubbele Men+Women-tags`);
-        } else {
-          V.ai.push(stopRef.current ? "Geslacht: gepauzeerd vóór er resultaten waren" : "Geslacht: alle producten kloppen (titel + omschrijving + foto beoordeeld)");
-        }
-      }
-      const AI_REST = [
-        ["language", (nr) => (nr ? `AI-taalcheck: ${nr} product(en) met vreemde taal — lijst staat hieronder (handwerk)` : "AI-taalcheck: alles Engels")],
-        ["watermark", (nr) => (nr ? `Watermerk-check: ${nr} foto('s) geflagd — verwijder-knop staat hieronder (jouw beslissing)` : "Watermerk-check: schoon")],
-        ["color-photo", (nr) => (nr ? `Kleur↔foto: ${nr} afwijking(en) — lijst staat hieronder` : "Kleur↔foto: klopt")],
-        ["sample", (nr) => (nr ? `Steekproef: ${nr} patroon/patronen gevonden — zie hieronder` : "Steekproef: geen terugkerende fouten")],
-      ];
-      for (const [check, lijn] of AI_REST) {
-        if (stopRef.current) break;
-        const out = await runAiCore(check, allIds);
-        V.usd += out.usd;
-        V.ai.push(lijn(out.results.length));
-      }
-
-      V.paused = stopRef.current;
-
-      /* FASE 3 — eindstand + open beslissingen (niets valt stil weg) */
-      const fresh = await scan({ keepAi: true, silent: true });
-      if (fresh) {
-        for (const f of fresh.findings) {
-          const danger = (f.fixes || []).some((x) => x.danger);
-          if (danger) V.open.push(`${f.title}: nog ${f.count} — verwijder-knop staat in het rapport; dat doe ik nooit automatisch`);
-          else if (f.level === "error") V.open.push(`${f.title}: nog ${f.count} — zie het rapport hieronder`);
-        }
-        if (!V.open.length) V.open.push("Geen open fouten meer — loop hooguit de waarschuwingen in het rapport na.");
-      }
-      setVerslag(V);
-      sfx(V.paused ? "toggle" : "success");
+      const { verslag } = await fixAllStore({
+        storeBody,
+        scanParams: scanParamsNow(),
+        fixOptions,
+        backupFor: backupPlanFor,
+        skipBackup: b.skipBackup,
+        withAi: true,
+        sizeGuides: orgDoc.sizeGuides,
+        hooks: {
+          phase: (k, label) => {
+            runApi.phase(k, label);
+            if (k !== "done") runApi.log(`— ${label} —`, "info");
+            if (k === "ai") setFixProg(null);
+          },
+          report: (r) => {
+            setRep(r);
+            setRepAt(new Date());
+          },
+          fixStart: (fix, cnt, i, of) => {
+            const id = newBlock(fix.label, cnt);
+            runApi.step(fix.label, { i, of, total: cnt });
+            setFixProg({ done: 0, total: cnt, fixed: 0, failed: 0, skipped: 0, label: fix.label });
+            return { id, label: fix.label, last: { fixed: 0, skipped: 0, failed: 0 } };
+          },
+          fixProgress: (hd, t) => {
+            setFixProg({ ...t, label: hd.label });
+            runApi.progress(t.done, t.total);
+            runApi.count({ fixed: t.fixed - hd.last.fixed, skipped: t.skipped - hd.last.skipped, failed: t.failed - hd.last.failed });
+            hd.last = t;
+          },
+          fixNotes: (hd, lines) => {
+            blockDetail(hd.id, lines);
+            lines.filter(isAlarm).slice(0, 3).forEach((l) => runApi.log(`${hd.label}: ${l}`, "warn"));
+          },
+          fixDone: (hd, t, e) => {
+            if (e) {
+              blockDone(hd.id, `gestopt: ${String(e).slice(0, 120)}`, 1);
+              runApi.log(`${hd.label}: ${e} — ik ga door met de volgende stap`, "err");
+            } else {
+              const sum = `${t.fixed} aangepast · ${t.skipped} overgeslagen · ${t.failed} mislukt`;
+              blockDone(hd.id, sum, t.failed);
+              runApi.log(`${hd.label}: ${sum}`, t.failed ? "warn" : "ok");
+            }
+          },
+          aiStart: (check, cnt) => {
+            setAiBusy(check);
+            runApi.step((AI_META[check] || {}).label || check, { total: cnt });
+          },
+          aiProgress: (check, d, t) => {
+            setAiProg(`${d}/${t}`);
+            runApi.progress(d, t);
+          },
+          aiResults: (check, all, usd) => {
+            setAiRes((cur) => ({ ...cur, [check]: all }));
+            setAiUsd((cur) => ({ ...cur, [check]: usd }));
+          },
+          aiDone: (check, out, e) => {
+            setAiBusy(null);
+            setAiProg("");
+            const lbl = (AI_META[check] || {}).label || check;
+            if (e) runApi.log(`${lbl}: ${e} — ik ga door`, "err");
+            else {
+              usdTotal += out.usd;
+              runApi.usd(usdTotal);
+              runApi.log(`${lbl}: ${out.results.length ? `${out.results.length} gevonden` : out.skipped ? "niets gevonden" : "schoon"}${out.skipped ? ` · ${out.skipped} niet gecontroleerd (AI haperde)` : ""}`, out.results.length || out.skipped ? "warn" : "ok");
+            }
+          },
+          log: (t, k) => runApi.log(t, k),
+          retry: (nr, why) => runApi.log(`${why}${nr ? ` — opnieuw (${nr + 1})` : ""}`, "warn"),
+          shouldStop: () => stopRef.current,
+        },
+      });
+      setVerslag(verslag);
+      runApi.finish(verslag.paused ? "paused" : "done", verslag.paused ? "Gepauzeerd" : verslag.errors.length ? "Klaar — met een paar meldingen" : "Klaar");
+      sfx(verslag.paused ? "toggle" : "success");
     } catch (e) {
-      V.paused = true;
-      setVerslag(V);
       setErr(`FIX ALLES gestopt: ${String(e.message || e)} — hieronder kun je per onderdeel verder.`);
+      runApi.log(String(e.message || e), "err");
+      runApi.finish("error");
       sfx("error");
     } finally {
       setFixBusy(null);
       setFixProg(null);
       setAiBusy(null);
       setAiProg("");
+      setPausing(false);
     }
   }
 
@@ -769,34 +729,28 @@ export default function DoctorPanel({ store, since }) {
   // tussen de losse knoppen en FIX ALLES. Resultaten streamen live naar
   // de UI; pauzeren (stopRef) stopt na het lopende plukje.
   async function runAiCore(check, idsAll) {
-    let ids = idsAll || [];
-    if (check === "sample") {
-      // 12 producten gelijk verspreid over de catalogus
-      const step = Math.max(1, Math.floor(ids.length / 12));
-      ids = ids.filter((_, i) => i % step === 0).slice(0, 12);
-    }
     setAiBusy(check);
     setFixProg(null); // AI-voortgang is zichtbaar op de check-knop zelf
-    const chunk = AI_CHUNK[check];
-    const all = [];
-    let usd = 0;
-    for (let i = 0; i < ids.length; i += chunk) {
-      if (stopRef.current) break;
-      setAiProg(`${Math.min(i + chunk, ids.length)}/${ids.length}`);
-      const r = await fetch("/api/doctor-ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ store: storeBody, check, ids: ids.slice(i, i + chunk) }),
+    runApi.step((AI_META[check] || {}).label || check, { total: check === "sample" ? Math.min(12, (idsAll || []).length) : (idsAll || []).length });
+    try {
+      const out = await runAiLoop(storeBody, check, idsAll || [], {
+        shouldStop: () => stopRef.current,
+        onProgress: (d, t) => {
+          setAiProg(`${d}/${t}`);
+          runApi.progress(d, t);
+        },
+        onResults: (all, usd) => {
+          setAiRes((cur) => ({ ...cur, [check]: all }));
+          setAiUsd((cur) => ({ ...cur, [check]: usd }));
+          runApi.usd(usd);
+        },
+        onNote: (t) => runApi.log(t, "warn"),
       });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || r.status);
-      all.push(...(data.results || []));
-      usd += data.aiUsd || 0;
-      setAiRes((cur) => ({ ...cur, [check]: [...all] }));
-      setAiUsd((cur) => ({ ...cur, [check]: usd }));
+      runApi.log(`${(AI_META[check] || {}).label || check}: ${out.results.length ? `${out.results.length} gevonden` : out.skipped ? "niets gevonden" : "schoon"}${out.skipped ? ` · ${out.skipped} niet gecontroleerd (AI haperde)` : ""}`, out.results.length || out.skipped ? "warn" : "ok");
+      return out;
+    } finally {
+      setAiProg("");
     }
-    setAiProg("");
-    return { results: all, usd };
   }
 
   async function runAi(check) {
@@ -811,20 +765,33 @@ export default function DoctorPanel({ store, since }) {
     if (!zeker) return;
     setErr("");
     stopRef.current = false;
+    setPausing(false);
+    runApi.start(AI_META[check].label, { phases: [{ key: "ai", label: "AI-check" }], sub: `${cnt} producten · ±$${est}` });
+    runApi.phase("ai", AI_META[check].label);
     try {
       const out = await runAiCore(check, baseIds);
+      runApi.finish(stopRef.current ? "paused" : "done");
       sfx(out.results.length ? "error" : "success");
     } catch (e) {
       setErr(`${AI_META[check].label} gestopt: ${String(e.message || e)}`);
+      runApi.log(String(e.message || e), "err");
+      runApi.finish("error");
       sfx("error");
     } finally {
       setAiBusy(null);
       setAiProg("");
+      setPausing(false);
     }
   }
 
-  function applyGenderFix() {
-    const list = aiRes.gender || [];
+  // Twijfel = de titel zegt expliciet het andere geslacht ("Men's …" → AI zegt Women)
+  const genderDoubt = (m) => {
+    const ts = titleSex(m.title);
+    return !!ts && ts !== m.suggested;
+  };
+
+  function applyGenderFix(withDoubt) {
+    const list = (aiRes.gender || []).filter((m) => withDoubt || !genderDoubt(m));
     if (!list.length) return;
     const labels = {};
     for (const m of list) labels[String(m.id)] = m.suggested;
@@ -870,11 +837,55 @@ export default function DoctorPanel({ store, since }) {
 
   /* ---------------- RENDER ---------------- */
 
-  const scoreColor = (s) => (s >= 8.5 ? "var(--ok)" : s >= 6.5 ? "var(--warn)" : "var(--err)");
   const disabled = !store || busy || !!fixBusy || !!aiBusy;
 
+  const scopeLabel = runScoped ? "deze import-run" : latestOn ? `laatste ${latestN} producten` : `hele store (max ${max})`;
+  const findingsShown = rep ? rep.findings.filter((f) => flt === "all" || (flt === "error" ? f.level === "error" && !f.soft : f.level === "warn" || f.soft)) : [];
+  const nErr = rep ? rep.findings.filter((f) => f.level === "error" && !f.soft).length : 0;
+  const nWarn = rep ? rep.findings.length - nErr : 0;
+
   return (
-    <div>
+    <div className="sd">
+      {/* 1. LIVE DASHBOARD — plakt bovenaan tijdens het scrollen */}
+      <RunDashboard run={run} pausing={pausing} onPause={pause} onClose={() => runApi.clear()} />
+
+      {/* 2. KOP + HOOFDACTIES */}
+      <div className="sd-hero">
+        <div className="sd-hero__left">
+          <div className="sd-eyebrow">Store Doctor</div>
+          <div className="sd-hero__title">{store.name || store.domain}</div>
+          <div className="sd-hero__meta">
+            <span className="sd-pill sd-pill--gold">{market || "geen markt"}</span>
+            {store.currency ? <span className="sd-pill">{store.currency}</span> : null}
+            <span className="sd-pill">{scopeLabel}</span>
+            <span className={`sd-pill${String(backupSheet || "").trim() ? " sd-pill--ok" : " sd-pill--warn"}`}>
+              {String(backupSheet || "").trim() ? "backup aan" : "zonder backup"}
+            </span>
+          </div>
+        </div>
+        <div className="sd-hero__actions">
+          <button className="sd-btn sd-btn--ghost" onClick={scanClick} disabled={disabled}>
+            {busy ? "Scannen…" : fixBusy === "sw-types" ? "Producttypes…" : "🔍 Scan"}
+          </button>
+          <button
+            className="sd-btn sd-btn--gold"
+            onClick={fixAll}
+            disabled={disabled}
+            title="Verse scan, alle veilige fixes, alle AI-controles en een eindscan met verslag. Verwijderen blijft altijd aan jou."
+          >
+            {fixBusy === "all" ? "FIX ALLES bezig…" : "⚡ FIX ALLES"}
+          </button>
+        </div>
+      </div>
+      {err && <div className="sd-alert">{err}</div>}
+
+      {/* 3. INSTELLINGEN */}
+      <details className="sd-card sd-settings" open={!rep}>
+        <summary>
+          <span className="sd-card__title" style={{ margin: 0 }}>Instellingen</span>
+          <span className="sd-muted"> · {scopeLabel} · markt {market || "—"}</span>
+        </summary>
+        <div className="sd-settings__body">
       <div className="field-label">
         Welke producten{" "}
         <span className="opt">
@@ -995,6 +1006,9 @@ export default function DoctorPanel({ store, since }) {
         </label>
       ) : null}
 
+        </div>
+      </details>
+
       {isSW ? (
         <div className="prog-card" style={{ marginTop: 12 }}>
           <div className="field-label" style={{ marginTop: 0 }}>
@@ -1027,204 +1041,353 @@ export default function DoctorPanel({ store, since }) {
         </div>
       ) : null}
 
-      <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <button className="btn" onClick={scanClick} disabled={disabled}>
-          {busy ? "Scannen…" : fixBusy === "sw-types" ? "Producttypes zetten…" : "✚ Scan producten"}
-        </button>
-        <button
-          className="btn"
-          onClick={fixAll}
-          disabled={disabled}
-          title="Scant (indien nodig), draait alle veilige fixes én alle AI-controles in logische volgorde, en eindigt met een verslag. Verwijderen blijft altijd aan jou."
-        >
-          {fixBusy === "all" ? "FIX ALLES bezig…" : "⚡ FIX ALLES"}
-        </button>
-        {(fixBusy || aiBusy) && (
-          <button className="btn-ghost btn-small" onClick={() => { stopRef.current = true; }}>
-            {fixBusy === "all" ? "⏸ Pauzeer — daarna per onderdeel verder" : "■ Stop na deze stap"}
-          </button>
-        )}
-      </div>
-      {err && (
-        <div className="hint" style={{ color: "var(--err)" }}>
-          {err}
-        </div>
-      )}
 
-      {fixProg && (
-        <div className="prog-card" style={{ marginTop: 12 }}>
-          <div className="prog-top">
-            <span className="prog-title">Fix bezig… {fixProg.label ? `· ${fixProg.label}` : ""}</span>
-            <span className="prog-count">
-              {fixProg.done}/{fixProg.total}
-              <span className="prog-sep"> · </span>
-              {fixProg.fixed} aangepast
-              {fixProg.failed ? <span className="err"> · {fixProg.failed} mislukt</span> : null}
-            </span>
+      {/* 4. EINDVERSLAG FIX ALLES */}
+      {verslag && !fixBusy && (
+        <div className={`sd-card sd-verslag${verslag.paused ? " is-paused" : ""}`}>
+          <div className="sd-card__title">
+            Eindverslag FIX ALLES{verslag.paused ? " — gepauzeerd" : ""}
+            <span className="sd-muted"> · AI ±${verslag.usd.toFixed(2)}</span>
           </div>
-          <div className="pbar">
-            <div className="pbar-fill live" style={{ width: fixProg.total ? (fixProg.done / fixProg.total) * 100 + "%" : "0%" }} />
-          </div>
-        </div>
-      )}
-
-      {fixLog.length > 0 && (
-        <div className="logpanel" style={{ marginTop: 10, maxHeight: 260 }}>
-          {fixLog.map((b) => (
-            <div key={b.id} className="log" style={{ display: "block" }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
-                <span className={b.status === "busy" ? "muted" : b.failed ? "warn" : "ok"}>
-                  {b.status === "busy" ? "▸" : b.failed ? "⚠" : "✓"}
+          {verslag.before && verslag.after ? (
+            <div className="sd-delta">
+              <div>
+                <span className="sd-delta__lbl">Score</span>
+                <span className="sd-delta__val">
+                  {String(verslag.before.score).replace(".", ",")} → <strong>{String(verslag.after.score).replace(".", ",")}</strong>
                 </span>
-                <span style={{ flex: 1, fontWeight: 600 }}>{b.label}</span>
-                <span className="muted small">{b.status === "busy" ? `bezig… (${b.total})` : b.sum}</span>
               </div>
-              {b.details.length > 0 && (
-                <div style={{ paddingLeft: 20, marginTop: 3 }}>
-                  {(b.open ? b.details : b.details.slice(0, 4)).map((d, i) => (
-                    <div
-                      key={i}
-                      className="hint"
-                      style={{ marginTop: 1, ...(/MISLUKT|LET OP/.test(d) ? { color: "var(--err)" } : {}) }}
-                    >
-                      {d}
-                    </div>
-                  ))}
-                  {b.details.length > 4 && (
-                    <button type="button" className="linklike" onClick={() => toggleBlock(b.id)}>
-                      {b.open ? "▾ inklappen" : `▸ alle ${b.details.length} regels tonen`}
-                    </button>
-                  )}
-                </div>
-              )}
+              <div>
+                <span className="sd-delta__lbl">Fouten</span>
+                <span className="sd-delta__val">
+                  {verslag.before.errors} → <strong>{verslag.after.errors}</strong>
+                </span>
+              </div>
+              <div>
+                <span className="sd-delta__lbl">Waarschuwingen</span>
+                <span className="sd-delta__val">
+                  {verslag.before.warns} → <strong>{verslag.after.warns}</strong>
+                </span>
+              </div>
             </div>
-          ))}
-        </div>
-      )}
-
-      {verslag && !fixProg && (
-        <div className="prog-card" style={{ marginTop: 12 }}>
-          <div className="prog-top">
-            <span className="prog-title">
-              Eindverslag FIX ALLES{verslag.paused ? " — gepauzeerd" : ""}
-            </span>
-            <span className="prog-count">AI ±${verslag.usd.toFixed(2)}</span>
-          </div>
+          ) : null}
           {verslag.paused && (
-            <div className="hint" style={{ marginTop: 4 }}>
-              Gepauzeerd — hieronder werk je gewoon per onderdeel verder. Nóg een keer FIX ALLES
-              pakt op waar het bleef (wat al gefixt is, komt niet terug uit de scan).
+            <div className="sd-note">
+              Gepauzeerd — werk hieronder per onderdeel verder, of druk nog een keer op FIX ALLES: hij pakt op waar het bleef.
             </div>
           )}
-          <div className="logpanel" style={{ marginTop: 8 }}>
+          <div className="sd-list">
             {verslag.auto.map((a, i) => (
-              <div className="log" key={"a" + i}>
-                <span className={a.failed ? "warn" : "ok"}>✓</span>
-                <span style={{ flex: 1 }}>
-                  {a.label}: {a.fixed} aangepast · {a.skipped} overgeslagen
-                  {a.failed ? ` · ${a.failed} mislukt` : ""}
+              <div className="sd-list__row" key={"a" + i}>
+                <span className={a.error ? "sd-i err" : a.failed ? "sd-i warn" : "sd-i ok"}>{a.error ? "✗" : "✓"}</span>
+                <span className="sd-list__txt">
+                  <strong>{a.label}</strong>
+                  <span className="sd-muted">
+                    {" "}
+                    · {a.fixed} aangepast · {a.skipped} overgeslagen{a.failed ? ` · ${a.failed} mislukt` : ""}
+                    {a.error ? ` · ${a.error}` : ""}
+                  </span>
                 </span>
               </div>
             ))}
             {verslag.ai.map((t, i) => (
-              <div className="log" key={"i" + i}>
-                <span className="ok">✦</span>
-                <span style={{ flex: 1 }}>{t}</span>
+              <div className="sd-list__row" key={"i" + i}>
+                <span className="sd-i gold">✦</span>
+                <span className="sd-list__txt">{t}</span>
               </div>
             ))}
-            {verslag.open.length > 0 && (
+            {(verslag.errors || []).length > 0 && (
               <>
-                <div className="field-label">Voor jou om te beslissen</div>
-                {verslag.open.map((t, i) => (
-                  <div className="log" key={"o" + i}>
-                    <span className="warn">!</span>
-                    <span style={{ flex: 1 }}>{t}</span>
+                <div className="sd-list__head">Meldingen (de run ging door)</div>
+                {verslag.errors.map((t, i) => (
+                  <div className="sd-list__row" key={"e" + i}>
+                    <span className="sd-i err">✗</span>
+                    <span className="sd-list__txt">{t}</span>
                   </div>
                 ))}
               </>
             )}
-            {!verslag.auto.length && !verslag.ai.length && (
-              <div className="center-note">Niets te fixen gevonden.</div>
+            {verslag.open.length > 0 && (
+              <>
+                <div className="sd-list__head">Voor jou om te beslissen</div>
+                {verslag.open.map((t, i) => (
+                  <div className="sd-list__row" key={"o" + i}>
+                    <span className="sd-i warn">!</span>
+                    <span className="sd-list__txt">{t}</span>
+                  </div>
+                ))}
+              </>
             )}
+            {!verslag.auto.length && !verslag.ai.length && <div className="sd-empty">Niets te fixen gevonden.</div>}
           </div>
         </div>
       )}
 
+      {/* 5. OVERZICHT (rapport) */}
       {rep && (
-        <div className="prog-card" style={{ marginTop: 12 }}>
-          <div className="prog-top">
-            <span className="prog-title">
-              Rapport · {rep.scope && rep.scope.mode === "latest" ? `laatste ${rep.scanned} producten` : `${rep.scanned} producten`}
-              {rep.statusCount ? ` (${rep.statusCount.active} actief · ${rep.statusCount.draft} draft)` : ""}
-            </span>
-            <span className="prog-count" style={{ color: scoreColor(rep.stats.score) }}>
-              {String(rep.stats.score).replace(".", ",")}/10
-            </span>
-          </div>
-          <div className="prog-meta">
-            <span>
-              <span className="err">{rep.stats.errors} fouten</span>
-              <span className="prog-sep"> · </span>
-              {rep.stats.warns} waarschuwingen
-              {repAt ? (
-                <span className="muted">
-                  <span className="prog-sep"> · </span>
-                  bijgewerkt {String(repAt.getHours()).padStart(2, "0")}:{String(repAt.getMinutes()).padStart(2, "0")}
+        <div className="sd-card sd-overview">
+          <div className="sd-overview__top">
+            <ScoreRing score={rep.stats.score} />
+            <div className="sd-overview__tiles">
+              <div className={`sd-tile${rep.stats.errors ? " sd-tile--err" : " sd-tile--ok"}`}>
+                <span className="sd-tile__num">{rep.stats.errors}</span>
+                <span className="sd-tile__lbl">fouten</span>
+              </div>
+              <div className={`sd-tile${rep.stats.warns ? " sd-tile--warn" : ""}`}>
+                <span className="sd-tile__num">{rep.stats.warns}</span>
+                <span className="sd-tile__lbl">waarschuwingen</span>
+              </div>
+              <div className="sd-tile">
+                <span className="sd-tile__num">{rep.scanned}</span>
+                <span className="sd-tile__lbl">
+                  {rep.statusCount ? `${rep.statusCount.active} actief · ${rep.statusCount.draft} draft` : "producten"}
                 </span>
-              ) : null}
-            </span>
+              </div>
+              <div className="sd-tile">
+                <span className="sd-tile__num">
+                  {repAt ? `${String(repAt.getHours()).padStart(2, "0")}:${String(repAt.getMinutes()).padStart(2, "0")}` : "—"}
+                </span>
+                <span className="sd-tile__lbl">laatste scan</span>
+              </div>
+            </div>
           </div>
-
-          <div className="logpanel" style={{ marginTop: 12 }}>
-            {rep.findings.length === 0 && <div className="center-note">Alles schoon. Netjes.</div>}
-            {rep.findings.map((f) => (
-              <div key={f.id} className="log" style={{ display: "block" }}>
-                <div
-                  style={{ display: "flex", gap: 8, alignItems: "baseline", cursor: "pointer" }}
-                  onClick={() => setOpen((o) => ({ ...o, [f.id]: !o[f.id] }))}
-                >
-                  <span className={f.level === "error" ? "err" : "warn"}>{f.level === "error" ? "✗" : "!"}</span>
-                  <span style={{ flex: 1, fontWeight: 600 }}>{f.title}</span>
-                  <span className="muted small">{f.count}×</span>
-                  <span className="muted small">{open[f.id] ? "▾" : "▸"}</span>
-                </div>
-                {open[f.id] && (
-                  <div style={{ paddingLeft: 20, marginTop: 6 }}>
-                    <div className="hint" style={{ marginTop: 0 }}>{f.why}</div>
-                    {(f.fixes || []).map((fx) => (
+          {rep.partial && rep.partial.length > 0 && <div className="sd-note">{rep.partial.join(" · ")}</div>}
+          <div className="sd-overview__bar">
+            <div className="seg">
+              <button type="button" className={flt === "all" ? "on" : ""} onClick={() => setFlt("all")}>
+                Alles ({rep.findings.length})
+              </button>
+              <button type="button" className={flt === "error" ? "on" : ""} onClick={() => setFlt("error")}>
+                Fouten ({nErr})
+              </button>
+              <button type="button" className={flt === "warn" ? "on" : ""} onClick={() => setFlt("warn")}>
+                Waarschuwingen ({nWarn})
+              </button>
+            </div>
+          </div>
+          <div className="sd-findings">
+            {rep.findings.length === 0 && <div className="sd-empty">Alles schoon. Netjes.</div>}
+            {findingsShown.map((f) => {
+              const isOpen = !!open[f.id];
+              const main = (f.fixes || [])[0];
+              return (
+                <div key={f.id} className={`sd-finding is-${f.soft ? "soft" : f.level}${isOpen ? " open" : ""}`}>
+                  <div className="sd-finding__head" onClick={() => setOpen((o) => ({ ...o, [f.id]: !o[f.id] }))}>
+                    <span className="sd-finding__dot" />
+                    <span className="sd-finding__title">{f.title}</span>
+                    <span className="sd-count">{f.count}</span>
+                    {main && !isOpen ? (
                       <button
-                        key={fx.id}
-                        className="btn-ghost btn-small"
-                        style={{ marginRight: 8, marginTop: 6, ...(fx.danger ? { color: "var(--err)", borderColor: "var(--err)" } : {}) }}
+                        type="button"
+                        className={`sd-btn sd-btn--mini${main.danger ? " sd-btn--danger" : ""}`}
                         disabled={disabled}
-                        onClick={() => runFix(f.id, fx, f.ids)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // verwijderen/archiveren nooit met één tik vanuit de dichte kaart: eerst openklappen
+                          if (main.danger) setOpen((o) => ({ ...o, [f.id]: true }));
+                          else runFix(f.id, main, f.ids);
+                        }}
+                        title={main.label}
                       >
-                        {fixBusy === `${f.id}|${fx.id}` ? "Bezig…" : `⚡ ${fx.label} (${f.count})`}
+                        {fixBusy === `${f.id}|${main.id}` ? "Bezig…" : main.danger ? "Bekijk" : "⚡ Fix"}
                       </button>
-                    ))}
-                    <div style={{ marginTop: 6 }}>
-                      {f.examples.map((ex) => (
-                        <div key={ex.id} className="hint" style={{ marginTop: 2 }}>
-                          <a className="linklike" href={adminUrl(ex.id)} target="_blank" rel="noreferrer noopener">
-                            {ex.title}
-                          </a>
-                          {ex.extra ? <span className="muted"> — {ex.extra}</span> : null}
+                    ) : null}
+                    <span className="sd-chev">{isOpen ? "▾" : "▸"}</span>
+                  </div>
+                  {isOpen && (
+                    <div className="sd-finding__body">
+                      <div className="sd-finding__why">{f.why}</div>
+                      {(f.fixes || []).length > 0 && (
+                        <div className="sd-finding__fixes">
+                          {(f.fixes || []).map((fx) => (
+                            <button
+                              key={fx.id}
+                              className={`sd-btn sd-btn--small${fx.danger ? " sd-btn--danger" : ""}`}
+                              disabled={disabled}
+                              onClick={() => runFix(f.id, fx, f.ids)}
+                            >
+                              {fixBusy === `${f.id}|${fx.id}` ? "Bezig…" : `⚡ ${fx.label} (${f.count})`}
+                            </button>
+                          ))}
                         </div>
-                      ))}
-                      {f.count > f.examples.length && (
-                        <div className="hint muted">… en {f.count - f.examples.length} meer</div>
                       )}
+                      <div className="sd-examples">
+                        {f.examples.map((ex) => (
+                          <div key={`${ex.id}-${ex.title}`} className="sd-examples__row">
+                            <a className="linklike" href={adminUrl(ex.id)} target="_blank" rel="noreferrer noopener">
+                              {ex.title}
+                            </a>
+                            {ex.extra ? <span className="sd-muted"> — {ex.extra}</span> : null}
+                          </div>
+                        ))}
+                        {f.count > f.examples.length && <div className="sd-muted">… en {f.count - f.examples.length} meer</div>}
+                      </div>
                     </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 6. LOGBOEK PER FIX */}
+      {fixLog.length > 0 && (
+        <details className="sd-card sd-log">
+          <summary>
+            <span className="sd-card__title" style={{ margin: 0 }}>Logboek per fix</span>
+            <span className="sd-muted"> · {fixLog.length} stap(pen)</span>
+          </summary>
+          <div className="sd-list" style={{ marginTop: 10 }}>
+            {fixLog.map((b) => (
+              <div key={b.id} className="sd-list__row" style={{ display: "block" }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
+                  <span className={b.status === "busy" ? "sd-i" : b.failed ? "sd-i warn" : "sd-i ok"}>
+                    {b.status === "busy" ? "▸" : b.failed ? "⚠" : "✓"}
+                  </span>
+                  <span style={{ flex: 1, fontWeight: 600 }}>{b.label}</span>
+                  <span className="sd-muted small">{b.status === "busy" ? `bezig… (${b.total})` : b.sum}</span>
+                </div>
+                {b.details.length > 0 && (
+                  <div style={{ paddingLeft: 22, marginTop: 3 }}>
+                    {(b.open ? b.details : b.details.slice(0, 4)).map((d, i) => (
+                      <div key={i} className="sd-muted small" style={{ marginTop: 1, ...(isAlarm(d) ? { color: "var(--err)" } : {}) }}>
+                        {d}
+                      </div>
+                    ))}
+                    {b.details.length > 4 && (
+                      <button type="button" className="linklike" onClick={() => toggleBlock(b.id)}>
+                        {b.open ? "▾ inklappen" : `▸ alle ${b.details.length} regels tonen`}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
             ))}
           </div>
-        </div>
+        </details>
       )}
 
+      {/* 7. AI-CONTROLES */}
+      {rep && (
+        <div className="sd-card sd-ai">
+          <div className="sd-card__title">
+            AI-controles <span className="sd-muted">goedkoop model · kosten vooraf in beeld · draaien ook mee in FIX ALLES</span>
+          </div>
+          {Object.keys(AI_META).map((check) => (
+            <div key={check} className="log" style={{ display: "block", marginTop: 6 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button className="btn-ghost btn-small" disabled={disabled} onClick={() => runAi(check)}>
+                  {aiBusy === check ? `Bezig… ${aiProg}` : `✦ ${AI_META[check].label}`}
+                </button>
+                <span className="hint" style={{ marginTop: 0, flex: 1 }}>
+                  {AI_META[check].desc} · ±$
+                  {check === "sample" ? "0.05" : (AI_EST[check] * (rep.productIds || []).length).toFixed(2)}
+                </span>
+                {aiUsd[check] != null && <span className="muted small">±${aiUsd[check].toFixed(3)} gebruikt</span>}
+              </div>
+
+              {aiRes[check] && (
+                <div style={{ paddingLeft: 4, marginTop: 6 }}>
+                  {aiRes[check].length === 0 && !aiBusy && (
+                    <div className="hint" style={{ color: "var(--ok)" }}>Niets gevonden — schoon.</div>
+                  )}
+                  {aiRes[check].length > 0 && (
+                    <>
+                      {check === "photo-audit" && aiRes[check].some((m) => m.kind === "gender") && (
+                        <>
+                          <button
+                            className="btn-ghost btn-small"
+                            style={{ color: "var(--err)", borderColor: "var(--err)" }}
+                            disabled={disabled}
+                            onClick={() => applyPhotoGender("archive")}
+                          >
+                            ⚡ Haal {aiRes[check].filter((m) => m.kind === "gender").length} misgenderd(e) eruit (archiveren)
+                          </button>{" "}
+                          <button className="btn-ghost btn-small" disabled={disabled} onClick={() => applyPhotoGender("flip")}>
+                            Of: zet om naar foto-geslacht
+                          </button>{" "}
+                        </>
+                      )}
+                      {check === "photo-audit" && aiRes[check].some((m) => m.kind === "fit") && (
+                        <button className="btn-ghost btn-small" disabled={disabled} onClick={applyCollectionFit}>
+                          ⚡ Haal {aiRes[check].filter((m) => m.kind === "fit").length} uit verkeerde collectie(s)
+                        </button>
+                      )}
+                      {check === "gender" && aiRes.gender.some((m) => !genderDoubt(m)) && (
+                        <button className="btn-ghost btn-small" disabled={disabled} onClick={() => applyGenderFix(false)}>
+                          ⚡ Zet {aiRes.gender.filter((m) => !genderDoubt(m)).length} gender-tag(s) goed
+                        </button>
+                      )}{" "}
+                      {check === "gender" && aiRes.gender.some(genderDoubt) && (
+                        <button
+                          className="btn-ghost btn-small"
+                          style={{ color: "var(--warn)", borderColor: "var(--warn)" }}
+                          disabled={disabled}
+                          onClick={() => {
+                            const n = aiRes.gender.filter(genderDoubt).length;
+                            if (window.confirm(`${n} product(en) waar de titel iets anders zegt dan de AI. Heb je de foto's gecheckt? Dan nu ook die omzetten.`)) applyGenderFix(true);
+                          }}
+                        >
+                          Ook {aiRes.gender.filter(genderDoubt).length} twijfelgeval(len) omzetten (na foto-check)
+                        </button>
+                      )}
+                      {check === "watermark" && (
+                        <button
+                          className="btn-ghost btn-small"
+                          style={{ color: "var(--err)", borderColor: "var(--err)" }}
+                          disabled={disabled}
+                          onClick={applyWatermarkFix}
+                        >
+                          ⚡ Verwijder {aiRes.watermark.filter((m) => m.imageId).length} geflagde foto('s)
+                        </button>
+                      )}
+                      <div style={{ marginTop: 4 }}>
+                        {aiRes[check].slice(0, 25).map((m, i) => (
+                          <div key={i} className="hint" style={{ marginTop: 2 }}>
+                            {m.id ? (
+                              <a className="linklike" href={adminUrl(m.id)} target="_blank" rel="noreferrer noopener">
+                                {m.title}
+                              </a>
+                            ) : (
+                              <strong>{m.title}</strong>
+                            )}
+                            <span className="muted">
+                              {check === "photo-audit" && ` — ${m.kind === "gender" ? "⚠ misgenderd: " : "collectie: "}${m.why}`}
+                              {check === "gender" && ` — ${m.current} → ${m.suggested}${genderDoubt(m) ? " · ⚠ twijfel: titel zegt " + titleSex(m.title) : ""}`}
+                              {check === "color-photo" && ` — "${m.color}": ${m.why}`}
+                              {check === "watermark" && ` — ${m.reason}`}
+                              {check === "language" && ` — ${m.lang}: "${m.sample}"`}
+                              {check === "sample" && ` — ${m.why}${m.affected ? ` (${m.affected} van de steekproef)` : ""}${m.example ? ` · bv. ${m.example}` : ""}`}
+                            </span>
+                          </div>
+                        ))}
+                        {aiRes[check].length > 25 && (
+                          <div className="hint muted">… en {aiRes[check].length - 25} meer</div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+          <div className="hint">
+            Kleur↔foto en taal-vondsten zijn handwerk (bewust — automatisch herschrijven is riskanter dan het probleem).
+            Geslacht en watermerk hebben een eigen toepas-knop hierboven.
+          </div>
+        </div>
+      )}
+      {/* 8. PLANNEN VAN CLAUDE */}
       {store && (
-        <div style={{ marginTop: 14 }}>
+        <details className="sd-card sd-plans">
+          <summary>
+            <span className="sd-card__title" style={{ margin: 0 }}>Plannen van Claude</span>
+            <span className="sd-muted"> · prijsplan · wijzigingsplan</span>
+          </summary>
+          <div style={{ marginTop: 12 }}>
+      {store && (
+        <div>
           <div className="field-label">Prijsplan toepassen <span className="opt">goedgekeurd voorstel van Claude, bv. ssb-2026-10-30</span></div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
             <input type="text" value={planName} placeholder="naam van het plan" onChange={(e) => setPlanName(e.target.value)} style={{ maxWidth: 260 }} />
@@ -1348,99 +1511,8 @@ export default function DoctorPanel({ store, since }) {
         </div>
       )}
 
-      {rep && (
-        <div style={{ marginTop: 14 }}>
-          <div className="field-label">AI-checks (goedkoop model — kosten vooraf in beeld)</div>
-          {Object.keys(AI_META).map((check) => (
-            <div key={check} className="log" style={{ display: "block", marginTop: 6 }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <button className="btn-ghost btn-small" disabled={disabled} onClick={() => runAi(check)}>
-                  {aiBusy === check ? `Bezig… ${aiProg}` : `✦ ${AI_META[check].label}`}
-                </button>
-                <span className="hint" style={{ marginTop: 0, flex: 1 }}>
-                  {AI_META[check].desc} · ±$
-                  {check === "sample" ? "0.05" : (AI_EST[check] * (rep.productIds || []).length).toFixed(2)}
-                </span>
-                {aiUsd[check] != null && <span className="muted small">±${aiUsd[check].toFixed(3)} gebruikt</span>}
-              </div>
-
-              {aiRes[check] && (
-                <div style={{ paddingLeft: 4, marginTop: 6 }}>
-                  {aiRes[check].length === 0 && !aiBusy && (
-                    <div className="hint" style={{ color: "var(--ok)" }}>Niets gevonden — schoon.</div>
-                  )}
-                  {aiRes[check].length > 0 && (
-                    <>
-                      {check === "photo-audit" && aiRes[check].some((m) => m.kind === "gender") && (
-                        <>
-                          <button
-                            className="btn-ghost btn-small"
-                            style={{ color: "var(--err)", borderColor: "var(--err)" }}
-                            disabled={disabled}
-                            onClick={() => applyPhotoGender("archive")}
-                          >
-                            ⚡ Haal {aiRes[check].filter((m) => m.kind === "gender").length} misgenderd(e) eruit (archiveren)
-                          </button>{" "}
-                          <button className="btn-ghost btn-small" disabled={disabled} onClick={() => applyPhotoGender("flip")}>
-                            Of: zet om naar foto-geslacht
-                          </button>{" "}
-                        </>
-                      )}
-                      {check === "photo-audit" && aiRes[check].some((m) => m.kind === "fit") && (
-                        <button className="btn-ghost btn-small" disabled={disabled} onClick={applyCollectionFit}>
-                          ⚡ Haal {aiRes[check].filter((m) => m.kind === "fit").length} uit verkeerde collectie(s)
-                        </button>
-                      )}
-                      {check === "gender" && (
-                        <button className="btn-ghost btn-small" disabled={disabled} onClick={applyGenderFix}>
-                          ⚡ Zet {aiRes.gender.length} gender-tag(s) goed
-                        </button>
-                      )}
-                      {check === "watermark" && (
-                        <button
-                          className="btn-ghost btn-small"
-                          style={{ color: "var(--err)", borderColor: "var(--err)" }}
-                          disabled={disabled}
-                          onClick={applyWatermarkFix}
-                        >
-                          ⚡ Verwijder {aiRes.watermark.filter((m) => m.imageId).length} geflagde foto('s)
-                        </button>
-                      )}
-                      <div style={{ marginTop: 4 }}>
-                        {aiRes[check].slice(0, 25).map((m, i) => (
-                          <div key={i} className="hint" style={{ marginTop: 2 }}>
-                            {m.id ? (
-                              <a className="linklike" href={adminUrl(m.id)} target="_blank" rel="noreferrer noopener">
-                                {m.title}
-                              </a>
-                            ) : (
-                              <strong>{m.title}</strong>
-                            )}
-                            <span className="muted">
-                              {check === "photo-audit" && ` — ${m.kind === "gender" ? "⚠ misgenderd: " : "collectie: "}${m.why}`}
-                              {check === "gender" && ` — ${m.current} → ${m.suggested}`}
-                              {check === "color-photo" && ` — "${m.color}": ${m.why}`}
-                              {check === "watermark" && ` — ${m.reason}`}
-                              {check === "language" && ` — ${m.lang}: "${m.sample}"`}
-                              {check === "sample" && ` — ${m.why}${m.affected ? ` (${m.affected} van de steekproef)` : ""}${m.example ? ` · bv. ${m.example}` : ""}`}
-                            </span>
-                          </div>
-                        ))}
-                        {aiRes[check].length > 25 && (
-                          <div className="hint muted">… en {aiRes[check].length - 25} meer</div>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-          <div className="hint">
-            Kleur↔foto en taal-vondsten zijn handwerk (bewust — automatisch herschrijven is riskanter dan het probleem).
-            Geslacht en watermerk hebben een eigen toepas-knop hierboven.
           </div>
-        </div>
+        </details>
       )}
     </div>
   );

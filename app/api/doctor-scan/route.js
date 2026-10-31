@@ -14,7 +14,17 @@ export const maxDuration = 120;
 // nieuwste producten, actief + draft, max 1000) en draait alle gratis
 // deterministische checks. AI-checks lopen apart via /api/doctor-ai.
 export async function POST(req) {
-  const { store, max, sinceISO, latest, vendorName, market, bareSystem, sizeGuides } = await req.json().catch(() => ({}));
+  const { store, max, sinceISO, latest, vendorName, market, bareSystem, sizeGuides, light } = await req.json().catch(() => ({}));
+  /* TIJDBUDGET (31-10): een scan die over de Vercel-limiet gaat, geeft een
+     HTML-foutpagina i.p.v. JSON ("… is not valid JSON" in het rood). De
+     verplichte delen (producten, maattabellen, checks) gaan altijd door; de
+     extra's (fijne categorieën, category-velden, thema-check) alleen zolang
+     er tijd is. Wat is overgeslagen staat in `partial`. light = de client
+     vroeg na een time-out om een lichte scan. */
+  const t0 = Date.now();
+  const BUDGET_MS = Number(process.env.DOCTOR_SCAN_BUDGET_MS) || 40000;
+  const left = () => BUDGET_MS - (Date.now() - t0);
+  const partial = [];
   // Sa Collective (lib/org.js, 20-10): maattabellen helemaal buiten de Doctor —
   // metafield niet ophalen, checks "Geen maattabel"/"past niet" niet draaien.
   const skipGuides = sizeGuides === false;
@@ -68,11 +78,16 @@ export async function POST(req) {
       }
 
       // Productcategorie (taxonomie) — niet in de REST-data; mislukt = check overslaan
-      try {
-        const c = await listProductCategories(store, { max: Number(max) || 1000 });
-        categories = c.ok ? c.values : null;
-      } catch {
+      if (light || left() < 12000) {
         categories = null;
+        partial.push("categorie-check overgeslagen (lichte scan)");
+      } else {
+        try {
+          const c = await listProductCategories(store, { max: Number(max) || 1000 });
+          categories = c.ok ? c.values : null;
+        } catch {
+          categories = null;
+        }
       }
     }
 
@@ -81,10 +96,15 @@ export async function POST(req) {
        hoofdcategorie (gecachet), metafields 100 producten per call. */
     let refinedCategories = null;
     let attrKeys = null;
-    if (categories) {
+    if (categories && !light) {
       try {
         refinedCategories = {};
         for (const p of products) {
+          // geen tijd meer? dan valt de check per product terug op de grove categorie
+          if (left() < 10000) {
+            partial.push("fijne categorie niet voor elk product bekeken (tijd)");
+            break;
+          }
           const rc = await resolveCategory(store, p);
           if (rc) refinedCategories[String(p.id)] = rc;
         }
@@ -93,6 +113,8 @@ export async function POST(req) {
       }
       if (byIdExtras) {
         attrKeys = byIdExtras.attrKeys;
+      } else if (left() < 8000) {
+        partial.push("category-velden niet gecontroleerd (tijd)");
       } else {
         try {
           const ak = await listCategoryAttrKeys(store, { max: Number(max) || 1000 });
@@ -122,7 +144,7 @@ export async function POST(req) {
 
     /* 31-10: maattabel-snippet in het live thema — rondt die nog af op 1 decimaal?
        (thema-breed, dus één finding; mislukt/geen scope = check overgeslagen) */
-    if (!skipGuides) {
+    if (!skipGuides && !light && left() > 6000) {
       const withGuide = products.find((p) => guides && guides[String(p.id)]) || products[0];
       const tf = await scanThemeSizeGuide(store, withGuide && withGuide.id).catch(() => null);
       if (tf) {
@@ -135,6 +157,8 @@ export async function POST(req) {
     return NextResponse.json({
       ok: true,
       ...result,
+      partial: [...new Set(partial)],
+      ms: Date.now() - t0,
       scanned: products.length,
       scope,
       sizeGuides: !skipGuides,
