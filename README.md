@@ -47,6 +47,16 @@ Doorvoeren: **Store Doctor → store kiezen → Wijzigingsplan toepassen → pla
 
 Veiligheid (`lib/change-plan.js`): elk veld heeft een "from" — is een product intussen handmatig veranderd, dan wordt het hele product overgeslagen. Tags: alleen toevoegen/weghalen wat in het plan staat. Optie-wijzigingen die varianten zouden samenvoegen worden geweigerd. Alles gaat eerst naar het backup-tabblad. Nieuwe url alleen mét doorverwijzing (lukt die niet, dan blijft de url staan). Motor: fix `apply-change-plan` in `lib/doctor.js`, route `app/api/doctor-fix`, knoppen in `components/DoctorPanel.js`.
 
+## Maattabellen en schoenmaten in Store Doctor (31-10-2026)
+- **Hele getallen in elke maattabel.** Nieuwe check "Maattabel met kommagetallen of dubbele US-kolom" (fix `tidy-size-guides`). Die rondt de kledingmaten in custom.size_guide af en haalt bij herenkleding de "US"-kolom weg, omdat die alleen de borstmaat herhaalde (S = 35/37). Schoenen: de voetlengte wordt alleen bij het tonen afgerond, niet in de opslag.
+- **Thema-snippet.** Nieuwe check "Maattabel toont kommagetallen (thema)" (fix `theme-round-size-guide`). Die zoekt in het live thema de maattabel-snippet die nog met `round: 1` afrondt. De fix zet eerst een backup-kopie (…-backup-datum.liquid) in hetzelfde thema en zet daarna alleen de afronding op hele getallen. Hiervoor zijn de app-scopes `read_themes` en `write_themes` nodig; zonder die scopes komt er een melding en wordt er niets aangepast.
+- **Standaardtabel heren** heeft geen US-kolom meer (`standardGuide`). De preview (`formatCell`) toont ook hele getallen.
+- **Schoenmaten in het verkeerde systeem**, check "size-system":
+  - "UK 5, 5.5, 6 … 11" wordt nu als UK gelezen; alleen de eerste maat had het label (`inferSetSystem` in `lib/sizes.js`). In een US-store wordt dat US 6–12 (heren UK +1, dames UK +2).
+  - "AU/NZ 6" wordt als AU gelezen.
+  - Slippers, clogs, booties, oxfords, brogues en moccasins tellen nu ook als schoen.
+- **Clove & Cloth** heeft een store-profiel (USA, man + vrouw).
+
 ## Environment variables
 
 Zet deze in Vercel → Project → Settings → Environment Variables.

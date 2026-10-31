@@ -73,6 +73,8 @@ const FIXALL_ORDER = [
   "fix-compareat",
   "clean-titles",
   "fix-size-guides",
+  "tidy-size-guides", // ná het herbouwen: hele getallen + geen dubbele US-kolom (31-10)
+  "theme-round-size-guide", // maattabel-snippet in het thema op hele getallen (met backup-kopie)
 ];
 
 function sfx(kind) {
@@ -668,7 +670,7 @@ export default function DoctorPanel({ store, since }) {
       for (const f of report.findings) {
         for (const fx of f.fixes || []) {
           if (!FIXALL_ORDER.includes(fx.id)) continue;
-          if (!orgDoc.sizeGuides && fx.id === "fix-size-guides") continue; // Sa Collective: geen maattabellen
+          if (!orgDoc.sizeGuides && /size-guide/.test(fx.id)) continue; // Sa Collective: geen maattabellen
           if (!jobs.has(fx.id)) jobs.set(fx.id, { fix: fx, ids: new Set() });
           for (const id of f.ids) jobs.get(fx.id).ids.add(id);
         }

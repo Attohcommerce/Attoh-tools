@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { listProducts, listProductMetafieldValues, listProductCategories } from "@/lib/shopify";
-import { runDoctor } from "@/lib/doctor";
+import { runDoctor, scanThemeSizeGuide } from "@/lib/doctor";
 import { resolveCategory, listCategoryAttrKeys } from "@/lib/category-attrs";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { storeGendersOf, storeShoeLabelsOf } from "@/lib/store-gender";
@@ -119,6 +119,18 @@ export async function POST(req) {
       // Shapes Wardrobe: producttype moet uit de lijst van Cas komen (23-10)
       swTypes: isShapesWardrobe(store),
     });
+
+    /* 31-10: maattabel-snippet in het live thema — rondt die nog af op 1 decimaal?
+       (thema-breed, dus één finding; mislukt/geen scope = check overgeslagen) */
+    if (!skipGuides) {
+      const withGuide = products.find((p) => guides && guides[String(p.id)]) || products[0];
+      const tf = await scanThemeSizeGuide(store, withGuide && withGuide.id).catch(() => null);
+      if (tf) {
+        result.findings.push(tf);
+        const order = { error: 0, warn: 1 };
+        result.findings.sort((a, b) => order[a.level] - order[b.level] || b.count - a.count);
+      }
+    }
 
     return NextResponse.json({
       ok: true,

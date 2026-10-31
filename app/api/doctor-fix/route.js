@@ -37,6 +37,9 @@ const CHUNK_FOR = {
   "translate-options": 12,
   "convert-sizes": 12,
   "fix-size-guides": 10,
+  "tidy-size-guides": 15,
+  // thema-breed: één product-id als drager, de fix raakt alleen de snippet
+  "theme-round-size-guide": 1,
   "delete-small-men-shoe-sizes": 8,
   "clean-size-labels": 12,
   "shoe-us-eu-labels": 8,
@@ -108,7 +111,10 @@ function snapshotFor(fix, p) {
     case "delete-flagged-images":
       return { images: (p.images || []).map((im) => [im.id, im.src]) };
     case "fix-size-guides":
+    case "tidy-size-guides":
       return { size_guide: p.__sizeGuide || null };
+    case "theme-round-size-guide":
+      return { note: "thema-snippet: de fix zet eerst een backup-kopie (…-backup-datum.liquid) in hetzelfde thema" };
     case "delete-small-men-shoe-sizes":
       return { variants: vars((x) => [x.id, x.option1, x.option2, x.option3, x.price, x.sku]) };
     case "clean-size-labels":
@@ -193,7 +199,7 @@ export async function POST(req) {
     const pending = slice.map((id) => products.find((p) => String(p.id) === String(id))).filter(Boolean);
 
     // Maattabel-fix: de huidige metafield erbij halen (voor backup + manual-guard)
-    if ((fix === "fix-size-guides" || fix === "shoe-us-eu-labels") && pending.length) {
+    if ((fix === "fix-size-guides" || fix === "tidy-size-guides" || fix === "shoe-us-eu-labels") && pending.length) {
       const mf = await getProductMetafieldValues(store, pending.map((p) => p.id), { namespace: SG_NS, key: SG_KEY });
       if (mf.ok) for (const p of pending) p.__sizeGuide = mf.values[String(p.id)] || null;
     }
