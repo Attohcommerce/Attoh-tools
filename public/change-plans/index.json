@@ -1,0 +1,44 @@
+{
+ "plans": [
+  {
+   "name": "cc-2026-10-31",
+   "store": "Clove & Cloth",
+   "domain": "cloveandcloth.com",
+   "date": "2026-10-31",
+   "items": 83,
+   "products": 76
+  },
+  {
+   "name": "ssb-2026-10-31",
+   "store": "Soul Society Boutique",
+   "domain": "soulsocietyboutique.com",
+   "date": "2026-10-31",
+   "items": 38,
+   "products": 37
+  },
+  {
+   "name": "emc-2026-10-31",
+   "store": "Everman Clothing",
+   "domain": "evermanclothing.com",
+   "date": "2026-10-31",
+   "items": 34,
+   "products": 34
+  },
+  {
+   "name": "sw-2026-10-31",
+   "store": "Shapes Wardrobe",
+   "domain": "shapeswardrobe.com",
+   "date": "2026-10-31",
+   "items": 27,
+   "products": 27
+  },
+  {
+   "name": "lgb-2026-10-31",
+   "store": "Lady Glam Boutique",
+   "domain": "ladyglamboutique.com",
+   "date": "2026-10-31",
+   "items": 32,
+   "products": 27
+  }
+ ]
+}

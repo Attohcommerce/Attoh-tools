@@ -1,0 +1,647 @@
+{
+ "kind": "change-plan",
+ "version": 1,
+ "name": "ssb-2026-10-31",
+ "store": "Soul Society Boutique",
+ "domain": "soulsocietyboutique.com",
+ "date": "2026-10-31",
+ "note": "volledige controle 31-10 — geslacht rechtzetten 9; categorie toevoegen 6; varianten opschonen 22; lege producttypes vullen 1",
+ "groups": [
+  {
+   "id": "gender",
+   "label": "Geslacht rechtzetten",
+   "desc": "Titel, tags, producttype en omschrijving van producten die bij het verkeerde geslacht stonden (handmatig gecheckt op de foto).",
+   "default": true
+  },
+  {
+   "id": "categories",
+   "label": "Categorie toevoegen",
+   "desc": "Producten die alleen in Men/Women stonden en in geen enkele subcollectie (bv. Women's Knitwear) — krijgen de juiste categorie-tag erbij.",
+   "default": true
+  },
+  {
+   "id": "variants",
+   "label": "Varianten opschonen",
+   "desc": "Optie-namen gelijk (Colours/Sizes/Shoe size → Color/Size, één filter) en rommel uit waarden (\"(Almost sold out)\", kg-bereik, Chinese kleurnamen, \"As shown\").",
+   "default": true
+  },
+  {
+   "id": "types",
+   "label": "Lege producttypes vullen",
+   "desc": "Producttype uit de titel (bv. \"Women's Clogs\").",
+   "default": true
+  }
+ ],
+ "items": [
+  {
+   "id": 10506363437385,
+   "title": "Women's Leather Jacket | Collared Zip Closure Long Sleeve",
+   "group": "gender",
+   "why": "herenjas (foto, url mens-, maten t/m 5XL) stond als Women's in Jackets & Coats",
+   "set": {
+    "title": "Men's Leather Jacket | Collared Zip Closure Long Sleeve",
+    "product_type": "Men's Leather Jacket"
+   },
+   "from": {
+    "title": "Women's Leather Jacket | Collared Zip Closure Long Sleeve",
+    "product_type": "Women's Leather Jacket"
+   },
+   "tagsAdd": [
+    "Men",
+    "Men's Jackets & Coats"
+   ],
+   "tagsRemove": [
+    "Women",
+    "Jackets & Coats"
+   ]
+  },
+  {
+   "id": 10353431871817,
+   "title": "Women's Pants | Elastic Waist Relaxed Fit Lightweight",
+   "group": "gender",
+   "why": "man op de foto; stond als Women's Pants met tag Men's Shirts",
+   "set": {
+    "title": "Men's Pants | Elastic Waist Relaxed Fit Lightweight",
+    "product_type": "Men's Pants"
+   },
+   "from": {
+    "title": "Women's Pants | Elastic Waist Relaxed Fit Lightweight",
+    "product_type": "Women's Pants"
+   },
+   "tagsAdd": [
+    "Men",
+    "Men's Pants"
+   ],
+   "tagsRemove": [
+    "Women",
+    "Men's Shirts"
+   ],
+   "body": [
+    [
+     "women's",
+     "men's"
+    ],
+    [
+     "womens",
+     "mens"
+    ],
+    [
+     "women",
+     "men"
+    ],
+    [
+     "woman",
+     "man"
+    ],
+    [
+     "ladies'",
+     "men's"
+    ],
+    [
+     "ladies",
+     "men"
+    ],
+    [
+     "female",
+     "male"
+    ]
+   ]
+  },
+  {
+   "id": 10353436655945,
+   "title": "Women's Shirt | Henley Neckline Long Sleeve Button Closure",
+   "group": "gender",
+   "why": "heren-henley (foto, url mens-) stond als Women's Shirt in Blouses",
+   "set": {
+    "title": "Men's Shirt | Henley Neckline Long Sleeve Button Closure",
+    "product_type": "Men's Shirt"
+   },
+   "from": {
+    "title": "Women's Shirt | Henley Neckline Long Sleeve Button Closure",
+    "product_type": "Women's Shirt"
+   },
+   "tagsAdd": [
+    "Men",
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Women",
+    "Blouses"
+   ]
+  },
+  {
+   "id": 10353425678665,
+   "title": "Men’s Hoodie | Colorblock Crewneck Relaxed Fit",
+   "group": "gender",
+   "why": "titel Men's, maar type Women's Hoodie + damescollectie Sweaters + 'women' in de tekst",
+   "set": {
+    "title": "Men's Hoodie | Colorblock Crewneck Relaxed Fit",
+    "product_type": "Men's Hoodie"
+   },
+   "from": {
+    "title": "Men’s Hoodie | Colorblock Crewneck Relaxed Fit",
+    "product_type": "Women's Hoodie"
+   },
+   "tagsAdd": [
+    "Men's Hoodies"
+   ],
+   "tagsRemove": [
+    "Sweaters"
+   ],
+   "body": [
+    [
+     "women's",
+     "men's"
+    ],
+    [
+     "womens",
+     "mens"
+    ],
+    [
+     "women",
+     "men"
+    ],
+    [
+     "woman",
+     "man"
+    ],
+    [
+     "ladies'",
+     "men's"
+    ],
+    [
+     "ladies",
+     "men"
+    ],
+    [
+     "female",
+     "male"
+    ]
+   ]
+  },
+  {
+   "id": 10506374906185,
+   "title": "Women's Platform Oxford Shoe | Rounded Toe Lace-Up Block Heel",
+   "group": "gender",
+   "why": "producttype \"Men's Heels\" had het verkeerde geslacht (titel + tags: Women)",
+   "set": {
+    "product_type": "Women's Heels"
+   },
+   "from": {
+    "product_type": "Men's Heels"
+   }
+  },
+  {
+   "id": 10486036693321,
+   "title": "Men's Cargo Pants | Relaxed Fit Denim Cargo Pockets",
+   "group": "gender",
+   "why": "producttype \"Women's Cargo Pants\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Cargo Pants"
+   },
+   "from": {
+    "product_type": "Women's Cargo Pants"
+   }
+  },
+  {
+   "id": 10464690176329,
+   "title": "Women's Christmas Sweater | Crew Neck Knit Nordic Print",
+   "group": "gender",
+   "why": "producttype \"Men's Christmas Sweater\" had het verkeerde geslacht (titel + tags: Women)",
+   "set": {
+    "product_type": "Women's Christmas Sweater"
+   },
+   "from": {
+    "product_type": "Men's Christmas Sweater"
+   }
+  },
+  {
+   "id": 10464690045257,
+   "title": "Women's Peacoat | Mid-Length Button Front Fleece Patchwork",
+   "group": "gender",
+   "why": "producttype \"Men's Coat\" had het verkeerde geslacht (titel + tags: Women)",
+   "set": {
+    "product_type": "Women's Coat"
+   },
+   "from": {
+    "product_type": "Men's Coat"
+   }
+  },
+  {
+   "id": 10476588990793,
+   "title": "Men's Cargo Pants | Relaxed Fit Corduroy Multiple Pockets",
+   "group": "gender",
+   "why": "producttype \"Women's Cargo Pants\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Cargo Pants"
+   },
+   "from": {
+    "product_type": "Women's Cargo Pants"
+   }
+  },
+  {
+   "id": 10506375496009,
+   "title": "Women's Orthopedic Slip Ons | Perforated Suede Loafer Comfort",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Flats & Loafers",
+   "tagsAdd": [
+    "Flats & Loafers"
+   ]
+  },
+  {
+   "id": 10353430233417,
+   "title": "Women's Cargo Pants | Capri Length Drawcord Cargo Pockets",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Trousers",
+   "tagsAdd": [
+    "Trousers"
+   ]
+  },
+  {
+   "id": 10353430364489,
+   "title": "Men's Cargo Pants | Relaxed Fit Drawstring Waist Cargo Pockets",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Men's Pants",
+   "tagsAdd": [
+    "Men's Pants"
+   ]
+  },
+  {
+   "id": 10353430921545,
+   "title": "Women's Jeans | High Waist Straight Leg Cropped Denim",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Jeans",
+   "tagsAdd": [
+    "Jeans"
+   ]
+  },
+  {
+   "id": 10353432887625,
+   "title": "Men's Tank Top | Notch Neckline Sleeveless Knit",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Men's Shirts",
+   "tagsAdd": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 10353436131657,
+   "title": "Men's Sweater | Zip-Up Knit Relaxed Fit Set",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Men's Sweaters",
+   "tagsAdd": [
+    "Men's Sweaters"
+   ]
+  },
+  {
+   "id": 10506375496009,
+   "title": "Women's Orthopedic Slip Ons | Perforated Suede Loafer Comfort",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Green (Almost sold out!)",
+     "to": "Green"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "White (Almost sold out!)",
+     "to": "White"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Black (Almost sold out!)",
+     "to": "Black"
+    }
+   ]
+  },
+  {
+   "id": 10506361340233,
+   "title": "Women's Snow Boots | Lace-Up Faux Fur Mid-Calf",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10506361307465,
+   "title": "Women's Ballet Flats | Pointed Toe Satin Buckle Low Heel",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10506361110857,
+   "title": "Women's Ballet Flats | Woven Open-Weave Rounded Toe Slip-On",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10498868511049,
+   "title": "Men's Loafer Shoe | Suede Upper Slip-On Casual Comfort",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10486038790473,
+   "title": "Men's Loafer Shoe | Suede Upper Slip-On Moccasin",
+   "group": "variants",
+   "why": "optie \"Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10464687522121,
+   "title": "Women's Slip On Loafers | Round Toe Suede Buckle Orthopedic",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10464686211401,
+   "title": "Women's Long Sleeveless Dress | U-Neck Maxi Linen Button Front",
+   "group": "variants",
+   "why": "optie \"Color-Orange\" → \"Color\"; optie \"Size-XS\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Color-Orange",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Size-XS",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10464684343625,
+   "title": "Women's Winter Boots | Suede Round Toe Flat Sole",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10464681296201,
+   "title": "Women's Mules | Pointed Toe Embroidered Mesh Slingback",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10464681230665,
+   "title": "Women's Mules | Faux Fur Lined Suede Upper Slip On",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10464679428425,
+   "title": "Women's Ballet Flats | Open Toe H Strap Leather Flat",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10353430331721,
+   "title": "Women's Cargo Pants | Wide Leg Drawstring Elastic Waist Cotton",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "S (almost sold out)",
+     "to": "S"
+    }
+   ]
+  },
+  {
+   "id": 10353430987081,
+   "title": "Women's Chelsea Boots | Geometric Chunky Platform Lug Sole",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10353431249225,
+   "title": "Women's Chelsea Boots | Platform Sole Elastic Side Panels Leather",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10353431576905,
+   "title": "Women's Waterproof Boots | Ankle Height Round Toe Slip-On Leather",
+   "group": "variants",
+   "why": "optie \"Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10353432756553,
+   "title": "Women's Tank Top | Shirt Collar Long Sleeve Mesh",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "S (almost sold out)",
+     "to": "S"
+    }
+   ]
+  },
+  {
+   "id": 10353433903433,
+   "title": "Men's Work Boots | Cap Toe Brogue Lace Up Leather",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10353434198345,
+   "title": "Women's Work Boots | Mesh Ankle Block Heel Side Zip",
+   "group": "variants",
+   "why": "optie \"US Shoe Size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "US Shoe Size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10353435803977,
+   "title": "Women's Pj Pants | Wide Leg Elastic Waist Ribbed Knit",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Gray (Almost sold out)",
+     "to": "Gray"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Light Blue (Almost sold out)",
+     "to": "Light Blue"
+    }
+   ]
+  },
+  {
+   "id": 10353436492105,
+   "title": "Men's Sweater | Crew Neck Long Sleeve Knit Plaid",
+   "group": "variants",
+   "why": "kg-bereik uit de maat",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "S (60-70Kg)",
+     "to": "S"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (70-80Kg)",
+     "to": "M"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "L (80-90Kg)",
+     "to": "L"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XL (90-100Kg)",
+     "to": "XL"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XXL (90-105Kg)",
+     "to": "XXL"
+    }
+   ]
+  },
+  {
+   "id": 10353437507913,
+   "title": "Men's Boots | Mid-Calf Leather Buckle Strap",
+   "group": "variants",
+   "why": "optie \"Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10506375070025,
+   "title": "Women's Brogue Oxford Shoe | Round Toe Wingtip Lace Up Leather",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Brogue Oxford Shoe\"",
+   "set": {
+    "product_type": "Women's Brogue Oxford Shoe"
+   },
+   "from": {
+    "product_type": ""
+   }
+  }
+ ]
+}

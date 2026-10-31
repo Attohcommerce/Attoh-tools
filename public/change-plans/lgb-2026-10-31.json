@@ -1,0 +1,487 @@
+{
+ "kind": "change-plan",
+ "version": 1,
+ "name": "lgb-2026-10-31",
+ "store": "Lady Glam Boutique",
+ "domain": "ladyglamboutique.com",
+ "date": "2026-10-31",
+ "note": "volledige controle 31-10 — varianten opschonen 20; lege producttypes vullen 6; optioneel 6",
+ "groups": [
+  {
+   "id": "variants",
+   "label": "Varianten opschonen",
+   "desc": "Optie-namen gelijk (Colours/Sizes/Shoe size → Color/Size, één filter) en rommel uit waarden (\"(Almost sold out)\", kg-bereik, Chinese kleurnamen, \"As shown\").",
+   "default": true
+  },
+  {
+   "id": "types",
+   "label": "Lege producttypes vullen",
+   "desc": "Producttype uit de titel (bv. \"Women's Clogs\").",
+   "default": true
+  },
+  {
+   "id": "hide",
+   "label": "Optioneel: verkeerd geslacht voor deze store op draft",
+   "desc": "Alleen aanvinken als je deze producten niet meer in de winkel wilt — ze worden onzichtbaar (draft), niet verwijderd. Terugdraaien kan altijd.",
+   "default": false
+  }
+ ],
+ "items": [
+  {
+   "id": 9715510542593,
+   "title": "Women's Platform Slippers | Clog Closed Toe Studded",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715507593473,
+   "title": "Women's Slip Dress | V-Neck Spaghetti Straps Floral Print Mini",
+   "group": "variants",
+   "why": "Chinese kleurnamen → Engels",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "椰树小鸟",
+     "to": "Palm Bird Print"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "椰树老虎",
+     "to": "Palm Tiger Print"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "椰树小豹",
+     "to": "Palm Leopard Print"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "蓝色椰树",
+     "to": "Blue Palm Print"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "印花植物",
+     "to": "Botanical Print"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "椰树鹦鹉",
+     "to": "Palm Parrot Print"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "红色小鸟",
+     "to": "Red Bird Print"
+    }
+   ]
+  },
+  {
+   "id": 9715507036417,
+   "title": "Women's Velvet Dress | Wrap Neckline Long Sleeve Midi",
+   "group": "variants",
+   "why": "optie \"Grootte\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Grootte",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715505692929,
+   "title": "Women's Sherpa Jacket | High Collar Zip Fleece Pockets",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Grey (Almost sold out)",
+     "to": "Grey"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "S (Almost sold out)",
+     "to": "S"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "2XL (Almost sold out)",
+     "to": "2XL"
+    }
+   ]
+  },
+  {
+   "id": 9715504972033,
+   "title": "Duck Boots For Men | Mid-Cut Lugged Sole Ankle Strap",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715504382209,
+   "title": "Women's Duck Boots | Mid Calf Lace Up Faux Fur Cuff",
+   "group": "variants",
+   "why": "optie \"Shoe Size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715489243393,
+   "title": "Women's Cozy Slippers | Ribbed Knit Fleece Lined Slip On",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715488915713,
+   "title": "Women's Walking Sneakers | Wide Toe Box Lace-Up Lightweight Breathable",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715487703297,
+   "title": "Women's House Slippers | Fleece Lined Cushioned Slip On",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715487572225,
+   "title": "House Slippers For Women | Fleece Lined Slip On Durable Sole",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715487539457,
+   "title": "Women's House Slippers | Slip-On Fleece Lined Platform Sole",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715482591489,
+   "title": "Women's Ankle Boots | Lace-Up Lug Sole Patent Leather",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715482525953,
+   "title": "Women's Ankle Boots | Chunky Sole Buckle Strap Leather",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715480592641,
+   "title": "Women's Knee High Boots | Ribbed Knit Shaft Leather Toe Block Heel",
+   "group": "variants",
+   "why": "optie \"Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715480101121,
+   "title": "Women's Mini Skirt | Sequin Embellishment Elastic Waist Mini Length",
+   "group": "variants",
+   "why": "\"As shown\" → echte kleurnaam",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "As shown",
+     "to": "Champagne"
+    }
+   ]
+  },
+  {
+   "id": 9715476103425,
+   "title": "Women's Kitten Heels | Pointed Toe Metallic Satin Mary Jane",
+   "group": "variants",
+   "why": "optie \"US Shoe Size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "US Shoe Size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715475120385,
+   "title": "Women's Clogs | Slip-On Moc-Toe Buckle Cork Sole",
+   "group": "variants",
+   "why": "optie \"Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715474792705,
+   "title": "Clogs For Women | Suede Slip-On Adjustable Buckle",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715473940737,
+   "title": "Women's Sweatshirt | Half Button Polo Collar Knit",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (almost sold out)",
+     "to": "M"
+    }
+   ]
+  },
+  {
+   "id": 9715471614209,
+   "title": "Women's Chelsea Boots | Square Toe Block Heel Ribbed Knit",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 9715509788929,
+   "title": "Women's Sweatsuit | Hooded Relaxed Fit Jogger",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Sweatsuit\"",
+   "set": {
+    "product_type": "Women's Sweatsuit"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 9715487703297,
+   "title": "Women's House Slippers | Fleece Lined Cushioned Slip On",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's House Slippers\"",
+   "set": {
+    "product_type": "Women's House Slippers"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 9715487572225,
+   "title": "House Slippers For Women | Fleece Lined Slip On Durable Sole",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's House Slippers\"",
+   "set": {
+    "product_type": "Women's House Slippers"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 9715487539457,
+   "title": "Women's House Slippers | Slip-On Fleece Lined Platform Sole",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's House Slippers\"",
+   "set": {
+    "product_type": "Women's House Slippers"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 9715484360961,
+   "title": "Women's Wide Leg Sweatpant | Barrel Silhouette Drawstring Rope Closure",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Wide Leg Sweatpant\"",
+   "set": {
+    "product_type": "Women's Wide Leg Sweatpant"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 9715474792705,
+   "title": "Clogs For Women | Suede Slip-On Adjustable Buckle",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Clogs\"",
+   "set": {
+    "product_type": "Women's Clogs"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 9715504972033,
+   "title": "Duck Boots For Men | Mid-Cut Lugged Sole Ankle Strap",
+   "group": "hide",
+   "why": "herenproduct in een damesstore → op draft (onzichtbaar, niet verwijderd)",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715498844417,
+   "title": "Men's Baggy Jeans | Relaxed Fit Straight Leg Denim",
+   "group": "hide",
+   "why": "herenproduct in een damesstore → op draft (onzichtbaar, niet verwijderd)",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715498746113,
+   "title": "Men's Baggy Jeans | Cargo Pockets Relaxed Fit Denim",
+   "group": "hide",
+   "why": "herenproduct in een damesstore → op draft (onzichtbaar, niet verwijderd)",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715483083009,
+   "title": "Men's Crop Top | Crew Neck Sleeveless Knit",
+   "group": "hide",
+   "why": "herenproduct in een damesstore → op draft (onzichtbaar, niet verwijderd)",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715473088769,
+   "title": "Men's Leather Jacket | Ribbed Collar Zip Closure",
+   "group": "hide",
+   "why": "herenproduct in een damesstore → op draft (onzichtbaar, niet verwijderd)",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715471909121,
+   "title": "Men's Chelsea Boots | Brogue Wingtip Leather Slip On",
+   "group": "hide",
+   "why": "herenproduct in een damesstore → op draft (onzichtbaar, niet verwijderd)",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  }
+ ]
+}

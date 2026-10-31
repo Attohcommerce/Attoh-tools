@@ -45,6 +45,8 @@ const CHUNK_FOR = {
   "fix-collection-fit": 8,
   "archive-products": 15,
   "set-prices": 10,
+  // wijzigingsplan: 1 PUT per product (+ evt. doorverwijzing/metafield)
+  "apply-change-plan": 6,
   // per product: 1 lees-call + per nieuwe waarde een metaobject-upsert + 1 write
   "fill-category-attrs": 8,
   // SW: één AI-call (foto + titel) voor het hele plukje + 1 write per product
@@ -117,6 +119,21 @@ function snapshotFor(fix, p) {
         variants: vars((x) => [x.id, x.option1, x.option2, x.option3]),
         size_guide: p.__sizeGuide || null,
       };
+    case "apply-change-plan":
+      // alles wat een wijzigingsplan kan raken — zo is elk product terug te zetten
+      return {
+        title: p.title || "",
+        product_type: p.product_type || "",
+        vendor: p.vendor || "",
+        status: p.status || "",
+        handle: p.handle || "",
+        template_suffix: p.template_suffix || "",
+        tags: p.tags || "",
+        options: (p.options || []).map((o) => o.name),
+        variants: vars((x) => [x.id, x.option1, x.option2, x.option3]),
+        metafields: p.__mf || null,
+        body_html: String(p.body_html || "").slice(0, 30000),
+      };
     default:
       return { title: p.title || "", tags: p.tags || "" };
   }
@@ -169,7 +186,8 @@ export async function POST(req) {
     }
 
     // Vers ophalen — nooit fixen op stale scan-data
-    const r = await listProductsByIds(store, slice, FIX_FIELDS);
+    // wijzigingsplan: omschrijving erbij (woord-vervangingen + backup)
+    const r = await listProductsByIds(store, slice, fix === "apply-change-plan" ? `${FIX_FIELDS},body_html` : FIX_FIELDS);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
     const products = r.products || [];
     const pending = slice.map((id) => products.find((p) => String(p.id) === String(id))).filter(Boolean);
@@ -178,6 +196,24 @@ export async function POST(req) {
     if ((fix === "fix-size-guides" || fix === "shoe-us-eu-labels") && pending.length) {
       const mf = await getProductMetafieldValues(store, pending.map((p) => p.id), { namespace: SG_NS, key: SG_KEY });
       if (mf.ok) for (const p of pending) p.__sizeGuide = mf.values[String(p.id)] || null;
+    }
+
+    // Wijzigingsplan: huidige waarde van de metafields die het plan zet (backup + "stond al goed")
+    if (fix === "apply-change-plan" && pending.length && options.plan) {
+      const pairs = new Map();
+      for (const p of pending) {
+        for (const m of (options.plan[String(p.id)] || {}).metafields || []) {
+          if (m && m.namespace && m.key) pairs.set(`${m.namespace}.${m.key}`, m);
+        }
+      }
+      for (const [k, m] of pairs) {
+        const mf = await getProductMetafieldValues(store, pending.map((p) => p.id), { namespace: m.namespace, key: m.key });
+        if (!mf.ok) continue;
+        for (const p of pending) {
+          p.__mf = p.__mf || {};
+          if (mf.values[String(p.id)] != null) p.__mf[k] = mf.values[String(p.id)];
+        }
+      }
     }
 
     // SW-producttype (Cas): het hele plukje in één AI-call indelen (foto + titel)

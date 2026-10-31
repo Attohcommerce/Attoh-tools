@@ -1,0 +1,570 @@
+{
+ "kind": "change-plan",
+ "version": 1,
+ "name": "emc-2026-10-31",
+ "store": "Everman Clothing",
+ "domain": "evermanclothing.com",
+ "date": "2026-10-31",
+ "note": "volledige controle 31-10 — geslacht rechtzetten 3; varianten opschonen 28; lege producttypes vullen 1; optioneel 2",
+ "groups": [
+  {
+   "id": "gender",
+   "label": "Geslacht rechtzetten",
+   "desc": "Titel, tags, producttype en omschrijving van producten die bij het verkeerde geslacht stonden (handmatig gecheckt op de foto).",
+   "default": true
+  },
+  {
+   "id": "variants",
+   "label": "Varianten opschonen",
+   "desc": "Optie-namen gelijk (Colours/Sizes/Shoe size → Color/Size, één filter) en rommel uit waarden (\"(Almost sold out)\", kg-bereik, Chinese kleurnamen, \"As shown\").",
+   "default": true
+  },
+  {
+   "id": "types",
+   "label": "Lege producttypes vullen",
+   "desc": "Producttype uit de titel (bv. \"Women's Clogs\").",
+   "default": true
+  },
+  {
+   "id": "hide",
+   "label": "Optioneel: verkeerd geslacht voor deze store op draft",
+   "desc": "Alleen aanvinken als je deze producten niet meer in de winkel wilt — ze worden onzichtbaar (draft), niet verwijderd. Terugdraaien kan altijd.",
+   "default": false
+  }
+ ],
+ "items": [
+  {
+   "id": 16080716267901,
+   "title": "Women's Combat Boots | Cap Toe Lace Up Side Zip Leather",
+   "group": "gender",
+   "why": "herenschoen op de foto, tags/type Men's — alleen de titel zei Women's",
+   "set": {
+    "title": "Men's Combat Boots | Cap Toe Lace Up Side Zip Leather"
+   },
+   "from": {
+    "title": "Women's Combat Boots | Cap Toe Lace Up Side Zip Leather"
+   },
+   "body": [
+    [
+     "women's",
+     "men's"
+    ],
+    [
+     "womens",
+     "mens"
+    ],
+    [
+     "women",
+     "men"
+    ],
+    [
+     "woman",
+     "man"
+    ],
+    [
+     "ladies'",
+     "men's"
+    ],
+    [
+     "ladies",
+     "men"
+    ],
+    [
+     "female",
+     "male"
+    ]
+   ]
+  },
+  {
+   "id": 16080713417085,
+   "title": "Women's Singlet Top | Sleeveless Notch Neckline Relaxed Fit",
+   "group": "gender",
+   "why": "man op de foto, tags/type Men's — alleen de titel zei Women's",
+   "set": {
+    "title": "Men's Singlet Top | Sleeveless Notch Neckline Relaxed Fit"
+   },
+   "from": {
+    "title": "Women's Singlet Top | Sleeveless Notch Neckline Relaxed Fit"
+   }
+  },
+  {
+   "id": 16023929160061,
+   "title": "Men's Baggy Jeans | Wide Leg Relaxed Fit Denim",
+   "group": "gender",
+   "why": "Men's Baggy Jeans stond met tags Women + Jeans (geen collectie in een herenstore)",
+   "tagsAdd": [
+    "Men",
+    "Men's Jeans"
+   ],
+   "tagsRemove": [
+    "Women",
+    "Jeans"
+   ]
+  },
+  {
+   "id": 16073593848189,
+   "title": "Men's Denim Shorts | Knee Length Relaxed Fit Denim",
+   "group": "variants",
+   "why": "optie \"Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16073593520509,
+   "title": "Men's Denim Shorts | Wide Leg Relaxed Fit Contrast Stitch",
+   "group": "variants",
+   "why": "optie \"Size (UK)\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Size (UK)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16073593356669,
+   "title": "Men's Denim Shorts | Cargo Pockets Knee Length Stretch Denim",
+   "group": "variants",
+   "why": "optie \"Size (UK)\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Size (UK)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023910056317,
+   "title": "Men's Board Shorts | Quick-Dry Nylon Drawstring Athletic Fit",
+   "group": "variants",
+   "why": "optie \"Colours\" → \"Color\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colours",
+     "to": "Color"
+    }
+   ]
+  },
+  {
+   "id": 16023909925245,
+   "title": "Men's Board Shorts | Flamingo Print Inner Liner Pocket",
+   "group": "variants",
+   "why": "optie \"Colours\" → \"Color\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colours",
+     "to": "Color"
+    }
+   ]
+  },
+  {
+   "id": 16023910220157,
+   "title": "Men's Board Shorts | Elastic Waist Drawstring Closure Quick Dry",
+   "group": "variants",
+   "why": "optie \"Colour:\" → \"Color\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colour:",
+     "to": "Color"
+    }
+   ]
+  },
+  {
+   "id": 16023911891325,
+   "title": "Men's Slide | Open Toe Buckle Velcro Leather",
+   "group": "variants",
+   "why": "optie \"Size (AU)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (AU)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023912120701,
+   "title": "Men's Chino | Tapered Drawstring Pleated Front",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023912186237,
+   "title": "Men's Chino | Pleated Tailored Regular Fit Rolled Hem",
+   "group": "variants",
+   "why": "optie \"Colours\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colours",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023912350077,
+   "title": "Men's Chino | Corduroy Shorts Elastic Waist Drawstring",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023912710525,
+   "title": "Men's Leather Sandals | Slip-On Flat Sole Stitched Detail",
+   "group": "variants",
+   "why": "optie \"Size (AU)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (AU)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023912776061,
+   "title": "Men's Sandals | Open Toe Leather Adjustable Strap",
+   "group": "variants",
+   "why": "optie \"Size (AU)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (AU)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023913496957,
+   "title": "Men's Beach Shorts | Cargo Pockets Multiple Pockets Cotton",
+   "group": "variants",
+   "why": "optie \"Waist size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Waist size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023913759101,
+   "title": "Men's Beach Shorts | Drawstring Waist Linen Relaxed Fit",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023915921789,
+   "title": "Men's White Shirt | Slim Fit Long Sleeve Button-Up Collar",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023917527421,
+   "title": "Men's Jeans | Slim Fit Denim Zip Fly Five Pocket",
+   "group": "variants",
+   "why": "optie \"Waist size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Waist size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023918248317,
+   "title": "Men's Shoes Dress | Leather Oxford Lace-Up Platform",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023918346621,
+   "title": "Men's Shoes Dress | Buckle Strap Leather Ankle Boot",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023919427965,
+   "title": "Men's Worker Shirt | Long Sleeve Button Down Collared Linen Blend",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023920476541,
+   "title": "Men's Collared Shirt | Three-Quarter Sleeve Button-Up",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023921099133,
+   "title": "Men's Hiking Pants | Cargo Pockets Quick Dry Regular Fit",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023924146557,
+   "title": "Men's Dress Pants | Slim Fit Tapered Wool Blend",
+   "group": "variants",
+   "why": "optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023924343165,
+   "title": "Men's Boat Shoe | Lace-Up Moc Rounded Toe Rubber Sole",
+   "group": "variants",
+   "why": "optie \"Size (AUS)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (AUS)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023925064061,
+   "title": "Men's Linen Shorts | Cargo Pockets Drawstring Relaxed Fit",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023926767997,
+   "title": "Men's Chino Shorts | Relaxed Fit Drawstring Closure Linen",
+   "group": "variants",
+   "why": "optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023933059453,
+   "title": "Penny Loafers With Penny For Men | Rounded Toe Slip On Suede",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023933288829,
+   "title": "Men's Black Short Cargo Pants | Ripstop Nylon Relaxed Fit Multiple Pockets",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16023936205181,
+   "title": "Men's Long Sleeve Henley | Raglan Crew Neck Knit",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 16080715841917,
+   "title": "Men's Leather Shoe | Double Monk Strap Cap-Toe Buckle Closure",
+   "group": "types",
+   "why": "producttype was leeg → \"Men's Leather Shoe\"",
+   "set": {
+    "product_type": "Men's Leather Shoe"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 16023922704765,
+   "title": "Casual Shoe For Women | Lace-Up Mesh Knit Rounded Toe",
+   "group": "hide",
+   "why": "damesproduct in een herenstore → op draft (onzichtbaar, niet verwijderd)",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023937384829,
+   "title": "Brown Slip On Shoe For Women | Round Toe Loafer Leather Flat",
+   "group": "hide",
+   "why": "damesproduct in een herenstore → op draft (onzichtbaar, niet verwijderd)",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  }
+ ]
+}

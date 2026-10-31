@@ -19,6 +19,7 @@ import { MARKETS, MARKET_SIZE_GUIDE, BARE_SYSTEMS } from "@/lib/sizes";
 import { orgLS } from "@/lib/org-client";
 import { useOrgDef } from "./OrgProvider";
 import { isShapesWardrobe, SW_TYPE_SHEET } from "@/lib/sw-product-types";
+import { mergePlanItems, groupCounts, planMatchesStore } from "@/lib/change-plan";
 
 const LS_BACKUP = "sa_doctor_backup";
 const LS_SCOPE = "sa_doctor_scope"; // "all" | "latest"
@@ -128,6 +129,18 @@ export default function DoctorPanel({ store, since }) {
   const [verslag, setVerslag] = useState(null); // eindverslag van FIX ALLES
   const [pricePlan, setPricePlan] = useState(null); // goedgekeurd prijsplan (public/price-plans)
   const [planName, setPlanName] = useState("");
+  // Wijzigingsplan (31-10): algemene fixes van Claude (public/change-plans)
+  const [cp, setCp] = useState(null);
+  const [cpName, setCpName] = useState("");
+  const [cpSel, setCpSel] = useState([]);
+  const [cpIndex, setCpIndex] = useState([]);
+  const [cpCheck, setCpCheck] = useState(null);
+  useEffect(() => {
+    fetch("/change-plans/index.json", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setCpIndex(Array.isArray(d && d.plans) ? d.plans : []))
+      .catch(() => {});
+  }, []);
 
   const [market, setMarket] = useState("");
   const [bareSystem, setBareSystem] = useState("");
@@ -344,7 +357,11 @@ export default function DoctorPanel({ store, since }) {
       throw e;
     }
     const backupTxt = backup ? ` · backup "${backup.tab}"` : " · zonder backup";
-    blockDone(blockId, `${tot.fixed} aangepast · ${tot.skipped} overgeslagen · ${tot.failed} mislukt${backupTxt}`, tot.failed);
+    if (options && options.dryRun) {
+      blockDone(blockId, `controle: ${tot.fixed} zouden veranderen · ${tot.skipped} al goed of overgeslagen · ${tot.failed} mislukt — er is niets aangepast`, tot.failed);
+    } else {
+      blockDone(blockId, `${tot.fixed} aangepast · ${tot.skipped} overgeslagen · ${tot.failed} mislukt${backupTxt}`, tot.failed);
+    }
     return tot;
   }
 
@@ -408,6 +425,99 @@ export default function DoctorPanel({ store, since }) {
     const prices = {};
     for (const it of pricePlan.items) prices[String(it.id)] = { price: it.price, compareAt: it.compareAt, from: it.from };
     runFix("price-plan", { id: "set-prices", label: `Prijsplan ${pricePlan.store || ""} ${pricePlan.date || ""}`.trim() }, pricePlan.items.map((it) => it.id), { prices });
+  }
+
+  /* ============ WIJZIGINGSPLAN TOEPASSEN (31-10) ============
+     Algemene fixes over de hele store (geslacht, tags, producttype, optie-
+     namen/-waarden, omschrijving, status…) uit public/change-plans/<naam>.json,
+     gemaakt door Claude na een volledige controle. Zelfde motor als het
+     prijsplan: chunks, tijdbudget, backup-tabblad. Producten die intussen
+     handmatig zijn veranderd worden overgeslagen (lib/change-plan.js).
+     1. Controleer = droge run, verandert niets.  2. Zet door.  3. Draai terug. */
+  async function loadChangePlan(nameArg) {
+    const name = String(nameArg != null ? nameArg : cpName || "").trim().replace(/\.json$/i, "");
+    if (!name) return;
+    setErr("");
+    setCpCheck(null);
+    try {
+      const r = await fetch(`/change-plans/${encodeURIComponent(name)}.json`, { cache: "no-store" });
+      if (!r.ok) throw new Error(`plan "${name}" niet gevonden (${r.status})`);
+      const plan = await r.json();
+      if (!Array.isArray(plan.items) || !plan.items.length) throw new Error("plan is leeg");
+      if (!Array.isArray(plan.groups) || !plan.groups.length) plan.groups = [{ id: "__all", label: "Alle wijzigingen", default: true }];
+      if (!plan.name) plan.name = name;
+      setCp(plan);
+      setCpSel(plan.groups.filter((g) => g.default !== false).map((g) => g.id));
+    } catch (e) {
+      setCp(null);
+      setErr(`Wijzigingsplan: ${String(e.message || e)}`);
+    }
+  }
+
+  function toggleCpGroup(id) {
+    setCpCheck(null);
+    setCpSel((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
+  }
+
+  function cpBuild() {
+    if (!cp || !cpSel.length) return { ids: [], map: {}, count: 0 };
+    return mergePlanItems(cp, cpSel.includes("__all") ? [] : cpSel);
+  }
+
+  function cpStoreOk() {
+    if (planMatchesStore(cp, store)) return true;
+    return window.confirm(`Dit plan is voor ${cp.store || cp.domain}, maar de gekozen store is ${store.name || store.domain}. Toch doorgaan?`);
+  }
+
+  async function checkChangePlan() {
+    if (!cp || !store || fixBusy || busy || aiBusy) return;
+    const { ids, map } = cpBuild();
+    if (!ids.length) return setErr("Wijzigingsplan: vink minstens één groep aan.");
+    if (!cpStoreOk()) return;
+    setFixBusy("change-plan|check");
+    setFixLog([]);
+    setErr("");
+    stopRef.current = false;
+    try {
+      const tot = await execFix(
+        { id: "apply-change-plan", label: `Controle "${cp.name || cpName}" — verandert niets` },
+        ids,
+        fixOptions({ plan: map, dryRun: true }),
+        true
+      );
+      setCpCheck(tot);
+      sfx(tot.failed ? "error" : "success");
+    } catch (e) {
+      setErr(`Controle gestopt: ${String(e.message || e)}`);
+      sfx("error");
+    } finally {
+      setFixBusy(null);
+      setFixProg(null);
+    }
+  }
+
+  function applyChangePlan(revert) {
+    if (!cp || !store) return;
+    const { ids, map, count } = cpBuild();
+    if (!ids.length) return setErr("Wijzigingsplan: vink minstens één groep aan.");
+    if (!cpStoreOk()) return;
+    const types = Object.values(map).filter((m) => m.set && m.set.product_type != null).length;
+    const status = Object.values(map).filter((m) => m.set && m.set.status != null).length;
+    const warn = [
+      types ? `\n⚠ ${types} producttype-wijziging(en) — kan een vermeldingsgroep van de mediabuyer raken.` : "",
+      status ? `\n⚠ ${status} product(en) krijgen een andere status (draft = niet meer zichtbaar in de winkel).` : "",
+    ].join("");
+    const msg = revert
+      ? `TERUGDRAAIEN: ${ids.length} producten uit "${cp.name || cpName}" terug naar hoe ze waren (alleen waar de plan-waarde nog staat). Omschrijvingen en metafields gaan niet automatisch terug — die staan in het backup-tabblad. Starten?`
+      : `${ids.length} producten (${count} wijzigingen) uit "${cp.name || cpName}" doorvoeren. Eerst gaat alles naar het backup-tabblad; producten die intussen veranderd zijn worden overgeslagen.${warn}\n\nStarten?`;
+    if (!window.confirm(msg)) return;
+    setCpCheck(null);
+    runFix(
+      "change-plan",
+      { id: "apply-change-plan", label: `${revert ? "Terugdraaien" : "Wijzigingsplan"} ${cp.name || cpName}` },
+      ids,
+      { plan: map, revert: !!revert }
+    );
   }
 
   /* ============ SW · PRODUCTTYPES VAN CAS ============
@@ -1128,6 +1238,111 @@ export default function DoctorPanel({ store, since }) {
               {pricePlan.store} · {pricePlan.date} · {pricePlan.note} — voorbeeld: {pricePlan.items.slice(0, 3).map((it) => `"${String(it.title).split("|")[0].trim()}" $${it.from} → $${it.price}`).join(" · ")}
             </div>
           )}
+        </div>
+      )}
+
+      {store && (
+        <div style={{ marginTop: 14 }}>
+          <div className="field-label">
+            Wijzigingsplan toepassen{" "}
+            <span className="opt">algemene fixes van Claude over de hele store (geslacht, tags, varianten…), bv. cc-2026-10-31</span>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+            <input type="text" list="cp-plans" value={cpName} placeholder="naam van het plan" onChange={(e) => setCpName(e.target.value)} style={{ maxWidth: 260 }} />
+            <datalist id="cp-plans">
+              {cpIndex.map((x) => (
+                <option key={x.name} value={x.name}>{`${x.store || ""} · ${x.date || ""}`}</option>
+              ))}
+            </datalist>
+            <button className="btn-ghost btn-small" disabled={!cpName.trim() || !!fixBusy || busy} onClick={() => loadChangePlan()}>
+              Laad plan
+            </button>
+          </div>
+          {!cp && cpIndex.filter((x) => planMatchesStore(x, store)).length > 0 && (
+            <div className="hint">
+              Klaar voor deze store:{" "}
+              {cpIndex
+                .filter((x) => planMatchesStore(x, store))
+                .map((x) => (
+                  <a
+                    key={x.name}
+                    className="linklike"
+                    style={{ marginRight: 8, cursor: "pointer" }}
+                    onClick={() => {
+                      setCpName(x.name);
+                      loadChangePlan(x.name);
+                    }}
+                  >
+                    {x.name}
+                  </a>
+                ))}
+            </div>
+          )}
+          {cp &&
+            (() => {
+              const counts = groupCounts(cp);
+              const sel = cpBuild();
+              const types = Object.values(sel.map).filter((m) => m.set && m.set.product_type != null).length;
+              const shown = (cp.items || []).filter((it) => cpSel.includes("__all") || cpSel.includes(it.group));
+              const cpBusy = !!fixBusy || busy || !!aiBusy;
+              return (
+                <div className="log" style={{ display: "block", marginTop: 6 }}>
+                  <div className="hint" style={{ marginTop: 0 }}>
+                    <strong>{cp.store}</strong> · {cp.date} · {cp.note}
+                  </div>
+                  {cp.groups.map((g) => (
+                    <label key={g.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginTop: 8, cursor: "pointer" }}>
+                      <input type="checkbox" checked={cpSel.includes(g.id)} onChange={() => toggleCpGroup(g.id)} style={{ marginTop: 3 }} />
+                      <span>
+                        <strong>{g.label}</strong>{" "}
+                        <span className="muted">({g.id === "__all" ? cp.items.length : counts[g.id] || 0} producten)</span>
+                        {g.desc ? (
+                          <span className="hint" style={{ display: "block", marginTop: 2 }}>
+                            {g.desc}
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
+                  ))}
+                  {types > 0 && (
+                    <div className="hint" style={{ color: "#b7791f" }}>
+                      ⚠ {types} producttype-wijziging(en) in de selectie — check of de mediabuyer op die types filtert.
+                    </div>
+                  )}
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+                    <button className="btn-ghost btn-small" disabled={cpBusy || !sel.ids.length} onClick={checkChangePlan}>
+                      {fixBusy === "change-plan|check" ? "Bezig…" : "🔍 Controleer eerst (verandert niets)"}
+                    </button>
+                    <button className="btn-ghost btn-small" disabled={cpBusy || !sel.ids.length} onClick={() => applyChangePlan(false)}>
+                      {fixBusy === "change-plan|apply-change-plan" ? "Bezig…" : `⚡ Zet ${sel.ids.length} producten door`}
+                    </button>
+                    <button className="btn-ghost btn-small" disabled={cpBusy || !sel.ids.length} onClick={() => applyChangePlan(true)}>
+                      ↩ Draai terug
+                    </button>
+                  </div>
+                  {cpCheck && (
+                    <div className="hint">
+                      Controle: <strong>{cpCheck.fixed}</strong> zouden veranderen · {cpCheck.skipped} al goed of overgeslagen · {cpCheck.failed} mislukt —
+                      details in het fix-log.
+                    </div>
+                  )}
+                  <details style={{ marginTop: 8 }}>
+                    <summary className="hint" style={{ cursor: "pointer" }}>
+                      Bekijk de {shown.length} wijzigingen
+                    </summary>
+                    {shown.slice(0, 400).map((it, i) => (
+                      <div key={`${it.id}-${i}`} className="hint" style={{ marginTop: 2 }}>
+                        <a className="linklike" href={adminUrl(it.id)} target="_blank" rel="noreferrer noopener">
+                          {String(it.title || it.id).split("|")[0].trim()}
+                        </a>
+                        <span className="muted"> — {it.why}</span>
+                      </div>
+                    ))}
+                    {shown.length > 400 && <div className="hint muted">… en {shown.length - 400} meer</div>}
+                  </details>
+                </div>
+              );
+            })()}
         </div>
       )}
 

@@ -39,6 +39,14 @@ Code: `lib/reis/*` (engine, bronnen, bestemmingen-database, opslag), `app/reis/*
 
 \* Zonder deze keys werkt alles, maar met geschatte prijzen (duidelijk gemarkeerd). Redis en `ANTHROPIC_API_KEY` worden gedeeld met de rest van Attoh Tools.
 
+## Wijzigingsplan in Store Doctor (31-10-2026)
+
+Algemene fixes over een hele store in één keer, net als het prijsplan. Claude loopt de store na (geslacht in titel/tags/type/omschrijving, producten zonder categorie, rommelige optie-namen en -waarden, lege producttypes …), schrijft `public/change-plans/<store>-<datum>.json` en zet hem in `public/change-plans/index.json`.
+
+Doorvoeren: **Store Doctor → store kiezen → Wijzigingsplan toepassen → plan laden → groepen aan/uit → 🔍 Controleer eerst → ⚡ Zet door** (↩ Draai terug kan altijd).
+
+Veiligheid (`lib/change-plan.js`): elk veld heeft een "from" — is een product intussen handmatig veranderd, dan wordt het hele product overgeslagen. Tags: alleen toevoegen/weghalen wat in het plan staat. Optie-wijzigingen die varianten zouden samenvoegen worden geweigerd. Alles gaat eerst naar het backup-tabblad. Nieuwe url alleen mét doorverwijzing (lukt die niet, dan blijft de url staan). Motor: fix `apply-change-plan` in `lib/doctor.js`, route `app/api/doctor-fix`, knoppen in `components/DoctorPanel.js`.
+
 ## Environment variables
 
 Zet deze in Vercel → Project → Settings → Environment Variables.

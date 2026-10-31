@@ -1,0 +1,480 @@
+{
+ "kind": "change-plan",
+ "version": 1,
+ "name": "sw-2026-10-31",
+ "store": "Shapes Wardrobe",
+ "domain": "shapeswardrobe.com",
+ "date": "2026-10-31",
+ "note": "volledige controle 31-10 — geslacht rechtzetten 5; categorie toevoegen 1; varianten opschonen 21",
+ "groups": [
+  {
+   "id": "gender",
+   "label": "Geslacht rechtzetten",
+   "desc": "Titel, tags, producttype en omschrijving van producten die bij het verkeerde geslacht stonden (handmatig gecheckt op de foto).",
+   "default": true
+  },
+  {
+   "id": "categories",
+   "label": "Categorie toevoegen",
+   "desc": "Producten die alleen in Men/Women stonden en in geen enkele subcollectie (bv. Women's Knitwear) — krijgen de juiste categorie-tag erbij.",
+   "default": true
+  },
+  {
+   "id": "variants",
+   "label": "Varianten opschonen",
+   "desc": "Optie-namen gelijk (Colours/Sizes/Shoe size → Color/Size, één filter) en rommel uit waarden (\"(Almost sold out)\", kg-bereik, Chinese kleurnamen, \"As shown\").",
+   "default": true
+  }
+ ],
+ "items": [
+  {
+   "id": 15864276910428,
+   "title": "Men's Cargo Pants | Relaxed Fit Drawstring Corduroy",
+   "group": "gender",
+   "why": "herenproduct (foto + titel Men's) stond in de damescollectie Trousers",
+   "tagsAdd": [
+    "Men",
+    "Men's Trousers"
+   ],
+   "tagsRemove": [
+    "Women",
+    "Trousers"
+   ]
+  },
+  {
+   "id": 15864277336412,
+   "title": "Men's Cargo Pants | Relaxed Fit Multi-Pocket",
+   "group": "gender",
+   "why": "herenproduct (foto + titel Men's) stond in de damescollectie Trousers",
+   "tagsAdd": [
+    "Men",
+    "Men's Trousers"
+   ],
+   "tagsRemove": [
+    "Women",
+    "Trousers"
+   ]
+  },
+  {
+   "id": 15864278745436,
+   "title": "Men's Slide | Thong Closure Leather Strap",
+   "group": "gender",
+   "why": "herenproduct (foto + titel Men's) stond in de damescollectie Sandals",
+   "tagsAdd": [
+    "Men",
+    "Men's Sandals"
+   ],
+   "tagsRemove": [
+    "Women",
+    "Sandals"
+   ]
+  },
+  {
+   "id": 15864283267420,
+   "title": "Men's Loafers | Canvas Slip On Lace Cushioned Sole",
+   "group": "gender",
+   "why": "herenproduct (foto + titel Men's) stond in de damescollectie Shoes",
+   "tagsAdd": [
+    "Men",
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Women",
+    "Shoes"
+   ]
+  },
+  {
+   "id": 15864289886556,
+   "title": "Women's Jeans | Relaxed Fit Straight Leg Lightning Print Denim",
+   "group": "gender",
+   "why": "zelfde foto als de Men's Lightning Print jeans, tags Men — alleen titel/type zeiden Women's",
+   "set": {
+    "title": "Men's Jeans | Relaxed Fit Straight Leg Lightning Print Denim",
+    "product_type": "AS - Mens - Jeans"
+   },
+   "from": {
+    "title": "Women's Jeans | Relaxed Fit Straight Leg Lightning Print Denim",
+    "product_type": "AS - Womens - Jeans"
+   },
+   "body": [
+    [
+     "women's",
+     "men's"
+    ],
+    [
+     "womens",
+     "mens"
+    ],
+    [
+     "women",
+     "men"
+    ],
+    [
+     "woman",
+     "man"
+    ],
+    [
+     "ladies'",
+     "men's"
+    ],
+    [
+     "ladies",
+     "men"
+    ],
+    [
+     "female",
+     "male"
+    ]
+   ]
+  },
+  {
+   "id": 15864292802908,
+   "title": "Women's Sports Shoe | Woven Textile Upper Slip-On Flat",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Shoes",
+   "tagsAdd": [
+    "Shoes"
+   ]
+  },
+  {
+   "id": 15942481445212,
+   "title": "Clogs For Women | Adjustable Buckle Strap Slip-On Suede",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15942481379676,
+   "title": "Unisex Clogs | Adjustable Buckle Slip-On Suede Comfort",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864275763548,
+   "title": "Men's Wallet | Pop-Up Card Holder Aluminium Leather RFID",
+   "group": "variants",
+   "why": "optie \"Variant\" → \"Color\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Variant",
+     "to": "Color"
+    }
+   ]
+  },
+  {
+   "id": 15864276123996,
+   "title": "Men's Wallet | Leather Aluminum Card Slots Money Clip",
+   "group": "variants",
+   "why": "optie \"Colours\" → \"Color\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colours",
+     "to": "Color"
+    }
+   ]
+  },
+  {
+   "id": 15864277533020,
+   "title": "Men's Board Shorts | Quick-Dry Nylon Athletic Fit Drawstring",
+   "group": "variants",
+   "why": "optie \"Colours\" → \"Color\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colours",
+     "to": "Color"
+    }
+   ]
+  },
+  {
+   "id": 15864278942044,
+   "title": "Men's Long Sleeve Top | Slim Fit Wool Point Collar Button",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864279040348,
+   "title": "Men's Hawaiian Shirt | Short Sleeve Newspaper Print Collar",
+   "group": "variants",
+   "why": "\"As shown\" → echte kleurnaam",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "as shown",
+     "to": "Newspaper Print"
+    }
+   ]
+  },
+  {
+   "id": 15864279204188,
+   "title": "Men's Chino | Tapered Leg Drawstring Linen Blend",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864279269724,
+   "title": "Men's Chino | Pleated Tailored Cuffed Shorts",
+   "group": "variants",
+   "why": "optie \"Colours\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colours",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864280711516,
+   "title": "Men's Compression Shirt | Sleeveless Seamless Ice Silk",
+   "group": "variants",
+   "why": "kg-bereik uit de maat",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "S (50–70 kg)",
+     "to": "S"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (70–90 kg)",
+     "to": "M"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "L (90–110 kg)",
+     "to": "L"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XL (110–130 kg)",
+     "to": "XL"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "2XL (130–150 kg)",
+     "to": "2XL"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "3XL (150–170 kg)",
+     "to": "3XL"
+    }
+   ]
+  },
+  {
+   "id": 15864286511452,
+   "title": "Men's White Shirt | Short Sleeve Linen Collar Pocket",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864286675292,
+   "title": "Men's Button Up Shirt | Collared Three-Quarter Sleeve Breathable",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864293720412,
+   "title": "Unisex Sports Shoe | Slip-On Knit Upper Textured Sole",
+   "group": "variants",
+   "why": "optie \"Size (AUS)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (AUS)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864294146396,
+   "title": "Sports Shoe For Men | Lace-Up Suede Ankle High Barefoot",
+   "group": "variants",
+   "why": "optie \"Size (AUS)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (AUS)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864296374620,
+   "title": "Men's Hiking Pants | Cargo Pockets Quick-Dry Regular Fit",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864297324892,
+   "title": "Men's Swimwear | Drawstring Waist Side Pockets Adjustable",
+   "group": "variants",
+   "why": "optie \"Colours\" → \"Color\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colours",
+     "to": "Color"
+    }
+   ]
+  },
+  {
+   "id": 15864297390428,
+   "title": "Men's Swimwear | Drawcord Waist Inner Liner Pocket",
+   "group": "variants",
+   "why": "optie \"Colours\" → \"Color\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colours",
+     "to": "Color"
+    }
+   ]
+  },
+  {
+   "id": 15864297783644,
+   "title": "Men's Linen Shorts | Drawstring Waist Relaxed Fit Lightweight",
+   "group": "variants",
+   "why": "optie \"Colors\" → \"Color\"; optie \"Sizes\" → \"Size\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "Colors",
+     "to": "Color"
+    },
+    {
+     "position": 2,
+     "from": "Sizes",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864164024668,
+   "title": "Women's Shoulder Bag | Woven Vegan Suede Quilted Hand-Woven",
+   "group": "variants",
+   "why": "optie \"Accessory size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Accessory size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864165957980,
+   "title": "Women's Kitten Heels | Open Toe Strappy Ankle Strap",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 15864168579420,
+   "title": "Women's Black Sandals | Open Toe Pearl Embellished Flat Slip On",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  }
+ ]
+}

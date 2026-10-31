@@ -1,0 +1,1209 @@
+{
+ "kind": "change-plan",
+ "version": 1,
+ "name": "cc-2026-10-31",
+ "store": "Clove & Cloth",
+ "domain": "cloveandcloth.com",
+ "date": "2026-10-31",
+ "note": "volledige controle 31-10 — geslacht rechtzetten 14; categorie toevoegen 18; varianten opschonen 40; lege producttypes vullen 11",
+ "groups": [
+  {
+   "id": "gender",
+   "label": "Geslacht rechtzetten",
+   "desc": "Titel, tags, producttype en omschrijving van producten die bij het verkeerde geslacht stonden (handmatig gecheckt op de foto).",
+   "default": true
+  },
+  {
+   "id": "categories",
+   "label": "Categorie toevoegen",
+   "desc": "Producten die alleen in Men/Women stonden en in geen enkele subcollectie (bv. Women's Knitwear) — krijgen de juiste categorie-tag erbij.",
+   "default": true
+  },
+  {
+   "id": "variants",
+   "label": "Varianten opschonen",
+   "desc": "Optie-namen gelijk (Colours/Sizes/Shoe size → Color/Size, één filter) en rommel uit waarden (\"(Almost sold out)\", kg-bereik, Chinese kleurnamen, \"As shown\").",
+   "default": true
+  },
+  {
+   "id": "types",
+   "label": "Lege producttypes vullen",
+   "desc": "Producttype uit de titel (bv. \"Women's Clogs\").",
+   "default": true
+  }
+ ],
+ "items": [
+  {
+   "id": 10507306271049,
+   "title": "Men's Slip Dress | Leather Loafer Moccasin Slip-On",
+   "group": "gender",
+   "why": "loafer heette \"Slip Dress\" en had type Women's Slip Dress; nu Men's Loafer + collectie Men's Shoes",
+   "set": {
+    "title": "Men's Loafer | Leather Moccasin Slip-On",
+    "product_type": "Men's Loafers"
+   },
+   "from": {
+    "title": "Men's Slip Dress | Leather Loafer Moccasin Slip-On",
+    "product_type": "Women's Slip Dress"
+   },
+   "tagsAdd": [
+    "Men's Shoes"
+   ]
+  },
+  {
+   "id": 10507289657673,
+   "title": "Chelsea Boots For Men | Slip-On Elastic Panel Lug Sole",
+   "group": "gender",
+   "why": "producttype \"Women's Chelsea Boots\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Chelsea Boots"
+   },
+   "from": {
+    "product_type": "Women's Chelsea Boots"
+   }
+  },
+  {
+   "id": 10507285758281,
+   "title": "Men's Winter Jacket | Corduroy Hood Zip Pockets",
+   "group": "gender",
+   "why": "producttype \"Women's Winter Jacket\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Winter Jacket"
+   },
+   "from": {
+    "product_type": "Women's Winter Jacket"
+   }
+  },
+  {
+   "id": 10507288674633,
+   "title": "Men's Chelsea Boots | Slip-On Leather Rounded Toe",
+   "group": "gender",
+   "why": "producttype \"Women's Chelsea Boots\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Chelsea Boots"
+   },
+   "from": {
+    "product_type": "Women's Chelsea Boots"
+   }
+  },
+  {
+   "id": 10507288019273,
+   "title": "Men's Sherpa Jacket | Collared Full-Zip Fleece Wool",
+   "group": "gender",
+   "why": "producttype \"Women's Sherpa Jacket\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Sherpa Jacket"
+   },
+   "from": {
+    "product_type": "Women's Sherpa Jacket"
+   }
+  },
+  {
+   "id": 10507288707401,
+   "title": "Men's Sherpa Jacket | Collared Button Front Chest Pockets Canvas",
+   "group": "gender",
+   "why": "producttype \"Women's Sherpa Jacket\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Sherpa Jacket"
+   },
+   "from": {
+    "product_type": "Women's Sherpa Jacket"
+   }
+  },
+  {
+   "id": 10507289428297,
+   "title": "Men's Chelsea Boots | Pointed Toe Slip On Leather",
+   "group": "gender",
+   "why": "producttype \"Women's Chelsea Boots\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Chelsea Boots"
+   },
+   "from": {
+    "product_type": "Women's Chelsea Boots"
+   }
+  },
+  {
+   "id": 10507289297225,
+   "title": "Men's Chelsea Boots | Brogue Wingtip Leather Elastic",
+   "group": "gender",
+   "why": "producttype \"Women's Chelsea Boots\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Chelsea Boots"
+   },
+   "from": {
+    "product_type": "Women's Chelsea Boots"
+   }
+  },
+  {
+   "id": 10507289854281,
+   "title": "Men's Chelsea Boots | Slip-On Leather Rounded Toe",
+   "group": "gender",
+   "why": "producttype \"Women's Chelsea Boots\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Chelsea Boots"
+   },
+   "from": {
+    "product_type": "Women's Chelsea Boots"
+   }
+  },
+  {
+   "id": 10507303747913,
+   "title": "Men's Dress Shoe | Brogue Wingtip Lace-Up Leather",
+   "group": "gender",
+   "why": "producttype \"Women's Dress Shoe\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Dress Shoe"
+   },
+   "from": {
+    "product_type": "Women's Dress Shoe"
+   }
+  },
+  {
+   "id": 10507303354697,
+   "title": "Men's Dress Shoe | Leather Lace-Up Oxford Pointed Toe",
+   "group": "gender",
+   "why": "producttype \"Women's Dress Shoe\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Dress Shoe"
+   },
+   "from": {
+    "product_type": "Women's Dress Shoe"
+   }
+  },
+  {
+   "id": 10507315118409,
+   "title": "Men's Puffer Jacket | Hooded Quilted Long Sleeve Zip Closure",
+   "group": "gender",
+   "why": "producttype \"Women's Puffer Jacket\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Puffer Jacket"
+   },
+   "from": {
+    "product_type": "Women's Puffer Jacket"
+   }
+  },
+  {
+   "id": 10507315183945,
+   "title": "Men's Puffer Jacket | Stand Collar Quilted Padded Zip",
+   "group": "gender",
+   "why": "producttype \"Women's Puffer Jacket\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Puffer Jacket"
+   },
+   "from": {
+    "product_type": "Women's Puffer Jacket"
+   }
+  },
+  {
+   "id": 10507315151177,
+   "title": "Men's Puffer Jacket | Suede Sleeves Fleece Collar Zip Closure",
+   "group": "gender",
+   "why": "producttype \"Women's Puffer Jacket\" had het verkeerde geslacht (titel + tags: Men)",
+   "set": {
+    "product_type": "Men's Puffer Jacket"
+   },
+   "from": {
+    "product_type": "Women's Puffer Jacket"
+   }
+  },
+  {
+   "id": 10507286151497,
+   "title": "Women's Leather Coat | Collared Button Front Long Sleeves",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Jackets & Coats",
+   "tagsAdd": [
+    "Women's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 10507297980745,
+   "title": "Women's Cardigan | Collared Button-Up Knit Relaxed Fit",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Knitwear",
+   "tagsAdd": [
+    "Women's Knitwear"
+   ]
+  },
+  {
+   "id": 10507298931017,
+   "title": "Women's Knit Sweater | Striped Hood Relaxed Long Sleeve",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Knitwear",
+   "tagsAdd": [
+    "Women's Knitwear"
+   ]
+  },
+  {
+   "id": 10507299291465,
+   "title": "Women's Turtleneck | Long Sleeve Knit Sculpted",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Knitwear",
+   "tagsAdd": [
+    "Women's Knitwear"
+   ]
+  },
+  {
+   "id": 10507299160393,
+   "title": "Women's Turtleneck | Long Sleeve Cowl Neck Knit",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Knitwear",
+   "tagsAdd": [
+    "Women's Knitwear"
+   ]
+  },
+  {
+   "id": 10507300405577,
+   "title": "Women's V Neck Sweater | Relaxed Fit Three Quarter Sleeve Knit",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Knitwear",
+   "tagsAdd": [
+    "Women's Knitwear"
+   ]
+  },
+  {
+   "id": 10507300438345,
+   "title": "Women's V Neck Sweater | Wrap Front Knit Long Sleeve",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Knitwear",
+   "tagsAdd": [
+    "Women's Knitwear"
+   ]
+  },
+  {
+   "id": 10507302928713,
+   "title": "Women's Flats | Open Toe Multi-Strap T-Back Flat Sole",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Flats & Loafers",
+   "tagsAdd": [
+    "Women's Flats & Loafers"
+   ]
+  },
+  {
+   "id": 10507308532041,
+   "title": "Women's Wide Leg Pants | V-Neck Sleeveless Denim Button Closure",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Trousers",
+   "tagsAdd": [
+    "Women's Trousers"
+   ]
+  },
+  {
+   "id": 10507311874377,
+   "title": "Women's High Heels | Thong Strap Block Heel Leather",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Heels",
+   "tagsAdd": [
+    "Women's Heels"
+   ]
+  },
+  {
+   "id": 10507312202057,
+   "title": "Women's Kitten Heels | Thong Strap Square Toe Slip-On",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Heels",
+   "tagsAdd": [
+    "Women's Heels"
+   ]
+  },
+  {
+   "id": 10507313905993,
+   "title": "Women's Bootcut Jeans | High-Rise Flare Denim Button Closure",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Jeans",
+   "tagsAdd": [
+    "Women's Jeans"
+   ]
+  },
+  {
+   "id": 10507318526281,
+   "title": "Women's Midi Skirt | One Shoulder Sleeveless Elastic Waist",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Skirts",
+   "tagsAdd": [
+    "Women's Skirts"
+   ]
+  },
+  {
+   "id": 10507318657353,
+   "title": "Women's Midi Skirt | Sleeveless Crop Top Leaf Print",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Skirts",
+   "tagsAdd": [
+    "Women's Skirts"
+   ]
+  },
+  {
+   "id": 10507318690121,
+   "title": "Women's Pencil Skirt | Mini Length High Waist Slit",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Women's Skirts",
+   "tagsAdd": [
+    "Women's Skirts"
+   ]
+  },
+  {
+   "id": 10507321311561,
+   "title": "Men's Leather Jacket | Oversized Boxy Zip Closure Faux",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Men's Jackets & Coats",
+   "tagsAdd": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 10507327635785,
+   "title": "Men's Knit Sweater | Hooded Zip-Up Relaxed Fit Multi-Pocket",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Men's Knitwear",
+   "tagsAdd": [
+    "Men's Knitwear"
+   ]
+  },
+  {
+   "id": 10507340710217,
+   "title": "Men's Corduroy Pants | Relaxed Fit Tapered Ankle Drawstring",
+   "group": "categories",
+   "why": "stond in geen enkele subcollectie → Men's Trousers",
+   "tagsAdd": [
+    "Men's Trousers"
+   ]
+  },
+  {
+   "id": 10507284709705,
+   "title": "Women's Puffer Jacket | Longline Quilted Hood Water-Repellent",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XS (Almost sold out)",
+     "to": "XS"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "L (Almost sold out)",
+     "to": "L"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "2XL (Almost sold out)",
+     "to": "2XL"
+    }
+   ]
+  },
+  {
+   "id": 10507287331145,
+   "title": "Women's Faux Fur Jacket | Wide Collar Relaxed Fit Hip-Length",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (almost sold out)",
+     "to": "M"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "L (almost sold out)",
+     "to": "L"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XL (almost sold out)",
+     "to": "XL"
+    }
+   ]
+  },
+  {
+   "id": 10507287691593,
+   "title": "Women's Quilted Jacket | Collared Lightweight Button Closure",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "S (Almost sold out)",
+     "to": "S"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XL (Almost sold out)",
+     "to": "XL"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "3XL (Almost sold out)",
+     "to": "3XL"
+    }
+   ]
+  },
+  {
+   "id": 10507290476873,
+   "title": "Women's Leather Boots | Block Heel Ankle Boot Pointed Toe Zip",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507291165001,
+   "title": "Women's Ankle Boots | Suede Faux-Fur Lined Lug Sole",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507290771785,
+   "title": "Women's Ankle Boots | Block Heel Buckle Strap Leather",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507292705097,
+   "title": "Women's Ankle Bootie | Suede Western Pointed Toe Stacked Heel Zipper",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Black (Almost sold out)",
+     "to": "Black"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Pink (Almost sold out)",
+     "to": "Pink"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "5  (Almost sold out)",
+     "to": "5"
+    }
+   ]
+  },
+  {
+   "id": 10507293229385,
+   "title": "Women's Tall Boots | Knee High Suede Slip-On Block Heel",
+   "group": "variants",
+   "why": "optie \"Shoe Size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507295588681,
+   "title": "Women's Semi-Formal Dress | Midi V-Neck Chiffon Wrap",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (almost sold out)",
+     "to": "M"
+    }
+   ]
+  },
+  {
+   "id": 10507298865481,
+   "title": "Women's Knit Sweater | V-Neck Long Sleeve Waffle",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Blue (Almost sold out)",
+     "to": "Blue"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (Almost sold out)",
+     "to": "M"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XL (Almost sold out)",
+     "to": "XL"
+    }
+   ]
+  },
+  {
+   "id": 10507298931017,
+   "title": "Women's Knit Sweater | Striped Hood Relaxed Long Sleeve",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Red (Almost sold out)",
+     "to": "Red"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (Almost sold out)",
+     "to": "M"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XL (Almost sold out)",
+     "to": "XL"
+    }
+   ]
+  },
+  {
+   "id": 10507300667721,
+   "title": "Women's Mock Neck Sweater | Textured Knit Relaxed Fit Dropped Sleeves",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Black (Almost sold out)",
+     "to": "Black"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "S (Almost sold out)",
+     "to": "S"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "2XL (Almost sold out)",
+     "to": "2XL"
+    }
+   ]
+  },
+  {
+   "id": 10507300438345,
+   "title": "Women's V Neck Sweater | Wrap Front Knit Long Sleeve",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Brown (Almost sold out)",
+     "to": "Brown"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "L (Almost sold out)",
+     "to": "L"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "2XL (Almost sold out)",
+     "to": "2XL"
+    }
+   ]
+  },
+  {
+   "id": 10507304108361,
+   "title": "Women's Slip On Shoe | Perforated Tassel Loafer Cushioned",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507308400969,
+   "title": "Women's Palazzo Pants | High Waist Wide Leg Button Detail",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "S (Almost sold out)",
+     "to": "S"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (Almost sold out)",
+     "to": "M"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XL (Almost sold out)",
+     "to": "XL"
+    }
+   ]
+  },
+  {
+   "id": 10507308532041,
+   "title": "Women's Wide Leg Pants | V-Neck Sleeveless Denim Button Closure",
+   "group": "variants",
+   "why": "optie \"color - Blue\" → \"Color\"",
+   "options": [
+    {
+     "position": 1,
+     "from": "color\n          - Blue",
+     "to": "Color"
+    }
+   ]
+  },
+  {
+   "id": 10507308990793,
+   "title": "Women's Wide Leg Trousers | High Waist Sailor Button Wide Leg",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "S (Almost sold out)",
+     "to": "S"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (Almost sold out)",
+     "to": "M"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "2XL (Almost sold out)",
+     "to": "2XL"
+    }
+   ]
+  },
+  {
+   "id": 10507311645001,
+   "title": "Women's High Heels | Embroidered Suede Knee High Boots Block Heel Pointed Toe",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507311448393,
+   "title": "Women's Kitten Heels | Pointed Toe Criss-Cross Mule",
+   "group": "variants",
+   "why": "optie \"Shoe Size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507311382857,
+   "title": "Women's Kitten Heels | Pointed Toe Knit Slingback Striped",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507312562505,
+   "title": "Women's Slippers | Fleece Lined Buckle Detail Cushioned Sole",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507312759113,
+   "title": "Women's Slippers | Square Toe Thong Strap Low Heel",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507312890185,
+   "title": "Women's House Slippers | Open Toe Ribbed Knit Cushioned Slide",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507313217865,
+   "title": "Women's Cozy Slippers | Slip-On Plush Teddy Knit Grip Sole",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Beige (Almost sold out)",
+     "to": "Beige"
+    }
+   ]
+  },
+  {
+   "id": 10507313611081,
+   "title": "Women's Platform Slippers | Open Toe Cutout Padded Sole",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Brown (Almost sold out!)",
+     "to": "Brown"
+    },
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Beige (Almost sold out!)",
+     "to": "Beige"
+    }
+   ]
+  },
+  {
+   "id": 10507313709385,
+   "title": "Women's Fuzzy Slippers | Buckle Closure Fleece Lined Cushioned Sole",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507314102601,
+   "title": "Women's Trench Coat | Lapel Collar Button Front Tailored",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Beige (Almost sold out)",
+     "to": "Beige"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XL (Almost sold out)",
+     "to": "XL"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "3XL (Almost sold out)",
+     "to": "3XL"
+    }
+   ]
+  },
+  {
+   "id": 10507314299209,
+   "title": "Women's Trench Coat | Hooded Water-Resistant Oversized",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (Almost sold out)",
+     "to": "M"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XL (Almost sold out)",
+     "to": "XL"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "3XL (Almost sold out)",
+     "to": "3XL"
+    }
+   ]
+  },
+  {
+   "id": 10507314626889,
+   "title": "Women's Trench Coat | Double-Breasted Longline Belted",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 1,
+     "option": "Color",
+     "from": "Red (Almost sold out)",
+     "to": "Red"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "S (Almost sold out)",
+     "to": "S"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "L (Almost sold out)",
+     "to": "L"
+    }
+   ]
+  },
+  {
+   "id": 10507315642697,
+   "title": "Women's Winter Coat | Sherpa Lined Quilted Long Puffer",
+   "group": "variants",
+   "why": "optie \"Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507316625737,
+   "title": "Women's Winter Jacket | Wide Fur Collar Puffer Quilted",
+   "group": "variants",
+   "why": "\"(Almost sold out)\" uit de maat/kleur",
+   "values": [
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "M (almost sold out)",
+     "to": "M"
+    },
+    {
+     "position": 2,
+     "option": "Size",
+     "from": "XL (almost sold out)",
+     "to": "XL"
+    }
+   ]
+  },
+  {
+   "id": 10507317576009,
+   "title": "Women's Wool Slippers | Fleece Lined Platform Cushioned",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507319968073,
+   "title": "Women's Platform Sneakers | Lace-Up Canvas Chunky Sole",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507320262985,
+   "title": "Women's Platform Sneakers | Lace-Up Suede Mesh Platform Sole",
+   "group": "variants",
+   "why": "optie \"Shoe size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507320164681,
+   "title": "Women's Wedge Sneakers | Lace-Up Perforated Platform Sole",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507330519369,
+   "title": "Men's Slip On Boots | Wingtip Brogue Suede Ankle Chelsea",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507332780361,
+   "title": "Men's Moc Toe Boots | Lace-Up Synthetic Leather Ankle Boot Rubber Sole",
+   "group": "variants",
+   "why": "optie \"Shoe Size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507335369033,
+   "title": "Men's Business Casual Shoe | Pointed Toe Leather Lace Up",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507335663945,
+   "title": "Men's Suede Shoe | Slip-On Loafer Cushioned Sole",
+   "group": "variants",
+   "why": "optie \"Shoe Size (US)\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "Shoe Size (US)",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507344019785,
+   "title": "Men's Slipper Boots | Suede Fleece-Lined Slip-On Anti-Slip Sole",
+   "group": "variants",
+   "why": "optie \"US Size\" → \"Size\"",
+   "options": [
+    {
+     "position": 2,
+     "from": "US Size",
+     "to": "Size"
+    }
+   ]
+  },
+  {
+   "id": 10507301585225,
+   "title": "Women's Clogs | Suede Buckle Strap Cork Sole",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Clogs\"",
+   "set": {
+    "product_type": "Women's Clogs"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 10507302109513,
+   "title": "Women's Clogs | Suede Buckle Strap Cork Sole",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Clogs\"",
+   "set": {
+    "product_type": "Women's Clogs"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 10507302371657,
+   "title": "Women's Mary Jane Shoe | T-Strap Buckle Lug Sole",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Mary Jane Shoe\"",
+   "set": {
+    "product_type": "Women's Mary Jane Shoe"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 10507312562505,
+   "title": "Women's Slippers | Fleece Lined Buckle Detail Cushioned Sole",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Slippers\"",
+   "set": {
+    "product_type": "Women's Slippers"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 10507313283401,
+   "title": "Women's Platform Slippers | Fleece Lined Platform Cushioned Sole",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Platform Slippers\"",
+   "set": {
+    "product_type": "Women's Platform Slippers"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 10507313348937,
+   "title": "Women's Cozy Slippers | Plush Slip-On Non-Slip Sole",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Cozy Slippers\"",
+   "set": {
+    "product_type": "Women's Cozy Slippers"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 10507313611081,
+   "title": "Women's Platform Slippers | Open Toe Cutout Padded Sole",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Platform Slippers\"",
+   "set": {
+    "product_type": "Women's Platform Slippers"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 10507313709385,
+   "title": "Women's Fuzzy Slippers | Buckle Closure Fleece Lined Cushioned Sole",
+   "group": "types",
+   "why": "producttype was leeg → \"Women's Fuzzy Slippers\"",
+   "set": {
+    "product_type": "Women's Fuzzy Slippers"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 10507335369033,
+   "title": "Men's Business Casual Shoe | Pointed Toe Leather Lace Up",
+   "group": "types",
+   "why": "producttype was leeg → \"Men's Business Casual Shoe\"",
+   "set": {
+    "product_type": "Men's Business Casual Shoe"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 10507342807369,
+   "title": "Men's Slippers | Suede Fleece Lining Closed Toe",
+   "group": "types",
+   "why": "producttype was leeg → \"Men's Slippers\"",
+   "set": {
+    "product_type": "Men's Slippers"
+   },
+   "from": {
+    "product_type": ""
+   }
+  },
+  {
+   "id": 10507343692105,
+   "title": "Men's House Slippers | Fleece Upper Sherpa Lining Slip-On",
+   "group": "types",
+   "why": "producttype was leeg → \"Men's House Slippers\"",
+   "set": {
+    "product_type": "Men's House Slippers"
+   },
+   "from": {
+    "product_type": ""
+   }
+  }
+ ]
+}
