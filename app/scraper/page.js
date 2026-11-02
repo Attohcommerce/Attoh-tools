@@ -10,7 +10,7 @@ import { useOrgDef } from "../components/OrgProvider";
 
 // Aantal winkels dat tegelijk wordt doorzocht (snelheid). 6 = ±6× sneller
 // dan één voor één; de catalogi komen uit de cache, dus dat kan veilig.
-const WAVE = 6;
+const WAVE = 8; // 02-11: 8 winkels per golf (catalogi staan meestal in de cache)
 
 const LS = {
   stores: "sa_competitor_stores",
@@ -75,7 +75,16 @@ const LS_FAST = "sa_fast_mode";
                    STORE 1 met die nieuwe termen
      store 4+    → ook het brede vangnet, opnieuw vanaf store 1
      store 6     → instructie-paneel — loopt gewoon door, wachten hoeft niet
-     store 20    → nog steeds 0? automatisch door naar het volgende keyword
+     store 12    → nog steeds 0? automatisch door naar het volgende keyword
+
+   02-11-2026 (Justin: "Christmas dress blijft te erg vasthaken op letterlijk
+   Christmas" + "ik loop weg van mijn PC, kan niet klikken"): de ladder gaat
+   nu ook verder als een keyword HALF gevuld is (< 60% na 2 / 4 winkels),
+   niet alleen bij 0. Daarbij komen ook de BUUR-PRODUCTEN uit de briefing mee
+   (loafers → slip-on loafers, moccasins; christmas dress → satin/velvet/
+   elegant midi dress), en die worden in "fit"-modus gecontroleerd: past het
+   bij wat de klant zocht, in plaats van "is het letterlijk dit woord".
+   Klikken op "AI-aanpak nu" is niet meer nodig.
 
    Waarom opnieuw vanaf store 1: de winkels staan op volgorde van kwaliteit
    (beste eerst). Als de AI-aanpak pas bij winkel 4 aanslaat, komt je hele
@@ -86,7 +95,7 @@ const LS_FAST = "sa_fast_mode";
 const ALTS_AT = 2;
 const BROAD_AT = 4;
 const STALL_PROMPT_AT = 6;
-const STALL_AUTO_AT = 20;
+const STALL_AUTO_AT = 12; // 02-11: sneller door naar het volgende keyword
 const MAX_LADDER_ROUNDS = 4; // vangnet tegen eindeloos herstarten
 
 // Geleerde kennis blijft bewaard tussen runs:
@@ -96,7 +105,7 @@ const LS_ALT_HITS = "sa_kw_alt_hits"; // kw → alternatief dat eerder écht pro
 // VELDEN in de briefing: zodra er een veld bijkomt (zoals titleForm) moeten
 // oude briefings opnieuw gemaakt worden. Zonder dit nummer bleef een briefing
 // van vóór titleForm eeuwig in de cache staan en bleef kolom K leeg.
-const BRIEF_VERSION = 2;
+const BRIEF_VERSION = 3; // 3: + related (buur-producten per keyword, 02-11)
 const LS_BRIEFS = `sa_kw_briefs_v${BRIEF_VERSION}`;
 
 // Maximaal aandeel van één concurrent in de hele import-lijst. Zonder deze
@@ -1589,8 +1598,8 @@ export default function ScraperPage() {
           // faalt is zonde van de tijd — de fysieke proxies uit de briefing
           // (sequin dress, velvet dress, sparkly midi…) gaan meteen mee, en
           // de foto-controle bewaakt daarna of het écht past.
-          if (isOccasion && kwBrief && kwBrief.searchTerms && kwBrief.searchTerms.length) {
-            const safe = kwBrief.searchTerms.filter((t) => alternativeIsSafe(k, t));
+          if (isOccasion && kwBrief && ((kwBrief.searchTerms && kwBrief.searchTerms.length) || (kwBrief.related && kwBrief.related.length))) {
+            const safe = [...(kwBrief.searchTerms || []), ...(kwBrief.related || [])].filter((t) => alternativeIsSafe(k, t)).slice(0, 8);
             if (safe.length) {
               terms = [...new Set([...terms, ...safe])];
               pushLog({
@@ -1616,8 +1625,9 @@ export default function ScraperPage() {
             // kleur, materiaal of patroon laten vallen: "camouflage pants" →
             // "cargo pants" en "gold heels" → "heels" leverden vorige run
             // producten op die het keyword totaal niet waren.
-            const safeAlts = alts.filter((a) => alternativeIsSafe(k, a));
-            const dropped = alts.filter((a) => !safeAlts.includes(a));
+            const pool = [...new Set([...alts, ...((kwBrief && kwBrief.related) || [])])];
+            const safeAlts = pool.filter((a) => alternativeIsSafe(k, a));
+            const dropped = pool.filter((a) => !safeAlts.includes(a));
             if (dropped.length) {
               pushLog({ muted: true, text: `Alternatieven geweigerd (verliezen "${hardAttributes(k).join(", ")}"): ${dropped.join(" · ")}` });
             }
@@ -1750,6 +1760,7 @@ export default function ScraperPage() {
                               keyword: k,
                               gender,
                               brief: kwBrief,
+                              mode: term !== k || isOccasion ? "fit" : "strict",
                               items: toVerify.map((m) => ({
                                 index: found.indexOf(m),
                                 title: m.title,
@@ -1879,13 +1890,21 @@ export default function ScraperPage() {
               pushLog({ muted: true, text: `"${k}": nog ${Math.max(needed, 0)} nodig.` });
               storesTried += wave.length;
 
-              if (withStallLogic && needed === target) {
+              /* Verbreden zodra het keyword achterloopt (< 60% gevuld), niet
+                 pas bij 0 — anders bleef "christmas dress" op 3/12 hangen
+                 en sjokte de run langs alle winkels met alleen het letterlijke woord. */
+              const behind = withStallLogic && needed > 0 && target - needed < Math.ceil(target * 0.6);
+              if (behind) {
+                const tag = needed === target ? "nog 0" : `pas ${target - needed}/${target}`;
+                const hasPool = alts.length || ((kwBrief && kwBrief.related) || []).length;
                 if (udProfile) {
                   if (storesTried >= ALTS_AT && relaxUnderdog()) return "restart";
                 } else {
-                  if (storesTried >= ALTS_AT && alts.length && expandAlts(`Na ${storesTried} winkel(s) nog 0`)) return "restart";
+                  if (storesTried >= ALTS_AT && hasPool && expandAlts(`Na ${storesTried} winkel(s) ${tag}`)) return "restart";
                   if (storesTried >= BROAD_AT && expandBroad()) return "restart";
                 }
+              }
+              if (withStallLogic && needed === target) {
                 if (storesTried >= STALL_PROMPT_AT && storesTried - wave.length < STALL_PROMPT_AT && !stallDecision.current) {
                   setStall({ kw: k, gender });
                   pushLog({
@@ -1918,7 +1937,7 @@ export default function ScraperPage() {
           // Bij weinig stores kan de ladder nooit geactiveerd zijn — dan alsnog
           // één slimme ronde (tenzij het keyword is overgeslagen).
           const skipped = stallDecision.current === "skip" || stallDecision.current === "skip-auto";
-          if (needed === target && !skipped && !altsFull && alts.length) {
+          if (needed > 0 && !skipped && !altsFull && (alts.length || ((kwBrief && kwBrief.related) || []).length)) {
             expandAlts("Laatste poging");
             expandBroad();
             await scanStores(false);
@@ -1977,7 +1996,10 @@ export default function ScraperPage() {
       try {
         await runLiteralCheck(runTabTitle);
       } catch {}
-      pushLog({ ok: true, text: "Eindcontroles klaar — kolom F (geslacht), G (dubbele foto) en H (literal-twijfel) zijn gevuld." });
+      try {
+        await runPhotoScore(runTabTitle);
+      } catch {}
+      pushLog({ ok: true, text: "Eindcontroles klaar — kolom F (geslacht), G (dubbele foto), H (literal-twijfel) en O/P (foto-cijfer) zijn gevuld." });
       // Sa Collective: meteen het tweede blad voor Chaims importer erbij
       if (orgDef.id === "sacollective") {
         try {
@@ -2326,6 +2348,41 @@ export default function ScraperPage() {
       pushLog({ ok: true, text: `Literal-check klaar — ${total} twijfelgevallen getagd in kolom H.` });
     } catch (e) {
       pushLog({ err: true, text: "Literal-check fout: " + e.message });
+    } finally {
+      setCheckBusy("");
+    }
+  }
+
+  /* FOTO-CIJFER (02-11): elk product in de import-lijst krijgt een cijfer
+     1–10 voor hoe branded de foto's ogen (10 = merk/editorial, 1 = AliExpress
+     uit 2010) in kolom O, met de reden in kolom P. Draait automatisch na de
+     run; los te herhalen voor een oud tabblad. */
+  async function runPhotoScore(forceTab) {
+    if (!workSheet.trim() || checkBusy) return;
+    setCheckBusy("photo");
+    pushLog({ strong: true, text: "— Foto-cijfer gestart (kolom O/P)" });
+    try {
+      let cursor = 2;
+      let total = 0;
+      let sum = 0;
+      let usd = 0;
+      for (let guard = 0; guard < 400; guard++) {
+        const res = await fetch("/api/checks/photo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sheetId: workSheet, tab: (forceTab || runTab).trim() || undefined, cursor }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.status);
+        total += data.scored || 0;
+        usd += data.usd || 0;
+        if (data.processed) pushLog({ key: "photo-prog", muted: true, text: `Foto-cijfer: t/m rij ${cursor + data.processed - 1} (${total} beoordeeld)` });
+        if (data.done) break;
+        cursor = data.nextCursor;
+      }
+      pushLog({ ok: true, text: `Foto-cijfer klaar — ${total} producten beoordeeld (±$${usd.toFixed(2)}). Sorteer op kolom O om de mooiste bovenaan te zetten.` });
+    } catch (e) {
+      pushLog({ err: true, text: "Foto-cijfer fout: " + e.message });
     } finally {
       setCheckBusy("");
     }
@@ -2962,6 +3019,19 @@ export default function ScraperPage() {
               </div>
               <button className="btn-ghost" onClick={runLiteralCheck} disabled={!workSheet.trim() || !!busy}>
                 {checkBusy === "literal" ? "Bezig…" : "Literal-check"}
+              </button>
+            </div>
+
+            <div className={secCls("photo", false)} id="sec-photo">
+              <SecHead id="photo" dflt={false} sum="achteraf · kolom O/P">
+                Foto-cijfer
+              </SecHead>
+              <div className="hint" style={{ marginTop: 0, marginBottom: 8 }}>
+                Geeft elk product een cijfer 1–10 voor hoe branded de foto's ogen (10 = merk/editorial, 1 = AliExpress uit
+                2010) in kolom O, met de reden in kolom P. Draait automatisch na elke run; hier los voor een ouder tabblad.
+              </div>
+              <button className="btn-ghost" onClick={() => runPhotoScore()} disabled={!workSheet.trim() || !!busy}>
+                {checkBusy === "photo" ? "Bezig…" : "Foto-cijfer"}
               </button>
             </div>
 

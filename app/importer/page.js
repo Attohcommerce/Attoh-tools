@@ -489,7 +489,7 @@ export default function ImporterPage() {
   }
 
   /* Per product: booming termen die bij DIT producttype horen (minstens één
-     gedeeld type-woord met het rij-keyword) — max 6, sterkste eerst. Is het
+     gedeeld type-woord met het rij-keyword) — max 10, sterkste eerst. Is het
      geslacht van de rij bekend (kolom F van de import-lijst: Man/Vrouw), dan
      alleen termen uit het geheugen van dat geslacht (rijen zonder g = oud
      batch-geheugen, die tellen altijd). */
@@ -503,7 +503,7 @@ export default function ImporterPage() {
     const base = String(rowKeyword || "").toLowerCase().trim();
     const out = [];
     for (const r of boom.rows) {
-      if (out.length >= 6) break;
+      if (out.length >= 10) break;
       if (want && r.g && r.g !== want) continue;
       if (!r.toks.some((t) => mine.has(t))) continue;
       if (r.kw === base || out.includes(r.kw)) continue;
