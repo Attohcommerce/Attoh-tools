@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 const CHUNK = 8;
 
 export const FIT_NOTE_LIQUID = `{%- comment -%} Fitnote — Attoh Tools / Store Doctor. Leest custom.model_height_cm + custom.model_size. Stijl: zelfde als de icoon-regels (verzending/retour) {%- endcomment -%}
+<style>.sg-fit[data-fit="snug"] .sg-fit-dot{left:40%}.sg-fit[data-fit="snug"] .sg-fit-labels span:nth-child(2){color:var(--sg-ink);font-weight:600}</style>
 {%- assign fn_h = product.metafields.custom.model_height_cm.value -%}
 {%- assign fn_s = product.metafields.custom.model_size.value -%}
 {%- if fn_h != blank and fn_s != blank -%}
