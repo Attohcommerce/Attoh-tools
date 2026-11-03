@@ -24,8 +24,9 @@ export const FIT_NOTE_LIQUID = `{%- comment -%} Fitnote — Attoh Tools / Store 
     <span>Model is {% if localization.country.iso_code == 'US' %}{{ fn_ft }}'{{ fn_rest }}" ({{ fn_h }} cm){% else %}{{ fn_h }} cm ({{ fn_ft }}'{{ fn_rest }}"){% endif %} and wears size {{ fn_s }}</span>
   </div>
   <style>
-    .fit-note{display:flex;align-items:center;gap:10px;margin:2px 0 14px;font-size:inherit;line-height:1.5;color:inherit}
-    .fit-note svg{flex:0 0 auto;opacity:.85}
+    .fit-note{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:13px;line-height:1.45;letter-spacing:.01em;color:inherit}
+    .fit-note span{opacity:.75}
+    .fit-note svg{flex:0 0 auto;width:15px;height:15px;opacity:.85}
   </style>
 {%- endif -%}`;
 
