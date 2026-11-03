@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { startJob, stopJob, resumeJob, jobStatus, kickTick, getJob, jobAvailable, getLastResults, patchResults } from "@/lib/finder-job";
 import {
-  getConfig, setConfig, getMarketQueries, setMarketQueries, localizeQueries, writeToSheet, markSeen, getSeen, apifyConfigured, cleanDomain,
+  getConfig, setConfig, getMarketQueries, setMarketQueries, clearMarketQueries, localizeQueries, writeToSheet, markSeen, getSeen, apifyConfigured, cleanDomain,
 } from "@/lib/competitor-finder";
+import { readSheetStores, ensurePool, bestStoresFor } from "@/lib/finder-pool";
 import { MARKETS, DEFAULT_QUERIES_EN } from "@/lib/finder-markets";
 import { addToStoreList, mergeStoreMeta } from "@/lib/catalog-cache";
 import { auditDropship } from "@/lib/dropship-score";
@@ -31,7 +32,7 @@ export async function POST(req) {
       const perMarket = {};
       for (const m of MARKETS) {
         const q = await getMarketQueries(m.key);
-        perMarket[m.key] = { count: q.queries.length, source: q.source, at: q.at || 0 };
+        perMarket[m.key] = { count: q.queries.length, source: q.source, at: q.at || 0, override: !!q.override, stores: (q.stores || []).map((s) => s.domain) };
       }
       const last = await getLastResults();
       return NextResponse.json({ ok: true, cfg, markets: MARKETS, perMarket, last, apify: apifyConfigured(), redis: jobAvailable(), defaultQueries: DEFAULT_QUERIES_EN });
@@ -48,9 +49,22 @@ export async function POST(req) {
       const list = await setMarketQueries(body.market, body.queries || [], "handmatig");
       return NextResponse.json({ ok: true, queries: list });
     }
+    if (action === "clearQueries") {
+      await clearMarketQueries(body.market);
+      const q = await getMarketQueries(body.market);
+      return NextResponse.json({ ok: true, ...q });
+    }
     if (action === "localize") {
       const r = await localizeQueries(body.market, body.base);
       return NextResponse.json({ ok: true, ...r });
+    }
+    /* Pool van één markt (opnieuw) bouwen uit de beste sheet-stores + startset. */
+    if (action === "poolRefresh") {
+      const cfg = await getConfig();
+      const sheetId = (body.sheet && body.sheet.sheetId) || cfg.sheetId;
+      const stores = await readSheetStores(sheetId);
+      const pool = await ensurePool(body.market, { sheetStores: stores, force: true });
+      return NextResponse.json({ ok: true, count: pool.titles.length, source: pool.source, stores: pool.stores, candidates: bestStoresFor(stores, body.market) });
     }
 
     if (!jobAvailable()) return NextResponse.json({ error: "REDIS_URL ontbreekt — de scan heeft Redis nodig om de voortgang te bewaren." }, { status: 422 });
