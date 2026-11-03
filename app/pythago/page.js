@@ -1,54 +1,62 @@
 "use client";
 
-// PYTHAGO — wat kost elk product aan Google Ads en wat levert het op in Shopify?
-// 7 / 14 / 30 dagen naast elkaar, vaste formules, advies per product en een
-// knop om de aangevinkte producten op draft te zetten (17-10-2026, doc 56).
+// PYTHAGO-DASHBOARD (03-11-2026, projectdoc 103) — Pythago (app.pythago.io)
+// nagebouwd in Attoh Tools: zelfde dashboard, filters, opgeslagen filters,
+// tags, kolommen, acties en background tasks, in de stijl van de tool.
 //
-// Nodig per run: (1) store (koppeling uit de Importer + Orders-app van de
-// Bills-pagina), (2) de Google Ads-export "Producten" van de afgelopen 30
-// dagen met segment Dag (CSV). De CSV wordt hier in de browser gelezen; alleen
-// de opgetelde cijfers per item gaan naar de server.
+// Data komt niet meer uit CSV-exports maar uit een sync (lib/pythago-sync.js):
+// Google Ads per product via het script scripts/google-ads-products.js → tab
+// Prod_<KEY> in "Attoh Ads Live", Shopify-orders/refunds via de Orders-app,
+// producten via de Importer-koppeling. Het resultaat staat in Redis; de pagina
+// synct zelf bij openen als de data ouder is dan 6 uur, en elke nacht via de
+// cron (/api/pythago/cron) voor stores met "automatisch syncen" aan.
 //
-// CONVERSION BOOSTER (23-10-2026, doc 64): vóór het draften eerst een kans.
-// Onder de tabel: categorieën aanvinken → 1 · Analyseer (AI kijkt per product
-// naar listing + cijfers: Boost · Draft nu · Laten lopen) → vinkjes nalopen →
-// 2 · Schrijf naar sheet (blad "CVR BOOST dd-mm" + CVR Log) + tekst voor Claude
-// op het klembord → Claude doet de fixes → Klaar → blad verbergen, boost-
-// venster loopt. Producten in een lopende boost slaat "Selecteer alle
-// Draften" over; na het venster toont de tabel of de boost werkte.
-
-import { useEffect, useMemo, useRef, useState } from "react";
+// Klassieke flow (CSV) + Conversion Booster: /pythago/booster — de knop
+// "Conversion Booster" geeft het gesynchroniseerde resultaat daar door.
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 import { sfx } from "../components/sfx";
-import { parseAdsExport, combineExports, slimAds } from "@/lib/pythago-csv";
-import { buildClaudeText } from "@/lib/cvr-text";
 import { orgLS } from "@/lib/org-client";
+import "./pythago.css";
 
 const LS_STORES = "sa_stores";
 const LS_STORE = "sa_py_store";
-const LS_SETTINGS = "sa_py_settings::"; // + domein
-const LS_SHEET = "sa_py_sheet::"; // + domein
+const LS_SETTINGS = "sa_py_settings::"; // + domein (zelfde als de klassieke pagina)
 const LS_ORDERS_APP = "sa_orders_app::"; // + domein (Bills-pagina)
-const LS_BILLS_SHEET = "sa_bills_sheet::"; // + domein (P&L-sheet)
-const LS_CVR = "sa_cvr_settings::"; // + domein (Conversion Booster)
-
-const DEFAULTS = { cogsPct: 35, feePct: 4.4, threshold: 5, ruleWindow: 30, minAge: 14 };
+const LS_ADS_SHEET = "attoh_dash_ads_sheet"; // zelfde sheet als het omzet-dashboard
+const LS_DASH_CFG = "attoh_dash_cfg"; // domein → { key, on } (omzet-dashboard)
+const LS_KEY = "sa_py_key::"; // + domein → SSB/LGB/…
+const LS_COLS = "sa_py_cols::"; // + domein → { order, hidden, img }
+const LS_VIEW = "sa_py_view::"; // + domein → { period, perPage }
+const DEFAULT_ADS_SHEET = "1xac7M4--kCb2DKShQy7s2A13sgfl4NxW8CXbLGW4H8o";
+// store → sleutel van de Ads-tabs (zelfde lijst als het omzet-dashboard; per store aan te passen)
+const KNOWN = [
+  { key: "SSB", match: /soul\s*society|0d6n10-zj/i },
+  { key: "LGB", match: /lady\s*glam|lornvale|hu9f6r-ee/i },
+  { key: "EMC", match: /everman|va3wjr-27/i },
+  { key: "SW", match: /shapes\s*wardrobe|shapeswardrobe|6snnji-kr/i },
+  { key: "CC", match: /clove|dyjxwd-p0/i },
+];
+const guessKey = (s) => {
+  if (!s) return "";
+  const hay = `${s.name || ""} ${s.domain || ""}`;
+  const hit = KNOWN.find((k) => k.match.test(hay));
+  return hit ? hit.key : "";
+};
+const DEFAULTS = { cogsPct: 35, feePct: 4.4, threshold: 5, ruleWindow: 30, minAge: 14, adsCurrency: "GBP" };
 const ADVIES = ["Draften", "Onder break-even", "Winstgevend", "Verkoopt", "Nieuw", "Te weinig spend", "Niet op store", "Al draft"];
 const TONE = {
-  Draften: "var(--err)",
-  "Onder break-even": "var(--warn)",
-  Winstgevend: "var(--ok)",
-  Verkoopt: "#7fb2ff",
-  Nieuw: "#a99bff",
-  "Te weinig spend": "var(--muted)",
-  "Niet op store": "var(--faint)",
-  "Al draft": "var(--faint)",
+  Draften: "var(--err)", "Onder break-even": "#f0b35a", Winstgevend: "var(--ok)", Verkoopt: "#4cc9f0",
+  Nieuw: "#b48cff", "Te weinig spend": "var(--muted)", "Niet op store": "var(--faint)", "Al draft": "var(--faint)",
 };
-const CVR_CATS = ["Draften", "Onder break-even", "Verkoopt", "Winstgevend", "Te weinig spend"];
-const CVR_DEFAULTS = { categories: ["Draften", "Onder break-even"], minClicks: 20, maxPerRun: 25, windowDays: 14, allowRepeat: false };
-const VERDICTS = ["Boost", "Draft nu", "Laten lopen"];
-const VTONE = { Boost: "#4cc9f0", "Draft nu": "var(--err)", "Laten lopen": "var(--muted)" };
-const BOOST_TONE = "#4cc9f0";
+const PRESET_COLORS = ["#c9a227", "#3ecf8e", "#4cc9f0", "#b48cff", "#ff6b6b", "#f0b35a", "#ff8fab", "#8ad7ff", "#9ad96a", "#e0b341"];
+const SYM = { GBP: "£", USD: "$", EUR: "€", AUD: "A$", NZD: "NZ$", CAD: "C$" };
+const EMPTY_FILTERS = {
+  q: "", status: "all", type: "", tags: [], advies: [], inBoost: false,
+  roasMin: "", roasMax: "", poasMin: "", poasMax: "", profitMin: "", profitMax: "", marginMin: "", marginMax: "",
+  priceMin: "", priceMax: "", adDaysMin: "", costMin: "", clicksMin: "", clicksMax: "", ordersMin: "", ordersMax: "",
+  pubFrom: "", pubTo: "", vendor: "",
+};
 
 function load(key, fallback) {
   try {
@@ -63,424 +71,397 @@ function save(key, value) {
     orgLS.setItem(key, JSON.stringify(value));
   } catch {}
 }
-const today = () => {
-  const d = new Date();
-  return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+const fmtMoney = (v, cur, dec = 2) => {
+  if (v == null || !Number.isFinite(Number(v))) return "—";
+  const n = Number(v);
+  const s = Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  return `${n < 0 ? "-" : ""}${SYM[cur] || cur + " "}${s}`;
 };
-const ddmm = (iso) => {
-  const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? `${m[3]}-${m[2]}` : String(iso || "");
+const fmtNum = (v, dec = 0) => (v == null || !Number.isFinite(Number(v)) ? "—" : Number(v).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec }));
+const fmtPct = (v, dec = 2) => (v == null || !Number.isFinite(Number(v)) ? "—" : `${Number(v).toFixed(dec)}%`);
+const ago = (iso) => {
+  if (!iso) return "";
+  const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
+  if (m < 1) return "zojuist";
+  if (m < 60) return `${m} min geleden`;
+  const h = Math.round(m / 60);
+  if (h < 48) return `${h} uur geleden`;
+  return `${Math.round(h / 24)} dagen geleden`;
+};
+const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—");
+const clock = (iso) => (iso ? new Date(iso).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" }) : "");
+const num = (v) => {
+  const n = Number(String(v ?? "").replace(",", "."));
+  return v === "" || v == null || !Number.isFinite(n) ? null : n;
 };
 
-/* Google Ads geeft CSV soms als UTF-16 ("Excel CSV") — BOM of nul-bytes herkennen. */
-async function readText(file) {
-  const buf = new Uint8Array(await file.arrayBuffer());
-  const utf16 = (buf[0] === 0xff && buf[1] === 0xfe) || (buf.length > 4 && buf[1] === 0 && buf[3] === 0);
-  return new TextDecoder(utf16 ? "utf-16le" : "utf-8").decode(buf);
+/* ---------- Kolommen (zoals Pythago, + onze extra's) ---------- */
+function makeColumns(P) {
+  const win = (w) => [
+    { id: `roas${w}`, label: `ROAS ${w}D`, grp: `g${w}`, gl: true, get: (r) => r.per[w].roas, kind: "roas" },
+    { id: `cost${w}`, label: `$ ${w}D`, grp: `g${w}`, get: (r) => r.per[w].spend, kind: "money" },
+    { id: `rev${w}`, label: `↗ ${w}D`, grp: `g${w}`, get: (r) => r.per[w].net, kind: "money", sub: (r) => r.per[w].netShop },
+    { id: `impr${w}`, label: `👁 ${w}D`, grp: `g${w}`, get: (r) => r.per[w].impr, kind: "int" },
+  ];
+  return [
+    { id: "price", label: "Prijs", get: (r) => r.price, kind: "price" },
+    { id: "cost", label: "Spend", get: (r) => r.per[P].spend, kind: "money", sub: (r) => r.per[P].spend, subMode: "shop" },
+    { id: "conv", label: "Conv.", get: (r) => r.per[P].conv, kind: "num1", title: "Google-conversies" },
+    { id: "qty", label: "Stuks", get: (r) => r.per[P].units, kind: "qty", title: "Shopify-stuks (refund-stuks tussen haakjes)" },
+    { id: "cv", label: "Omzet", get: (r) => r.per[P].net, kind: "money", sub: (r) => r.per[P].netShop, title: "Shopify-omzet na refunds" },
+    { id: "refunds", label: "Refunds", get: (r) => r.per[P].refunds, kind: "refund" },
+    { id: "orders", label: "Orders", get: (r) => r.per[P].orders, kind: "int", def: false },
+    { id: "clicks", label: "Klikken", get: (r) => r.per[P].clicks, kind: "int" },
+    { id: "ctr", label: "CTR", get: (r) => r.per[P].ctr, kind: "pct" },
+    { id: "cpc", label: "CPC", get: (r) => r.per[P].cpc, kind: "money" },
+    { id: "cpa", label: "CPA", get: (r) => r.per[P].cpa, kind: "money", title: "spend per verkocht stuk" },
+    ...win(7), ...win(14), ...win(30),
+    { id: "margin", label: "Marge", get: (r) => r.per[P].margin, kind: "pct0", gl: true, title: "brutomarge na COGS + fees" },
+    { id: "cog", label: "COGS", get: (r) => r.per[P].cog, kind: "money" },
+    { id: "profit", label: "Netto winst", get: (r) => r.per[P].profit, kind: "money" },
+    { id: "poas", label: "POAS", get: (r) => r.per[P].poas, kind: "roas" },
+    { id: "adDays", label: "Ad-dagen", get: (r) => r.adDays, kind: "int", def: false },
+    { id: "gRoas", label: "G-ROAS", get: (r) => r.per[P].gRoas, kind: "roas", def: false, title: "Google conv.waarde / spend" },
+    { id: "type", label: "Type", get: (r) => r.type, kind: "text", def: false },
+    { id: "age", label: "Leeftijd", get: (r) => r.age, kind: "int", def: false, title: "dagen live" },
+    { id: "published", label: "Gepubliceerd", get: (r) => r.publishedAt, kind: "date" },
+  ];
 }
-
-/* Label voor de boost-status van een product in de tabel. */
-function boostLabel(b) {
-  if (!b) return null;
-  const short = String(b.tab || "").replace(/^CVR BOOST\s*/i, "");
-  if (b.status === "open") return { text: `Boost ${short} · open`, color: BOOST_TONE, title: `In boost "${b.tab}" — nog niet klaar gemeld. Wordt niet gedraft.` };
-  if (b.status === "venster") return { text: `Boost ${short} · dag ${b.day}/${b.windowDays}`, color: BOOST_TONE, title: `Boost "${b.tab}" klaar op ${ddmm(b.doneAt)} — venster van ${b.windowDays} dagen loopt. Wordt niet gedraft.` };
-  if (b.effect === "geen effect") return { text: `Geboost ${short} · geen effect`, color: "var(--warn)", title: `${b.effectText || ""} — telt weer gewoon mee voor Draften.` };
-  if (b.effect === "beter") return { text: `Boost ${short} · beter`, color: "var(--ok)", title: b.effectText || "" };
-  return { text: `Boost ${short} werkt ✓`, color: "var(--ok)", title: b.effectText || "" };
-}
+const ALL_COL_IDS = makeColumns(30).map((c) => c.id);
 
 export default function PythagoPage() {
   const [stores, setStores] = useState([]);
   const [sel, setSel] = useState("");
-  const [files, setFiles] = useState([]); // [{ name, parsed?, error? }]
   const [settings, setSettings] = useState(DEFAULTS);
-  const [fxOverride, setFxOverride] = useState("");
-  const [result, setResult] = useState(null);
-  const [filter, setFilter] = useState("Draften");
-  const [sort, setSort] = useState({ key: "", dir: "desc" }); // "" = volgorde van de server (advies, dan spend)
-  const [q, setQ] = useState("");
+  const [key, setKey] = useState("");
+  const [adsSheet, setAdsSheet] = useState(DEFAULT_ADS_SHEET);
+  const [data, setData] = useState(null);
+  const [stale, setStale] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [auto, setAuto] = useState(null);
+  const [presets, setPresets] = useState([]);
+  const [notes, setNotes] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [error, setError] = useState("");
+  const [flash, setFlash] = useState("");
+  const [period, setPeriod] = useState(30);
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [showFilters, setShowFilters] = useState(false);
+  const [menu, setMenu] = useState(""); // "tags" | "presets" | "cols" | "actions"
+  const [tagQ, setTagQ] = useState("");
+  const [sort, setSort] = useState({ key: "cost", dir: "desc" });
+  const [page, setPage] = useState(0);
+  const [perPage, setPerPage] = useState(25);
   const [picked, setPicked] = useState(() => new Set());
-  const [sheet, setSheet] = useState("");
-  const [tab, setTab] = useState(`Pythago ${today()}`);
-  const [doneUrl, setDoneUrl] = useState("");
-  const [busy, setBusy] = useState("");
-  const [logs, setLogs] = useState([]);
-  const [dragOver, setDragOver] = useState(false);
-  const fileRef = useRef(null);
-  // Conversion Booster
-  const [cvr, setCvr] = useState(CVR_DEFAULTS);
-  const [bRun, setBRun] = useState(null);
-  const [bPicked, setBPicked] = useState(() => new Set());
-  const [bTab, setBTab] = useState("");
-  const [bFilter, setBFilter] = useState("Alles");
-  const [bDone, setBDone] = useState(null); // { url, tab, text }
-  const [runs, setRuns] = useState([]);
+  const [cols, setCols] = useState({ order: ALL_COL_IDS, hidden: makeColumns(30).filter((c) => c.def === false).map((c) => c.id), img: 44 });
+  const [full, setFull] = useState(false);
+  const [modal, setModal] = useState(null); // { kind, ... }
+  const [showTasks, setShowTasks] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const pollRef = useRef(null);
 
-  const push = (e) => setLogs((l) => [...l, e]);
   const store = stores.find((s) => s.domain === sel) || null;
   const ordersKeys = useMemo(() => {
     if (!sel) return null;
     const k = load(LS_ORDERS_APP + sel, null);
     return k && k.clientId && k.clientSecret ? k : null;
   }, [sel]);
-  const creds = () => (store ? { name: store.name, domain: store.domain, currency: store.currency, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret } : null);
+  const creds = useCallback(() => (store ? { name: store.name, domain: store.domain, currency: store.currency, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret } : null), [store]);
+  const P = [7, 14, 30].includes(period) ? period : 30;
+  const columns = useMemo(() => makeColumns(P), [P]);
+  const adsCur = (data && data.adsCurrency) || settings.adsCurrency || "GBP";
+  const shopCur = (data && data.shopCurrency) || (store && store.currency) || adsCur;
+  const dual = adsCur !== shopCur;
+  const be = (data && data.settings && data.settings.breakEvenRoas) || 1 / Math.max(0.05, 1 - settings.cogsPct / 100 - settings.feePct / 100);
+  const running = tasks.find((t) => t.status === "running");
 
+  /* ---------- store kiezen + laden ---------- */
   useEffect(() => {
     const list = load(LS_STORES, []) || [];
     setStores(list);
+    setAdsSheet(load(LS_ADS_SHEET, "") || DEFAULT_ADS_SHEET);
     const last = load(LS_STORE, "");
-    if (last && list.some((s) => s.domain === last)) pickStore(last);
+    if (last && list.some((s) => s.domain === last)) pickStore(last, list);
+    else if (list[0]) pickStore(list[0].domain, list);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function pickStore(domain) {
+  useEffect(() => {
+    const close = (e) => {
+      if (e.target && e.target.closest && e.target.closest(".pyd-dd")) return;
+      setMenu("");
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  function pickStore(domain, list) {
+    const all = list || stores;
+    const s = all.find((x) => x.domain === domain);
     setSel(domain);
     save(LS_STORE, domain);
     setSettings({ ...DEFAULTS, ...(load(LS_SETTINGS + domain, {}) || {}) });
-    setCvr({ ...CVR_DEFAULTS, ...(load(LS_CVR + domain, {}) || {}) });
-    const bills = load(LS_BILLS_SHEET + domain, "");
-    setSheet(load(LS_SHEET + domain, "") || bills || "");
-    setResult(null);
+    const cfg = load(LS_DASH_CFG, {}) || {};
+    setKey(load(LS_KEY + domain, "") || (cfg[domain] && cfg[domain].key) || guessKey(s) || "");
+    const c = load(LS_COLS + domain, null);
+    if (c && Array.isArray(c.order)) {
+      const order = [...c.order.filter((id) => ALL_COL_IDS.includes(id)), ...ALL_COL_IDS.filter((id) => !c.order.includes(id))];
+      setCols({ order, hidden: Array.isArray(c.hidden) ? c.hidden : [], img: c.img || 44 });
+    } else setCols({ order: ALL_COL_IDS, hidden: makeColumns(30).filter((x) => x.def === false).map((x) => x.id), img: 44 });
+    const v = load(LS_VIEW + domain, {}) || {};
+    setPeriod(v.period || 30);
+    setPerPage(v.perPage || 25);
+    setData(null);
+    setTasks([]);
     setPicked(new Set());
-    setDoneUrl("");
-    setBRun(null);
-    setBPicked(new Set());
-    setBDone(null);
-    setRuns([]);
+    setPage(0);
+    setFilters(EMPTY_FILTERS);
+    setError("");
+    setFlash("");
+    loadData(domain);
   }
-
-  function setS(k, v) {
-    setSettings((s) => {
-      const n = { ...s, [k]: v };
-      if (sel) save(LS_SETTINGS + sel, n);
-      return n;
-    });
-  }
-  function setC(k, v) {
-    setCvr((s) => {
-      const n = { ...s, [k]: v };
-      if (sel) save(LS_CVR + sel, n);
-      return n;
-    });
-  }
-  const toggleCat = (c) => setC("categories", cvr.categories.includes(c) ? cvr.categories.filter((x) => x !== c) : [...cvr.categories, c]);
-
-  async function addFiles(list) {
-    const arr = [...(list || [])].filter((f) => /\.(csv|tsv|txt)$/i.test(f.name) || /csv|text/.test(f.type));
-    if (!arr.length) {
-      push({ err: true, text: "Alleen CSV-bestanden — kies in Google Ads bij Downloaden voor .csv." });
-      return;
-    }
-    const next = [];
-    for (const f of arr) {
-      try {
-        const parsed = parseAdsExport(await readText(f), f.name);
-        next.push({ name: f.name, parsed });
-      } catch (e) {
-        next.push({ name: f.name, error: String(e.message || e) });
-      }
-    }
-    setFiles((cur) => [...cur.filter((c) => !next.some((n) => n.name === c.name)), ...next]);
-    setResult(null);
-  }
-
-  const okFiles = files.filter((f) => f.parsed);
-  const combined = useMemo(() => (okFiles.length ? combineExports(okFiles.map((f) => f.parsed)) : null), [files]); // eslint-disable-line react-hooks/exhaustive-deps
-  const canAnalyse = !busy && store && combined && combined.end;
 
   async function api(body) {
     const res = await fetch("/api/pythago", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-    return data;
-  }
-  async function apiCvr(body) {
-    const res = await fetch("/api/cvr-boost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-    return data;
-  }
-
-  async function analyse() {
-    if (!canAnalyse) return;
-    setBusy("analyse");
-    setResult(null);
-    setPicked(new Set());
-    setDoneUrl("");
-    setBRun(null);
-    setBPicked(new Set());
-    setBDone(null);
-    setLogs([]);
+    const txt = await res.text();
+    let d;
     try {
-      const ads = slimAds(combined);
-      push({ strong: true, text: `— Pythago: ${store.name || store.domain} · Ads ${combined.start} t/m ${combined.end} · ${ads.items.length} items met spend` });
-      push({ text: ordersKeys ? "Shopify-orders via de Orders-app (Bills-pagina) · producten via de Importer-koppeling…" : "Geen Orders-app-sleutels voor deze store — orders via de Importer-koppeling (werkt alleen als die read_orders heeft)…" });
-      const r = await api({
-        action: "analyse",
-        store: creds(),
-        ordersStore: ordersKeys,
-        ads,
-        settings,
-        fxOverride: fxOverride ? Number(String(fxOverride).replace(",", ".")) : undefined,
-      });
-      const res = r.result;
-      setResult(res);
-      setRuns(res.boostRuns || []);
-      const c = res.counts || {};
-      setFilter(c.Draften ? "Draften" : "Alles");
-      const cur = res.adsCurrency === "GBP" ? "£" : res.adsCurrency + " ";
-      push({ ok: true, text: `Klaar: ${res.rows.length} producten · ${res.ordersCounted} Shopify-orders · koers 1 ${res.shopCurrency} = ${res.fx.rate} ${res.adsCurrency} · break-even ROAS ${res.settings.breakEvenRoas}.` });
-      push({ text: `Advies: ${ADVIES.filter((a) => c[a]).map((a) => `${a} ${c[a]}`).join(" · ")}${res.draftSpend ? ` — ${cur}${res.draftSpend.toFixed(2)} spend op draft-kandidaten (${res.settings.ruleWindow} d)` : ""}` });
-      const inBoost = res.rows.filter((x) => x.boost && x.boost.active).length;
-      const judged = res.rows.filter((x) => x.boost && x.boost.status === "klaar" && x.boost.effect);
-      if (inBoost || judged.length) {
-        push({ text: `Conversion Booster: ${inBoost} product(en) in een lopende boost (worden niet gedraft)${judged.length ? ` · ${judged.filter((x) => x.boost.effect !== "geen effect").length} boost(s) met effect, ${judged.filter((x) => x.boost.effect === "geen effect").length} zonder effect (tellen weer mee voor Draften)` : ""}.` });
-      }
-      for (const w of res.warnings || []) push({ err: true, text: `Let op: ${w}` });
-      sfx("success");
-    } catch (e) {
-      push({ err: true, text: `Mislukt: ${e.message || e}` });
-      sfx("error");
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function writeSheet() {
-    if (!result || !sheet.trim() || !tab.trim() || busy) return;
-    setBusy("write");
-    try {
-      save(LS_SHEET + sel, sheet.trim());
-      const r = await api({ action: "write", sheet: sheet.trim(), tab: tab.trim(), result });
-      setDoneUrl(r.url);
-      push({ ok: true, text: `✓ Blad "${r.tab}"${r.replaced ? " (overschreven)" : ""} — ${r.rows} producten, met filter en kleuren per advies.` });
-      sfx("success");
-    } catch (e) {
-      push({ err: true, text: `Schrijven mislukt: ${e.message || e}${/permission|403/i.test(String(e.message)) ? " — deel de sheet als Bewerker met attoh-sheets@attoh-tools.iam.gserviceaccount.com." : ""}` });
-      sfx("error");
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function draftPicked() {
-    const ids = [...picked];
-    if (!ids.length || busy) return;
-    const names = result.rows.filter((x) => picked.has(x.productId)).map((x) => x.title);
-    if (!window.confirm(`${ids.length} product(en) op draft zetten in ${store.name || store.domain}?\n\n${names.slice(0, 12).join("\n")}${names.length > 12 ? `\n… en ${names.length - 12} meer` : ""}`)) return;
-    setBusy("draft");
-    try {
-      const r = await api({
-        action: "draft",
-        store: { name: store.name, domain: store.domain, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret },
-        productIds: ids,
-      });
-      const ok = new Set(r.results.filter((x) => x.ok).map((x) => x.productId));
-      setResult((res) => ({ ...res, rows: res.rows.map((x) => (ok.has(x.productId) ? { ...x, status: "draft", advies: "Al draft", drafted: true } : x)) }));
-      setPicked(new Set());
-      push({ ok: true, text: `✓ ${r.drafted} product(en) op draft gezet.` });
-      for (const f of r.failed || []) push({ err: true, text: `Niet gelukt: ${f.productId} — ${f.error}` });
-      sfx(r.failed && r.failed.length ? "error" : "success");
-    } catch (e) {
-      push({ err: true, text: `Draften mislukt: ${e.message || e}` });
-      sfx("error");
-    } finally {
-      setBusy("");
-    }
-  }
-
-  /* ---------------- Conversion Booster ---------------- */
-
-  async function refreshRuns() {
-    try {
-      const r = await apiCvr({ action: "list", store: { domain: store.domain } });
-      setRuns(r.runs || []);
-    } catch {}
-  }
-
-  async function boosterAnalyse() {
-    if (!result || busy) return;
-    if (!cvr.categories.length) {
-      push({ err: true, text: "Vink minstens één categorie aan voor de Conversion Booster." });
-      return;
-    }
-    setBusy("booster");
-    setBRun(null);
-    setBDone(null);
-    setBFilter("Alles");
-    try {
-      push({ strong: true, text: `— Conversion Booster: ${cvr.categories.join(", ")} · min. ${cvr.minClicks} klikken (30 d) · max ${cvr.maxPerRun} producten · AI bekijkt per product listing + cijfers…` });
-      const r = await apiCvr({ action: "analyse", store: creds(), result, settings: cvr });
-      const run = r.run;
-      setBRun(run);
-      setBPicked(new Set(run.items.filter((it) => it.pick).map((it) => it.productId)));
-      setBTab(run.tabSuggestion);
-      push({ ok: true, text: run.stat });
-      if (run.summary) for (const l of String(run.summary).split(/\n+/).filter(Boolean)) push({ text: l });
-      for (const e of run.errors || []) push({ err: true, text: `Let op: ${e}` });
-      if (run.ai && run.ai.calls) push({ text: `AI: ${run.ai.calls} call(s) · ±$${Number(run.ai.usd || 0).toFixed(2)}` });
-      sfx("success");
-    } catch (e) {
-      push({ err: true, text: `Booster mislukt: ${e.message || e}` });
-      sfx("error");
-    } finally {
-      setBusy("");
-    }
-  }
-
-  const bItems = useMemo(() => (bRun ? bRun.items.filter((it) => bFilter === "Alles" || it.ai.verdict === bFilter) : []), [bRun, bFilter]);
-  const bToggle = (id) =>
-    setBPicked((s) => {
-      const n = new Set(s);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
-
-  async function copyText(text) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
+      d = JSON.parse(txt);
     } catch {
-      return false;
+      throw new Error(`server gaf geen JSON (${res.status}) — waarschijnlijk tijdslimiet, probeer opnieuw`);
+    }
+    if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
+    return d;
+  }
+
+  async function loadData(domain) {
+    setLoading(true);
+    try {
+      const d = await api({ action: "load", domain });
+      setData(d.data);
+      setStale(!!d.stale);
+      setTasks(d.tasks || []);
+      setAuto(d.auto);
+      setPresets(d.presets || []);
+      setNotes(d.notes || {});
+      if (d.tasks && d.tasks.some((t) => t.status === "running")) startPolling(domain);
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function boosterWrite() {
-    if (!bRun || busy) return;
-    const items = bRun.items.filter((it) => bPicked.has(it.productId));
-    if (!items.length) {
-      push({ err: true, text: "Geen producten aangevinkt voor de boost." });
+  // bij openen automatisch syncen als de data ontbreekt of ouder is dan 6 uur
+  const autoStarted = useRef("");
+  useEffect(() => {
+    if (!store || loading || syncing || running) return;
+    if (!stale && data) return;
+    if (!key) return;
+    if (autoStarted.current === store.domain) return;
+    autoStarted.current = store.domain;
+    const t = setTimeout(() => sync("automatisch bij openen"), 800);
+    return () => clearTimeout(t);
+  }, [store, loading, stale, data, key]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function startPolling(domain) {
+    stopPolling();
+    pollRef.current = setInterval(async () => {
+      try {
+        const d = await api({ action: "tasks", domain });
+        setTasks(d.tasks || []);
+        if (!(d.tasks || []).some((t) => t.status === "running")) {
+          stopPolling();
+          if (!syncing) loadData(domain);
+        }
+      } catch {}
+    }, 4000);
+  }
+  function stopPolling() {
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = null;
+  }
+  useEffect(() => () => stopPolling(), []);
+
+  async function sync(source = "handmatig") {
+    if (!store || syncing) return;
+    if (!key) {
+      setShowSettings(true);
+      setError("Vul eerst de store-sleutel (SSB / LGB / EMC / SW) in bij instellingen — die bepaalt het tabblad Prod_<sleutel> in de Ads-sheet.");
       return;
     }
-    if (!sheet.trim()) {
-      push({ err: true, text: "Vul bij 4 · Naar sheet de Google Sheet van de store in (standaard de P&L-sheet)." });
-      return;
-    }
-    const title = (bTab || bRun.tabSuggestion || `CVR BOOST ${today()}`).trim();
-    // klembord binnen de klik (anders weigert de browser het na de server-call)
-    const text = buildClaudeText({ ...bRun, tab: title, items });
-    const copied = await copyText(text);
-    setBusy("bwrite");
+    setSyncing(true);
+    setError("");
+    setFlash("");
+    startPolling(store.domain);
     try {
-      save(LS_SHEET + sel, sheet.trim());
-      const r = await apiCvr({ action: "write", store: { name: store.name, domain: store.domain }, sheet: sheet.trim(), tab: title, run: { ...bRun, items } });
-      setBDone({ url: r.url, tab: r.tab, text: r.text || text });
-      push({ ok: true, text: `✓ Blad "${r.tab}"${r.replaced ? " (overschreven)" : ""} — ${r.rows} producten · CVR Log +${r.logged}${copied ? " · tekst voor Claude staat op het klembord" : " · klembord geweigerd, gebruik \"Kopieer opnieuw\""}` });
-      if (r.logErr) push({ err: true, text: `CVR Log niet bijgewerkt: ${r.logErr}` });
-      if (r.stateErr) push({ err: true, text: `Geheugen niet bijgewerkt — Pythago weet niet van deze boost: ${r.stateErr}` });
-      const ids = new Set(items.map((it) => it.productId));
-      setResult((res) => ({
-        ...res,
-        rows: res.rows.map((x) => (ids.has(x.productId) ? { ...x, boost: { tab: r.tab, date: bRun.date, status: "open", active: true, day: 0, windowDays: cvr.windowDays } } : x)),
-      }));
-      refreshRuns();
+      const d = await api({ action: "sync", store: creds(), ordersStore: ordersKeys, adsSheetId: adsSheet, key, settings, source });
+      setData(d.data);
+      setStale(false);
+      setTasks(d.tasks || []);
+      setPicked(new Set());
       sfx("success");
+      setFlash(`Gesynchroniseerd: ${d.data.rows.length} producten · ${d.data.adsItems} Ads-items · ${d.data.ordersCounted} orders · ${Math.round(d.data.syncMs / 1000)} s.`);
     } catch (e) {
-      push({ err: true, text: `Schrijven mislukt: ${e.message || e}${/permission|403/i.test(String(e.message)) ? " — deel de sheet als Bewerker met attoh-sheets@attoh-tools.iam.gserviceaccount.com." : ""}` });
+      setError(`Sync mislukt: ${e.message || e}`);
       sfx("error");
+      try {
+        const t = await api({ action: "tasks", domain: store.domain });
+        setTasks(t.tasks || []);
+      } catch {}
     } finally {
-      setBusy("");
+      setSyncing(false);
+      stopPolling();
     }
   }
 
-  async function boosterDone(run) {
-    if (busy) return;
-    if (!window.confirm(`Boost "${run.tab}" klaar melden?\n\nHet blad wordt verborgen en het boost-venster van ${run.windowDays} dagen start — die ${run.products} producten worden tot die tijd niet gedraft.`)) return;
-    setBusy("bdone");
+  async function toggleAuto(on) {
+    if (!store) return;
     try {
-      const r = await apiCvr({ action: "done", store: { domain: store.domain }, tab: run.tab });
-      push({ ok: true, text: `✓ Boost "${run.tab}" klaar — blad verborgen, venster loopt t/m dag ${r.run.windowDays}.` });
-      setResult((res) => ({ ...res, rows: res.rows.map((x) => (x.boost && x.boost.tab === run.tab && x.boost.status === "open" ? { ...x, boost: { ...x.boost, status: "venster", day: 1, doneAt: r.run.doneAt } } : x)) }));
-      await refreshRuns();
-      sfx("success");
+      await api({ action: "auto", enabled: on, store: creds(), ordersStore: ordersKeys, adsSheetId: adsSheet, key, settings });
+      setAuto(on ? { enabled: true, savedAt: new Date().toISOString() } : null);
+      sfx("toggle");
     } catch (e) {
-      push({ err: true, text: `Klaar melden mislukt: ${e.message || e}` });
-      sfx("error");
-    } finally {
-      setBusy("");
-    }
-  }
-  async function boosterShow(run, hidden) {
-    if (busy) return;
-    setBusy("bshow");
-    try {
-      await apiCvr({ action: "show", store: { domain: store.domain }, tab: run.tab, hidden });
-      push({ ok: true, text: `✓ Blad "${run.tab}" ${hidden ? "verborgen" : "weer zichtbaar"}.` });
-      await refreshRuns();
-    } catch (e) {
-      push({ err: true, text: `Mislukt: ${e.message || e}` });
-    } finally {
-      setBusy("");
-    }
-  }
-  async function boosterReopen(run) {
-    if (busy) return;
-    if (!window.confirm(`Boost "${run.tab}" heropenen? Het venster en het gemeten effect worden gewist; de producten worden weer niet gedraft tot je opnieuw Klaar meldt.`)) return;
-    setBusy("breopen");
-    try {
-      await apiCvr({ action: "reopen", store: { domain: store.domain }, tab: run.tab });
-      push({ ok: true, text: `✓ Boost "${run.tab}" heropend.` });
-      setResult((res) => ({ ...res, rows: res.rows.map((x) => (x.boost && x.boost.tab === run.tab ? { ...x, boost: { ...x.boost, status: "open", active: true, effect: null, effectText: "" } } : x)) }));
-      await refreshRuns();
-    } catch (e) {
-      push({ err: true, text: `Mislukt: ${e.message || e}` });
-    } finally {
-      setBusy("");
+      setError(String(e.message || e));
     }
   }
 
-  /* ---------------- tabel ---------------- */
+  function saveSettings(next, nextKey, nextSheet) {
+    setSettings(next);
+    save(LS_SETTINGS + sel, next);
+    setKey(nextKey);
+    save(LS_KEY + sel, nextKey);
+    setAdsSheet(nextSheet);
+    save(LS_ADS_SHEET, nextSheet);
+  }
 
-  const ADV_ORDER = Object.fromEntries(ADVIES.map((a, i) => [a, i]));
-  const SORT = {
-    advies: (x) => ADV_ORDER[x.advies] ?? 99,
-    title: (x) => String(x.title || "").toLowerCase(),
-    age: (x) => (x.age == null ? -1 : x.age),
-    s7: (x) => x.per[7].spend, o7: (x) => x.per[7].orders, r7: (x) => (x.per[7].roas == null ? -1 : x.per[7].roas),
-    s14: (x) => x.per[14].spend, o14: (x) => x.per[14].orders, r14: (x) => (x.per[14].roas == null ? -1 : x.per[14].roas),
-    s30: (x) => x.per[30].spend, c30: (x) => x.per[30].clicks, o30: (x) => x.per[30].orders, v30: (x) => x.per[30].rev,
-    r30: (x) => (x.per[30].roas == null ? -1 : x.per[30].roas), g30: (x) => x.per[30].conv, p30: (x) => x.profit30,
-  };
-  const rows = useMemo(() => {
-    if (!result) return [];
-    const needle = q.trim().toLowerCase();
-    let list = result.rows.filter((x) => (filter === "Alles" || (filter === "In boost" ? x.boost && x.boost.active : x.advies === filter)) && (!needle || String(x.title || "").toLowerCase().includes(needle)));
-    if (sort.key && SORT[sort.key]) {
-      const get = SORT[sort.key];
-      const m = sort.dir === "asc" ? 1 : -1;
-      list = [...list].sort((a, b) => {
-        const va = get(a);
-        const vb = get(b);
-        return (typeof va === "string" ? va.localeCompare(vb) : va - vb) * m;
-      });
-    }
-    return list;
-  }, [result, filter, q, sort]); // eslint-disable-line react-hooks/exhaustive-deps
-  // klik op een kolomkop: eerst hoog → laag (tekst: A → Z), nog een klik draait om, derde klik = standaard
-  const sortBy = (key) =>
-    setSort((s) => {
-      const first = key === "title" || key === "advies" ? "asc" : "desc";
-      if (s.key !== key) return { key, dir: first };
-      if (s.dir === first) return { key, dir: first === "asc" ? "desc" : "asc" };
-      return { key: "", dir: "desc" };
+  /* ---------- filteren / sorteren ---------- */
+  const rows = data ? data.rows : [];
+  const filtered = useMemo(() => {
+    const f = filters;
+    const q = f.q.trim().toLowerCase();
+    const n = (k) => num(f[k]);
+    const between = (v, lo, hi) => (lo == null || (v != null && v >= lo)) && (hi == null || (v != null && v <= hi));
+    const lim = {
+      roas: [n("roasMin"), n("roasMax")], poas: [n("poasMin"), n("poasMax")], profit: [n("profitMin"), n("profitMax")],
+      margin: [n("marginMin"), n("marginMax")], price: [n("priceMin"), n("priceMax")], clicks: [n("clicksMin"), n("clicksMax")],
+      orders: [n("ordersMin"), n("ordersMax")],
+    };
+    const adDaysMin = n("adDaysMin");
+    const costMin = n("costMin");
+    return rows.filter((r) => {
+      if (f.status !== "all" && (r.status || "") !== f.status) return false;
+      if (f.type && r.type !== f.type) return false;
+      if (f.vendor && r.vendor !== f.vendor) return false;
+      if (f.tags.length && !f.tags.every((t) => r.tags.includes(t))) return false;
+      if (f.advies.length && !f.advies.includes(r.advies)) return false;
+      if (f.inBoost && !(r.boost && r.boost.active)) return false;
+      if (q && !(`${r.title} ${r.productId} ${r.handle} ${r.type} ${r.vendor} ${r.tags.join(" ")}`.toLowerCase().includes(q))) return false;
+      const p = r.per[P];
+      if (!between(p.roas == null ? 0 : p.roas, lim.roas[0], lim.roas[1])) return false;
+      if (!between(p.poas == null ? 0 : p.poas, lim.poas[0], lim.poas[1])) return false;
+      if (!between(p.profit, lim.profit[0], lim.profit[1])) return false;
+      if ((lim.margin[0] != null || lim.margin[1] != null) && !between(p.margin, lim.margin[0], lim.margin[1])) return false;
+      if ((lim.price[0] != null || lim.price[1] != null) && !between(r.price, lim.price[0], lim.price[1])) return false;
+      if (!between(p.clicks, lim.clicks[0], lim.clicks[1])) return false;
+      if (!between(p.orders, lim.orders[0], lim.orders[1])) return false;
+      if (adDaysMin != null && r.adDays < adDaysMin) return false;
+      if (costMin != null && p.spend < costMin) return false;
+      if (f.pubFrom && (!r.publishedAt || r.publishedAt < f.pubFrom)) return false;
+      if (f.pubTo && (!r.publishedAt || r.publishedAt > f.pubTo)) return false;
+      return true;
     });
-  const Th = ({ k, children, l, g, title }) => (
-    <th className={(l ? "l " : "") + (g ? "gl " : "") + "py-sort" + (sort.key === k ? " on" : "")} onClick={() => sortBy(k)} title={title || "Klik om te sorteren"}>
+  }, [rows, filters, P]);
+
+  const sorted = useMemo(() => {
+    const list = [...filtered];
+    if (!sort.key) return list;
+    const col = columns.find((c) => c.id === sort.key);
+    const m = sort.dir === "asc" ? 1 : -1;
+    const val = (r) => {
+      if (sort.key === "product") return r.title.toLowerCase();
+      if (sort.key === "status") return r.status;
+      if (sort.key === "advies") return ADVIES.indexOf(r.advies);
+      if (sort.key === "variants") return r.vcount;
+      return col ? col.get(r) : 0;
+    };
+    list.sort((a, b) => {
+      const va = val(a);
+      const vb = val(b);
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      if (typeof va === "string") return va.localeCompare(vb) * m;
+      return (va - vb) * m;
+    });
+    return list;
+  }, [filtered, sort, columns]);
+
+  const pageCount = Math.max(1, Math.ceil(sorted.length / perPage));
+  const pageRows = sorted.slice(page * perPage, page * perPage + perPage);
+  useEffect(() => {
+    if (page >= pageCount) setPage(0);
+  }, [pageCount, page]);
+
+  const kpi = useMemo(() => {
+    const sum = (f) => filtered.reduce((a, r) => a + (r.per[P][f] || 0), 0);
+    const spend = sum("spend");
+    const net = sum("net");
+    return { products: filtered.length, spend, net, netShop: sum("netShop"), spendShop: data ? spend / (data.fx.rate || 1) : spend, units: sum("units"), refundUnits: sum("refundUnits"), refunds: sum("refunds"), refundsShop: sum("refundsShop"), roas: spend > 0 ? net / spend : null };
+  }, [filtered, P, data]);
+  const counts = useMemo(() => {
+    const c = {};
+    for (const r of rows) c[r.advies] = (c[r.advies] || 0) + 1;
+    c.inBoost = rows.filter((r) => r.boost && r.boost.active).length;
+    return c;
+  }, [rows]);
+
+  function setF(patch) {
+    setFilters((f) => ({ ...f, ...patch }));
+    setPage(0);
+  }
+  const activeFilterTags = useMemo(() => {
+    const f = filters;
+    const out = [];
+    const rng = (label, a, b, suf = "") => {
+      if (f[a] !== "" || f[b] !== "") out.push({ k: [a, b], t: `${label} ${f[a] !== "" ? `≥ ${f[a]}${suf}` : ""}${f[a] !== "" && f[b] !== "" ? " · " : ""}${f[b] !== "" ? `≤ ${f[b]}${suf}` : ""}` });
+    };
+    if (f.status !== "all") out.push({ k: ["status"], t: `Status: ${f.status}`, reset: { status: "all" } });
+    if (f.type) out.push({ k: ["type"], t: `Type: ${f.type}` });
+    if (f.vendor) out.push({ k: ["vendor"], t: `Vendor: ${f.vendor}` });
+    for (const t of f.tags) out.push({ k: ["tags"], t: `Tag: ${t}`, reset: { tags: f.tags.filter((x) => x !== t) } });
+    for (const a of f.advies) out.push({ k: ["advies"], t: a, reset: { advies: f.advies.filter((x) => x !== a) } });
+    if (f.inBoost) out.push({ k: ["inBoost"], t: "In boost", reset: { inBoost: false } });
+    rng("ROAS", "roasMin", "roasMax");
+    rng("POAS", "poasMin", "poasMax");
+    rng("Netto winst", "profitMin", "profitMax");
+    rng("Marge", "marginMin", "marginMax", "%");
+    rng("Prijs", "priceMin", "priceMax");
+    rng("Klikken", "clicksMin", "clicksMax");
+    rng("Orders", "ordersMin", "ordersMax");
+    if (f.adDaysMin !== "") out.push({ k: ["adDaysMin"], t: `Ad-dagen ≥ ${f.adDaysMin}` });
+    if (f.costMin !== "") out.push({ k: ["costMin"], t: `Spend ≥ ${f.costMin}` });
+    if (f.pubFrom || f.pubTo) out.push({ k: ["pubFrom", "pubTo"], t: `Gepubliceerd ${f.pubFrom || "…"} – ${f.pubTo || "…"}` });
+    return out;
+  }, [filters]);
+  function clearTag(tag) {
+    if (tag.reset) return setF(tag.reset);
+    const patch = {};
+    for (const k of tag.k) patch[k] = EMPTY_FILTERS[k];
+    setF(patch);
+  }
+
+  function clickSort(id) {
+    setSort((s) => (s.key !== id ? { key: id, dir: id === "product" ? "asc" : "desc" } : s.dir === "desc" ? { key: id, dir: "asc" } : s.dir === "asc" && id !== "product" ? { key: "", dir: "desc" } : { key: id, dir: "desc" }));
+  }
+  const Th = ({ id, children, cls = "", title }) => (
+    <th className={`sort ${cls} ${sort.key === id ? "on" : ""}`} onClick={() => clickSort(id)} title={title || ""}>
       {children}
-      <span className="py-arrow">{sort.key === k ? (sort.dir === "asc" ? "▲" : "▼") : "↕"}</span>
+      <span className="ar">{sort.key === id ? (sort.dir === "asc" ? "▲" : "▼") : "↕"}</span>
     </th>
   );
-  const RW = result ? result.settings.ruleWindow : 30;
-  const cur = result ? (result.adsCurrency === "GBP" ? "£" : result.adsCurrency === "EUR" ? "€" : result.adsCurrency === "USD" ? "$" : "") : "£";
-  const money = (n) => (n == null ? "—" : `${cur}${Number(n).toFixed(2)}`);
-  const roasCell = (v) => {
-    if (v == null) return <span style={{ color: "var(--faint)" }}>—</span>;
-    const be = result.settings.breakEvenRoas;
-    return <span style={{ color: v >= be ? "var(--ok)" : v > 0 ? "var(--warn)" : "var(--err)" }}>{v.toFixed(2)}</span>;
-  };
-  const draftable = (x) => x.productId && x.status === "active" && !x.drafted;
-  const inBoostCount = result ? result.rows.filter((x) => x.boost && x.boost.active).length : 0;
+
+  /* ---------- selectie + acties ---------- */
   const toggle = (id) =>
     setPicked((s) => {
       const n = new Set(s);
@@ -488,671 +469,949 @@ export default function PythagoPage() {
       else n.add(id);
       return n;
     });
-  function selectAllDraften() {
-    const all = result.rows.filter((x) => x.advies === "Draften" && draftable(x));
-    const skip = all.filter((x) => x.boost && x.boost.active);
-    setPicked(new Set(all.filter((x) => !(x.boost && x.boost.active)).map((x) => x.productId)));
-    if (skip.length) push({ text: `Selecteer alle Draften: ${skip.length} product(en) in een lopende boost overgeslagen (vink ze handmatig aan als je ze toch wilt draften).` });
+  const pageIds = pageRows.filter((r) => r.onStore).map((r) => r.productId);
+  const allPage = pageIds.length > 0 && pageIds.every((id) => picked.has(id));
+  function togglePage() {
+    setPicked((s) => {
+      const n = new Set(s);
+      if (allPage) pageIds.forEach((id) => n.delete(id));
+      else pageIds.forEach((id) => n.add(id));
+      return n;
+    });
   }
-  const shopSym = result ? (result.shopCurrency === "USD" ? "$" : result.shopCurrency === "AUD" ? "A$" : result.shopCurrency === "NZD" ? "NZ$" : result.shopCurrency === "GBP" ? "£" : result.shopCurrency === "EUR" ? "€" : `${result.shopCurrency} `) : "";
-  const activeRuns = runs.filter((r) => r.status !== "klaar");
-  const doneRuns = runs.filter((r) => r.status === "klaar");
+  function selectAllDraften() {
+    const ids = rows.filter((r) => r.advies === "Draften" && !(r.boost && r.boost.active)).map((r) => r.productId);
+    setPicked(new Set(ids));
+    setF({ advies: ["Draften"] });
+    setFlash(`${ids.length} draft-kandidaten aangevinkt${counts.inBoost ? ` (producten in een lopende boost overgeslagen)` : ""}.`);
+  }
+  function askStatus(status, ids) {
+    const list = (ids || [...picked]).filter(Boolean);
+    if (!list.length) return;
+    setModal({ kind: "status", status, ids: list });
+  }
+  async function doStatus(status, ids) {
+    setModal(null);
+    setSyncing(true);
+    try {
+      const r = await api({ action: "status", store: creds(), productIds: ids, status });
+      setData((d) => {
+        if (!d) return d;
+        const set = new Set(r.results.filter((x) => x.ok).map((x) => x.productId));
+        return { ...d, rows: d.rows.map((row) => (set.has(row.productId) ? { ...row, status, advies: status !== "active" ? "Al draft" : row.advies === "Al draft" ? "Verkoopt" : row.advies } : row)) };
+      });
+      setPicked(new Set());
+      sfx("success");
+      setFlash(`${r.done} product(en) op ${status} gezet${r.failed.length ? ` · ${r.failed.length} mislukt` : ""}.`);
+    } catch (e) {
+      setError(String(e.message || e));
+      sfx("error");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
+  async function openVariants(r) {
+    setModal({ kind: "variants", row: r, variants: null, w: P });
+    try {
+      const d = await api({ action: "variants", domain: sel, productId: r.productId });
+      setModal((m) => (m && m.kind === "variants" && m.row.productId === r.productId ? { ...m, variants: d.variants || [] } : m));
+    } catch (e) {
+      setModal((m) => (m && m.kind === "variants" ? { ...m, variants: [], error: String(e.message || e) } : m));
+    }
+  }
+  async function saveNote(productId, text) {
+    try {
+      const d = await api({ action: "notes", op: "set", domain: sel, productId, text });
+      setNotes(d.notes || {});
+      setModal(null);
+      sfx("success");
+    } catch (e) {
+      setError(String(e.message || e));
+    }
+  }
+
+  /* ---------- opgeslagen filters ---------- */
+  async function savePreset(p) {
+    try {
+      const d = await api({ action: "presets", op: "save", domain: sel, preset: { ...p, filters: p.filters || filters, period: P } });
+      setPresets(d.presets || []);
+      setModal(null);
+      sfx("success");
+      setFlash(`Filter "${p.name}" opgeslagen.`);
+    } catch (e) {
+      setError(String(e.message || e));
+    }
+  }
+  async function deletePreset(id) {
+    try {
+      const d = await api({ action: "presets", op: "delete", domain: sel, id });
+      setPresets(d.presets || []);
+    } catch (e) {
+      setError(String(e.message || e));
+    }
+  }
+  function applyPreset(p) {
+    setFilters({ ...EMPTY_FILTERS, ...(p.filters || {}) });
+    if (p.period) setPeriod(p.period);
+    setPage(0);
+    setMenu("");
+    sfx("toggle");
+  }
+
+  /* ---------- kolommen ---------- */
+  const visibleCols = cols.order.map((id) => columns.find((c) => c.id === id)).filter((c) => c && !cols.hidden.includes(c.id));
+  function saveCols(next) {
+    setCols(next);
+    save(LS_COLS + sel, next);
+  }
+  function moveCol(id, dir) {
+    const i = cols.order.indexOf(id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= cols.order.length) return;
+    const order = [...cols.order];
+    [order[i], order[j]] = [order[j], order[i]];
+    saveCols({ ...cols, order });
+  }
+  function setView(patch) {
+    const v = { period: P, perPage, ...patch };
+    save(LS_VIEW + sel, v);
+    if (patch.period) setPeriod(patch.period);
+    if (patch.perPage) setPerPage(patch.perPage);
+  }
+
+  /* ---------- export ---------- */
+  function exportCsv() {
+    const head = ["Product", "Product-ID", "Status", "Advies", "Type", "Tags", "Varianten", ...visibleCols.map((c) => c.label), "Admin"];
+    const lines = [head];
+    for (const r of sorted) {
+      lines.push([r.title, r.productId, r.status, r.advies, r.type, r.tags.join("|"), r.vcount, ...visibleCols.map((c) => c.get(r)), adminUrl(r)]);
+    }
+    const csv = lines.map((l) => l.map((v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+    a.download = `pythago-${(store && store.name) || sel}-${P}d-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+  }
+  function openBooster() {
+    if (!data) return;
+    try {
+      sessionStorage.setItem("sa_py_bridge", JSON.stringify({ domain: sel, result: data }));
+    } catch {}
+    window.location.href = "/pythago/booster";
+  }
+  const adminUrl = (r) => (store ? `https://${String(store.domain).replace(/^https?:\/\//, "").replace(/\/$/, "")}/admin/products/${r.productId}` : "#");
+  const storeUrl = (r) => (store && store.publicDomain && r.handle ? `https://${String(store.publicDomain).replace(/^https?:\/\//, "")}/products/${r.handle}` : "");
+
+  /* ---------- cellen ---------- */
+  function cell(c, r) {
+    const v = c.get(r);
+    switch (c.kind) {
+      case "roas": {
+        if (v == null) return <span className="pyd-roas rn">—</span>;
+        const cls = v <= 0 ? "r0" : v < be ? "r1" : "r2";
+        return <span className={`pyd-roas ${cls}`}>{Number(v).toFixed(2)}</span>;
+      }
+      case "money":
+        return (
+          <>
+            {v == null ? <span className="dim">—</span> : fmtMoney(v, adsCur)}
+            {dual && c.sub && v != null ? <span className="pyd-sub">({c.subMode === "shop" ? fmtMoney(v / (data.fx.rate || 1), shopCur) : fmtMoney(c.sub(r), shopCur)})</span> : null}
+          </>
+        );
+      case "refund":
+        return v ? (
+          <>
+            <span className="pyd-neg">-{fmtMoney(v, adsCur)}</span>
+            {dual ? <span className="pyd-sub">(-{fmtMoney(r.per[P].refundsShop, shopCur)})</span> : null}
+          </>
+        ) : (
+          <span className="dim">—</span>
+        );
+      case "price":
+        return v == null ? <span className="dim">—</span> : r.priceMax && r.priceMax !== v ? `${fmtMoney(v, shopCur)} – ${fmtMoney(r.priceMax, shopCur)}` : fmtMoney(v, shopCur);
+      case "qty":
+        return (
+          <>
+            {fmtNum(v)}
+            {r.per[P].refundUnits ? <span className="pyd-sub pyd-neg">(-{r.per[P].refundUnits})</span> : null}
+          </>
+        );
+      case "num1":
+        return v ? fmtNum(v, v % 1 ? 2 : 0) : <span className="dim">0</span>;
+      case "int":
+        return v == null ? <span className="dim">—</span> : v === 0 ? <span className="dim">0</span> : fmtNum(v);
+      case "pct":
+        return v == null ? <span className="dim">—</span> : fmtPct(v);
+      case "pct0":
+        return v == null ? <span className="dim">—</span> : <span className={v < 0 ? "pyd-neg" : ""}>{fmtPct(v, 0)}</span>;
+      case "date":
+        return v ? fmtDate(v) : <span className="dim">—</span>;
+      case "text":
+        return v || <span className="dim">—</span>;
+      default:
+        return v == null ? "—" : String(v);
+    }
+  }
+
+  const tagOptions = useMemo(() => {
+    const q = tagQ.trim().toLowerCase();
+    return (data ? data.tags : []).filter((t) => !q || t.tag.toLowerCase().includes(q)).slice(0, 200);
+  }, [data, tagQ]);
+  const vendors = useMemo(() => [...new Set(rows.map((r) => r.vendor).filter(Boolean))].sort(), [rows]);
+
+  const ready = !!data;
+  const periodLabel = data ? `${data.ranges[P].start} t/m ${data.ranges[P].end}` : "";
+
+  /* ====================================================================== */
   return (
-    <>
-      <Header icon="Π" title="Pythago" subtitle="Spend per product (Google Ads) naast de echte verkopen (Shopify)" />
-      <style>{`
-        .py-files { display: grid; gap: 6px; margin-top: 10px; }
-        .py-file { font-size: 12.5px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 9px; padding: 7px 10px; display: flex; justify-content: space-between; gap: 10px; }
-        .py-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
-        .py-grid input, .py-grid select { width: 100%; }
-        .py-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
-        .py-tile { border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px; background: rgba(255,255,255,0.02); }
-        .py-tile .k { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
-        .py-tile .v { font-size: 17px; font-weight: 600; color: var(--ink); margin-top: 3px; font-variant-numeric: tabular-nums; }
-        .py-tile .s { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-        .py-wrap { overflow: auto; max-height: 72vh; border: 1px solid var(--line); border-radius: 12px; }
-        .py-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
-        .py-table th { position: sticky; background: #15151b; color: var(--muted); font-weight: 600; text-align: right; padding: 8px 10px; font-size: 11px; white-space: nowrap; border-bottom: 1px solid var(--line); z-index: 2; }
-        .py-table thead tr:first-child th { top: 0; height: 30px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
-        .py-table thead tr:nth-child(2) th { top: 30px; }
-        .py-table th.l, .py-table td.l { text-align: left; }
-        .py-table th.grp { text-align: center; border-left: 1px solid var(--line-hi); }
-        .py-table .gl { border-left: 1px solid var(--line-hi); }
-        .py-sort { cursor: pointer; user-select: none; }
-        .py-sort:hover { color: var(--ink); }
-        .py-sort.on { color: var(--accent-hi); }
-        .py-arrow { margin-left: 5px; font-size: 9px; opacity: .55; }
-        .py-sort.on .py-arrow { opacity: 1; }
-        .py-table td { padding: 8px 10px; border-top: 1px solid var(--line); text-align: right; color: var(--ink-2); white-space: nowrap; }
-        .py-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
-        .py-table tbody tr:hover td { background: var(--panel-hi); }
-        .py-table td.t { min-width: 260px; max-width: 380px; white-space: normal; color: var(--ink); line-height: 1.35; }
-        .py-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .py-meta { margin-top: 4px; font-size: 11px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .py-pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; border: 1px solid currentColor; }
-        .py-search { width: 220px; }
-        .py-img { display: block; width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,0.04); }
-        .py-noimg { display: inline-block; }
-        .py-table td { vertical-align: middle; }
-        .py-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
-        /* Conversion Booster */
-        .cb-cats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-        .cb-cat { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border: 1px solid var(--line); border-radius: 99px; font-size: 12.5px; color: var(--ink-2); cursor: pointer; user-select: none; }
-        .cb-cat.on { border-color: var(--accent); color: var(--ink); background: rgba(255,255,255,0.03); }
-        .cb-cat input { margin: 0; }
-        .cb-cat .n { color: var(--muted); font-size: 11px; }
-        .cb-grid { display: grid; grid-template-columns: repeat(5, minmax(120px, 180px)); gap: 8px 12px; align-items: end; }
-        .cb-grid input { width: 100%; }
-        .cb-sum { border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px; margin: 12px 0; font-size: 13px; line-height: 1.5; color: var(--ink-2); white-space: pre-line; }
-        .cb-sum b { color: var(--ink); }
-        .cb-bar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; }
-        .cb-bar input[type="text"] { width: 200px; }
-        .py-table td.cb-txt { white-space: normal; min-width: 260px; max-width: 420px; text-align: left; color: var(--ink-2); font-size: 12.5px; line-height: 1.4; }
-        .py-table td.cb-txt ol { margin: 0; padding-left: 16px; }
-        .cb-runs { display: grid; gap: 6px; margin-top: 8px; }
-        .cb-run { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 9px; padding: 8px 11px; font-size: 12.5px; color: var(--ink-2); }
-        .cb-run b { color: var(--ink); }
-        .cb-run .acts { display: flex; gap: 6px; flex-wrap: wrap; }
-        .cb-skip { margin-top: 10px; font-size: 12px; color: var(--muted); }
-        .cb-skip summary { cursor: pointer; }
-        .cb-skip ul { margin: 6px 0 0; padding-left: 18px; }
-        @media (max-width: 1100px) { .py-tiles { grid-template-columns: 1fr 1fr; } .cb-grid { grid-template-columns: 1fr 1fr; } }
-      `}</style>
-      <div className="page layout-scraper" style={result ? { paddingBottom: 0 } : undefined}>
-        <div>
-          <div className="card">
-            <h2>1 · Store</h2>
-            {stores.length === 0 ? (
-              <div className="center-note">Koppel eerst een store in de Importer.</div>
-            ) : (
-              <select value={sel} onChange={(e) => pickStore(e.target.value)} disabled={!!busy} style={{ width: "100%" }}>
-                <option value="">— kies een store —</option>
-                {stores.map((s) => (
-                  <option key={s.domain} value={s.domain}>
-                    {s.name || s.domain} {s.currency ? `(${s.currency})` : ""}
-                  </option>
-                ))}
-              </select>
-            )}
-            {store && (
-              <div className="hint">
-                Producten + draften: Importer-koppeling. Orders:{" "}
-                {ordersKeys ? <b>Orders-app ✓</b> : <span style={{ color: "var(--warn)" }}>geen Orders-app-sleutels — vul ze in op de Bills-pagina (anders proberen we de Importer-koppeling)</span>}
-              </div>
-            )}
-          </div>
+    <div className={`page pyd ${full ? "is-full" : ""}`}>
+      {!full && <Header icon="Π" title="Pythago" subtitle="Productprestaties: Google Ads naast Shopify — 7 / 14 / 30 dagen, filters, draften" />}
 
-          <div
-            className="card"
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragOver(false);
-              addFiles(e.dataTransfer.files);
-            }}
-            style={dragOver ? { outline: "1px solid var(--accent)", outlineOffset: 2 } : undefined}
-          >
-            <h2>2 · Google Ads-export</h2>
-            <div className="hint" style={{ marginTop: 0 }}>
-              Google Ads → <b>Campagnes → Producten</b> → periode <b>Afgelopen 30 dagen</b> → <b>Segment → Tijd → Dag</b> → kolommen
-              Item-ID, Kosten, Klikken, Conversies en Conv.waarde aan → <b>Downloaden → .csv</b>. Sleep het bestand hierin.
-              (Drie losse exports van 30, 14 en 7 dagen zonder segment mag ook.)
+      {/* ---------- bovenbalk ---------- */}
+      <div className="pyd-bar">
+        <div className="pyd-stores">
+          {stores.map((s) => (
+            <button key={s.domain} className={`pyd-chip ${s.domain === sel ? "on" : ""}`} onClick={() => pickStore(s.domain)}>
+              <span className="dot" />
+              {s.name || s.domain}
+            </button>
+          ))}
+          {!stores.length && <span className="pyd-synced">Geen stores gekoppeld — koppel eerst een store in de Importer.</span>}
+        </div>
+        <div className="grow" />
+        {data && (
+          <span className="pyd-synced">
+            Laatst gesynchroniseerd <b>{ago(data.syncedAt)}</b>
+            {data.adsUpdated ? <span title="laatste run van het Google Ads-script">· Ads-script {String(data.adsUpdated).slice(5, 16)}</span> : null}
+          </span>
+        )}
+        <label className="pyd-toggle" title="Elke nacht automatisch syncen (cron) — de koppeling van deze store wordt daarvoor op de server bewaard">
+          <input type="checkbox" checked={!!(auto && auto.enabled)} onChange={(e) => toggleAuto(e.target.checked)} disabled={!store} /> automatisch syncen
+        </label>
+        <button className="pyd-ibtn" onClick={() => setShowSettings(true)} disabled={!store} title="Instellingen: COGS, fees, drempel, store-sleutel, Ads-sheet">⚙ Instellingen</button>
+        <button className="pyd-ibtn" onClick={() => setShowTasks(true)} disabled={!store}>
+          {running ? <span className="pyd-spinner" /> : "☰"} Taken{tasks.length ? ` (${tasks.length})` : ""}
+        </button>
+        <button className="btn btn-small" onClick={() => sync()} disabled={!store || syncing || !!running}>
+          {syncing || running ? "Bezig met syncen…" : "⟳ Sync nu"}
+        </button>
+      </div>
+
+      {/* ---------- taken-banner ---------- */}
+      {(running || (tasks[0] && Date.now() - Date.parse(tasks[0].finishedAt || tasks[0].startedAt) < 90000)) && (
+        <div className={`pyd-tasks ${running ? "" : "idle"}`}>
+          <div className="pyd-tasks__head">
+            {running ? <span className="pyd-spinner" /> : null}
+            {running ? "Background tasks running" : "Background tasks"}
+            <button className="pyd-ibtn" onClick={() => setShowTasks(true)}>Alle taken</button>
+          </div>
+          {(running ? [running] : [tasks[0]]).map((t) => (
+            <div className="pyd-task" key={t.id}>
+              <span className="n">{t.name}</span>
+              <span className={`pyd-st ${t.status}`}>{t.status === "running" ? "in progress" : t.status === "done" ? "klaar" : "mislukt"}</span>
+              <span className="m">{t.msg}</span>
+              <span className="t">{t.source} · {clock(t.startedAt)}{t.finishedAt ? ` → ${clock(t.finishedAt)}` : ""}</span>
             </div>
-            <input ref={fileRef} type="file" accept=".csv,text/csv,.tsv,.txt" multiple style={{ display: "none" }} onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button className="btn-ghost" onClick={() => fileRef.current && fileRef.current.click()} disabled={!!busy}>
-                Kies CSV
-              </button>
-              {files.length > 0 && (
-                <button className="btn-ghost" onClick={() => { setFiles([]); setResult(null); }} disabled={!!busy}>
-                  Wissen
+          ))}
+        </div>
+      )}
+      {error && <div className="pyd-err">{error}</div>}
+      {flash && !error && <div className="pyd-ok">{flash}</div>}
+      {data && data.warnings && data.warnings.length > 0 && <div className="pyd-warn">{data.warnings.join(" · ")}</div>}
+
+      {/* ---------- eerste keer: uitleg ---------- */}
+      {store && !data && !loading && !syncing && !running && (
+        <div className="card pyd-setup">
+          <h2>Nog geen data voor {store.name || sel}</h2>
+          <ol>
+            <li>Zet het script <code>scripts/google-ads-products.js</code> in het Google Ads-account van deze store (SHEET_ID = Attoh Ads Live, STORE = <code>{key || "SSB"}</code>), eerste run met DAGEN = 35.</li>
+            <li>Controleer bij ⚙ Instellingen de store-sleutel, de Ads-sheet en de Orders-app (Bills-pagina) voor orders en refunds.</li>
+            <li>Klik op <b>Sync nu</b>. Daarna synct de pagina zelf bij openen (ouder dan 6 uur) en elke nacht als "automatisch syncen" aan staat.</li>
+          </ol>
+        </div>
+      )}
+      {loading && !data && <div className="pyd-empty">Laden…</div>}
+
+      {ready && (
+        <>
+          {/* ---------- filterbalk ---------- */}
+          <div className="card pyd-filters">
+            <div className="pyd-search">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+              <input type="text" placeholder="Zoek op naam, product-ID, type, vendor of tag…" value={filters.q} onChange={(e) => setF({ q: e.target.value })} />
+            </div>
+            <div className="pyd-row">
+              <label className="lbl">
+                Status
+                <select value={filters.status} onChange={(e) => setF({ status: e.target.value })}>
+                  <option value="all">Alles</option>
+                  <option value="active">Active</option>
+                  <option value="draft">Draft</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </label>
+              <label className="lbl">
+                Type
+                <select value={filters.type} onChange={(e) => setF({ type: e.target.value })}>
+                  <option value="">Alle types</option>
+                  {data.types.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="pyd-dd">
+                <button className={`pyd-ibtn ${filters.tags.length ? "on" : ""}`} onClick={() => setMenu(menu === "tags" ? "" : "tags")}>
+                  Tags{filters.tags.length ? ` (${filters.tags.length})` : ""} ▾
                 </button>
-              )}
-            </div>
-            {files.length > 0 && (
-              <div className="py-files">
-                {files.map((f) => (
-                  <div className="py-file" key={f.name}>
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{f.name}</span>
-                    {f.parsed ? (
-                      <span style={{ color: "var(--ok)", whiteSpace: "nowrap" }}>
-                        {f.parsed.rows.length} regels · {f.parsed.hasDay ? "per dag" : "totaal"}
-                        {f.parsed.period ? ` · ${f.parsed.period.from} → ${f.parsed.period.to}` : ""}
-                      </span>
-                    ) : (
-                      <span style={{ color: "var(--err)" }}>{f.error}</span>
+                {menu === "tags" && (
+                  <div className="pyd-menu">
+                    <div className="msearch"><input type="text" placeholder="Zoek tag…" value={tagQ} onChange={(e) => setTagQ(e.target.value)} autoFocus /></div>
+                    {!tagOptions.length && <div className="empty">Geen tags{data.tags.length ? " gevonden" : " op deze store"}</div>}
+                    {tagOptions.map((t) => (
+                      <label key={t.tag} className={`mi ${filters.tags.includes(t.tag) ? "on" : ""}`}>
+                        <input type="checkbox" checked={filters.tags.includes(t.tag)} onChange={(e) => setF({ tags: e.target.checked ? [...filters.tags, t.tag] : filters.tags.filter((x) => x !== t.tag) })} />
+                        {t.tag}
+                        <span className="cnt">{t.n}</span>
+                      </label>
+                    ))}
+                    {filters.tags.length > 0 && (
+                      <>
+                        <div className="sep" />
+                        <button className="mi" onClick={() => setF({ tags: [] })}>Tags wissen</button>
+                      </>
                     )}
                   </div>
-                ))}
-                {combined && combined.warnings.map((w, i) => (
-                  <div key={i} className="hint" style={{ color: "var(--warn)", margin: 0 }}>{w}</div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="card">
-            <h2>3 · Regels</h2>
-            <div className="py-grid">
-              <div>
-                <div className="field-label">COGS %</div>
-                <input type="number" step="0.1" value={settings.cogsPct} onChange={(e) => setS("cogsPct", e.target.value)} />
-              </div>
-              <div>
-                <div className="field-label">Fees %</div>
-                <input type="number" step="0.1" value={settings.feePct} onChange={(e) => setS("feePct", e.target.value)} />
-              </div>
-              <div>
-                <div className="field-label">Draft-drempel (spend)</div>
-                <input type="number" step="0.5" value={settings.threshold} onChange={(e) => setS("threshold", e.target.value)} />
-              </div>
-              <div>
-                <div className="field-label">Regelvenster</div>
-                <select value={settings.ruleWindow} onChange={(e) => setS("ruleWindow", Number(e.target.value))}>
-                  <option value={30}>30 dagen</option>
-                  <option value={14}>14 dagen</option>
-                </select>
-              </div>
-              <div>
-                <div className="field-label">Min. dagen live</div>
-                <input type="number" value={settings.minAge} onChange={(e) => setS("minAge", e.target.value)} />
-              </div>
-              <div>
-                <div className="field-label">Koers <span className="opt">(leeg = automatisch)</span></div>
-                <input type="text" placeholder={result ? String(result.fx.rate) : "auto"} value={fxOverride} onChange={(e) => setFxOverride(e.target.value)} />
-              </div>
-            </div>
-            <div className="hint">
-              Break-even ROAS = 1 / (1 − COGS − fees) ={" "}
-              <b>{(1 / Math.max(0.05, 1 - Number(settings.cogsPct || 0) / 100 - Number(settings.feePct || 0) / 100)).toFixed(2)}</b>. Draften = spend ≥ drempel in het
-              regelvenster, 0 verkopen in Shopify én 0 Google-conversies, product minstens {settings.minAge || 0} dagen live.
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <button className="btn" onClick={analyse} disabled={!canAnalyse}>
-                {busy === "analyse" ? "Bezig…" : "Analyseren"}
-              </button>
-            </div>
-          </div>
-
-          {result && (
-            <div className="card">
-              <h2>4 · Naar sheet <span className="opt">(optioneel)</span></h2>
-              <div className="field-label">Google Sheet <span className="opt">(standaard de P&L-sheet van de store · ook voor de Conversion Booster)</span></div>
-              <input type="text" placeholder="link van de sheet (gedeeld met de service account)" value={sheet} onChange={(e) => setSheet(e.target.value)} style={{ width: "100%" }} />
-              <div className="field-label">Bladnaam</div>
-              <input type="text" value={tab} onChange={(e) => setTab(e.target.value)} style={{ width: "100%" }} />
-              <div style={{ marginTop: 12, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <button className="btn" onClick={writeSheet} disabled={!!busy || !sheet.trim() || !tab.trim()}>
-                  {busy === "write" ? "Bezig…" : "Schrijf naar sheet"}
-                </button>
-                {doneUrl && (
-                  <a className="linklike" href={doneUrl} target="_blank" rel="noreferrer noopener">
-                    Openen ↗
-                  </a>
                 )}
               </div>
+              <button className={`pyd-ibtn ${showFilters || activeFilterTags.length ? "on" : ""}`} onClick={() => setShowFilters((v) => !v)}>
+                ⚲ Filters{activeFilterTags.length ? ` (${activeFilterTags.length})` : ""}
+              </button>
+              <div className="pyd-dd">
+                <button className="pyd-ibtn" onClick={() => setMenu(menu === "presets" ? "" : "presets")}>☆ Opgeslagen filters ▾</button>
+                {menu === "presets" && (
+                  <div className="pyd-menu">
+                    {!presets.length && <div className="empty">Nog geen opgeslagen filters</div>}
+                    {presets.map((p) => (
+                      <button key={p.id} className="mi" onClick={() => applyPreset(p)}>
+                        <span className="pyd-pdot" style={{ background: p.color || PRESET_COLORS[0] }} />
+                        {p.name}
+                        <span className="cnt">{p.scope === "all" ? "alle stores" : ""}</span>
+                      </button>
+                    ))}
+                    <div className="sep" />
+                    <button className="mi" onClick={() => { setMenu(""); setModal({ kind: "preset", preset: { name: "", color: PRESET_COLORS[0], scope: "store" } }); }}>+ Huidige filters opslaan</button>
+                    <button className="mi" onClick={() => { setMenu(""); setModal({ kind: "presets" }); }}>⚙ Opgeslagen filters beheren</button>
+                  </div>
+                )}
+              </div>
+              <div className="grow" />
+              <div className="pyd-period" title="Periode voor Spend · Conv. · Stuks · Omzet · Refunds · Klikken · CTR · CPC · CPA en de tegels (de 7D/14D/30D-kolommen staan altijd)">
+                {[7, 14, 30].map((w) => (
+                  <button key={w} className={P === w ? "on" : ""} onClick={() => setView({ period: w })}>{w} dagen</button>
+                ))}
+              </div>
+              <button className="pyd-ibtn" onClick={exportCsv} title="Alle gefilterde rijen als CSV">⤓ Export CSV</button>
             </div>
-          )}
-        </div>
-
-        <div>
-          <div className="card">
-            <h2>Log {busy && <span className="opt">— bezig</span>}</h2>
-            {logs.length === 0 && !busy && (
-              <div className="center-note" style={{ padding: "18px 8px" }}>
-                Kies een store, sleep de Google Ads-export erin en druk op Analyseren.
+            {showFilters && (
+              <div className="pyd-panel">
+                <div className="pyd-grp">
+                  <h4>Prestaties</h4>
+                  {[["ROAS", "roasMin", "roasMax"], ["POAS", "poasMin", "poasMax"]].map(([l, a, b]) => (
+                    <div className="fr" key={a}>
+                      <span>{l}</span>
+                      <div className="mm">
+                        <input type="number" step="0.1" placeholder="Min" value={filters[a]} onChange={(e) => setF({ [a]: e.target.value })} /> – <input type="number" step="0.1" placeholder="Max" value={filters[b]} onChange={(e) => setF({ [b]: e.target.value })} />
+                      </div>
+                    </div>
+                  ))}
+                  <div className="fr">
+                    <span>Advies</span>
+                    <select multiple size={4} value={filters.advies} onChange={(e) => setF({ advies: [...e.target.selectedOptions].map((o) => o.value) })}>
+                      {ADVIES.map((a) => (
+                        <option key={a} value={a}>{a} ({counts[a] || 0})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="pyd-grp">
+                  <h4>Winstgevendheid</h4>
+                  {[["Netto winst", "profitMin", "profitMax"], ["Marge %", "marginMin", "marginMax"], ["Prijs", "priceMin", "priceMax"]].map(([l, a, b]) => (
+                    <div className="fr" key={a}>
+                      <span>{l}</span>
+                      <div className="mm">
+                        <input type="number" placeholder="Min" value={filters[a]} onChange={(e) => setF({ [a]: e.target.value })} /> – <input type="number" placeholder="Max" value={filters[b]} onChange={(e) => setF({ [b]: e.target.value })} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="pyd-grp">
+                  <h4>Ad spend</h4>
+                  <div className="fr"><span>Ad-dagen</span><div className="mm"><input type="number" placeholder="Min" value={filters.adDaysMin} onChange={(e) => setF({ adDaysMin: e.target.value })} /></div></div>
+                  <div className="fr"><span>Spend</span><div className="mm"><input type="number" placeholder="Min" value={filters.costMin} onChange={(e) => setF({ costMin: e.target.value })} /></div></div>
+                  <div className="fr">
+                    <span>Klikken</span>
+                    <div className="mm"><input type="number" placeholder="Min" value={filters.clicksMin} onChange={(e) => setF({ clicksMin: e.target.value })} /> – <input type="number" placeholder="Max" value={filters.clicksMax} onChange={(e) => setF({ clicksMax: e.target.value })} /></div>
+                  </div>
+                </div>
+                <div className="pyd-grp">
+                  <h4>Shopify</h4>
+                  <div className="fr">
+                    <span>Orders</span>
+                    <div className="mm"><input type="number" placeholder="Min" value={filters.ordersMin} onChange={(e) => setF({ ordersMin: e.target.value })} /> – <input type="number" placeholder="Max" value={filters.ordersMax} onChange={(e) => setF({ ordersMax: e.target.value })} /></div>
+                  </div>
+                  <div className="fr">
+                    <span>Vendor</span>
+                    <select value={filters.vendor} onChange={(e) => setF({ vendor: e.target.value })}>
+                      <option value="">Alle</option>
+                      {vendors.map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="fr">
+                    <span>Boost</span>
+                    <label className="pyd-toggle"><input type="checkbox" checked={filters.inBoost} onChange={(e) => setF({ inBoost: e.target.checked })} /> alleen in lopende boost ({counts.inBoost || 0})</label>
+                  </div>
+                </div>
+                <div className="pyd-grp">
+                  <h4>Publicatiedatum</h4>
+                  <div className="fr"><span>Vanaf</span><input type="date" value={filters.pubFrom} onChange={(e) => setF({ pubFrom: e.target.value })} /></div>
+                  <div className="fr"><span>Tot</span><input type="date" value={filters.pubTo} onChange={(e) => setF({ pubTo: e.target.value })} /></div>
+                </div>
+                <div className="pyd-panel__foot">
+                  <span>Filters gelden op de gekozen periode ({P} dagen).</span>
+                  <div className="grow" />
+                  <button className="pyd-ibtn" onClick={() => setFilters({ ...EMPTY_FILTERS, q: filters.q })}>Alles wissen</button>
+                  <button className="pyd-ibtn on" onClick={() => setModal({ kind: "preset", preset: { name: "", color: PRESET_COLORS[0], scope: "store" } })}>☆ Opslaan als filter</button>
+                </div>
               </div>
             )}
-            <div className="logpanel">
-              {logs.map((l, i) => (
-                <div key={i} className={"logline" + (l.err ? " err" : l.ok ? " ok" : l.strong ? " strong" : "")}>
-                  {l.text}
+            {activeFilterTags.length > 0 && (
+              <div className="pyd-active">
+                {activeFilterTags.map((t, i) => (
+                  <span className="pyd-tag" key={i}>
+                    {t.t}
+                    <button onClick={() => clearTag(t)} title="Verwijder filter">×</button>
+                  </span>
+                ))}
+                <button className="pyd-ibtn" style={{ height: 26, fontSize: 11.5 }} onClick={() => setFilters({ ...EMPTY_FILTERS, q: filters.q })}>Alles wissen</button>
+              </div>
+            )}
+          </div>
+
+          {/* ---------- valuta + periode ---------- */}
+          <div className="pyd-cur">
+            <span>Google Ads: <b>{adsCur}</b></span>
+            <span>Shopify: <b>{shopCur}</b></span>
+            {dual && <span className="mut">(bedragen in {adsCur}, {shopCur} tussen haakjes · koers 1 {shopCur} = {data.fx.rate} {adsCur})</span>}
+            <span className="mut">· Periode {P} dagen: {periodLabel}</span>
+            <span className="mut">· break-even ROAS {be.toFixed(2)}</span>
+            <span className="mut">· {data.ordersCounted} orders · {data.adsItems} Ads-items</span>
+          </div>
+
+          {/* ---------- tegels ---------- */}
+          <div className="pyd-tiles">
+            <div className="pyd-tile"><div className="v">{fmtNum(kpi.products)}</div><div className="k">Producten (gefilterd)</div></div>
+            <div className="pyd-tile">
+              <div className="v">{fmtMoney(kpi.spend, adsCur, 0)}</div>
+              {dual && <div className="v2">({fmtMoney(kpi.spendShop, shopCur, 0)})</div>}
+              <div className="k">Product ad spend (gefilterd)</div>
+              <div className="lnk">van {fmtMoney(data.totals[P].accountSpend || data.totals[P].spend, adsCur, 0)} account-spend · <button onClick={() => setModal({ kind: "breakdown" })}>uitsplitsing</button></div>
+            </div>
+            <div className="pyd-tile">
+              <div className="v">{fmtNum(kpi.units)}</div>
+              {kpi.refundUnits ? <div className="v2 pyd-neg">(-{kpi.refundUnits} retour)</div> : null}
+              <div className="k">Shopify · stuks</div>
+            </div>
+            <div className="pyd-tile">
+              <div className="v">{fmtMoney(kpi.net, adsCur, 0)}</div>
+              {dual && <div className="v2">({fmtMoney(kpi.netShop, shopCur, 0)})</div>}
+              <div className="k">Shopify · omzet (na refunds)</div>
+            </div>
+            <div className="pyd-tile">
+              <div className="v red">{fmtMoney(kpi.refunds, adsCur, 0)}</div>
+              {dual && <div className="v2">({fmtMoney(kpi.refundsShop, shopCur, 0)})</div>}
+              <div className="k">Refunds</div>
+            </div>
+            <div className="pyd-tile">
+              <div className="v" style={{ color: kpi.roas == null ? "var(--faint)" : kpi.roas < be ? "#f0b35a" : "var(--ok)" }}>{kpi.roas == null ? "—" : kpi.roas.toFixed(2)}</div>
+              <div className="k">ROAS op Shopify-omzet</div>
+            </div>
+          </div>
+
+          {/* ---------- advies-chips ---------- */}
+          <div className="pyd-adv">
+            <button className={`pyd-chip ${!filters.advies.length ? "on" : ""}`} onClick={() => setF({ advies: [] })}>Alles {rows.length}</button>
+            {ADVIES.filter((a) => counts[a]).map((a) => (
+              <button key={a} className={`pyd-chip ${filters.advies.length === 1 && filters.advies[0] === a ? "on" : ""}`} onClick={() => setF({ advies: filters.advies.length === 1 && filters.advies[0] === a ? [] : [a] })}>
+                <span className="dot" style={{ background: TONE[a] }} />
+                {a} {counts[a]}
+              </button>
+            ))}
+            {counts.inBoost ? (
+              <button className={`pyd-chip ${filters.inBoost ? "on" : ""}`} onClick={() => setF({ inBoost: !filters.inBoost })}>
+                <span className="dot" style={{ background: "#4cc9f0" }} />In boost {counts.inBoost}
+              </button>
+            ) : null}
+            <span className="grow" />
+            {counts.Draften ? (
+              <button className="pyd-ibtn" onClick={selectAllDraften}>Selecteer alle Draften ({counts.Draften}){data.draftSpend ? ` · ${fmtMoney(data.draftSpend, adsCur, 0)} spend` : ""}</button>
+            ) : null}
+            <button className="pyd-ibtn" onClick={openBooster} title="Conversion Booster + schrijf naar sheet (klassieke pagina) met dit resultaat">⚡ Conversion Booster →</button>
+          </div>
+
+          {/* ---------- tabel ---------- */}
+          <div className="card pyd-tablecard" style={{ position: "relative" }}>
+            <div className="pyd-thead">
+              <div>
+                <h2 style={{ marginBottom: 2 }}>Product performance</h2>
+                <div className="sub">{sorted.length} van {rows.length} producten{picked.size ? ` · ${picked.size} aangevinkt` : ""}</div>
+              </div>
+              <div className="grow" />
+              {picked.size > 0 && (
+                <select value="" onChange={(e) => { const v = e.target.value; if (v) askStatus(v); }}>
+                  <option value="">Acties ({picked.size})</option>
+                  <option value="draft">Op draft zetten</option>
+                  <option value="active">Op active zetten</option>
+                  <option value="archived">Archiveren</option>
+                </select>
+              )}
+              <div className="pyd-dd">
+                <button className="pyd-ibtn" onMouseDown={(e) => e.stopPropagation()} onClick={() => setMenu(menu === "cols" ? "" : "cols")} title="Kolommen">▦ Kolommen</button>
+                {menu === "cols" && (
+                  <div className="pyd-cols">
+                    <h4>Foto</h4>
+                    <div className="slider">
+                      <span>{cols.img}px</span>
+                      <input type="range" min={28} max={80} step={4} value={cols.img} onChange={(e) => saveCols({ ...cols, img: Number(e.target.value) })} />
+                    </div>
+                    <h4>Kolommen (volgorde + zichtbaar)</h4>
+                    {cols.order.map((id, i) => {
+                      const c = columns.find((x) => x.id === id);
+                      if (!c) return null;
+                      const off = cols.hidden.includes(id);
+                      return (
+                        <div className={`ci ${off ? "off" : ""}`} key={id}>
+                          <input type="checkbox" checked={!off} onChange={(e) => saveCols({ ...cols, hidden: e.target.checked ? cols.hidden.filter((x) => x !== id) : [...cols.hidden, id] })} />
+                          <span>{c.label}</span>
+                          <button onClick={() => moveCol(id, -1)} disabled={i === 0} title="omhoog">▲</button>
+                          <button onClick={() => moveCol(id, 1)} disabled={i === cols.order.length - 1} title="omlaag">▼</button>
+                        </div>
+                      );
+                    })}
+                    <div className="sep" style={{ height: 1, background: "var(--line)", margin: "8px 4px" }} />
+                    <button className="pyd-ibtn" style={{ width: "100%" }} onClick={() => saveCols({ order: ALL_COL_IDS, hidden: makeColumns(30).filter((x) => x.def === false).map((x) => x.id), img: 44 })}>Standaard</button>
+                  </div>
+                )}
+              </div>
+              <button className="pyd-ibtn" onClick={() => setFull((v) => !v)} title="Volledig scherm">{full ? "⤡ Verklein" : "⤢ Volledig"}</button>
+            </div>
+
+            <div className="pyd-wrap">
+              <table className="pyd-table">
+                <thead>
+                  <tr>
+                    <th className="c sticky" style={{ width: 34 }}><input type="checkbox" checked={allPage} onChange={togglePage} title="Alles op deze pagina" /></th>
+                    <Th id="product" cls="l sticky2" >Product</Th>
+                    <Th id="status" cls="c">Status</Th>
+                    <Th id="variants" cls="c">Var.</Th>
+                    {visibleCols.map((c) => (
+                      <Th key={c.id} id={c.id} cls={`${c.grp || ""} ${c.gl ? "gl" : ""}`} title={c.title}>{c.label}</Th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageRows.map((r) => {
+                    const note = notes[r.productId];
+                    const isSel = picked.has(r.productId);
+                    return (
+                      <tr key={r.key || r.productId} className={isSel ? "sel" : ""}>
+                        <td className="c sticky">{r.onStore ? <input type="checkbox" checked={isSel} onChange={() => toggle(r.productId)} /> : null}</td>
+                        <td className="l prod sticky2">
+                          <div className="pyd-prod">
+                            {r.image ? (
+                              <img className="pyd-img" src={r.image} alt="" loading="lazy" style={{ width: cols.img, height: cols.img }} onClick={() => setModal({ kind: "image", src: r.image.replace(/([?&])width=\d+/, "$1width=900"), title: r.title })} />
+                            ) : (
+                              <span className="pyd-noimg" style={{ width: cols.img, height: cols.img }} />
+                            )}
+                            <div style={{ minWidth: 0 }}>
+                              <div className="pyd-title" title={r.title}>
+                                {r.onStore ? <a href={adminUrl(r)} target="_blank" rel="noreferrer">{r.title}</a> : r.title}
+                              </div>
+                              <div className="pyd-id">ID: {r.productId || "—"}{r.type ? ` · ${r.type}` : ""}</div>
+                              <div className="pyd-icons">
+                                <span className="pyd-pill" style={{ color: TONE[r.advies] }}>{r.advies}</span>
+                                {r.boost && (
+                                  <span className="pyd-pill" style={{ color: r.boost.effect === "geen effect" ? "#f0b35a" : r.boost.effect ? "var(--ok)" : "#4cc9f0" }} title={r.boost.tab}>
+                                    {r.boost.active ? `Boost · dag ${r.boost.day}/${r.boost.windowDays}` : r.boost.effect ? `Boost: ${r.boost.effect}` : "Boost"}
+                                  </span>
+                                )}
+                                {r.onStore && (
+                                  <>
+                                    <button className={note ? "has" : ""} title={note ? `Notitie: ${note.text}` : "Notitie toevoegen"} onClick={() => setModal({ kind: "note", row: r, text: note ? note.text : "" })}>✎</button>
+                                    <a href={adminUrl(r)} target="_blank" rel="noreferrer" title="Open in Shopify-admin">↗</a>
+                                    {storeUrl(r) && <a href={storeUrl(r)} target="_blank" rel="noreferrer" title="Bekijk op de store">🛍</a>}
+                                  </>
+                                )}
+                                {r.soldOut ? <span className="pyd-sub" title="varianten uitverkocht">{r.soldOut} uitverkocht</span> : null}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="c">
+                          {r.onStore ? (
+                            <button className={`pyd-pill pyd-status ${r.status}`} onClick={() => setModal({ kind: "rowstatus", row: r })} title="Status wijzigen">{r.status}</button>
+                          ) : (
+                            <span className="dim">—</span>
+                          )}
+                        </td>
+                        <td className="c">
+                          {r.onStore ? <button className="pyd-vbtn" onClick={() => openVariants(r)} title={`${r.vcount} varianten${r.variants ? ` · ${r.variants} met spend` : ""} — klik voor de uitsplitsing`}>{r.vcount}{r.variants ? <span style={{ color: "var(--faint)", fontWeight: 500 }}> · {r.variants} ads</span> : null}</button> : <span className="dim">—</span>}
+                        </td>
+                        {visibleCols.map((c) => (
+                          <td key={c.id} className={`${c.grp || ""} ${c.gl ? "gl" : ""} ${c.kind === "text" ? "l" : ""}`}>{cell(c, r)}</td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                  {!pageRows.length && (
+                    <tr>
+                      <td colSpan={4 + visibleCols.length} className="pyd-empty">Geen producten voor deze filters.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="pyd-pager">
+              <span>Toon</span>
+              <select value={perPage} onChange={(e) => { setView({ perPage: Number(e.target.value) }); setPage(0); }}>
+                {[10, 25, 50, 100, 250].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+              <span>per pagina · {page * perPage + 1}–{Math.min(sorted.length, (page + 1) * perPage)} van {sorted.length}</span>
+              <div className="grow" />
+              <button onClick={() => setPage(0)} disabled={page === 0}>«</button>
+              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>‹</button>
+              {Array.from({ length: Math.min(7, pageCount) }, (_, i) => {
+                const start = Math.max(0, Math.min(page - 3, pageCount - 7));
+                const n = start + i;
+                return (
+                  <button key={n} className={n === page ? "on" : ""} onClick={() => setPage(n)}>{n + 1}</button>
+                );
+              })}
+              <button onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1}>›</button>
+              <button onClick={() => setPage(pageCount - 1)} disabled={page >= pageCount - 1}>»</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ====================================================================
+          MODALS
+          ==================================================================== */}
+      {showTasks && (
+        <div className="pyd-modal" onClick={() => setShowTasks(false)}>
+          <div className="pyd-box md" onClick={(e) => e.stopPropagation()}>
+            <div className="pyd-box__head">
+              <div><h3>Background tasks</h3><div className="sub">Syncs van {store ? store.name || sel : ""} — lopend en geschiedenis</div></div>
+              <button className="x" onClick={() => setShowTasks(false)}>×</button>
+            </div>
+            <div className="pyd-list">
+              {!tasks.length && <div className="pyd-empty">Nog geen taken.</div>}
+              {tasks.map((t) => (
+                <div className="li" key={t.id}>
+                  {t.status === "running" ? <span className="pyd-spinner" /> : null}
+                  <span className={`pyd-st ${t.status}`}>{t.status === "running" ? "in progress" : t.status === "done" ? "klaar" : "mislukt"}</span>
+                  <span className="grow" title={t.msg}><b>{t.name}</b> — {t.msg}</span>
+                  <span style={{ color: "var(--faint)", fontSize: 11.5, whiteSpace: "nowrap" }}>{t.source} · {ago(t.startedAt)}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </div>
-      <div className="page" style={{ paddingTop: 22, maxWidth: 1640, display: result ? "grid" : "none" }}>
-          {result && (
-            <div className="card">
-              <h2>
-                {result.store.name || result.store.domain} <span className="opt">· {result.period.from} t/m {result.period.to}</span>
-              </h2>
-              <div className="py-tiles">
-                {[7, 14, 30].map((w) => (
-                  <div className="py-tile" key={w}>
-                    <div className="k">{(result.windowDays && result.windowDays[w]) || w} dagen</div>
-                    <div className="v">{money(result.totals[w].spend)}</div>
-                    <div className="s">
-                      omzet {money(result.totals[w].rev)} · ROAS {result.totals[w].roas == null ? "—" : result.totals[w].roas.toFixed(2)}
-                    </div>
-                  </div>
-                ))}
-                <div className="py-tile">
-                  <div className="k">Draft-kandidaten</div>
-                  <div className="v" style={{ color: result.counts.Draften ? "var(--err)" : "var(--ok)" }}>{result.counts.Draften || 0}</div>
-                  <div className="s">
-                    {money(result.draftSpend)} spend zonder verkoop ({RW} d){inBoostCount ? ` · ${inBoostCount} in boost` : ""}
-                  </div>
-                </div>
-              </div>
+      )}
 
-              <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", marginBottom: 10 }}>
-                <div className="seg">
-                  {["Alles", ...ADVIES].filter((a) => a === "Alles" || result.counts[a]).map((a) => (
-                    <button key={a} className={filter === a ? "on" : ""} onClick={() => setFilter(a)} type="button">
-                      {a !== "Alles" && <span className="py-dot" style={{ background: TONE[a] }} />}
-                      {a} {a === "Alles" ? result.rows.length : result.counts[a]}
-                    </button>
-                  ))}
-                  {inBoostCount > 0 && (
-                    <button className={filter === "In boost" ? "on" : ""} onClick={() => setFilter("In boost")} type="button">
-                      <span className="py-dot" style={{ background: BOOST_TONE }} />
-                      In boost {inBoostCount}
-                    </button>
-                  )}
-                </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                  <input className="py-search" type="text" placeholder="Zoek product…" value={q} onChange={(e) => setQ(e.target.value)} />
-                  {sort.key && (
-                    <button className="btn-ghost btn-small" type="button" onClick={() => setSort({ key: "", dir: "desc" })}>
-                      Sortering wissen
-                    </button>
-                  )}
-                  {result.counts.Draften > 0 && (
-                    <button className="btn-ghost btn-small" type="button" disabled={!!busy} onClick={selectAllDraften} title="Producten in een lopende boost worden overgeslagen">
-                      Selecteer alle Draften
-                    </button>
-                  )}
-                  <button className="btn btn-small" type="button" onClick={draftPicked} disabled={!!busy || picked.size === 0}>
-                    {busy === "draft" ? "Bezig…" : `Draft geselecteerde (${picked.size})`}
-                  </button>
-                </div>
-              </div>
+      {showSettings && store && (
+        <SettingsModal
+          settings={settings} storeKey={key} adsSheet={adsSheet} ordersKeys={ordersKeys} store={store}
+          onClose={() => setShowSettings(false)}
+          onSave={(s, k, sh, resync) => {
+            saveSettings(s, k, sh);
+            setShowSettings(false);
+            if (resync) setTimeout(() => sync("instellingen gewijzigd"), 100);
+          }}
+        />
+      )}
 
-              <div className="py-wrap">
-                <table className="py-table">
-                  <thead>
-                    <tr>
-                      <th className="l" colSpan={4} />
-                      <th className="grp" colSpan={3}>{(result.windowDays && result.windowDays[7]) || 7} dagen</th>
-                      <th className="grp" colSpan={3}>{(result.windowDays && result.windowDays[14]) || 14} dagen</th>
-                      <th className="grp" colSpan={6}>{(result.windowDays && result.windowDays[30]) || 30} dagen</th>
-                      <th className="grp" />
-                    </tr>
-                    <tr>
-                      <th className="l" />
-                      <th className="l">Foto</th>
-                      <Th k="title" l>Product</Th>
-                      <Th k="age" title="Dagen sinds het product live staat">Dagen live</Th>
-                      <Th k="s7" g>Spend</Th>
-                      <Th k="o7">Orders</Th>
-                      <Th k="r7">ROAS</Th>
-                      <Th k="s14" g>Spend</Th>
-                      <Th k="o14">Orders</Th>
-                      <Th k="r14">ROAS</Th>
-                      <Th k="s30" g>Spend</Th>
-                      <Th k="c30">Klikken</Th>
-                      <Th k="o30">Orders</Th>
-                      <Th k="v30">Omzet</Th>
-                      <Th k="r30">ROAS</Th>
-                      <Th k="g30" title="Google-conversies (TrackBee) in 30 dagen">G-conv</Th>
-                      <Th k="p30" g title="Omzet × (1 − COGS − fees) − spend, 30 dagen">Winst 30d</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.length === 0 && (
-                      <tr>
-                        <td className="l" colSpan={17} style={{ color: "var(--muted)", padding: 18 }}>
-                          Geen producten in deze selectie.
-                        </td>
-                      </tr>
-                    )}
-                    {rows.map((x) => {
-                      const bl = boostLabel(x.boost);
-                      return (
-                        <tr key={x.productId || x.title}>
-                          <td className="l">
-                            {draftable(x) ? <input type="checkbox" checked={picked.has(x.productId)} onChange={() => toggle(x.productId)} disabled={!!busy} /> : null}
-                          </td>
-                          <td className="l">
-                            {x.image ? (
-                              <a href={x.image.replace(/([?&])width=\d+/, "$1width=800")} target="_blank" rel="noreferrer noopener">
-                                <img className="py-img" src={x.image} alt="" loading="lazy" />
-                              </a>
-                            ) : (
-                              <span className="py-img py-noimg" />
-                            )}
-                          </td>
-                          <td className="l t" title={x.title}>
-                            <div className="py-title">
-                              {x.productId && x.status && result.store.domain ? (
-                                <a className="linklike" href={`https://${result.store.domain}/admin/products/${x.productId}`} target="_blank" rel="noreferrer noopener">
-                                  {x.title}
-                                </a>
-                              ) : (
-                                x.title
-                              )}
-                            </div>
-                            <div className="py-meta">
-                              <span className="py-pill" style={{ color: TONE[x.advies] }}>
-                                {x.advies}
-                              </span>
-                              {bl && (
-                                <span className="py-pill" style={{ color: bl.color }} title={bl.title}>
-                                  {bl.text}
-                                </span>
-                              )}
-                              {x.variants > 1 && <span>{x.variants} varianten met spend</span>}
-                              {x.status && x.status !== "active" && <span>{x.status}</span>}
-                            </div>
-                          </td>
-                          <td>{x.age ?? "—"}</td>
-                          <td className="gl">{money(x.per[7].spend)}</td>
-                          <td>{x.per[7].orders}</td>
-                          <td>{roasCell(x.per[7].roas)}</td>
-                          <td className="gl">{money(x.per[14].spend)}</td>
-                          <td>{x.per[14].orders}</td>
-                          <td>{roasCell(x.per[14].roas)}</td>
-                          <td className="gl">{money(x.per[30].spend)}</td>
-                          <td>{x.per[30].clicks}</td>
-                          <td>{x.per[30].orders}</td>
-                          <td>{money(x.per[30].rev)}</td>
-                          <td>{roasCell(x.per[30].roas)}</td>
-                          <td>{x.per[30].conv}</td>
-                          <td className="gl" style={{ color: x.profit30 >= 0 ? "var(--ok)" : "var(--err)", fontWeight: 600 }}>{money(x.profit30)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <div className="hint">
-                ROAS = Shopify-omzet ({result.shopCurrency} → {result.adsCurrency}, koers {result.fx.rate}) / Google Ads-spend. Groen ≥ break-even {result.settings.breakEvenRoas}, oranje
-                eronder, rood = spend zonder omzet. Orders zijn álle Shopify-orders van het product in die dagen (niet alleen via Google).
-                {inBoostCount > 0 && <> Producten met een blauw boost-label zitten in een lopende Conversion Boost en worden door "Selecteer alle Draften" overgeslagen.</>}
-              </div>
+      {modal && modal.kind === "status" && (
+        <div className="pyd-modal" onClick={() => setModal(null)}>
+          <div className="pyd-box md" onClick={(e) => e.stopPropagation()}>
+            <div className="pyd-box__head">
+              <div><h3>{modal.ids.length} product(en) op <b>{modal.status}</b> zetten</h3><div className="sub">Dit wijzigt de status in Shopify ({store.name || sel}). Niets gebeurt vanzelf — alleen na bevestigen.</div></div>
+              <button className="x" onClick={() => setModal(null)}>×</button>
             </div>
-          )}
+            <div className="pyd-list">
+              {modal.ids.map((id) => {
+                const r = rows.find((x) => x.productId === id);
+                return <div className="li" key={id}><span className="grow">{r ? r.title : id}</span><span className="pyd-pill" style={{ color: r ? TONE[r.advies] : "var(--muted)" }}>{r ? r.advies : ""}</span></div>;
+              })}
+            </div>
+            <div className="pyd-box__foot">
+              <button className="btn-ghost" onClick={() => setModal(null)}>Annuleren</button>
+              <button className="btn" onClick={() => doStatus(modal.status, modal.ids)}>Ja, op {modal.status}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
-          {result && (
-            <div className="card">
-              <h2>
-                Conversion Booster <span className="opt">— vóór het draften eerst een kans: AI kijkt per product wat er aan de listing mis is</span>
-              </h2>
-              <div className="cb-cats">
-                {CVR_CATS.map((c) => (
-                  <label key={c} className={"cb-cat" + (cvr.categories.includes(c) ? " on" : "")}>
-                    <input type="checkbox" checked={cvr.categories.includes(c)} onChange={() => toggleCat(c)} disabled={!!busy} />
-                    <span className="py-dot" style={{ background: TONE[c], marginRight: 0 }} />
-                    {c} <span className="n">{result.counts[c] || 0}</span>
-                  </label>
+      {modal && modal.kind === "rowstatus" && (
+        <div className="pyd-modal" onClick={() => setModal(null)}>
+          <div className="pyd-box sm" onClick={(e) => e.stopPropagation()}>
+            <div className="pyd-box__head">
+              <div><h3>Status wijzigen</h3><div className="sub">{modal.row.title} · nu <b>{modal.row.status}</b></div></div>
+              <button className="x" onClick={() => setModal(null)}>×</button>
+            </div>
+            <div className="pyd-box__foot" style={{ justifyContent: "flex-start" }}>
+              {["active", "draft", "archived"].filter((s) => s !== modal.row.status).map((s) => (
+                <button key={s} className="pyd-ibtn" onClick={() => askStatus(s, [modal.row.productId])}>→ {s}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal && modal.kind === "note" && (
+        <div className="pyd-modal" onClick={() => setModal(null)}>
+          <div className="pyd-box sm" onClick={(e) => e.stopPropagation()}>
+            <div className="pyd-box__head">
+              <div><h3>Notitie</h3><div className="sub">{modal.row.title}</div></div>
+              <button className="x" onClick={() => setModal(null)}>×</button>
+            </div>
+            <textarea value={modal.text} onChange={(e) => setModal({ ...modal, text: e.target.value })} placeholder="Bijv. prijs verlaagd op 3-11, foto 1 vervangen…" autoFocus />
+            <div className="pyd-box__foot">
+              {modal.text && <button className="btn-ghost" onClick={() => saveNote(modal.row.productId, "")}>Verwijderen</button>}
+              <button className="btn-ghost" onClick={() => setModal(null)}>Annuleren</button>
+              <button className="btn" onClick={() => saveNote(modal.row.productId, modal.text)}>Opslaan</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal && modal.kind === "image" && (
+        <div className="pyd-modal" onClick={() => setModal(null)}>
+          <img className="pyd-bigimg" src={modal.src} alt={modal.title} />
+        </div>
+      )}
+
+      {modal && modal.kind === "breakdown" && data && (
+        <div className="pyd-modal" onClick={() => setModal(null)}>
+          <div className="pyd-box sm" onClick={(e) => e.stopPropagation()}>
+            <div className="pyd-box__head">
+              <div><h3>Ad spend uitsplitsing</h3><div className="sub">{periodLabel} · {adsCur}</div></div>
+              <button className="x" onClick={() => setModal(null)}>×</button>
+            </div>
+            {(() => {
+              const t = data.totals[P];
+              const acc = t.accountSpend || t.spend;
+              const rowsB = [["Totale ad spend (account)", acc, 100], ["Product ad spend (alle producten)", t.spend, acc ? (t.spend / acc) * 100 : 100], ["Product ad spend (gefilterd)", kpi.spend, acc ? (kpi.spend / acc) * 100 : 100], ["Niet aan een product toe te wijzen", Math.max(0, acc - t.spend), acc ? (Math.max(0, acc - t.spend) / acc) * 100 : 0]];
+              return (
+                <div className="pyd-bd">
+                  {rowsB.map(([l, v, p]) => (
+                    <div className="r" key={l}><span>{l}</span><span className="bar"><i style={{ width: `${Math.min(100, p)}%` }} /></span><b>{fmtMoney(v, adsCur, 0)}</b><span style={{ color: "var(--muted)" }}>{p.toFixed(0)}%</span></div>
+                  ))}
+                  <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>Het verschil: spend op items die niet meer in Shopify staan, Search/Display-verkeer van PMax zonder product, en dagen waarop het productscript nog niet draaide. Account-spend komt uit tab Ads_{key}; product-spend uit Prod_{key}.</p>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {modal && modal.kind === "preset" && (
+        <PresetModal preset={modal.preset} onClose={() => setModal(null)} onSave={savePreset} />
+      )}
+
+      {modal && modal.kind === "presets" && (
+        <div className="pyd-modal" onClick={() => setModal(null)}>
+          <div className="pyd-box md" onClick={(e) => e.stopPropagation()}>
+            <div className="pyd-box__head">
+              <div><h3>Opgeslagen filters</h3><div className="sub">Toepassen, overschrijven met de huidige filters, of verwijderen</div></div>
+              <button className="x" onClick={() => setModal(null)}>×</button>
+            </div>
+            <div className="pyd-list">
+              {!presets.length && <div className="pyd-empty">Nog geen opgeslagen filters.</div>}
+              {presets.map((p) => (
+                <div className="li" key={p.id}>
+                  <span className="pyd-pdot" style={{ background: p.color }} />
+                  <span className="grow"><b>{p.name}</b> <span style={{ color: "var(--faint)" }}>· {p.scope === "all" ? "alle stores" : "deze store"} · {p.period || 30} d</span></span>
+                  <button className="pyd-ibtn" onClick={() => { applyPreset(p); setModal(null); }}>Toepassen</button>
+                  <button className="pyd-ibtn" onClick={() => savePreset({ ...p, filters })} title="Vervang de opgeslagen filters door wat nu actief is">Overschrijven</button>
+                  <button className="pyd-ibtn" onClick={() => deletePreset(p.id)} style={{ color: "var(--err)" }}>Verwijder</button>
+                </div>
+              ))}
+            </div>
+            <div className="pyd-box__foot">
+              <button className="btn" onClick={() => setModal({ kind: "preset", preset: { name: "", color: PRESET_COLORS[0], scope: "store" } })}>+ Nieuw uit huidige filters</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal && modal.kind === "variants" && (
+        <div className="pyd-modal" onClick={() => setModal(null)}>
+          <div className="pyd-box" onClick={(e) => e.stopPropagation()}>
+            <div className="pyd-box__head">
+              <div>
+                <h3>Uitsplitsing per variant</h3>
+                <div className="sub">{modal.row.title} · ID {modal.row.productId}</div>
+              </div>
+              <div className="pyd-period" style={{ marginLeft: "auto" }}>
+                {[7, 14, 30].map((w) => (
+                  <button key={w} className={modal.w === w ? "on" : ""} onClick={() => setModal({ ...modal, w })}>{w} dagen</button>
                 ))}
               </div>
-              <div className="cb-grid">
-                <div>
-                  <div className="field-label">Min. klikken (30 d)</div>
-                  <input type="number" value={cvr.minClicks} onChange={(e) => setC("minClicks", e.target.value)} title="Minder klikken = te weinig data om over conversie te oordelen → Afwachten" />
-                </div>
-                <div>
-                  <div className="field-label">Max producten per run</div>
-                  <input type="number" value={cvr.maxPerRun} onChange={(e) => setC("maxPerRun", e.target.value)} title="Hoogste spend eerst (max 40)" />
-                </div>
-                <div>
-                  <div className="field-label">Boost-venster (dagen)</div>
-                  <input type="number" value={cvr.windowDays} onChange={(e) => setC("windowDays", e.target.value)} title="Zo lang wordt een geboost product niet gedraft nadat je Klaar hebt gemeld" />
-                </div>
-                <div>
-                  <div className="field-label">Opnieuw boosten</div>
-                  <label className="cb-cat" style={{ padding: "7px 11px" }}>
-                    <input type="checkbox" checked={!!cvr.allowRepeat} onChange={(e) => setC("allowRepeat", e.target.checked)} disabled={!!busy} />
-                    na "geen effect"
-                  </label>
-                </div>
-                <div>
-                  <button className="btn" onClick={boosterAnalyse} disabled={!!busy || !cvr.categories.length} style={{ width: "100%" }}>
-                    {busy === "booster" ? "AI kijkt…" : "1 · Analyseer (AI)"}
-                  </button>
-                </div>
-              </div>
-              <div className="hint">
-                Kandidaten = actieve producten in de aangevinkte categorieën, minstens {cvr.minClicks || 0} klikken in 30 dagen, niet al in een boost. De AI ziet per product de cijfers (7/14/30 d),
-                titel, begin van de omschrijving, foto 1, prijs/compare-at, varianten en voorraad, size guide en hoe de rest van het producttype in deze run doet. Oordeel: <b>Boost</b> (aanwijsbaar listing-probleem, gaat naar Claude) ·{" "}
-                <b>Draft nu</b> (niets fixbaars, gewoon draften) · <b>Laten lopen</b>. Analyseren schrijft niets.
-              </div>
-
-              {bRun && (
+              <button className="x" onClick={() => setModal(null)}>×</button>
+            </div>
+            {(() => {
+              const w = modal.w;
+              const V = modal.variants;
+              const t = modal.row.per[w];
+              return (
                 <>
-                  <div className="cb-sum">
-                    <b>{bRun.stat}</b>
-                    {bRun.summary ? `\n${bRun.summary}` : ""}
-                  </div>
-                  <div className="cb-bar">
-                    <div className="seg">
-                      {["Alles", ...VERDICTS].filter((v) => v === "Alles" || bRun.counts[v]).map((v) => (
-                        <button key={v} className={bFilter === v ? "on" : ""} onClick={() => setBFilter(v)} type="button">
-                          {v !== "Alles" && <span className="py-dot" style={{ background: VTONE[v] }} />}
-                          {v} {v === "Alles" ? bRun.items.length : bRun.counts[v]}
-                        </button>
-                      ))}
-                    </div>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                      <button className="btn-ghost btn-small" type="button" disabled={!!busy} onClick={() => setBPicked(new Set(bRun.items.filter((it) => it.ai.verdict === "Boost").map((it) => it.productId)))}>
-                        Selecteer alle Boost
-                      </button>
-                      <span className="field-label" style={{ margin: 0 }}>Bladnaam</span>
-                      <input type="text" value={bTab} onChange={(e) => setBTab(e.target.value)} placeholder={bRun.tabSuggestion} />
-                      <button className="btn btn-small" type="button" onClick={boosterWrite} disabled={!!busy || bPicked.size === 0 || !sheet.trim()} title={!sheet.trim() ? "Vul bij 4 · Naar sheet de sheet van de store in" : "Blad + CVR Log schrijven en de tekst voor Claude op het klembord zetten"}>
-                        {busy === "bwrite" ? "Bezig…" : `2 · Schrijf naar sheet + kopieer voor Claude (${bPicked.size})`}
-                      </button>
-                      {bDone && (
-                        <>
-                          <button className="btn-ghost btn-small" type="button" onClick={async () => push((await copyText(bDone.text)) ? { ok: true, text: "✓ Tekst voor Claude opnieuw gekopieerd." } : { err: true, text: "Klembord geweigerd — open het blad en kopieer vandaar." })}>
-                            Kopieer opnieuw
-                          </button>
-                          <a className="linklike" href={bDone.url} target="_blank" rel="noreferrer noopener">
-                            Openen ↗
-                          </a>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="py-wrap" style={{ maxHeight: "64vh" }}>
-                    <table className="py-table">
-                      <thead>
-                        <tr>
-                          <th className="l" />
-                          <th className="l">Foto</th>
-                          <th className="l">Product</th>
-                          <th>Prio</th>
-                          <th className="l">Oorzaak</th>
-                          <th className="l">Verslag (AI)</th>
-                          <th className="l">Acties (AI)</th>
-                          <th className="gl">Spend 30d</th>
-                          <th>Klikken</th>
-                          <th>CTR</th>
-                          <th>Orders</th>
-                          <th>ROAS</th>
-                          <th className="gl">Prijs</th>
-                          <th>Foto's</th>
-                          <th>Uitverkocht</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {bItems.length === 0 && (
-                          <tr>
-                            <td className="l" colSpan={15} style={{ color: "var(--muted)", padding: 18 }}>
-                              Geen producten in deze selectie.
-                            </td>
-                          </tr>
-                        )}
-                        {bItems.map((it) => (
-                          <tr key={it.productId}>
-                            <td className="l">
-                              <input type="checkbox" checked={bPicked.has(it.productId)} onChange={() => bToggle(it.productId)} disabled={!!busy} />
-                            </td>
-                            <td className="l">
-                              {it.image ? (
-                                <a href={it.image.replace(/([?&])width=\d+/, "$1width=800")} target="_blank" rel="noreferrer noopener">
-                                  <img className="py-img" src={it.image} alt="" loading="lazy" />
-                                </a>
-                              ) : (
-                                <span className="py-img py-noimg" />
-                              )}
-                            </td>
-                            <td className="l t" title={it.title}>
-                              <div className="py-title">
-                                <a className="linklike" href={it.adminUrl} target="_blank" rel="noreferrer noopener">
-                                  {it.title}
-                                </a>
-                              </div>
-                              <div className="py-meta">
-                                <span className="py-pill" style={{ color: VTONE[it.ai.verdict] }}>{it.ai.verdict}</span>
-                                <span className="py-pill" style={{ color: TONE[it.advies] }}>{it.advies}</span>
-                                {it.type && <span>{it.type}</span>}
-                                {it.storeUrl && (
-                                  <a className="linklike" href={it.storeUrl} target="_blank" rel="noreferrer noopener">
-                                    store ↗
-                                  </a>
-                                )}
-                              </div>
-                            </td>
-                            <td>{it.ai.prio ?? "—"}</td>
-                            <td className="l">{it.ai.cause || "—"}</td>
-                            <td className="cb-txt">{it.ai.report || "—"}</td>
-                            <td className="cb-txt">
-                              {it.ai.actions && it.ai.actions.length ? (
-                                <ol>
-                                  {it.ai.actions.map((a, i) => (
-                                    <li key={i}>{a}</li>
-                                  ))}
-                                </ol>
-                              ) : (
-                                "—"
-                              )}
-                            </td>
-                            <td className="gl">{money(it.m.spend30)}</td>
-                            <td>{it.m.clicks30}</td>
-                            <td>{it.m.ctr == null ? "—" : `${(it.m.ctr * 100).toFixed(1)}%`}</td>
-                            <td>{it.m.orders30}</td>
-                            <td>{roasCell(it.m.roas30)}</td>
-                            <td className="gl">
-                              {it.listing.price == null ? "—" : `${shopSym}${Number(it.listing.price).toFixed(2)}`}
-                              {it.listing.compareAt ? <span style={{ color: "var(--muted)" }}> / {shopSym}{Number(it.listing.compareAt).toFixed(2)}</span> : null}
-                            </td>
-                            <td>{it.listing.images ?? "—"}</td>
-                            <td title={(it.listing.soldOutNames || []).join(", ")} style={{ color: it.listing.soldOut ? "var(--warn)" : undefined }}>
-                              {it.listing.soldOut || 0}/{it.listing.variants ?? "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {(bRun.waiting.length > 0 || bRun.boosted.length > 0 || bRun.overflow.length > 0) && (
-                    <details className="cb-skip">
-                      <summary>
-                        Niet beoordeeld: {bRun.waiting.length} afwachten (minder dan {cvr.minClicks} klikken){bRun.boosted.length ? ` · ${bRun.boosted.length} al geboost` : ""}{bRun.overflow.length ? ` · ${bRun.overflow.length} boven het maximum van ${bRun.settings.maxPerRun}` : ""}
-                      </summary>
-                      <ul>
-                        {bRun.waiting.slice(0, 40).map((w) => (
-                          <li key={w.productId}>{w.title} — {w.advies}, {w.clicks} klikken, {money(w.spend)}</li>
-                        ))}
-                        {bRun.boosted.map((w) => (
-                          <li key={w.productId}>{w.title} — {w.reason}</li>
-                        ))}
-                        {bRun.overflow.slice(0, 40).map((w) => (
-                          <li key={w.productId}>{w.title} — {w.advies}, {money(w.spend)} (volgende run)</li>
-                        ))}
-                      </ul>
-                    </details>
-                  )}
-                  <div className="hint">
-                    Stap 2 schrijft het blad "{bTab || bRun.tabSuggestion}" in de sheet van stap 4 (kleur per verdict, met foto, verslag en acties), zet elke rij in het blad "CVR Log" en kopieert de tekst voor
-                    Claude. Plak die in de chat, of zeg daar "doe {bTab || bRun.tabSuggestion} van {result.store.name || result.store.domain}". Is Claude klaar → hieronder <b>Klaar</b>: blad verborgen, boost-venster van {cvr.windowDays} dagen start.
-                  </div>
-                </>
-              )}
-
-              <h2 style={{ marginTop: 18 }}>
-                Lopende boosts <span className="opt">{activeRuns.length ? `· ${activeRuns.length}` : "· geen"}</span>
-              </h2>
-              {activeRuns.length === 0 && doneRuns.length === 0 && <div className="hint" style={{ marginTop: 0 }}>Nog geen boosts voor deze store.</div>}
-              <div className="cb-runs">
-                {activeRuns.map((r) => (
-                  <div className="cb-run" key={r.tab + (r.createdAt || "")}>
-                    <div>
-                      <b>{r.tab}</b> · {r.products} product{r.products === 1 ? "" : "en"} ·{" "}
-                      {r.status === "open" ? (
-                        <span style={{ color: BOOST_TONE }}>open — wacht op Claude{r.createdAt ? ` (sinds ${ddmm(r.createdAt)})` : ""}</span>
-                      ) : (
-                        <span style={{ color: "var(--ok)" }}>klaar op {ddmm(r.doneAt)} · venster dag {r.day}/{r.windowDays}</span>
-                      )}
-                      {r.hidden ? " · blad verborgen" : ""}
-                    </div>
-                    <div className="acts">
-                      {r.url && (
-                        <a className="linklike" href={r.url} target="_blank" rel="noreferrer noopener">
-                          Blad ↗
-                        </a>
-                      )}
-                      {r.status === "open" ? (
-                        <button className="btn btn-small" type="button" disabled={!!busy} onClick={() => boosterDone(r)}>
-                          Klaar → blad verbergen
-                        </button>
-                      ) : (
-                        <>
-                          <button className="btn-ghost btn-small" type="button" disabled={!!busy} onClick={() => boosterShow(r, !r.hidden)}>
-                            {r.hidden ? "Toon blad" : "Verberg blad"}
-                          </button>
-                          <button className="btn-ghost btn-small" type="button" disabled={!!busy} onClick={() => boosterReopen(r)}>
-                            Heropen
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {doneRuns.length > 0 && (
-                <details className="cb-skip">
-                  <summary>Afgeronde boosts: {doneRuns.length}</summary>
-                  <div className="cb-runs">
-                    {doneRuns.map((r) => (
-                      <div className="cb-run" key={r.tab + (r.createdAt || "")}>
-                        <div>
-                          <b>{r.tab}</b> · {r.products} product{r.products === 1 ? "" : "en"} · klaar op {ddmm(r.doneAt)} ·{" "}
-                          {Object.keys(r.effects || {}).length ? Object.entries(r.effects).map(([k, v]) => `${k} ${v}`).join(" · ") : "effect nog niet gemeten (volgende Pythago-run)"}
-                          {r.hidden ? " · blad verborgen" : ""}
-                        </div>
-                        <div className="acts">
-                          {r.url && (
-                            <a className="linklike" href={r.url} target="_blank" rel="noreferrer noopener">
-                              Blad ↗
-                            </a>
-                          )}
-                          <button className="btn-ghost btn-small" type="button" disabled={!!busy} onClick={() => boosterShow(r, !r.hidden)}>
-                            {r.hidden ? "Toon blad" : "Verberg blad"}
-                          </button>
-                          <button className="btn-ghost btn-small" type="button" disabled={!!busy} onClick={() => boosterReopen(r)}>
-                            Heropen
-                          </button>
-                        </div>
-                      </div>
+                  <div className="pyd-vt">
+                    {[["Varianten", modal.row.vcount], ["Spend", fmtMoney(t.spend, adsCur)], ["Google conv.", fmtNum(t.conv, 1)], ["Stuks", `${fmtNum(t.units)}${t.refundUnits ? ` (-${t.refundUnits})` : ""}`], ["Omzet (netto)", fmtMoney(t.net, adsCur)], ["ROAS", t.roas == null ? "—" : t.roas.toFixed(2)]].map(([k, v]) => (
+                      <div className="pyd-tile" key={k}><div className="v" style={{ fontSize: 17 }}>{v}</div><div className="k">{k}</div></div>
                     ))}
                   </div>
-                </details>
-              )}
-            </div>
-          )}
+                  {V === null && <div className="pyd-empty">Laden…</div>}
+                  {modal.error && <div className="pyd-err">{modal.error}</div>}
+                  {V && (
+                    <div className="pyd-wrap" style={{ maxHeight: "55vh" }}>
+                      <table className="pyd-table">
+                        <thead>
+                          <tr>
+                            <th className="l">Variant</th><th>Prijs</th><th>Spend</th><th>Vertoningen</th><th>Klikken</th><th>G-conv.</th><th>Stuks</th><th>Omzet</th><th>Refunds</th><th>Netto</th><th>CTR</th><th>CPC</th><th>ROAS</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[...V].sort((a, b) => b.per[w].spend - a.per[w].spend || b.per[w].net - a.per[w].net).map((v) => {
+                            const p = v.per[w];
+                            const cls = p.roas == null ? "rn" : p.roas <= 0 ? "r0" : p.roas < be ? "r1" : "r2";
+                            return (
+                              <tr key={v.id}>
+                                <td className="l" style={{ whiteSpace: "normal", color: "var(--ink)" }}>
+                                  {v.title}{v.soldOut ? <span className="pyd-sub pyd-neg">uitverkocht</span> : null}
+                                  {v.sku ? <span className="pyd-sub">SKU {v.sku}</span> : null}
+                                  {v.item ? <span className="pyd-sub" style={{ fontFamily: "ui-monospace, monospace" }}>{v.item}</span> : null}
+                                </td>
+                                <td>{v.price ? fmtMoney(v.price, shopCur) : "—"}</td>
+                                <td>{fmtMoney(p.spend, adsCur)}</td>
+                                <td>{fmtNum(p.impr)}</td>
+                                <td>{fmtNum(p.clicks)}</td>
+                                <td>{fmtNum(p.conv, p.conv % 1 ? 1 : 0)}</td>
+                                <td>{fmtNum(p.units)}{p.refundUnits ? <span className="pyd-sub pyd-neg">(-{p.refundUnits})</span> : null}</td>
+                                <td>{fmtMoney(p.rev, adsCur)}</td>
+                                <td>{p.refunds ? <span className="pyd-neg">-{fmtMoney(p.refunds, adsCur)}</span> : "—"}</td>
+                                <td>{fmtMoney(p.net, adsCur)}</td>
+                                <td>{p.ctr == null ? "—" : fmtPct(p.ctr)}</td>
+                                <td>{p.cpc == null ? "—" : fmtMoney(p.cpc, adsCur)}</td>
+                                <td><span className={`pyd-roas ${cls}`}>{p.roas == null ? "—" : p.roas.toFixed(2)}</span></td>
+                              </tr>
+                            );
+                          })}
+                          {!V.length && <tr><td colSpan={13} className="pyd-empty">Geen varianten gevonden — sync opnieuw.</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- instellingen ---------- */
+function SettingsModal({ settings, storeKey, adsSheet, ordersKeys, store, onClose, onSave }) {
+  const [s, setS] = useState({ ...settings });
+  const [k, setK] = useState(storeKey);
+  const [sh, setSh] = useState(adsSheet);
+  const set = (key, v) => setS((x) => ({ ...x, [key]: v }));
+  const numS = (key) => ({ type: "number", value: s[key] ?? "", onChange: (e) => set(key, e.target.value === "" ? "" : Number(e.target.value)) });
+  return (
+    <div className="pyd-modal" onClick={onClose}>
+      <div className="pyd-box md" onClick={(e) => e.stopPropagation()}>
+        <div className="pyd-box__head">
+          <div><h3>Instellingen · {store.name || store.domain}</h3><div className="sub">Per store onthouden. Regels voor het advies + waar de Ads-cijfers vandaan komen.</div></div>
+          <button className="x" onClick={onClose}>×</button>
+        </div>
+        <div className="fgrid">
+          <label><div className="field-label">Store-sleutel <span className="opt">tab Prod_&lt;sleutel&gt; / Ads_&lt;sleutel&gt;</span></div><input type="text" value={k} onChange={(e) => setK(e.target.value.toUpperCase().trim())} placeholder="SSB / LGB / EMC / SW" /></label>
+          <label><div className="field-label">Ads-valuta <span className="opt">van het Google Ads-account</span></div>
+            <select value={s.adsCurrency || "GBP"} onChange={(e) => set("adsCurrency", e.target.value)}>
+              {["GBP", "USD", "EUR", "AUD", "NZD", "CAD"].map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+          <label style={{ gridColumn: "1 / -1" }}><div className="field-label">Ads-sheet <span className="opt">"Attoh Ads Live" (zelfde als het omzet-dashboard)</span></div><input type="text" value={sh} onChange={(e) => setSh(e.target.value.trim())} /></label>
+          <label><div className="field-label">COGS %</div><input {...numS("cogsPct")} step="0.5" /></label>
+          <label><div className="field-label">Fees % <span className="opt">betaalkosten e.d.</span></div><input {...numS("feePct")} step="0.1" /></label>
+          <label><div className="field-label">Draft-drempel <span className="opt">spend in Ads-valuta</span></div><input {...numS("threshold")} step="1" /></label>
+          <label><div className="field-label">Regelvenster</div>
+            <select value={s.ruleWindow || 30} onChange={(e) => set("ruleWindow", Number(e.target.value))}>
+              {[7, 14, 30].map((w) => <option key={w} value={w}>{w} dagen</option>)}
+            </select>
+          </label>
+          <label><div className="field-label">Min. dagen live <span className="opt">jonger = Nieuw, nooit draften</span></div><input {...numS("minAge")} step="1" /></label>
+          <label><div className="field-label">Wisselkoers <span className="opt">leeg = automatisch</span></div><input type="number" step="0.0001" value={s.fxOverride ?? ""} onChange={(e) => set("fxOverride", e.target.value === "" ? "" : Number(e.target.value))} placeholder={`1 ${store.currency || "…"} = ? ${s.adsCurrency || "GBP"}`} /></label>
+        </div>
+        <div className={ordersKeys ? "pyd-ok" : "pyd-warn"} style={{ marginTop: 12 }}>
+          {ordersKeys ? "Orders + refunds via de Orders-app (Bills-pagina)." : "Geen Orders-app-sleutels voor deze store (Bills-pagina) — orders gaan via de Importer-koppeling; die moet read_orders hebben."}
+        </div>
+        <div className="pyd-box__foot">
+          <button className="btn-ghost" onClick={onClose}>Annuleren</button>
+          <button className="btn-ghost" onClick={() => onSave(s, k, sh, false)}>Opslaan</button>
+          <button className="btn" onClick={() => onSave(s, k, sh, true)}>Opslaan + opnieuw syncen</button>
+        </div>
       </div>
-    </>
+    </div>
+  );
+}
+
+/* ---------- filter opslaan ---------- */
+function PresetModal({ preset, onClose, onSave }) {
+  const [p, setP] = useState({ ...preset });
+  return (
+    <div className="pyd-modal" onClick={onClose}>
+      <div className="pyd-box sm" onClick={(e) => e.stopPropagation()}>
+        <div className="pyd-box__head">
+          <div><h3>{p.id ? "Filter bewerken" : "Filter opslaan"}</h3><div className="sub">De huidige filters, zoekterm en periode worden bewaard.</div></div>
+          <button className="x" onClick={onClose}>×</button>
+        </div>
+        <div className="fgrid">
+          <label style={{ gridColumn: "1 / -1" }}><div className="field-label">Naam</div><input type="text" value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} placeholder="bijv. Draften > £20 spend" autoFocus /></label>
+          <label><div className="field-label">Geldt voor</div>
+            <select value={p.scope || "store"} onChange={(e) => setP({ ...p, scope: e.target.value })}>
+              <option value="store">Alleen deze store</option>
+              <option value="all">Alle stores</option>
+            </select>
+          </label>
+          <div><div className="field-label">Kleur</div>
+            <div className="pyd-colors">
+              {PRESET_COLORS.map((c) => <button key={c} className={p.color === c ? "on" : ""} style={{ background: c }} onClick={() => setP({ ...p, color: c })} />)}
+            </div>
+          </div>
+        </div>
+        <div className="pyd-box__foot">
+          <button className="btn-ghost" onClick={onClose}>Annuleren</button>
+          <button className="btn" disabled={!p.name.trim()} onClick={() => onSave({ ...p, name: p.name.trim() })}>Opslaan</button>
+        </div>
+      </div>
+    </div>
   );
 }

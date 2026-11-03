@@ -1,5 +1,12 @@
 {
   "crons": [
-    { "path": "/api/reis/cron", "schedule": "0 6 * * *" }
+    {
+      "path": "/api/reis/cron",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/pythago/cron",
+      "schedule": "10 5 * * *"
+    }
   ]
 }
