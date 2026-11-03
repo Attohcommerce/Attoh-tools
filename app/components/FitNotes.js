@@ -188,7 +188,7 @@ export default function FitNotes({ store, scanKey }) {
         if (d.errors && d.errors.length) throw new Error(d.errors.join(" · "));
         n += d.updated || 0;
       }
-      setMsg(`✓ ${n} maattabellen staan nu op "Fits slightly snug — we recommend sizing up for a comfortable fit."`);
+      setMsg(`✓ ${n} maattabellen staan nu op "Runs snug — choose one size up for your desired fit."`);
       setSc(await call({ action: "sizecharts-scan", store: body }));
     } catch (e) {
       setErr(String(e.message || e));
@@ -239,7 +239,7 @@ export default function FitNotes({ store, scanKey }) {
           {sc && (
             <div className="cf-action" style={{ borderTop: 0, paddingTop: 0, marginTop: 4 }}>
               <span className="sd-muted" style={{ flex: 1 }}>
-                Maattabellen: <b>{sc.done}</b> van {sc.total - sc.shoes} op “Fits slightly snug — we recommend sizing up” · {sc.shoes} schoenen blijven true to size
+                Maattabellen: <b>{sc.done}</b> van {sc.total - sc.shoes} op “Runs snug — choose one size up for your desired fit” · {sc.shoes} schoenen blijven true to size
               </span>
               <button className="sd-btn sd-btn--small" onClick={sizeChartsSmall} disabled={!!busy || !sc.todo.length}>
                 {busy === "sc" ? "Bezig…" : sc.todo.length ? `Maattabellen: fits snug · ${sc.todo.length}` : "✓ alle maattabellen"}
