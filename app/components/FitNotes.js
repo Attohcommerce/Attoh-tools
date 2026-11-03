@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const CHUNK = 8;
 
-export const FIT_NOTE_LIQUID = `{%- comment -%} Fitnote — Attoh Tools / Store Doctor. Leest custom.model_height_cm + custom.model_size {%- endcomment -%}
+export const FIT_NOTE_LIQUID = `{%- comment -%} Fitnote — Attoh Tools / Store Doctor. Leest custom.model_height_cm + custom.model_size. Stijl: zelfde als de icoon-regels (verzending/retour) {%- endcomment -%}
 {%- assign fn_h = product.metafields.custom.model_height_cm.value -%}
 {%- assign fn_s = product.metafields.custom.model_size.value -%}
 {%- if fn_h != blank and fn_s != blank -%}
@@ -19,18 +19,12 @@ export const FIT_NOTE_LIQUID = `{%- comment -%} Fitnote — Attoh Tools / Store 
   {%- assign fn_ft = fn_in | divided_by: 12 -%}
   {%- assign fn_rest = fn_in | modulo: 12 -%}
   <div class="fit-note">
-    <svg class="fit-note__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2.2"/><path d="M8.5 21v-6.5H7.2l1.3-6.2h7l1.3 6.2h-1.3V21"/></svg>
-    <span>Model is
-      {%- if localization.country.iso_code == 'US' -%}
-        <strong> {{ fn_ft }}'{{ fn_rest }}"</strong> ({{ fn_h }} cm)
-      {%- else -%}
-        <strong> {{ fn_h }} cm</strong> ({{ fn_ft }}'{{ fn_rest }}")
-      {%- endif %} and wears size <strong>{{ fn_s }}</strong></span>
+    <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6 20V9M10 20v-6M14 20V9M18 20v-6"/><path d="M4 4h16"/></svg>
+    <span>Model is {% if localization.country.iso_code == 'US' %}{{ fn_ft }}'{{ fn_rest }}" ({{ fn_h }} cm){% else %}{{ fn_h }} cm ({{ fn_ft }}'{{ fn_rest }}"){% endif %} and wears size {{ fn_s }}</span>
   </div>
   <style>
-    .fit-note{display:flex;align-items:center;gap:.6em;margin:.9em 0;padding:.65em .95em;font-size:.88em;line-height:1.4;letter-spacing:.01em;color:inherit;border:1px solid color-mix(in srgb,currentColor 16%,transparent);border-radius:999px;background:color-mix(in srgb,currentColor 4%,transparent);width:fit-content;max-width:100%}
-    .fit-note__icon{flex:0 0 auto;opacity:.75}
-    .fit-note strong{font-weight:600}
+    .fit-note{display:flex;align-items:center;gap:10px;margin:2px 0 14px;font-size:inherit;line-height:1.5;color:inherit}
+    .fit-note svg{flex:0 0 auto;opacity:.85}
   </style>
 {%- endif -%}`;
 
@@ -51,6 +45,7 @@ export default function FitNotes({ store, scanKey }) {
   const [edit, setEdit] = useState({}); // bestaande fitnotes aanpassen: id → {height, size}
   const [msg, setMsg] = useState("");
   const [copied, setCopied] = useState(false);
+  const [sc, setSc] = useState(null); // maattabellen: {total, shoes, done, todo[]}
 
   const body = store
     ? { domain: store.domain, publicDomain: store.publicDomain, currency: store.currency, name: store.name, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret }
@@ -76,6 +71,9 @@ export default function FitNotes({ store, scanKey }) {
     setMsg("");
     try {
       setData(await call({ action: "scan", store: body }));
+      try {
+        setSc(await call({ action: "sizecharts-scan", store: body }));
+      } catch {}
     } catch (e) {
       setErr(String(e.message || e));
     } finally {
@@ -88,6 +86,7 @@ export default function FitNotes({ store, scanKey }) {
   }, [scanKey, store && store.domain]);
   useEffect(() => {
     setData(null);
+    setSc(null);
     setSugg({});
     setEdit({});
   }, [store && store.domain]);
@@ -176,6 +175,27 @@ export default function FitNotes({ store, scanKey }) {
     }
   }
 
+  async function sizeChartsSmall() {
+    if (!sc || !sc.todo.length) return;
+    setBusy("sc");
+    setErr("");
+    setMsg("");
+    try {
+      let n = 0;
+      for (let i = 0; i < sc.todo.length; i += 100) {
+        const d = await call({ action: "sizecharts-apply", store: body, ids: sc.todo.slice(i, i + 100) });
+        if (d.errors && d.errors.length) throw new Error(d.errors.join(" · "));
+        n += d.updated || 0;
+      }
+      setMsg(`✓ ${n} maattabellen staan nu op "Runs one size small — we recommend ordering one size up."`);
+      setSc(await call({ action: "sizecharts-scan", store: body }));
+    } catch (e) {
+      setErr(String(e.message || e));
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function copyLiquid() {
     try {
       await navigator.clipboard.writeText(FIT_NOTE_LIQUID);
@@ -214,6 +234,17 @@ export default function FitNotes({ store, scanKey }) {
             <div className="cf-tile"><b>{data.apparel}</b><span>kledingstukken</span></div>
             <div className="cf-tile"><b>{data.skipped}</b><span>overgeslagen (schoenen, tassen, accessoires)</span></div>
           </div>
+
+          {sc && (
+            <div className="cf-action" style={{ borderTop: 0, paddingTop: 0, marginTop: 4 }}>
+              <span className="sd-muted" style={{ flex: 1 }}>
+                Maattabellen: <b>{sc.done}</b> van {sc.total - sc.shoes} op “Runs one size small — we recommend ordering one size up” · {sc.shoes} schoenen blijven true to size
+              </span>
+              <button className="sd-btn sd-btn--small" onClick={sizeChartsSmall} disabled={!!busy || !sc.todo.length}>
+                {busy === "sc" ? "Bezig…" : sc.todo.length ? `Maattabellen: valt 1 maat klein · ${sc.todo.length}` : "✓ alle maattabellen"}
+              </button>
+            </div>
+          )}
 
           <div className="cf-action" style={{ borderTop: 0, paddingTop: 0 }}>
             <button className="sd-btn sd-btn--gold" onClick={analyze} disabled={!!busy || !todo.length}>
