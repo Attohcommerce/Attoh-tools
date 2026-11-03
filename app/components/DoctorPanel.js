@@ -23,6 +23,7 @@ import { mergePlanItems, groupCounts, planMatchesStore } from "@/lib/change-plan
 import { AI_EST, CUR_MARKET, aiEstimate, scanStore, runFixLoop, runAiLoop, fixAllStore, titleSex } from "@/lib/doctor-engine";
 import RunDashboard, { useRun, ScoreRing } from "./RunDashboard";
 import CollectionFill from "./CollectionFill";
+import FitNotes from "./FitNotes";
 
 const LS_BACKUP = "sa_doctor_backup";
 const LS_SCOPE = "sa_doctor_scope"; // "all" | "latest"
@@ -1235,6 +1236,7 @@ export default function DoctorPanel({ store, since }) {
       {/* 5b. COLLECTIES — overzicht + aanvullen (02-11). Alleen op de echte
           Store Doctor (niet in de importer-controles van een import-run). */}
       {!since && <CollectionFill store={store} scanKey={repAt ? repAt.getTime() : 0} />}
+      {!since && <FitNotes store={store} scanKey={repAt ? repAt.getTime() : 0} />}
 
       {/* 6. LOGBOEK PER FIX */}
       {fixLog.length > 0 && (
