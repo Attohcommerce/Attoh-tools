@@ -3919,3 +3919,47 @@ details.sd-card[open] > summary::before { transform: rotate(90deg); }
   .sd-hero__actions .sd-btn { flex: 1; }
   .sd-delta { grid-template-columns: 1fr; }
 }
+
+
+/* ===== Store Doctor · Collecties aanvullen (02-11-2026) ===== */
+.cf { margin-top: 0; }
+.cf-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cf-empty { margin-top: 10px; font-size: 13px; }
+.cf-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 14px 0 10px; }
+.cf-tile { border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; background: rgba(255,255,255,.02); display: flex; flex-direction: column; gap: 2px; }
+.cf-tile b { font-size: 20px; font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cf-tile span { font-size: 11.5px; color: var(--muted); }
+.cf-tile--err b { color: var(--err); }
+.cf-tile--warn b { color: var(--warn); }
+.cf-tile--ok b { color: var(--ok); }
+.cf-links { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.cf-links a { color: inherit; text-decoration: none; }
+.cf-toggle { margin-left: auto; font-size: 12px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.cf-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 14px; }
+.cf-row { display: grid; grid-template-columns: 18px minmax(0, 1fr) 90px 34px 62px; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--ink-2); border: 1px solid transparent; }
+.cf-row:hover { background: rgba(255,255,255,.035); }
+.cf-row.is-on { background: var(--accent-dim); border-color: rgba(201,162,39,.35); color: var(--ink); }
+.cf-row.is-off { opacity: .5; cursor: default; }
+.cf-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cf-dup { font-style: normal; font-size: 10.5px; color: var(--warn); margin-left: 6px; }
+.cf-bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; }
+.cf-bar i { display: block; height: 100%; border-radius: 99px; background: var(--ok); }
+.cf-row--te-leeg .cf-bar i { background: var(--err); }
+.cf-row--bijna .cf-bar i { background: var(--warn); }
+.cf-row--hoofd .cf-bar i { background: var(--muted); }
+.cf-num { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+.cf-gap { text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--muted); }
+.cf-row--te-leeg .cf-gap { color: var(--err); font-weight: 600; }
+.cf-row--bijna .cf-gap { color: var(--warn); }
+.cf-action { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.cf-tabname { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 220px; font-size: 12px; }
+.cf-tabname input { width: 100%; }
+.cf-result { margin-top: 14px; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(62,207,142,.3); background: var(--ok-dim); }
+.cf-result__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13px; font-weight: 600; }
+.cf-next { font-size: 12.5px; margin-top: 6px; }
+.cf-plan { margin-top: 10px; display: grid; gap: 8px; }
+.cf-plan__title { font-size: 13px; color: var(--ink); margin-bottom: 4px; }
+.cf-plan__kws { display: flex; flex-wrap: wrap; gap: 4px; }
+.cf-plan__kws .sd-chip { margin-right: 0; }
+.cf-plan__note { font-size: 12px; }
+@media (max-width: 860px) { .cf-list { grid-template-columns: 1fr; } .cf-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
