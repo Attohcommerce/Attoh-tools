@@ -14,7 +14,7 @@ export async function POST(req) {
     if (action === "scan") return NextResponse.json(await scanCollections(body.store, body.target));
     if (action === "plan") {
       return NextResponse.json(
-        await planFill({ store: body.store, ordersStore: body.ordersStore, collections: body.collections, target: body.target, researchOnly: body.researchOnly !== false })
+        await planFill({ store: body.store, ordersStore: body.ordersStore, collections: body.collections, target: body.target, researchOnly: body.researchOnly === true })
       );
     }
     if (action === "write") return NextResponse.json(await writeFillTab({ plan: body.plan, tab: body.tab }));

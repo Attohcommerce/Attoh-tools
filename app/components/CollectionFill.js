@@ -12,7 +12,7 @@ import { orgLS } from "@/lib/org-client";
 
 const LS_ORDERS_APP = "sa_orders_app::";
 const LS_TARGET = "sa_cf_target::"; // doel per collectie, per store
-const LS_RESEARCH = "sa_cf_research::"; // alleen keyword research, per store
+const LS_SALES = "sa_cf_sales::"; // verkoopdata (top performers) meenemen, per store
 const DEFAULT_TARGET = 20;
 const lsGet = (k) => {
   try {
@@ -41,23 +41,23 @@ export default function CollectionFill({ store, scanKey }) {
   const [result, setResult] = useState(null);
   const [showOk, setShowOk] = useState(false);
   const [target, setTarget] = useState(DEFAULT_TARGET);
-  const [researchOnly, setResearchOnly] = useState(true);
+  const [useSales, setUseSales] = useState(true);
 
   // per store onthouden: doel per collectie + alleen keyword research
   useEffect(() => {
     if (!store) return;
     const t = Number(lsGet(LS_TARGET + store.domain));
     setTarget(t >= 5 && t <= 150 ? t : DEFAULT_TARGET);
-    setResearchOnly(lsGet(LS_RESEARCH + store.domain) !== "0");
+    setUseSales(lsGet(LS_SALES + store.domain) !== "0");
   }, [store && store.domain]);
   function changeTarget(v) {
     const t = Math.min(150, Math.max(5, Math.round(Number(v) || DEFAULT_TARGET)));
     setTarget(t);
     if (store) lsSet(LS_TARGET + store.domain, t);
   }
-  function changeResearch(v) {
-    setResearchOnly(v);
-    if (store) lsSet(LS_RESEARCH + store.domain, v ? "1" : "0");
+  function changeSales(v) {
+    setUseSales(v);
+    if (store) lsSet(LS_SALES + store.domain, v ? "1" : "0");
   }
   const minOf = (t) => Math.round(t * 0.75);
 
@@ -140,7 +140,7 @@ export default function CollectionFill({ store, scanKey }) {
     setResult(null);
     try {
       let ordersStore = null;
-      if (!researchOnly) try {
+      if (useSales) try {
         const keys = JSON.parse(orgLS.getItem(LS_ORDERS_APP + store.domain) || "null");
         if (keys && keys.clientId && keys.clientSecret) ordersStore = { domain: store.domain, clientId: keys.clientId, clientSecret: keys.clientSecret };
       } catch {}
@@ -150,7 +150,7 @@ export default function CollectionFill({ store, scanKey }) {
         ordersStore,
         collections: chosen.map((c) => ({ id: c.id, title: c.title })),
         target,
-        researchOnly,
+        researchOnly: !useSales,
       });
       const w = await call({ action: "write", plan, tab: tab.trim() });
       setResult({ plan, write: w });
@@ -194,7 +194,7 @@ export default function CollectionFill({ store, scanKey }) {
             </span>
             <span className="sd-pill sd-pill--ok">All-batch keywords {mem.market || ""}</span>
             <label className="cf-toggle">
-              <input type="checkbox" checked={researchOnly} onChange={(e) => changeResearch(e.target.checked)} /> alleen keyword research
+              <input type="checkbox" checked={useSales} onChange={(e) => changeSales(e.target.checked)} /> top performers meenemen (orders 60 d)
             </label>
             <label className="cf-toggle">
               <input type="checkbox" checked={showOk} onChange={(e) => setShowOk(e.target.checked)} /> ook volle collecties tonen
@@ -254,6 +254,16 @@ export default function CollectionFill({ store, scanKey }) {
           <div className="sd-muted cf-next">
             Volgende stap: Scraper → bron TPK-sheet → blad "{result.write.tab}" → scrapen. Kolom O geeft daarna het foto-cijfer.
           </div>
+          {result.plan.topPerformers && result.plan.topPerformers.length > 0 && (
+            <div className="cf-top">
+              <span className="sd-muted">Top performers (60 d) — gebruikt in het plan:</span>
+              {result.plan.topPerformers.map((t) => (
+                <span key={t.kw} className="sd-chip sd-chip--ok">
+                  {t.kw} · {t.orders}
+                </span>
+              ))}
+            </div>
+          )}
           {(result.plan.warnings || []).map((w, i) => (
             <div key={i} className="sd-note">{w}</div>
           ))}
@@ -265,7 +275,7 @@ export default function CollectionFill({ store, scanKey }) {
                 </div>
                 <div className="cf-plan__kws">
                   {p.rows.map((r) => (
-                    <span key={r.zoekterm} className={`sd-chip${r.src === "Verkocht" ? " sd-chip--ok" : ""}`} title={r.src === "Verkocht" ? `${r.orders} orders in 60 d` : `zoekvolume ${r.vol}`}>
+                    <span key={r.zoekterm} className={`sd-chip${r.src === "Verkocht" ? " sd-chip--ok" : r.top ? " sd-chip--gold" : ""}`} title={r.src === "Verkocht" ? `top performer · ${r.orders} orders in 60 d` : `zoekvolume ${r.vol}${r.top ? ` · bouwt op top performer "${r.top}" (${r.topOrders} orders)` : ""}`}>
                       {r.zoekterm} · {r.n}
                     </span>
                   ))}
