@@ -29,27 +29,42 @@ function main() {
   var naam = 'Prod_' + STORE;
   var tab = ss.getSheetByName(naam) || ss.insertSheet(naam);
   var kop = ['date', 'item_id', 'title', 'impressions', 'clicks', 'cost', 'conversions', 'conv_value', 'updated_at'];
-  var DAGEN_NU = tab.getLastRow() > 1 ? DAGEN : EERSTE_RUN_DAGEN;
+  var dagStr = function (d) { return Utilities.formatDate(d, tz, 'yyyy-MM-dd'); };
+  var tot = dagStr(nu);
+  var grens = dagStr(new Date(nu.getTime() - BEWAAR_DAGEN * 86400000));
+
+  // bestaande rijen lezen; onthoud de laatste datum die al in de tab staat
+  var oud = tab.getLastRow() > 1 ? tab.getRange(2, 1, tab.getLastRow() - 1, kop.length).getValues() : [];
+  var laatste = '';
+  for (var i0 = 0; i0 < oud.length; i0++) {
+    var d0 = oud[i0][0];
+    var iso0 = (d0 instanceof Date) ? dagStr(d0) : String(d0).slice(0, 10);
+    oud[i0][0] = iso0;
+    if (iso0 > laatste) laatste = iso0;
+  }
+
+  // hoeveel dagen terug ophalen: normaal DAGEN; lege tab → EERSTE_RUN_DAGEN;
+  // zit er een gat (script stond stil of de tab is incompleet) → vanaf de laatste
+  // aanwezige datum, tot maximaal EERSTE_RUN_DAGEN terug
+  var DAGEN_NU = oud.length ? DAGEN : EERSTE_RUN_DAGEN;
+  if (oud.length && laatste) {
+    var gat = Math.round((nu.getTime() - new Date(laatste + 'T12:00:00Z').getTime()) / 86400000) + 1;
+    if (gat > DAGEN_NU) DAGEN_NU = Math.min(EERSTE_RUN_DAGEN, gat);
+  }
 
   var dagen = {};
   for (var k = 0; k < DAGEN_NU; k++) {
-    dagen[Utilities.formatDate(new Date(nu.getTime() - k * 86400000), tz, 'yyyy-MM-dd')] = true;
+    dagen[dagStr(new Date(nu.getTime() - k * 86400000))] = true;
   }
-  var grens = Utilities.formatDate(new Date(nu.getTime() - BEWAAR_DAGEN * 86400000), tz, 'yyyy-MM-dd');
+  var van = dagStr(new Date(nu.getTime() - (DAGEN_NU - 1) * 86400000));
 
   // bestaande rijen bewaren, behalve de dagen die we nu opnieuw schrijven en wat te oud is
-  var oud = tab.getLastRow() > 1 ? tab.getRange(2, 1, tab.getLastRow() - 1, kop.length).getValues() : [];
   var bewaar = [];
   for (var i = 0; i < oud.length; i++) {
-    var d = oud[i][0];
-    var iso = (d instanceof Date) ? Utilities.formatDate(d, tz, 'yyyy-MM-dd') : String(d).slice(0, 10);
+    var iso = oud[i][0];
     if (!iso || dagen[iso] || iso < grens) continue;
-    oud[i][0] = iso;
     bewaar.push(oud[i]);
   }
-
-  var van = Utilities.formatDate(new Date(nu.getTime() - (DAGEN_NU - 1) * 86400000), tz, 'yyyy-MM-dd');
-  var tot = Utilities.formatDate(nu, tz, 'yyyy-MM-dd');
   var rows = AdsApp.report(
     'SELECT segments.date, segments.product_item_id, segments.product_title, ' +
     'metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions, metrics.conversions_value ' +
@@ -88,17 +103,38 @@ function main() {
   }
   var alles = bewaar.concat(nieuw);
   alles.sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; });
+  for (var u = 0; u < alles.length; u++) {
+    var ua = alles[u][8];
+    if (ua instanceof Date) alles[u][8] = Utilities.formatDate(ua, tz, 'yyyy-MM-dd HH:mm');
+  }
 
-  tab.clearContents();
-  tab.getRange('A:A').setNumberFormat('@');
-  tab.getRange('B:B').setNumberFormat('@');
-  tab.getRange(1, 1, 1, kop.length).setValues([kop]);
-  if (alles.length) {
-    var blok = 20000;
+  // Veilig schrijven: eerst alles in een tijdelijke tab, dan omwisselen. Zo blijft
+  // de oude tab heel als het schrijven halverwege misgaat (anders: halve data).
+  var tmpNaam = naam + '_tmp';
+  var tmp = ss.getSheetByName(tmpNaam);
+  if (tmp) ss.deleteSheet(tmp);
+  tmp = ss.insertSheet(tmpNaam);
+  try {
+    if (tmp.getMaxColumns() > kop.length) tmp.deleteColumns(kop.length + 1, tmp.getMaxColumns() - kop.length);
+    var nodig = alles.length + 1;
+    if (tmp.getMaxRows() < nodig) tmp.insertRowsAfter(tmp.getMaxRows(), nodig - tmp.getMaxRows());
+    else if (tmp.getMaxRows() > nodig + 1) tmp.deleteRows(nodig + 1, tmp.getMaxRows() - nodig - 1);
+    tmp.getRange('A:B').setNumberFormat('@');
+    tmp.getRange('I:I').setNumberFormat('@');
+    tmp.getRange(1, 1, 1, kop.length).setValues([kop]);
+    var blok = 10000;
     for (var s = 0; s < alles.length; s += blok) {
       var deel = alles.slice(s, s + blok);
-      tab.getRange(2 + s, 1, deel.length, kop.length).setValues(deel);
+      tmp.getRange(2 + s, 1, deel.length, kop.length).setValues(deel);
+      SpreadsheetApp.flush();
     }
+    if (tmp.getLastRow() !== nodig) throw new Error('Niet alles geschreven: ' + (tmp.getLastRow() - 1) + ' van ' + alles.length + ' rijen');
+  } catch (e) {
+    // mislukt → tijdelijke tab weg, oude tab blijft onaangeroerd
+    ss.deleteSheet(tmp);
+    throw e;
   }
+  ss.deleteSheet(tab);
+  tmp.setName(naam);
   Logger.log(STORE + ' producten: ' + nieuw.length + ' rijen voor ' + van + ' t/m ' + tot + ' · totaal ' + alles.length + ' rijen in ' + naam);
 }
