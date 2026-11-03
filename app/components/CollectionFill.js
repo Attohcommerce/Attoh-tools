@@ -11,6 +11,21 @@ import { useEffect, useMemo, useState } from "react";
 import { orgLS } from "@/lib/org-client";
 
 const LS_ORDERS_APP = "sa_orders_app::";
+const LS_TARGET = "sa_cf_target::"; // doel per collectie, per store
+const LS_RESEARCH = "sa_cf_research::"; // alleen keyword research, per store
+const DEFAULT_TARGET = 20;
+const lsGet = (k) => {
+  try {
+    return orgLS.getItem(k);
+  } catch {
+    return null;
+  }
+};
+const lsSet = (k, v) => {
+  try {
+    orgLS.setItem(k, String(v));
+  } catch {}
+};
 
 function todayTab() {
   const d = new Date();
@@ -25,6 +40,26 @@ export default function CollectionFill({ store, scanKey }) {
   const [tab, setTab] = useState(todayTab());
   const [result, setResult] = useState(null);
   const [showOk, setShowOk] = useState(false);
+  const [target, setTarget] = useState(DEFAULT_TARGET);
+  const [researchOnly, setResearchOnly] = useState(true);
+
+  // per store onthouden: doel per collectie + alleen keyword research
+  useEffect(() => {
+    if (!store) return;
+    const t = Number(lsGet(LS_TARGET + store.domain));
+    setTarget(t >= 5 && t <= 150 ? t : DEFAULT_TARGET);
+    setResearchOnly(lsGet(LS_RESEARCH + store.domain) !== "0");
+  }, [store && store.domain]);
+  function changeTarget(v) {
+    const t = Math.min(150, Math.max(5, Math.round(Number(v) || DEFAULT_TARGET)));
+    setTarget(t);
+    if (store) lsSet(LS_TARGET + store.domain, t);
+  }
+  function changeResearch(v) {
+    setResearchOnly(v);
+    if (store) lsSet(LS_RESEARCH + store.domain, v ? "1" : "0");
+  }
+  const minOf = (t) => Math.round(t * 0.75);
 
   const body = store
     ? { domain: store.domain, publicDomain: store.publicDomain, currency: store.currency, name: store.name, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret }
@@ -49,11 +84,8 @@ export default function CollectionFill({ store, scanKey }) {
     setErr("");
     setResult(null);
     try {
-      const d = await call({ action: "scan", store: body });
+      const d = await call({ action: "scan", store: body, target });
       setData(d);
-      const pre = {};
-      for (const c of d.collections) if (!c.generic && !c.duplicateOf && c.status === "te-leeg") pre[c.id] = true;
-      setSel(pre);
     } catch (e) {
       setErr(String(e.message || e));
     } finally {
@@ -67,9 +99,27 @@ export default function CollectionFill({ store, scanKey }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scanKey, store && store.domain]);
 
-  const rows = data ? data.collections : [];
+  // status + tekort live herberekenen als het doel verandert (geen nieuwe scan nodig)
+  const min = minOf(target);
+  const rows = useMemo(
+    () =>
+      (data ? data.collections : []).map((c) =>
+        c.generic
+          ? c
+          : { ...c, status: c.active < min ? "te-leeg" : c.active < target ? "bijna" : "ok", gap: Math.max(0, target - c.active) }
+      ),
+    [data, target, min]
+  );
+  // voorselectie: alles onder het doel, geen hoofd- of dubbele collectie
+  useEffect(() => {
+    if (!data) return;
+    const pre = {};
+    for (const c of rows) if (!c.generic && !c.duplicateOf && c.gap > 0) pre[c.id] = true;
+    setSel(pre);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, target]);
   const visible = useMemo(() => rows.filter((c) => showOk || c.status !== "ok" || sel[c.id]), [rows, showOk, sel]);
-  const chosen = rows.filter((c) => sel[c.id]);
+  const chosen = rows.filter((c) => sel[c.id] && c.gap > 0);
   const chosenGap = chosen.reduce((s, c) => s + c.gap, 0);
   const counts = useMemo(() => {
     const k = { teLeeg: 0, bijna: 0, ok: 0, gap: 0 };
@@ -90,7 +140,7 @@ export default function CollectionFill({ store, scanKey }) {
     setResult(null);
     try {
       let ordersStore = null;
-      try {
+      if (!researchOnly) try {
         const keys = JSON.parse(orgLS.getItem(LS_ORDERS_APP + store.domain) || "null");
         if (keys && keys.clientId && keys.clientSecret) ordersStore = { domain: store.domain, clientId: keys.clientId, clientSecret: keys.clientSecret };
       } catch {}
@@ -99,7 +149,8 @@ export default function CollectionFill({ store, scanKey }) {
         store: body,
         ordersStore,
         collections: chosen.map((c) => ({ id: c.id, title: c.title })),
-        target: data.target,
+        target,
+        researchOnly,
       });
       const w = await call({ action: "write", plan, tab: tab.trim() });
       setResult({ plan, write: w });
@@ -117,7 +168,7 @@ export default function CollectionFill({ store, scanKey }) {
     <div className="sd-card cf">
       <div className="cf-head">
         <div className="sd-card__title" style={{ marginBottom: 0 }}>
-          Collecties <span className="sd-muted">doel {data ? data.target : 40} per collectie · minimaal {data ? data.min : 30}</span>
+          Collecties <span className="sd-muted">doel {target} per collectie · te leeg onder {min}</span>
         </div>
         <button className="sd-btn sd-btn--small" onClick={scan} disabled={!!busy}>
           {busy === "scan" ? "Scannen…" : data ? "Opnieuw scannen" : "Collecties scannen"}
@@ -130,8 +181,8 @@ export default function CollectionFill({ store, scanKey }) {
       {data && (
         <>
           <div className="cf-tiles">
-            <div className="cf-tile cf-tile--err"><b>{counts.teLeeg}</b><span>te leeg (&lt; {data.min})</span></div>
-            <div className="cf-tile cf-tile--warn"><b>{counts.bijna}</b><span>bijna ({data.min}–{data.target - 1})</span></div>
+            <div className="cf-tile cf-tile--err"><b>{counts.teLeeg}</b><span>te leeg (&lt; {min})</span></div>
+            <div className="cf-tile cf-tile--warn"><b>{counts.bijna}</b><span>bijna ({min}–{target - 1})</span></div>
             <div className="cf-tile cf-tile--ok"><b>{counts.ok}</b><span>op doel</span></div>
             <div className="cf-tile"><b>{counts.gap}</b><span>producten tekort</span></div>
           </div>
@@ -143,13 +194,16 @@ export default function CollectionFill({ store, scanKey }) {
             </span>
             <span className="sd-pill sd-pill--ok">All-batch keywords {mem.market || ""}</span>
             <label className="cf-toggle">
+              <input type="checkbox" checked={researchOnly} onChange={(e) => changeResearch(e.target.checked)} /> alleen keyword research
+            </label>
+            <label className="cf-toggle">
               <input type="checkbox" checked={showOk} onChange={(e) => setShowOk(e.target.checked)} /> ook volle collecties tonen
             </label>
           </div>
 
           <div className="cf-list">
             {visible.map((c) => {
-              const pct = Math.min(100, Math.round((c.active / data.target) * 100));
+              const pct = Math.min(100, Math.round((c.active / target) * 100));
               const disabled = c.generic;
               return (
                 <label key={c.id} className={`cf-row cf-row--${c.status}${sel[c.id] ? " is-on" : ""}${disabled ? " is-off" : ""}`}>
@@ -173,6 +227,10 @@ export default function CollectionFill({ store, scanKey }) {
           </div>
 
           <div className="cf-action">
+            <div className="cf-tabname cf-target">
+              <span className="sd-muted">Producten per collectie</span>
+              <input type="number" min={5} max={150} step={5} value={target} onChange={(e) => changeTarget(e.target.value)} />
+            </div>
             <div className="cf-tabname">
               <span className="sd-muted">Bladnaam in de TPK-sheet</span>
               <input type="text" value={tab} onChange={(e) => setTab(e.target.value)} />

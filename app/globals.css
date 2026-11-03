@@ -3954,6 +3954,7 @@ details.sd-card[open] > summary::before { transform: rotate(90deg); }
 .cf-action { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .cf-tabname { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 220px; font-size: 12px; }
 .cf-tabname input { width: 100%; }
+.cf-target { flex: 0 0 150px; min-width: 150px; }
 .cf-result { margin-top: 14px; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(62,207,142,.3); background: var(--ok-dim); }
 .cf-result__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13px; font-weight: 600; }
 .cf-next { font-size: 12.5px; margin-top: 6px; }

@@ -11,10 +11,10 @@ export async function POST(req) {
   const body = await req.json().catch(() => ({}));
   const action = String(body.action || "");
   try {
-    if (action === "scan") return NextResponse.json(await scanCollections(body.store));
+    if (action === "scan") return NextResponse.json(await scanCollections(body.store, body.target));
     if (action === "plan") {
       return NextResponse.json(
-        await planFill({ store: body.store, ordersStore: body.ordersStore, collections: body.collections, target: body.target })
+        await planFill({ store: body.store, ordersStore: body.ordersStore, collections: body.collections, target: body.target, researchOnly: body.researchOnly !== false })
       );
     }
     if (action === "write") return NextResponse.json(await writeFillTab({ plan: body.plan, tab: body.tab }));
