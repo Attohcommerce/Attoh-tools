@@ -12,13 +12,13 @@
  * conv_value, updated_at. Alleen items met vertoningen. Bij elke run worden de
  * laatste DAGEN dagen opnieuw geschreven (gisteren/eergisteren veranderen nog
  * door late conversies); rijen ouder dan BEWAAR_DAGEN gaan eruit.
- * Eerste keer: DAGEN op 35 zetten en één keer draaien (vult 35 dagen), daarna
- * weer op 3.
+ * Eerste run (tab nog leeg) haalt vanzelf EERSTE_RUN_DAGEN dagen geschiedenis op.
  */
-var SHEET_ID = 'PLAK_HIER_HET_SHEET_ID';
-var STORE = 'SSB';
-var DAGEN = 3;          // eenmalig 35 → daarna 3
-var BEWAAR_DAGEN = 40;  // ouder dan dit wordt opgeruimd
+var SHEET_ID = '1xac7M4--kCb2DKShQy7s2A13sgfl4NxW8CXbLGW4H8o'; // Attoh Ads Live
+var STORE = 'SSB';          // SSB · LGB · EMC · SW
+var DAGEN = 3;              // normale run: laatste 3 dagen opnieuw
+var EERSTE_RUN_DAGEN = 35;  // tab nog leeg → 35 dagen geschiedenis
+var BEWAAR_DAGEN = 40;      // ouder dan dit wordt opgeruimd
 
 function main() {
   var acc = AdsApp.currentAccount();
@@ -29,9 +29,10 @@ function main() {
   var naam = 'Prod_' + STORE;
   var tab = ss.getSheetByName(naam) || ss.insertSheet(naam);
   var kop = ['date', 'item_id', 'title', 'impressions', 'clicks', 'cost', 'conversions', 'conv_value', 'updated_at'];
+  var DAGEN_NU = tab.getLastRow() > 1 ? DAGEN : EERSTE_RUN_DAGEN;
 
   var dagen = {};
-  for (var k = 0; k < DAGEN; k++) {
+  for (var k = 0; k < DAGEN_NU; k++) {
     dagen[Utilities.formatDate(new Date(nu.getTime() - k * 86400000), tz, 'yyyy-MM-dd')] = true;
   }
   var grens = Utilities.formatDate(new Date(nu.getTime() - BEWAAR_DAGEN * 86400000), tz, 'yyyy-MM-dd');
@@ -47,7 +48,7 @@ function main() {
     bewaar.push(oud[i]);
   }
 
-  var van = Utilities.formatDate(new Date(nu.getTime() - (DAGEN - 1) * 86400000), tz, 'yyyy-MM-dd');
+  var van = Utilities.formatDate(new Date(nu.getTime() - (DAGEN_NU - 1) * 86400000), tz, 'yyyy-MM-dd');
   var tot = Utilities.formatDate(nu, tz, 'yyyy-MM-dd');
   var rows = AdsApp.report(
     'SELECT segments.date, segments.product_item_id, segments.product_title, ' +

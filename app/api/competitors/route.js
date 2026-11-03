@@ -18,8 +18,15 @@ export const maxDuration = 60;
    op een domein lijkt maakt de rij een store-rij; markt, bezoekers,
    productaantal en opmerking worden uit dezelfde rij gevist. */
 
-const MARKETS = new Set(["USA", "UK", "AUS", "CANADA", "CAN", "NL/BE", "NLBE", "NL", "BE", "FR", "PL", "DE"]);
-const MARKET_LANG = { "NL/BE": "nl", NL: "nl", BE: "nl", NLBE: "nl", FR: "fr", PL: "pl", DE: "de" };
+// 03-11-2026: uitgebreid met de markten van de Competitor finder (lib/finder-markets.js)
+const MARKETS = new Set([
+  "USA", "UK", "IE", "AUS", "NZ", "CANADA", "CAN", "NL/BE", "NLBE", "NL", "BE", "DE", "AT", "CH", "FR", "ES", "IT", "PT",
+  "PL", "HU", "RO", "CZ", "SK", "GR", "SE", "DK", "NO", "FI",
+]);
+const MARKET_LANG = {
+  "NL/BE": "nl", NL: "nl", BE: "nl", NLBE: "nl", FR: "fr", PL: "pl", DE: "de", AT: "de", CH: "de", ES: "es", IT: "it", PT: "pt",
+  HU: "hu", RO: "ro", CZ: "cs", SK: "sk", GR: "el", SE: "sv", DK: "da", NO: "no", FI: "fi",
+};
 
 function cleanDomain(v) {
   return String(v || "")

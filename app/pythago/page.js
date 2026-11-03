@@ -153,12 +153,15 @@ export default function PythagoPage() {
   const [sort, setSort] = useState({ key: "cost", dir: "desc" });
   const [page, setPage] = useState(0);
   const [perPage, setPerPage] = useState(25);
+  const [hideGone, setHideGone] = useState(true); // "Niet op store" verbergen
   const [picked, setPicked] = useState(() => new Set());
   const [cols, setCols] = useState({ order: ALL_COL_IDS, hidden: makeColumns(30).filter((c) => c.def === false).map((c) => c.id), img: 44 });
   const [full, setFull] = useState(false);
   const [modal, setModal] = useState(null); // { kind, ... }
   const [showTasks, setShowTasks] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [syncMeta, setSyncMeta] = useState(null); // lokale taak zolang de server-taak nog niet gepolld is
+  const [now, setNow] = useState(0);
   const pollRef = useRef(null);
 
   const store = stores.find((s) => s.domain === sel) || null;
@@ -175,6 +178,15 @@ export default function PythagoPage() {
   const dual = adsCur !== shopCur;
   const be = (data && data.settings && data.settings.breakEvenRoas) || 1 / Math.max(0.05, 1 - settings.cogsPct / 100 - settings.feePct / 100);
   const running = tasks.find((t) => t.status === "running");
+  const live = running || (syncing ? syncMeta : null); // de taak die nu loopt (server of net gestart)
+
+  // klokje voor "bezig sinds" zolang er een sync loopt
+  useEffect(() => {
+    if (!live && !loading) return;
+    setNow(Date.now());
+    const i = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(i);
+  }, [!!live, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ---------- store kiezen + laden ---------- */
   useEffect(() => {
@@ -211,6 +223,7 @@ export default function PythagoPage() {
     const v = load(LS_VIEW + domain, {}) || {};
     setPeriod(v.period || 30);
     setPerPage(v.perPage || 25);
+    setHideGone(v.hideGone !== false);
     setData(null);
     setTasks([]);
     setPicked(new Set());
@@ -291,6 +304,7 @@ export default function PythagoPage() {
       return;
     }
     setSyncing(true);
+    setSyncMeta({ id: "local", name: `Sync ${store.name || store.domain}`, source, status: "running", startedAt: new Date().toISOString(), msg: "gestart" });
     setError("");
     setFlash("");
     startPolling(store.domain);
@@ -311,6 +325,7 @@ export default function PythagoPage() {
       } catch {}
     } finally {
       setSyncing(false);
+      setSyncMeta(null);
       stopPolling();
     }
   }
@@ -336,7 +351,9 @@ export default function PythagoPage() {
   }
 
   /* ---------- filteren / sorteren ---------- */
-  const rows = data ? data.rows : [];
+  // verwijderde producten (wel spend in het venster, niet meer in Shopify) standaard verbergen
+  const goneCount = useMemo(() => (data ? data.rows.filter((r) => !r.onStore).length : 0), [data]);
+  const rows = useMemo(() => (data ? (hideGone ? data.rows.filter((r) => r.onStore) : data.rows) : []), [data, hideGone]);
   const filtered = useMemo(() => {
     const f = filters;
     const q = f.q.trim().toLowerCase();
@@ -574,10 +591,15 @@ export default function PythagoPage() {
     saveCols({ ...cols, order });
   }
   function setView(patch) {
-    const v = { period: P, perPage, ...patch };
+    const v = { period: P, perPage, hideGone, ...patch };
     save(LS_VIEW + sel, v);
     if (patch.period) setPeriod(patch.period);
     if (patch.perPage) setPerPage(patch.perPage);
+    if (typeof patch.hideGone === "boolean") {
+      setHideGone(patch.hideGone);
+      setPage(0);
+      if (patch.hideGone && filters.advies.includes("Niet op store")) setF({ advies: filters.advies.filter((a) => a !== "Niet op store") });
+    }
   }
 
   /* ---------- export ---------- */
@@ -698,22 +720,35 @@ export default function PythagoPage() {
         </button>
       </div>
 
-      {/* ---------- taken-banner ---------- */}
-      {(running || (tasks[0] && Date.now() - Date.parse(tasks[0].finishedAt || tasks[0].startedAt) < 90000)) && (
-        <div className={`pyd-tasks ${running ? "" : "idle"}`}>
+      {/* ---------- taken-banner (compact; bij een lege pagina neemt het sync-scherm het over) ---------- */}
+      {((live && data) || (!live && tasks[0] && Date.now() - Date.parse(tasks[0].finishedAt || tasks[0].startedAt) < 90000)) && (
+        <div className={`pyd-tasks ${live ? "" : "idle"}`}>
           <div className="pyd-tasks__head">
-            {running ? <span className="pyd-spinner" /> : null}
-            {running ? "Background tasks running" : "Background tasks"}
+            {live ? <span className="pyd-spinner" /> : null}
+            {live ? "Background task running" : "Background tasks"}
+            {live && <span className="pyd-tasks__time">{mmss(now - Date.parse(live.startedAt))}</span>}
             <button className="pyd-ibtn" onClick={() => setShowTasks(true)}>Alle taken</button>
           </div>
-          {(running ? [running] : [tasks[0]]).map((t) => (
-            <div className="pyd-task" key={t.id}>
-              <span className="n">{t.name}</span>
-              <span className={`pyd-st ${t.status}`}>{t.status === "running" ? "in progress" : t.status === "done" ? "klaar" : "mislukt"}</span>
-              <span className="m">{t.msg}</span>
-              <span className="t">{t.source} · {clock(t.startedAt)}{t.finishedAt ? ` → ${clock(t.finishedAt)}` : ""}</span>
-            </div>
-          ))}
+          {live ? (
+            <>
+              <div className="pyd-task">
+                <span className="n">{live.name}</span>
+                <span className="pyd-st running">in progress</span>
+                <span className="m">{live.msg}</span>
+                <span className="t">{live.source} · {clock(live.startedAt)}</span>
+              </div>
+              <SyncSteps task={live} compact />
+            </>
+          ) : (
+            [tasks[0]].map((t) => (
+              <div className="pyd-task" key={t.id}>
+                <span className="n">{t.name}</span>
+                <span className={`pyd-st ${t.status}`}>{t.status === "done" ? "klaar" : "mislukt"}</span>
+                <span className="m">{t.msg}</span>
+                <span className="t">{t.source} · {clock(t.startedAt)}{t.finishedAt ? ` → ${clock(t.finishedAt)}` : ""}</span>
+              </div>
+            ))
+          )}
         </div>
       )}
       {error && <div className="pyd-err">{error}</div>}
@@ -731,7 +766,8 @@ export default function PythagoPage() {
           </ol>
         </div>
       )}
-      {loading && !data && <div className="pyd-empty">Laden…</div>}
+      {/* ---------- sync-/laadscherm zolang er nog geen dashboard is ---------- */}
+      {store && !data && (live || loading) && <SyncStage task={live} store={store} now={now} />}
 
       {ready && (
         <>
@@ -952,6 +988,16 @@ export default function PythagoPage() {
             {counts.inBoost ? (
               <button className={`pyd-chip ${filters.inBoost ? "on" : ""}`} onClick={() => setF({ inBoost: !filters.inBoost })}>
                 <span className="dot" style={{ background: "#4cc9f0" }} />In boost {counts.inBoost}
+              </button>
+            ) : null}
+            {goneCount ? (
+              <button
+                className={`pyd-chip gone ${hideGone ? "" : "on"}`}
+                onClick={() => setView({ hideGone: !hideGone })}
+                title={hideGone ? "Producten die niet meer in Shopify staan maar wel spend hadden in dit venster — klik om ze te tonen" : "Klik om verwijderde producten weer te verbergen"}
+              >
+                <span className="dot" style={{ background: TONE["Niet op store"] }} />
+                {hideGone ? `${goneCount} verwijderd verborgen` : `Verwijderd ${goneCount} · verbergen`}
               </button>
             ) : null}
             <span className="grow" />
@@ -1338,6 +1384,96 @@ export default function PythagoPage() {
 }
 
 /* ---------- instellingen ---------- */
+/* ---------- sync-voortgang ---------- */
+const SYNC_STEPS = [
+  { t: "Google Ads", d: "cijfers per product", m: /google ads/i },
+  { t: "Shopify", d: "producten + orders", m: /^shopify/i },
+  { t: "Orders", d: "refunds verwerken", m: /orders verwerken/i },
+  { t: "Berekenen", d: "per product · 7 / 14 / 30 d", m: /per product/i },
+  { t: "Opslaan", d: "dashboard vullen", m: /^opslaan/i },
+];
+const syncStage = (msg) => {
+  const s = String(msg || "");
+  for (let i = SYNC_STEPS.length - 1; i >= 0; i--) if (SYNC_STEPS[i].m.test(s)) return i;
+  return 0;
+};
+const mmss = (ms) => {
+  const s = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
+
+function SyncSteps({ task, compact }) {
+  const stage = task ? syncStage(task.msg) : 0;
+  const started = task && task.msg !== "gestart";
+  const pct = task ? Math.min(96, Math.round(((stage + (started ? 0.65 : 0.15)) / SYNC_STEPS.length) * 100)) : 6;
+  return (
+    <>
+      <div className="pyd-prog"><i style={{ width: `${pct}%` }} /></div>
+      <div className={`pyd-steps ${compact ? "compact" : ""}`}>
+        {SYNC_STEPS.map((s, i) => {
+          const st = !task ? "todo" : i < stage ? "done" : i === stage ? "active" : "todo";
+          return (
+            <div key={s.t} className={`pyd-step ${st}`}>
+              <span className="i">{st === "done" ? "✓" : st === "active" ? <span className="pyd-spinner" /> : i + 1}</span>
+              <span className="n">{s.t}</span>
+              {!compact && <span className="d">{st === "active" && started ? String(task.msg).replace(/…$/, "") : s.d}</span>}
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+function SyncStage({ task, store, now }) {
+  const name = store ? store.name || store.domain : "";
+  const since = task ? now - Date.parse(task.startedAt) : 0;
+  return (
+    <div className="pyd-stage">
+      <div className="pyd-stage__card">
+        <div className="pyd-orb"><span>Π</span></div>
+        <div className="pyd-stage__title">
+          {task ? "Eerste sync van " : "Laden van "}{name}
+          <small>Google Ads × Shopify</small>
+        </div>
+        <div className="pyd-stage__sub">
+          {task
+            ? "Even geduld — de eerste keer leest hij tot 35 dagen Ads-cijfers, alle producten en alle orders. Daarna gaat elke sync in seconden."
+            : "Opgeslagen dashboard ophalen…"}
+        </div>
+        <SyncSteps task={task} />
+        <div className="pyd-stage__meta">
+          {task && <span>Gestart <b>{clock(task.startedAt)}</b> · {task.source}</span>}
+          {task && <span>Bezig <b>{mmss(since)}</b></span>}
+          {task && <span>Verwacht <b>1–2 min</b></span>}
+        </div>
+      </div>
+      <div className="pyd-skel" aria-hidden="true">
+        <div className="pyd-tiles">
+          {[...Array(6)].map((_, i) => (
+            <div className="pyd-tile" key={i}>
+              <span className="pyd-sk" style={{ width: 84, height: 24 }} />
+              <span className="pyd-sk" style={{ width: 56, height: 9 }} />
+            </div>
+          ))}
+        </div>
+        <div className="card pyd-skel__table">
+          {[...Array(9)].map((_, i) => (
+            <div className="pyd-skel-row" key={i}>
+              <span className="pyd-sk" style={{ width: 14, height: 14 }} />
+              <span className="pyd-sk" style={{ width: 40, height: 40, borderRadius: 8 }} />
+              <span className="pyd-sk" style={{ width: `${48 + ((i * 37) % 44)}%`, height: 12 }} />
+              {[...Array(7)].map((_, j) => (
+                <span className="pyd-sk" key={j} style={{ width: `${36 + (((i + 1) * (j + 3) * 19) % 52)}%`, height: 12, justifySelf: "end" }} />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SettingsModal({ settings, storeKey, adsSheet, ordersKeys, store, onClose, onSave }) {
   const [s, setS] = useState({ ...settings });
   const [k, setK] = useState(storeKey);

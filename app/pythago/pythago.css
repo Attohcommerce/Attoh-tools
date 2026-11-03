@@ -36,6 +36,56 @@
 .pyd-st.done { color: var(--ok); background: var(--ok-dim); }
 .pyd-st.failed { color: var(--err); background: var(--err-dim); }
 .pyd-spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(201,162,39,.25); border-top-color: var(--accent-hi); animation: pyd-spin .8s linear infinite; }
+.pyd-tasks__time { font-size: 12px; font-weight: 600; color: var(--accent-hi); font-variant-numeric: tabular-nums; padding: 1px 8px; border-radius: 99px; background: var(--accent-dim); }
+
+/* ---------- Sync-voortgang (balk + stappen) ---------- */
+@keyframes pyd-sweep { to { transform: translateX(100%); } }
+@keyframes pyd-pulse { 0% { transform: scale(.82); opacity: .85; } 100% { transform: scale(1.35); opacity: 0; } }
+@keyframes pyd-breathe { 0%, 100% { box-shadow: 0 0 0 0 rgba(201,162,39,.0), 0 0 28px rgba(201,162,39,.18); } 50% { box-shadow: 0 0 0 6px rgba(201,162,39,.06), 0 0 44px rgba(201,162,39,.32); } }
+.pyd-prog { height: 6px; border-radius: 99px; background: rgba(255,255,255,.06); overflow: hidden; }
+.pyd-prog > i { display: block; height: 100%; min-width: 14px; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-hi)); position: relative; overflow: hidden; transition: width 1.4s cubic-bezier(.2,.8,.2,1); }
+.pyd-prog > i::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: pyd-sweep 1.5s linear infinite; }
+.pyd-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.pyd-step { display: grid; grid-template-columns: 22px 1fr; column-gap: 10px; row-gap: 2px; align-items: center; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,.18); color: var(--muted); font-size: 12.5px; font-weight: 600; transition: border-color .4s, background .4s, color .4s; min-width: 0; }
+.pyd-step .i { grid-row: span 2; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; border: 1px solid var(--line); color: var(--faint); }
+.pyd-step .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pyd-step .d { font-size: 11px; font-weight: 500; color: var(--faint); line-height: 1.35; }
+.pyd-step.done { color: var(--ink-2); border-color: rgba(62,207,142,.28); }
+.pyd-step.done .i { background: var(--ok-dim); color: var(--ok); border-color: transparent; }
+.pyd-step.active { color: var(--ink); border-color: rgba(201,162,39,.55); background: rgba(201,162,39,.09); animation: pyd-breathe 2.4s ease-in-out infinite; }
+.pyd-step.active .i { border-color: transparent; }
+.pyd-step.active .d { color: var(--accent-hi); }
+.pyd-steps.compact { gap: 6px; }
+.pyd-steps.compact .pyd-step { padding: 6px 10px; font-size: 11.5px; border-radius: 8px; animation: none; }
+.pyd-steps.compact .pyd-step .i { grid-row: auto; width: 18px; height: 18px; font-size: 10px; }
+.pyd-steps.compact .pyd-step .pyd-spinner { width: 11px; height: 11px; }
+@media (max-width: 900px) { .pyd-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- Sync-scherm (eerste keer, nog geen dashboard) ---------- */
+.pyd-stage { display: grid; gap: 14px; }
+.pyd-stage__card { position: relative; overflow: hidden; border: 1px solid rgba(201,162,39,.32); border-radius: 16px; background: radial-gradient(900px 260px at 12% -30%, rgba(201,162,39,.16), transparent 65%), var(--panel); padding: 24px 26px 20px; display: grid; grid-template-columns: auto 1fr; column-gap: 22px; row-gap: 12px; align-items: center; }
+.pyd-stage__card::before { content: ""; position: absolute; inset: 0; pointer-events: none; transform: translateX(-100%); background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.035) 50%, transparent 65%); animation: pyd-sweep 3.2s ease-in-out infinite; }
+.pyd-orb { grid-row: span 2; position: relative; width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, rgba(201,162,39,.28), rgba(201,162,39,.06) 70%); color: var(--accent-hi); font-size: 30px; font-weight: 700; animation: pyd-breathe 2.4s ease-in-out infinite; }
+.pyd-orb span { position: relative; z-index: 1; transform: translateY(-1px); }
+.pyd-orb::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--accent-hi); border-right-color: rgba(201,162,39,.35); animation: pyd-spin 1.3s linear infinite; }
+.pyd-orb::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid rgba(201,162,39,.45); animation: pyd-pulse 2.2s ease-out infinite; }
+.pyd-stage__title { font-size: 19px; font-weight: 600; color: var(--ink); letter-spacing: -.01em; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; align-self: end; }
+.pyd-stage__title small { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-hi); font-weight: 600; }
+.pyd-stage__sub { font-size: 12.5px; color: var(--muted); line-height: 1.5; align-self: start; max-width: 760px; }
+.pyd-stage__card .pyd-prog, .pyd-stage__card .pyd-steps, .pyd-stage__meta { grid-column: 1 / -1; }
+.pyd-stage__meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 11.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.pyd-stage__meta b { color: var(--ink-2); font-weight: 600; }
+@media (max-width: 700px) { .pyd-stage__card { grid-template-columns: 1fr; } .pyd-orb { grid-row: auto; } }
+
+/* skeleton van het dashboard dat eraan komt */
+.pyd-skel { display: grid; gap: 14px; opacity: .75; }
+.pyd-sk { position: relative; overflow: hidden; display: block; background: rgba(255,255,255,.05); border-radius: 6px; }
+.pyd-sk::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent); animation: pyd-sweep 1.9s ease-in-out infinite; }
+.pyd-skel .pyd-tile { display: grid; gap: 9px; justify-items: center; padding: 18px 14px 16px; }
+.pyd-skel__table { padding: 0 !important; overflow: hidden; }
+.pyd-skel-row { display: grid; grid-template-columns: 26px 40px 2.4fr repeat(7, minmax(0, 1fr)); gap: 12px; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+.pyd-skel-row:last-child { border-bottom: 0; }
+@media (max-width: 900px) { .pyd-skel-row { grid-template-columns: 26px 40px 2fr repeat(3, minmax(0, 1fr)); } .pyd-skel-row .pyd-sk:nth-child(n+7) { display: none; } }
 
 /* ---------- Filterbalk ---------- */
 .pyd-filters { display: grid; gap: 10px; }
@@ -95,6 +145,9 @@
 .pyd-tile .lnk button { appearance: none; border: 0; background: none; color: var(--accent-hi); font: inherit; font-size: 11px; cursor: pointer; text-decoration: underline; padding: 0; }
 .pyd-adv { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .pyd-adv .pyd-chip { padding: 5px 10px; font-size: 12px; }
+.pyd-adv .pyd-chip.gone { border-style: dashed; color: var(--faint); }
+.pyd-adv .pyd-chip.gone:hover { color: var(--ink-2); }
+.pyd-adv .pyd-chip.gone.on { color: var(--ink); border-style: solid; }
 
 /* ---------- Tabel ---------- */
 .pyd-tablecard { display: grid; gap: 10px; }

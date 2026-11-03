@@ -10,7 +10,8 @@ import { ORG_COOKIE, normOrg, toolAllowed } from "./lib/org";
 // (server → server, geen sessie); de route eist zelf het job-geheim.
 // /tp = lege verificatiepagina voor Travelpayouts (vluchtprijzen reisplanner)
 // /api/pythago/cron = dagelijkse Pythago-sync (Vercel Cron; eist zelf CRON_SECRET)
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/kw", "/api/size-guide/job/tick", "/tp", "/api/pythago/cron"];
+// /api/competitor-finder/tick = cloud-run van de Competitor finder (zelfde opzet als de Size Guide-tick)
+const PUBLIC_PATHS = ["/login", "/api/auth/login", "/kw", "/api/size-guide/job/tick", "/api/competitor-finder/tick", "/tp", "/api/pythago/cron"];
 
 // Reisplanner (27-10-2026): /reis + /api/reis hebben een EIGEN login
 // (cookie attoh_reis_session, gebruikers Justin + Quinty) en staan los van
