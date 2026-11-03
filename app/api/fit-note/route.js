@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { scanFitNotes, analyzeFitNotes, writeFitNotes, scanSizeCharts, applySizeChartsSmall } from "@/lib/fit-note";
+import { scanFitNotes, analyzeFitNotes, writeFitNotes, scanSizeCharts, applySizeChartsSmall, autoFitNotes } from "@/lib/fit-note";
 
 /* FITNOTES (Store Doctor, 03-11-2026)
    scan:    kleding-producten + huidige fitnote (metafields custom.model_height_cm / custom.model_size)
@@ -15,6 +15,7 @@ export async function POST(req) {
     if (action === "analyze") return NextResponse.json(await analyzeFitNotes(body.store, body.ids));
     if (action === "sizecharts-scan") return NextResponse.json(await scanSizeCharts(body.store));
     if (action === "sizecharts-apply") return NextResponse.json(await applySizeChartsSmall(body.store, body.ids));
+    if (action === "auto") return NextResponse.json(await autoFitNotes(body.store, body.ids));
     if (action === "write") return NextResponse.json(await writeFitNotes(body.store, body.rows));
     return NextResponse.json({ error: "Onbekende actie" }, { status: 400 });
   } catch (e) {

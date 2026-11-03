@@ -797,6 +797,41 @@ export default function ImporterPage() {
         if (iData.sizeGuide) {
           pushLog({ info: true, text: `${nr} · Maattabel: ${iData.sizeGuide}` });
         }
+        // FITNOTE (03-11): model in beeld → "Model is … and wears size …" meteen zetten
+        if (iData.product && iData.product.id) {
+          try {
+            setStep(`${nr} · Fitnote checken…`);
+            const fRes = await fetch("/api/fit-note", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "auto",
+                store: {
+                  domain: selectedStore.domain,
+                  publicDomain: selectedStore.publicDomain,
+                  token: selectedStore.token,
+                  clientId: selectedStore.clientId,
+                  clientSecret: selectedStore.clientSecret,
+                  currency: selectedStore.currency,
+                  name: selectedStore.name,
+                },
+                ids: [iData.product.id],
+              }),
+            });
+            const fData = await fRes.json().catch(() => ({}));
+            aiRunUsd += fData.aiUsd || 0;
+            const fr = (fData.results || [])[0];
+            if (!fRes.ok || (fData.errors && fData.errors.length)) {
+              pushLog({ ok: false, text: `${nr} · FITNOTE: ${fData.error || (fData.errors || []).join("; ") || fRes.status} — via Store Doctor → Fitnotes nazetten` });
+            } else if (fr && fr.set) {
+              pushLog({ info: true, text: `${nr} · Fitnote: ${fr.label}` });
+            } else {
+              pushLog({ info: true, text: `${nr} · Fitnote: geen (${(fr && fr.why) || "geen model of schoen/tas/accessoire"})` });
+            }
+          } catch (e) {
+            pushLog({ ok: false, text: `${nr} · FITNOTE: ${String(e.message || e)} — via Store Doctor → Fitnotes nazetten` });
+          }
+        }
         if (iData.sizeGuideWarn) {
           pushLog({ ok: false, text: `${nr} · GEEN MAATTABEL: ${iData.sizeGuideWarn} — via Size Guide-pagina of Doctor nazetten` });
         }
