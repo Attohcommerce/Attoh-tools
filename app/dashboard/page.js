@@ -76,6 +76,21 @@ function dayLabel(ymd, today) {
   return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
 }
 
+/** Dagknop in de cashflow: Vandaag · Morgen · Overmorgen · daarna "ma 9 nov". */
+function cfDayLabel(ymd, today) {
+  if (ymd === today) return "Vandaag";
+  if (ymd === addDays(today, 1)) return "Morgen";
+  if (ymd === addDays(today, 2)) return "Overmorgen";
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).replace(".", "");
+}
+function cfLongDate(ymd) {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+}
+const CF_STATUS = { SCHEDULED: ["Gepland", "sched"], IN_TRANSIT: ["Onderweg", "transit"], PAID: ["Betaald", "paid"], FAILED: ["Mislukt", "failed"], CANCELED: ["Geannuleerd", "failed"] };
+const money = (n, cur) => (n == null ? "—" : new Intl.NumberFormat("nl-NL", { style: "currency", currency: cur || "GBP", maximumFractionDigits: 2 }).format(n));
+
 /** Uur-reeks → cumulatief; uren na "nu" (alleen vandaag) worden null. */
 function cumulative(arr, cutAfter) {
   let run = 0;
@@ -98,7 +113,12 @@ export default function DashboardPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showIssues, setShowIssues] = useState(false);
   const [modal, setModal] = useState(null); // { id, scope }
+  const [cf, setCf] = useState(null); // cashflow: Shopify Payments-uitbetalingen
+  const [cfDay, setCfDay] = useState(londonDay());
+  const [cfBusy, setCfBusy] = useState(false);
+  const [cfHist, setCfHist] = useState(false);
   const reqId = useRef(0);
+  const cfReq = useRef(0);
 
   useEffect(() => {
     const list = load(LS_STORES, []);
@@ -153,6 +173,21 @@ export default function DashboardPage() {
         };
       }),
     };
+    // Cashflow (Shopify Payments) loopt los van de omzetdata: zelfde stores, eigen call
+    const cfId = ++cfReq.current;
+    setCfBusy(true);
+    fetch("/api/cashflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stores: body.stores }), cache: "no-store" })
+      .then((r) => r.json().then((j) => ({ okHttp: r.ok, j })))
+      .then(({ okHttp, j }) => {
+        if (cfId !== cfReq.current) return;
+        if (!okHttp || !j.ok) setCf({ error: j.error || "Cashflow niet geladen" });
+        else {
+          setCf(j);
+          setCfDay((d) => (d && d >= j.today ? d : j.today));
+        }
+      })
+      .catch((e) => cfId === cfReq.current && setCf({ error: String(e.message || e) }))
+      .finally(() => cfId === cfReq.current && setCfBusy(false));
     try {
       const res = await fetch("/api/dashboard", {
         method: "POST",
@@ -444,6 +479,106 @@ export default function DashboardPage() {
                 );
               })}
             </div>
+
+            {/* Cashflow — Shopify Payments-uitbetalingen */}
+            <section className="dd-card dd-cf">
+              {(() => {
+                const t = cf && cf.totals;
+                const dayKeys = t ? Object.keys(t.days).sort() : [];
+                const selDay = t && t.days[cfDay] ? cfDay : dayKeys[0];
+                const sel = t && selDay ? t.days[selDay] : null;
+                const errs = cf && Array.isArray(cf.stores) ? cf.stores.filter((s) => !s.ok) : [];
+                const okStores = cf && Array.isArray(cf.stores) ? cf.stores.filter((s) => s.ok) : [];
+                return (
+                  <>
+                    <div className="dd-hero-head">
+                      <div>
+                        <div className="dd-eyebrow">Cashflow · Shopify Payments-uitbetalingen{cfBusy ? " · laden…" : ""}</div>
+                        <div className="dd-mid">{t ? `${gbp(t.week.gbp)} nog te ontvangen deze week` : cf && cf.error ? "Cashflow niet geladen" : "—"}</div>
+                        <div className="small muted">
+                          {t ? `t/m ${cfLongDate(t.week.to)} · ${t.week.count} uitbetaling${t.week.count === 1 ? "" : "en"} · volgende 7 dagen ${gbp(t.next7.gbp)}${t.later.count ? ` · daarna nog ${gbp(t.later.gbp)}` : ""}${t.overdue.count ? ` · ${t.overdue.count} gepland met verstreken datum (bij vandaag)` : ""}` : cf && cf.error ? cf.error : "Uitbetalingen worden geladen…"}
+                        </div>
+                      </div>
+                      {t ? (
+                        <div className="dd-cf-balance">
+                          <div className="dd-tile-label">Saldo bij Shopify Payments</div>
+                          <div className="dd-cf-balance-val">{gbp(t.balanceGbp)}</div>
+                          <div className="small muted">{t.balances.map((b) => `${b.key} ${money(b.amount, b.currency)}`).join(" · ") || "—"}</div>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {t ? (
+                      <>
+                        <div className="dd-cf-days">
+                          {dayKeys.slice(0, 10).map((d) => {
+                            const v = t.days[d];
+                            return (
+                              <button key={d} className={"dd-cf-day" + (d === selDay ? " on" : "") + (v.gbp ? " has" : "")} onClick={() => setCfDay(d)} title={cfLongDate(d)}>
+                                <span className="dd-cf-day-l">{cfDayLabel(d, cf.today)}</span>
+                                <span className="dd-cf-day-v">{v.gbp ? gbp(v.gbp) : "—"}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="dd-cf-list">
+                          <div className="dd-cf-list-head">
+                            <strong>{selDay ? cfLongDate(selDay) : ""}</strong>
+                            <span className="muted small">{sel && sel.items.length ? `${sel.items.length} uitbetaling${sel.items.length === 1 ? "" : "en"} · ${gbp(sel.gbp)}` : "geen uitbetaling gepland"}</span>
+                          </div>
+                          {sel && sel.items.map((it, i) => {
+                            const st = CF_STATUS[it.status] || [it.status, ""];
+                            const color = colorOf(it.key, i);
+                            return (
+                              <div key={it.id || i} className="dd-cf-row">
+                                <span className="dd-store-dot" style={{ background: color }} />
+                                <strong>{it.key}</strong>
+                                <span className="muted small">{it.store}</span>
+                                {it.late ? <span className="dd-cf-pill failed">gepland op {shortDate(it.late)}</span> : null}
+                                <span className="dd-flex" />
+                                <span className="dd-cf-local">{it.currency !== "GBP" ? money(it.net, it.currency) : ""}</span>
+                                <span className="dd-cf-gbp">{gbp(it.gbp)}</span>
+                                <span className={"dd-cf-pill " + st[1]}>{st[0]}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="small muted" style={{ marginTop: 8 }}>
+                          Datum = de dag waarop Shopify uitbetaalt; op je rekening meestal 1–3 werkdagen later. Bedragen netto (na Shopify-fees en refunds), omgerekend naar £ met de koers van vandaag.
+                          {okStores.length ? ` Schema: ${okStores.map((s) => `${s.key || s.name} ${s.schedule ? String(s.schedule.interval || "").toLowerCase() + (s.schedule.weeklyAnchor ? " (" + String(s.schedule.weeklyAnchor).toLowerCase() + ")" : "") : "?"}`).join(" · ")}.` : ""}
+                        </div>
+                        <button className="dd-cf-toggle" onClick={() => setCfHist((v) => !v)}>{cfHist ? "▾" : "▸"} Laatste uitbetalingen (14 dagen)</button>
+                        {cfHist && (
+                          <div className="dd-cf-list">
+                            {okStores.flatMap((s) => s.paid.map((p) => ({ ...p, key: s.key || s.name, store: s.name }))).sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 20).map((p, i) => {
+                              const st = CF_STATUS[p.status] || [p.status, ""];
+                              return (
+                                <div key={p.id || i} className="dd-cf-row">
+                                  <span className="muted small" style={{ minWidth: 70 }}>{shortDate(p.date)}</span>
+                                  <strong>{p.key}</strong>
+                                  <span className="dd-flex" />
+                                  <span className="dd-cf-local">{p.currency !== "GBP" ? money(p.net, p.currency) : ""}</span>
+                                  <span className="dd-cf-gbp">{gbp(p.gbp)}</span>
+                                  <span className={"dd-cf-pill " + st[1]}>{st[0]}</span>
+                                </div>
+                              );
+                            })}
+                            {!okStores.some((s) => s.paid.length) && <div className="muted small">Geen uitbetalingen in de laatste 14 dagen.</div>}
+                          </div>
+                        )}
+                      </>
+                    ) : null}
+                    {errs.length > 0 && (
+                      <div className="dd-issues" style={{ marginTop: 10 }}>
+                        {errs.map((s) => (
+                          <div key={s.domain} className="dd-issue"><span><strong>{s.key || s.name}</strong></span><span>{s.error}</span></div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </section>
 
             {/* Trend 14 dagen */}
             <section className="dd-card">

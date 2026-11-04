@@ -349,9 +349,15 @@ export default function CompetitorFinderPage() {
                 <div style={{ marginTop: 14 }}>
                   <div className="pbar"><div className={"pbar-fill" + (running ? " live" : "")} style={{ width: `${pct}%` }} /></div>
                   <div className="small muted" style={{ marginTop: 6 }}>
-                    {job.status === "running" ? (job.phase === "search" ? "Zoeken op Google…" : job.phase === "resolve" ? "Merchantnamen opzoeken…" : "Winkels checken…") : job.status === "done" ? "Klaar" : job.status === "stopped" ? "Gestopt" : `Fout: ${job.error || ""}`}
+                    {job.status === "running" ? (job.phase === "search" ? "Apify zoekt op Google (alle markten tegelijk) — intussen worden gevonden winkels al gecheckt…" : job.phase === "resolve" ? "Merchantnamen opzoeken…" : "Winkels checken…") : job.status === "done" ? "Klaar" : job.status === "stopped" ? "Gestopt" : `Fout: ${job.error || ""}`}
                     {" · "}zoekopdrachten {job.qCursor || 0}/{job.totalQueries}{job.totalNames ? ` · merchantnamen ${job.nCursor || 0}/${job.totalNames}` : ""} · winkels gecheckt {job.aCursor || 0}/{job.totalCandidates}
                   </div>
+                  {Array.isArray(job.runs) && job.runs.length > 0 && (
+                    <div className="small muted" style={{ marginTop: 4 }}>
+                      Apify: {job.runs.filter((r) => r.kind === "search").map((r) => `${r.market} ${r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : `bezig ${Math.max(0, Math.round((Date.now() - (r.startedAt || Date.now())) / 1000))} s`}`).join(" · ")}
+                      {job.runs.some((r) => r.kind === "resolve") ? ` · merchantnamen: ${job.runs.filter((r) => r.kind === "resolve").map((r) => `${r.market} ${r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : "bezig"}`).join(" · ")}` : ""}
+                    </div>
+                  )}
                   {prog && (
                     <div className="statline" style={{ marginTop: 10 }}>
                       <div className="stat"><div className="stat-k">Gezien</div><div className="stat-v">{prog.found}</div></div>
