@@ -24,6 +24,25 @@ async function api(body) {
   return data;
 }
 const fmtN = (n) => (n == null || n === "" ? "—" : Number(n).toLocaleString("nl-NL"));
+const MONTHS_NL = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+const monthLabel = (ym) => (ym && /^\d{4}-\d{2}/.test(ym) ? MONTHS_NL[Number(ym.slice(5, 7)) - 1] || ym : "");
+/** " · sep ▼71%" achter het bezoekcijfer: laatste gepubliceerde maand + verschil met de maand ervoor */
+function visitsSuffix(r) {
+  if (r.visitsSrc === "handmatig") return " · eigen cijfer";
+  const m = monthLabel(r.visitsMonth);
+  let trend = "";
+  if (r.visitsPrev > 0 && r.visits > 0) {
+    const pct = Math.round(((Number(r.visits) - r.visitsPrev) / r.visitsPrev) * 100);
+    if (pct !== 0) trend = ` ${pct > 0 ? "▲" : "▼"}${Math.abs(pct)}%`;
+  }
+  return m || trend ? ` · ${m}${trend}` : "";
+}
+function visitsTitle(r) {
+  if (r.visitsSrc === "handmatig") return "Eigen cijfer (TrendTrack/handmatig)";
+  const parts = ["SimilarWeb — laatst gepubliceerde maand"];
+  if (r.visitsMonths && r.visitsMonths.length) parts.push(`laatste maanden: ${r.visitsMonths.map((x) => fmtN(x)).join(" → ")}`);
+  return parts.join(" · ");
+}
 
 function ScoreBadge({ score, verdict }) {
   const cls = verdict === "dropship" ? "badge badge-green" : verdict === "twijfel" ? "badge badge-amber" : "badge";
@@ -46,6 +65,9 @@ export default function CompetitorFinderPage() {
   const [showQueries, setShowQueries] = useState(false);
   const [filter, setFilter] = useState("dropship");
   const [onlyAbove, setOnlyAbove] = useState(true); // alleen winkels ≥ grens maandbezoek (onbekend blijft zichtbaar)
+  const [vfetch, setVfetch] = useState(null); // losse SimilarWeb-run: { count, at, note } | null
+  const [vmsg, setVmsg] = useState("");
+  const vpollRef = useRef(null);
   const [marketFilter, setMarketFilter] = useState("");
   const [checked, setChecked] = useState({});
   const [visits, setVisits] = useState({});
@@ -101,6 +123,53 @@ export default function CompetitorFinderPage() {
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [job && job.log && job.log.length]);
+
+  // losse maandbezoek-run (knop): status pollen tot klaar, dan resultaten verversen
+  async function pollVisits() {
+    const d = await api({ action: "visitsStatus" }).catch((e) => ({ ok: false, error: String(e.message || e) }));
+    if (d.idle) {
+      setVfetch(null);
+      return;
+    }
+    if (d.done) {
+      setVfetch(null);
+      setVmsg(`Maandbezoek opgehaald voor ${d.count} winkels: ${d.above} ≥ ${fmtN(minV)} · ${d.below} eronder · ${d.noData} zonder SimilarWeb-data (= klein)`);
+      await loadInfo().catch(() => {});
+      if (running) await loadStatus().catch(() => {});
+      return;
+    }
+    if (d.ok === false) {
+      setVfetch(null);
+      setErr(d.error || "Maandbezoek ophalen mislukt");
+      return;
+    }
+    setVfetch((v) => ({ ...(v || { count: 0, at: Date.now() - (d.elapsed || 0) }), note: d.note || "" }));
+  }
+  useEffect(() => {
+    if (vpollRef.current) clearInterval(vpollRef.current);
+    if (vfetch) vpollRef.current = setInterval(() => pollVisits().catch(() => {}), 5000);
+    return () => vpollRef.current && clearInterval(vpollRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!vfetch]);
+  useEffect(() => {
+    // bij openen: loopt er nog een losse run van net?
+    api({ action: "visitsStatus" })
+      .then((d) => {
+        if (d.running) setVfetch({ count: 0, at: Date.now() - (d.elapsed || 0), note: "" });
+        else if (d.done) loadInfo().catch(() => {});
+      })
+      .catch(() => {});
+  }, []);
+  async function fetchVisitsNow(force) {
+    setErr("");
+    setVmsg("");
+    try {
+      const d = await api({ action: "visitsStart", force: !!force });
+      setVfetch({ count: d.count || 0, at: Date.now(), note: "" });
+    } catch (e) {
+      setErr(String(e.message || e));
+    }
+  }
 
   // zoekopdrachten-paneel: set van de gekozen markt laden
   useEffect(() => {
@@ -196,6 +265,7 @@ export default function CompetitorFinderPage() {
     return [...s];
   }, [results]);
   const selected = shown.filter((r) => checked[r.domain]);
+  const noVisitsCount = results.filter((r) => (r.verdict === "dropship" || r.verdict === "twijfel") && !r.added && !r.ignored && (r.visits == null || r.visits === "")).length;
 
   function rowsFor(list) {
     return list.map((r) => {
@@ -494,9 +564,15 @@ export default function CompetitorFinderPage() {
                 <button type="button" className="btn-ghost btn-small" style={onlyAbove ? { borderColor: "var(--accent)", color: "var(--accent-hi)", background: "var(--accent-dim)" } : {}} onClick={() => { const v = !onlyAbove; setOnlyAbove(v); try { localStorage.setItem("attoh_cf_only_above", v ? "1" : "0"); } catch {} }} title="Winkels met een bekend maandbezoek onder de grens verbergen">
                   {onlyAbove ? "✓ " : ""}alleen ≥ {fmtN(minV)} bezoek/mnd
                 </button>
-                <span className="small muted">Maandbezoek komt automatisch (SimilarWeb) aan het eind van de scan; wil je het TrendTrack-cijfer gebruiken, typ het in het vakje.</span>
+                {vfetch ? (
+                  <span className="small" style={{ color: "var(--accent-hi)" }}>SimilarWeb bezig… {Math.max(0, Math.round((Date.now() - vfetch.at) / 1000))} s{vfetch.count ? ` · ${vfetch.count} winkels` : ""}</span>
+                ) : noVisitsCount > 0 && !(running && job && job.phase === "visits") ? (
+                  <button type="button" className="btn-ghost btn-small" onClick={() => fetchVisitsNow(false)} title="SimilarWeb-cijfers ophalen voor alle dropship/twijfel-winkels zonder bezoekcijfer (±$0,002 per winkel)">Maandbezoek ophalen ({noVisitsCount})</button>
+                ) : null}
+                <span className="small muted">Maandbezoek = laatst gepubliceerde maand bij SimilarWeb (loopt ±1 maand achter), automatisch aan het eind van elke scan. Eigen TrendTrack-cijfer: typ het in het vakje.</span>
               </div>
 
+              {vmsg && <div className="small" style={{ marginTop: 8, color: "var(--ok)" }}>{vmsg}</div>}
               {!shown.length ? (
                 <div className="hint" style={{ marginTop: 14 }}>
                   {results.length ? "Niets in dit filter." : running ? "Resultaten verschijnen zodra de eerste winkels gecheckt zijn." : "Nog geen scan gedaan. Kies links je markten en klik Scan nu."}
@@ -519,11 +595,11 @@ export default function CompetitorFinderPage() {
                           <span style={{ flex: 1 }} />
                           {r.visits != null && r.visits !== "" ? (
                             Number(r.visits) >= minV ? (
-                              <span className="badge badge-green" title={`SimilarWeb${r.visitsMonths && r.visitsMonths.length ? ` · laatste maanden: ${r.visitsMonths.map((x) => fmtN(x)).join(" → ")}` : ""}`}>{fmtN(Number(r.visits))} bezoek/mnd</span>
+                              <span className="badge badge-green" title={visitsTitle(r)}>{fmtN(Number(r.visits))} bezoek/mnd{visitsSuffix(r)}</span>
                             ) : r.visitsNoData || Number(r.visits) === 0 ? (
                               <span className="badge" style={{ opacity: 0.7 }} title="SimilarWeb heeft geen data voor deze site — dat betekent meestal minder dan ±5.000 bezoek/mnd">&lt; 5.000 bezoek/mnd</span>
                             ) : (
-                              <span className="badge" style={{ opacity: 0.7 }} title="Onder je grens">{fmtN(Number(r.visits))} bezoek/mnd</span>
+                              <span className="badge" style={{ opacity: 0.7 }} title={visitsTitle(r)}>{fmtN(Number(r.visits))} bezoek/mnd{visitsSuffix(r)}</span>
                             )
                           ) : (
                             <span className="small muted">{running ? "bezoek volgt…" : "bezoek onbekend"}</span>

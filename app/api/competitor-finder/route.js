@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { startJob, stopJob, resumeJob, jobStatus, kickTick, getJob, jobAvailable, getLastResults, patchResults, getHistory } from "@/lib/finder-job";
+import { startJob, stopJob, resumeJob, jobStatus, kickTick, getJob, jobAvailable, getLastResults, patchResults, getHistory, startVisitsFetch, visitsFetchStatus } from "@/lib/finder-job";
 import {
   getConfig, setConfig, getMarketQueries, setMarketQueries, clearMarketQueries, localizeQueries, writeToSheet, markSeen, getSeen, apifyConfigured, cleanDomain,
 } from "@/lib/competitor-finder";
@@ -142,6 +142,15 @@ export async function POST(req) {
       });
       return NextResponse.json({ ok: true, ignored: domains.length });
     }
+    if (action === "visitsStart") {
+      // SimilarWeb-run starten voor alle dropship/twijfel-resultaten zonder cijfer (of force: alles opnieuw)
+      const r = await startVisitsFetch({ force: !!body.force, domains: body.domains || [] });
+      return NextResponse.json(r, { status: r.ok ? 200 : 400 });
+    }
+    if (action === "visitsStatus") {
+      const r = await visitsFetchStatus();
+      return NextResponse.json(r, { status: r.ok ? 200 : 400 });
+    }
     if (action === "visits") {
       // { visits: { domein: 12000, … } } — van Claude (TrendTrack) of handmatig
       const seen = await getSeen();
@@ -150,12 +159,12 @@ export async function POST(req) {
         const k = cleanDomain(d);
         const n = Number(String(v).replace(/[^\d]/g, ""));
         if (!k || !isFinite(n)) continue;
-        patch[k] = { ...(seen[k] || {}), visits: n };
-        if (seen[k] && seen[k].audit) patch[k].audit = { ...seen[k].audit, visits: n };
+        patch[k] = { ...(seen[k] || {}), visits: n, visitsSrc: "handmatig" };
+        if (seen[k] && seen[k].audit) patch[k].audit = { ...seen[k].audit, visits: n, visitsSrc: "handmatig", visitsNoData: false };
       }
       await markSeen(patch);
       await patchResults((res) => {
-        for (const k of Object.keys(patch)) if (res[k]) res[k].visits = patch[k].visits;
+        for (const k of Object.keys(patch)) if (res[k]) Object.assign(res[k], { visits: patch[k].visits, visitsSrc: "handmatig", visitsNoData: false });
       });
       return NextResponse.json({ ok: true, updated: Object.keys(patch).length });
     }
