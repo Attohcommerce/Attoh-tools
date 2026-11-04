@@ -354,7 +354,7 @@ export default function CompetitorFinderPage() {
                   </div>
                   {Array.isArray(job.runs) && job.runs.length > 0 && (
                     <div className="small muted" style={{ marginTop: 4 }}>
-                      Apify: {job.runs.filter((r) => r.kind === "search").map((r) => `${r.market} ${r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : `bezig ${Math.max(0, Math.round((Date.now() - (r.startedAt || Date.now())) / 1000))} s`}`).join(" · ")}
+                      Apify: {job.runs.filter((r) => r.kind === "search").map((r) => `${r.market} ${r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : `${r.total > 1 ? `${r.done}/${r.total} runs klaar · ` : ""}bezig ${Math.max(0, Math.round((Date.now() - (r.startedAt || Date.now())) / 1000))} s`}`).join(" · ")}
                       {job.runs.some((r) => r.kind === "resolve") ? ` · merchantnamen: ${job.runs.filter((r) => r.kind === "resolve").map((r) => `${r.market} ${r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : "bezig"}`).join(" · ")}` : ""}
                     </div>
                   )}
