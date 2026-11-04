@@ -36,7 +36,7 @@ function ScoreBadge({ score, verdict }) {
 
 export default function CompetitorFinderPage() {
   const [info, setInfo] = useState(null);
-  const [cfg, setCfg] = useState({ minVisits: 8000, pages: 1, queriesPerMarket: 60, aliCheck: true, sheetId: "", sheetTab: "Google competitors" });
+  const [cfg, setCfg] = useState({ minVisits: 8000, pages: 1, queriesPerMarket: 60, aliCheck: true, weekly: true, weeklyMarkets: DEFAULT_MARKET_KEYS.join(","), ownStores: "", sheetId: "", sheetTab: "Google competitors" });
   const [sel, setSel] = useState(DEFAULT_MARKET_KEYS);
   const [job, setJob] = useState(null);
   const [last, setLast] = useState(null);
@@ -280,7 +280,7 @@ export default function CompetitorFinderPage() {
 
   const perMarket = (info && info.perMarket) || {};
   const prog = job && job.prog;
-  const pct = job ? (job.phase === "search" ? Math.round(((job.qCursor || 0) / Math.max(1, job.totalQueries || 1)) * 60) : job.phase === "audit" ? 60 + Math.round(((job.aCursor || 0) / Math.max(1, job.totalCandidates || 1)) * 40) : 100) : 0;
+  const pct = job ? (job.phase === "search" ? Math.round(((job.qCursor || 0) / Math.max(1, job.totalQueries || 1)) * 55) : job.phase === "resolve" ? 55 + Math.round(((job.nCursor || 0) / Math.max(1, job.totalNames || 1)) * 5) : job.phase === "audit" ? 60 + Math.round(((job.aCursor || 0) / Math.max(1, job.totalCandidates || 1)) * 40) : 100) : 0;
   const estQueries = sel.length * Math.min(cfg.queriesPerMarket || 60, 300);
   const estUsd = (estQueries * (cfg.pages || 1) * 0.0018).toFixed(2);
 
@@ -349,8 +349,8 @@ export default function CompetitorFinderPage() {
                 <div style={{ marginTop: 14 }}>
                   <div className="pbar"><div className={"pbar-fill" + (running ? " live" : "")} style={{ width: `${pct}%` }} /></div>
                   <div className="small muted" style={{ marginTop: 6 }}>
-                    {job.status === "running" ? (job.phase === "search" ? "Zoeken op Google…" : "Winkels checken…") : job.status === "done" ? "Klaar" : job.status === "stopped" ? "Gestopt" : `Fout: ${job.error || ""}`}
-                    {" · "}zoekopdrachten {job.qCursor || 0}/{job.totalQueries} · winkels gecheckt {job.aCursor || 0}/{job.totalCandidates}
+                    {job.status === "running" ? (job.phase === "search" ? "Zoeken op Google…" : job.phase === "resolve" ? "Merchantnamen opzoeken…" : "Winkels checken…") : job.status === "done" ? "Klaar" : job.status === "stopped" ? "Gestopt" : `Fout: ${job.error || ""}`}
+                    {" · "}zoekopdrachten {job.qCursor || 0}/{job.totalQueries}{job.totalNames ? ` · merchantnamen ${job.nCursor || 0}/${job.totalNames}` : ""} · winkels gecheckt {job.aCursor || 0}/{job.totalCandidates}
                   </div>
                   {prog && (
                     <div className="statline" style={{ marginTop: 10 }}>
@@ -362,6 +362,7 @@ export default function CompetitorFinderPage() {
                       <div className="stat"><div className="stat-k">Twijfel</div><div className="stat-v" style={{ color: "var(--warn)" }}>{prog.twijfel}</div></div>
                       <div className="stat"><div className="stat-k">Merk</div><div className="stat-v">{prog.merk}</div></div>
                       <div className="stat"><div className="stat-k">Geen Shopify</div><div className="stat-v">{prog.nonShopify}</div></div>
+                      <div className="stat"><div className="stat-k">Geleerd</div><div className="stat-v">{prog.learned || 0}</div></div>
                     </div>
                   )}
                   <div className="logpanel" ref={logRef} style={{ marginTop: 12, minHeight: 120, maxHeight: 260 }}>
@@ -406,6 +407,16 @@ export default function CompetitorFinderPage() {
                   <input type="text" value={cfg.sheetTab} onChange={(e) => setCfg({ ...cfg, sheetTab: e.target.value })} onBlur={() => saveCfg({ sheetTab: cfg.sheetTab })} />
                   <div className="field-label">Grens maandbezoek</div>
                   <input type="number" min={0} step={1000} value={cfg.minVisits} onChange={(e) => setCfg({ ...cfg, minVisits: Number(e.target.value) || 0 })} onBlur={() => saveCfg({ minVisits: cfg.minVisits })} style={{ width: 140 }} />
+
+                  <div className="field-label">Elke maandag automatisch <span className="opt">(Vercel-cron, 06:20 NL-tijd)</span></div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span className={"switch" + (cfg.weekly !== false ? " on" : "")} role="switch" aria-checked={cfg.weekly !== false} onClick={() => saveCfg({ weekly: !(cfg.weekly !== false) })} />
+                    <span className="small muted">{cfg.weekly !== false ? "aan" : "uit"} · markten: {String(cfg.weeklyMarkets || "").split(",").filter(Boolean).join(" · ") || "—"}</span>
+                    <button className="btn-ghost btn-small" type="button" onClick={() => saveCfg({ weeklyMarkets: sel.join(",") })} disabled={!sel.length}>Huidige selectie gebruiken</button>
+                  </div>
+
+                  <div className="field-label">Eigen stores <span className="opt">(nooit als concurrent tonen; standaard al: SSB, LGB, EMC, SW, C&C, L&L, Sa Collective)</span></div>
+                  <input type="text" value={cfg.ownStores || ""} onChange={(e) => setCfg({ ...cfg, ownStores: e.target.value })} onBlur={() => saveCfg({ ownStores: cfg.ownStores || "" })} placeholder="extra domeinen, komma-gescheiden" />
                 </div>
               )}
 
@@ -509,14 +520,27 @@ export default function CompetitorFinderPage() {
               )}
             </div>
 
+            {info && Array.isArray(info.history) && info.history.length > 0 && (
+              <div className="card">
+                <h2>Vorige scans <span className="opt">(laatste {Math.min(10, info.history.length)})</span></h2>
+                {info.history.slice(0, 10).map((h, i) => (
+                  <div key={i} className="log" style={{ fontSize: 12.5 }}>
+                    <span className="muted">{new Date(h.at).toLocaleString("nl-NL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+                    <span>{h.label || "Scan"} · {(h.markets || []).join(", ")}</span>
+                    <span className="muted">{h.prog ? `${h.prog.candidates} nieuw → ${h.prog.dropship} dropship · ${h.prog.twijfel} twijfel${h.prog.learned ? ` · ${h.prog.learned} geleerd` : ""}` : ""}{h.minutes ? ` · ${h.minutes} min` : ""}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="card">
               <h2>Zo werkt het</h2>
               <div className="hint">
-                1. <b>Scan nu</b> → de tool zoekt op Google in elk gekozen land (via Apify, geen VPN) met echte producttitels van de beste stores uit je sheet.<br /><br />
-                2. Alle winkels uit organisch + gesponsorde producten → merken/marketplaces eruit → wat al in je sheet of scraper-lijst staat slaat hij over.<br /><br />
+                1. <b>Scan nu</b> (of elke maandag vanzelf) → de tool zoekt op Google in elk gekozen land (via Apify, geen VPN) met echte producttitels van de beste stores uit je sheet, geschud en roterend: elke scan andere titels.<br /><br />
+                2. Alle winkels uit organisch + advertenties + gesponsorde producten → merken/marketplaces en je eigen stores eruit → wat al in je sheet of scraper-lijst staat slaat hij over. Gesponsorde producten waarvan Google alleen een redirect geeft, zoekt hij op merchantnaam alsnog op.<br /><br />
                 3. Elke nieuwe Shopify-store krijgt een dropship-score 0–100 (één vendor, bulk-import, compare-at overal, trust bar, sale-banner, HK/Ltd-adres, thema, reviews-app, leeftijd; foto op AliExpress = +30).<br /><br />
-                4. Vink aan → <b>Toevoegen</b>: rij in het juiste marktblok van je sheet + in de lijst van de Product Scraper. Bezoek/mnd uit TrendTrack in het vakje, of later door Claude.<br /><br />
-                5. Merk/retailer en "geen Shopify" onthoudt hij; dropship die je niet toevoegt komt de volgende keer terug als "eerder gevonden". Elke scan gebruikt andere titels uit de pool.
+                4. <b>Zelflerend</b>: de titels van elke gevonden dropship-store gaan in het zoekgeheugen van die markt, dus de volgende scan zoekt met hun woorden en vindt weer nieuwe stores (sneeuwbal).<br /><br />
+                5. Vink aan → <b>Toevoegen</b>: rij in het juiste marktblok van je sheet + in de lijst van de Product Scraper. Bezoek/mnd uit TrendTrack in het vakje, of later door Claude. Merk/retailer en "geen Shopify" onthoudt hij; dropship die je niet toevoegt komt terug als "eerder gevonden".
               </div>
             </div>
           </div>

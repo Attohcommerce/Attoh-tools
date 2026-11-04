@@ -42,6 +42,7 @@ const CHUNK_FOR = {
   "theme-round-size-guide": 1,
   "delete-small-men-shoe-sizes": 8,
   "clean-size-labels": 12,
+  "fix-size-notation": 12,
   "shoe-us-eu-labels": 8,
   "fix-gender-from-title": 8,
   "gender-tags": 8,
@@ -118,6 +119,7 @@ function snapshotFor(fix, p) {
     case "delete-small-men-shoe-sizes":
       return { variants: vars((x) => [x.id, x.option1, x.option2, x.option3, x.price, x.sku]) };
     case "clean-size-labels":
+    case "fix-size-notation":
       return { variants: vars((x) => [x.id, x.option1, x.option2, x.option3]) };
     case "shoe-us-eu-labels":
       return {

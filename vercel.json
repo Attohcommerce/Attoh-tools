@@ -7,6 +7,10 @@
     {
       "path": "/api/pythago/cron",
       "schedule": "10 5 * * *"
+    },
+    {
+      "path": "/api/competitor-finder/cron",
+      "schedule": "20 5 * * 1"
     }
   ]
 }

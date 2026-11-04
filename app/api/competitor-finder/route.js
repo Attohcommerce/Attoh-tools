@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { startJob, stopJob, resumeJob, jobStatus, kickTick, getJob, jobAvailable, getLastResults, patchResults } from "@/lib/finder-job";
+import { startJob, stopJob, resumeJob, jobStatus, kickTick, getJob, jobAvailable, getLastResults, patchResults, getHistory } from "@/lib/finder-job";
 import {
   getConfig, setConfig, getMarketQueries, setMarketQueries, clearMarketQueries, localizeQueries, writeToSheet, markSeen, getSeen, apifyConfigured, cleanDomain,
 } from "@/lib/competitor-finder";
@@ -35,7 +35,8 @@ export async function POST(req) {
         perMarket[m.key] = { count: q.queries.length, source: q.source, at: q.at || 0, override: !!q.override, stores: (q.stores || []).map((s) => s.domain) };
       }
       const last = await getLastResults();
-      return NextResponse.json({ ok: true, cfg, markets: MARKETS, perMarket, last, apify: apifyConfigured(), redis: jobAvailable(), defaultQueries: DEFAULT_QUERIES_EN });
+      const history = await getHistory();
+      return NextResponse.json({ ok: true, cfg, markets: MARKETS, perMarket, last, history, apify: apifyConfigured(), redis: jobAvailable(), defaultQueries: DEFAULT_QUERIES_EN });
     }
     if (action === "config") {
       const cfg = await setConfig(body.cfg || {});
