@@ -45,6 +45,7 @@ export default function CompetitorFinderPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showQueries, setShowQueries] = useState(false);
   const [filter, setFilter] = useState("dropship");
+  const [onlyAbove, setOnlyAbove] = useState(true); // alleen winkels ≥ grens maandbezoek (onbekend blijft zichtbaar)
   const [marketFilter, setMarketFilter] = useState("");
   const [checked, setChecked] = useState({});
   const [visits, setVisits] = useState({});
@@ -74,6 +75,8 @@ export default function CompetitorFinderPage() {
       if (Array.isArray(m) && m.length) setSel(m);
       const f = localStorage.getItem(LS_FILTER);
       if (f) setFilter(f);
+      const oa = localStorage.getItem("attoh_cf_only_above");
+      if (oa === "0") setOnlyAbove(false);
     } catch {}
     loadInfo().catch((e) => setErr(String(e.message || e)));
     loadStatus().catch(() => {});
@@ -167,6 +170,7 @@ export default function CompetitorFinderPage() {
   }
 
   /* ---- resultaten ---- */
+  const minV = Number(cfg && cfg.minVisits) || 8000;
   const results = useMemo(() => (job && job.results && job.results.length ? job.results : last && last.results ? last.results : []), [job, last]);
   const shown = useMemo(
     () =>
@@ -174,8 +178,17 @@ export default function CompetitorFinderPage() {
         .filter((r) => !r.added && !r.ignored)
         .filter((r) => (filter === "alles" ? true : r.verdict === filter))
         .filter((r) => (marketFilter ? (r.markets || []).includes(marketFilter) : true))
-        .sort((a, b) => (b.score || 0) - (a.score || 0)),
-    [results, filter, marketFilter]
+        .filter((r) => (onlyAbove && r.visits != null && r.visits !== "" ? Number(r.visits) >= minV : true))
+        .sort((a, b) => {
+          const va = a.visits != null && a.visits !== "" ? Number(a.visits) : null;
+          const vb = b.visits != null && b.visits !== "" ? Number(b.visits) : null;
+          const ra = va == null ? 1 : va >= minV ? 0 : 2; // boven grens → onbekend → eronder
+          const rb = vb == null ? 1 : vb >= minV ? 0 : 2;
+          if (ra !== rb) return ra - rb;
+          if (ra === 0 && va !== vb) return vb - va;
+          return (b.score || 0) - (a.score || 0);
+        }),
+    [results, filter, marketFilter, onlyAbove, minV]
   );
   const marketsInResults = useMemo(() => {
     const s = new Set();
@@ -280,7 +293,7 @@ export default function CompetitorFinderPage() {
 
   const perMarket = (info && info.perMarket) || {};
   const prog = job && job.prog;
-  const pct = job ? (job.phase === "search" ? Math.round(((job.qCursor || 0) / Math.max(1, job.totalQueries || 1)) * 55) : job.phase === "resolve" ? 55 + Math.round(((job.nCursor || 0) / Math.max(1, job.totalNames || 1)) * 5) : job.phase === "audit" ? 60 + Math.round(((job.aCursor || 0) / Math.max(1, job.totalCandidates || 1)) * 40) : 100) : 0;
+  const pct = job ? (job.phase === "search" ? Math.round(((job.qCursor || 0) / Math.max(1, job.totalQueries || 1)) * 55) : job.phase === "resolve" ? 55 + Math.round(((job.nCursor || 0) / Math.max(1, job.totalNames || 1)) * 5) : job.phase === "audit" ? 60 + Math.round(((job.aCursor || 0) / Math.max(1, job.totalCandidates || 1)) * 36) : job.phase === "visits" ? 97 : 100) : 0;
   const estQueries = sel.length * Math.min(cfg.queriesPerMarket || 60, 300);
   const estUsd = (estQueries * (cfg.pages || 1) * 0.0018).toFixed(2);
 
@@ -349,13 +362,14 @@ export default function CompetitorFinderPage() {
                 <div style={{ marginTop: 14 }}>
                   <div className="pbar"><div className={"pbar-fill" + (running ? " live" : "")} style={{ width: `${pct}%` }} /></div>
                   <div className="small muted" style={{ marginTop: 6 }}>
-                    {job.status === "running" ? (job.phase === "search" ? "Apify zoekt op Google (alle markten tegelijk) — intussen worden gevonden winkels al gecheckt…" : job.phase === "resolve" ? "Merchantnamen opzoeken…" : "Winkels checken…") : job.status === "done" ? "Klaar" : job.status === "stopped" ? "Gestopt" : `Fout: ${job.error || ""}`}
+                    {job.status === "running" ? (job.phase === "search" ? "Apify zoekt op Google (alle markten tegelijk) — intussen worden gevonden winkels al gecheckt…" : job.phase === "resolve" ? "Merchantnamen opzoeken…" : job.phase === "visits" ? "Maandbezoek ophalen (SimilarWeb)…" : "Winkels checken…") : job.status === "done" ? "Klaar" : job.status === "stopped" ? "Gestopt" : `Fout: ${job.error || ""}`}
                     {" · "}zoekopdrachten {job.qCursor || 0}/{job.totalQueries}{job.totalNames ? ` · merchantnamen ${job.nCursor || 0}/${job.totalNames}` : ""} · winkels gecheckt {job.aCursor || 0}/{job.totalCandidates}
                   </div>
                   {Array.isArray(job.runs) && job.runs.length > 0 && (
                     <div className="small muted" style={{ marginTop: 4 }}>
                       Apify: {job.runs.filter((r) => r.kind === "search").map((r) => `${r.market} ${r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : `${r.total > 1 ? `${r.done}/${r.total} runs klaar · ` : ""}bezig ${Math.max(0, Math.round((Date.now() - (r.startedAt || Date.now())) / 1000))} s`}`).join(" · ")}
                       {job.runs.some((r) => r.kind === "resolve") ? ` · merchantnamen: ${job.runs.filter((r) => r.kind === "resolve").map((r) => `${r.market} ${r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : "bezig"}`).join(" · ")}` : ""}
+                      {job.runs.some((r) => r.kind === "visits") ? ` · maandbezoek: ${job.runs.filter((r) => r.kind === "visits").map((r) => (r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : `bezig ${Math.max(0, Math.round((Date.now() - (r.startedAt || Date.now())) / 1000))} s`)).join(" · ")}` : ""}
                     </div>
                   )}
                   {prog && (
@@ -477,7 +491,10 @@ export default function CompetitorFinderPage() {
               <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <button className="btn" onClick={addSelected} disabled={!!busy || !selected.length}>{busy === "add" ? "Schrijven…" : `Toevoegen aan sheet + lijst (${selected.length})`}</button>
                 <button className="btn-ghost" onClick={ignoreSelected} disabled={!!busy || !selected.length}>Negeren ({selected.length})</button>
-                <span className="small muted">Grens {fmtN(cfg.minVisits)} bezoek/mnd — vul het TrendTrack-cijfer in het vakje in, of laat Claude het doen.</span>
+                <button type="button" className="btn-ghost btn-small" style={onlyAbove ? { borderColor: "var(--accent)", color: "var(--accent-hi)", background: "var(--accent-dim)" } : {}} onClick={() => { const v = !onlyAbove; setOnlyAbove(v); try { localStorage.setItem("attoh_cf_only_above", v ? "1" : "0"); } catch {} }} title="Winkels met een bekend maandbezoek onder de grens verbergen">
+                  {onlyAbove ? "✓ " : ""}alleen ≥ {fmtN(minV)} bezoek/mnd
+                </button>
+                <span className="small muted">Maandbezoek komt automatisch (SimilarWeb) aan het eind van de scan; wil je het TrendTrack-cijfer gebruiken, typ het in het vakje.</span>
               </div>
 
               {!shown.length ? (
@@ -500,7 +517,18 @@ export default function CompetitorFinderPage() {
                           {r.ali && r.ali.found && <span className="badge badge-green" title={r.ali.top || ""}>AliExpress ✓</span>}
                           {r.earlier && <span className="small muted">eerder gevonden</span>}
                           <span style={{ flex: 1 }} />
-                          <input type="text" placeholder="bezoek/mnd" value={visits[r.domain] != null ? visits[r.domain] : r.visits || ""} onChange={(e) => setVisits({ ...visits, [r.domain]: e.target.value })} style={{ width: 110, padding: "5px 8px", fontSize: 12.5 }} title="Maandbezoek uit TrendTrack" />
+                          {r.visits != null && r.visits !== "" ? (
+                            Number(r.visits) >= minV ? (
+                              <span className="badge badge-green" title={`SimilarWeb${r.visitsMonths && r.visitsMonths.length ? ` · laatste maanden: ${r.visitsMonths.map((x) => fmtN(x)).join(" → ")}` : ""}`}>{fmtN(Number(r.visits))} bezoek/mnd</span>
+                            ) : r.visitsNoData || Number(r.visits) === 0 ? (
+                              <span className="badge" style={{ opacity: 0.7 }} title="SimilarWeb heeft geen data voor deze site — dat betekent meestal minder dan ±5.000 bezoek/mnd">&lt; 5.000 bezoek/mnd</span>
+                            ) : (
+                              <span className="badge" style={{ opacity: 0.7 }} title="Onder je grens">{fmtN(Number(r.visits))} bezoek/mnd</span>
+                            )
+                          ) : (
+                            <span className="small muted">{running ? "bezoek volgt…" : "bezoek onbekend"}</span>
+                          )}
+                          <input type="text" placeholder="eigen cijfer" value={visits[r.domain] != null ? visits[r.domain] : ""} onChange={(e) => setVisits({ ...visits, [r.domain]: e.target.value })} style={{ width: 92, padding: "5px 8px", fontSize: 12.5 }} title="Eigen maandbezoek (bijv. uit TrendTrack) — overschrijft het SimilarWeb-cijfer bij toevoegen" />
                           <button className="btn-ghost btn-small" type="button" onClick={() => setOpen({ ...open, [r.domain]: !isOpen })}>{isOpen ? "minder" : "details"}</button>
                         </div>
                         <div className="small muted" style={{ marginTop: 4 }}>
