@@ -365,7 +365,8 @@ export default function CompetitorFinderPage() {
   const prog = job && job.prog;
   const pct = job ? (job.phase === "search" ? Math.round(((job.qCursor || 0) / Math.max(1, job.totalQueries || 1)) * 55) : job.phase === "resolve" ? 55 + Math.round(((job.nCursor || 0) / Math.max(1, job.totalNames || 1)) * 5) : job.phase === "audit" ? 60 + Math.round(((job.aCursor || 0) / Math.max(1, job.totalCandidates || 1)) * 36) : job.phase === "visits" ? 97 : 100) : 0;
   const estQueries = sel.length * Math.min(cfg.queriesPerMarket || 60, 300);
-  const estUsd = (estQueries * (cfg.pages || 1) * 0.0018).toFixed(2);
+  const estAdsUsd = cfg.adsSource !== false ? sel.length * Math.min(Number(cfg.adsQueries) || 40, Number(cfg.queriesPerMarket) || 60) * (Number(cfg.adsPerQuery) || 10) * 0.0027 : 0;
+  const estUsd = (estQueries * (cfg.pages || 1) * 0.0018 + estAdsUsd).toFixed(2);
 
   return (
     <>
@@ -438,6 +439,8 @@ export default function CompetitorFinderPage() {
                   {Array.isArray(job.runs) && job.runs.length > 0 && (
                     <div className="small muted" style={{ marginTop: 4 }}>
                       Apify: {job.runs.filter((r) => r.kind === "search").map((r) => `${r.market} ${r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : `${r.total > 1 ? `${r.done}/${r.total} runs klaar · ` : ""}bezig ${Math.max(0, Math.round((Date.now() - (r.startedAt || Date.now())) / 1000))} s`}`).join(" · ")}
+                      {job.runs.some((r) => r.kind === "ads") ? ` · gesponsord: ${job.runs.filter((r) => r.kind === "ads").map((r) => `${r.market} ${r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : "bezig"}`).join(" · ")}` : ""}
+                      {job.queue && job.queue.length ? ` · ${job.queue.length} in wachtrij` : ""}
                       {job.runs.some((r) => r.kind === "resolve") ? ` · merchantnamen: ${job.runs.filter((r) => r.kind === "resolve").map((r) => `${r.market} ${r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : "bezig"}`).join(" · ")}` : ""}
                       {job.runs.some((r) => r.kind === "visits") ? ` · maandbezoek: ${job.runs.filter((r) => r.kind === "visits").map((r) => (r.status === "klaar" ? "✓" : r.status === "fout" ? "✗" : `bezig ${Math.max(0, Math.round((Date.now() - (r.startedAt || Date.now())) / 1000))} s`)).join(" · ")}` : ""}
                     </div>
@@ -491,6 +494,25 @@ export default function CompetitorFinderPage() {
                       </div>
                     </div>
                   </div>
+                  <div className="field-label">Gesponsorde producten <span className="opt">(Shopping-advertenties bij elke zoekopdracht — dé bron van dropshippers · $0,0027 per advertentie)</span></div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                    <span className={"switch" + (cfg.adsSource !== false ? " on" : "")} role="switch" aria-checked={cfg.adsSource !== false} onClick={() => saveCfg({ adsSource: !(cfg.adsSource !== false) })} />
+                    <span className="small muted">{cfg.adsSource !== false ? "aan" : "uit"}</span>
+                    <label className="small muted" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      zoekopdrachten per markt
+                      <input type="number" min={5} max={300} value={cfg.adsQueries || 40} onChange={(e) => setCfg({ ...cfg, adsQueries: Number(e.target.value) || 40 })} onBlur={() => saveCfg({ adsQueries: cfg.adsQueries || 40 })} style={{ width: 70, padding: "4px 6px" }} />
+                    </label>
+                    <label className="small muted" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      max advertenties per zoekopdracht
+                      <input type="number" min={1} max={40} value={cfg.adsPerQuery || 10} onChange={(e) => setCfg({ ...cfg, adsPerQuery: Number(e.target.value) || 10 })} onBlur={() => saveCfg({ adsPerQuery: cfg.adsPerQuery || 10 })} style={{ width: 60, padding: "4px 6px" }} />
+                    </label>
+                    <select value={cfg.adsDevice || "desktop"} onChange={(e) => saveCfg({ adsDevice: e.target.value })} style={{ width: 150 }}>
+                      <option value="desktop">desktop</option>
+                      <option value="mobile">mobiel</option>
+                      <option value="both">desktop + mobiel (2× kosten)</option>
+                    </select>
+                  </div>
+
                   <div className="field-label">Competitor-sheet <span className="opt">(gedeeld met attoh-sheets@attoh-tools.iam.gserviceaccount.com als Bewerker)</span></div>
                   <input type="text" value={cfg.sheetId} onChange={(e) => setCfg({ ...cfg, sheetId: e.target.value })} onBlur={() => saveCfg({ sheetId: cfg.sheetId })} placeholder="https://docs.google.com/spreadsheets/d/…" />
                   <div className="field-label">Tabblad <span className="opt">(het dashboard met de marktblokken)</span></div>
@@ -647,7 +669,7 @@ export default function CompetitorFinderPage() {
               <h2>Zo werkt het</h2>
               <div className="hint">
                 1. <b>Scan nu</b> (of elke maandag vanzelf) → de tool zoekt op Google in elk gekozen land (via Apify, geen VPN) met echte producttitels van de beste stores uit je sheet, geschud en roterend: elke scan andere titels.<br /><br />
-                2. Alle winkels uit organisch + advertenties + gesponsorde producten → merken/marketplaces en je eigen stores eruit → wat al in je sheet of scraper-lijst staat slaat hij over. Gesponsorde producten waarvan Google alleen een redirect geeft, zoekt hij op merchantnaam alsnog op.<br /><br />
+                2. Twee bronnen per zoekopdracht: de gewone Google-resultaten én de carrousel "Gesponsorde producten" (Shopping-advertenties, daar adverteren de dropshippers). Merken/marketplaces en je eigen stores eruit → wat al in je sheet of scraper-lijst staat slaat hij over. Gesponsorde producten waarvan Google alleen een redirect geeft, zoekt hij op merchantnaam alsnog op.<br /><br />
                 3. Elke nieuwe Shopify-store krijgt een dropship-score 0–100 (één vendor, bulk-import, compare-at overal, trust bar, sale-banner, HK/Ltd-adres, thema, reviews-app, leeftijd; foto op AliExpress = +30).<br /><br />
                 4. <b>Zelflerend</b>: de titels van elke gevonden dropship-store gaan in het zoekgeheugen van die markt, dus de volgende scan zoekt met hun woorden en vindt weer nieuwe stores (sneeuwbal).<br /><br />
                 5. Vink aan → <b>Toevoegen</b>: rij in het juiste marktblok van je sheet + in de lijst van de Product Scraper. Bezoek/mnd uit TrendTrack in het vakje, of later door Claude. Merk/retailer en "geen Shopify" onthoudt hij; dropship die je niet toevoegt komt terug als "eerder gevonden".
