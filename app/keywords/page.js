@@ -1332,6 +1332,11 @@ export default function KeywordsPage() {
       tPush({ text: `Verdeling (${t.planned} producten over ${t.fed} keywords${t.big != null ? ` · ${t.big} met ≥ 15% van de orders → 3` : ""}): ${top}` });
       tPush({ muted: true, text: r.weeks && r.weeks.length ? `Trend en TPK t/m nu vergeleken met: ${r.weeks.join(", ")}` : "Geen eerdere TPK-weken — trend = nieuw." });
       if (r.ignoredWeeks && r.ignoredWeeks.length) tPush({ muted: true, text: `Niet meegeteld: ${r.ignoredWeeks.join(", ")} (verwijderd blad, of het blad dat stap 2 nu overschrijft) — stap 2 haalt die regels uit Log en Overzicht.` });
+      if (a.feedback) {
+        tPush({ text: `Effect eerdere TPK-weken (${a.feedback.weeks.join(", ")}): ${a.feedback.label}` });
+        if (a.feedback.best.length) tPush({ muted: true, text: `Beste: ${a.feedback.best.filter((x) => x.now > x.before).map((x) => `${x.keyword} ${x.before} → ${x.now} (${x.bron}, ${x.week})`).join(" · ") || "—"}` });
+        if (a.feedback.worst.length) tPush({ muted: true, text: `Gedaald: ${a.feedback.worst.map((x) => `${x.keyword} ${x.before} → ${x.now} (${x.bron}, ${x.week})`).join(" · ")}` });
+      }
       for (const w of a.warnings || []) tPush({ err: true, text: `Let op: ${w}` });
       if (tTabs.includes(tTab.trim())) tPush({ err: true, text: `Blad "${tTab.trim()}" bestaat al in de TPK-sheet — stap 2 overschrijft het (Log-regels van dat blad worden vervangen, telt niet als extra week).` });
       tPush({ text: `Klopt de verdeling? Pas eventueel het aantal aan en draai opnieuw. Anders: stap 2 schrijft blad "${tTab.trim() || "…"}" + Log + Overzicht.` });
@@ -2211,6 +2216,8 @@ export default function KeywordsPage() {
                 <div className="hint">
                   Regels (bewezen verkoop): alleen keywords met ≥ 3 orders, op volgorde van orders · ≥ 15% van alle orders → 3 producten, de rest 1 · tot het aantal vol is (blijft er over: van boven af bijplussen tot max 3).
                   Koptermen (jeans, shoe, top …) krijgen een verfijnde zoekterm op het best verkopende product: max 3 woorden, kopterm achteraan.
+                  Winstfilter (als de store in Pythago gesynct is): een keyword dat in 30 d onder break-even zit op Ads krijgt max 1 product.
+                  Effect eerdere weken: keywords die eerder producten kregen worden vergeleken met nu (per bron) — zelfde periode aanhouden.
                   Na stap 2 wordt het blad teruggelezen zoals de scraper het leest en gecheckt (scrape-ready).
                 </div>
 
@@ -2283,6 +2290,7 @@ export default function KeywordsPage() {
                           <strong>{s.zoekterm}</strong>
                           <span className="opt"> · {s.g === "M" ? "heren" : "dames"}{s.coll ? ` · ${s.coll}` : " · (geen collectie)"}{s.type === "Gelegenheid" ? " · gelegenheid" : ""}</span>
                           {s.keyword !== s.zoekterm.replace(/^mens /, "") && <span className="opt"> · uit "{s.keyword}"</span>}
+                          {s.loss && <span className="opt" style={{ color: "var(--warn)" }}> · verliesgevend op Ads (max 1)</span>}
                           {s.bron && s.bron !== "Sales" && (
                             <span className="opt" style={{ color: "var(--ok, #6bbf59)" }} title={s.py || ""}> · {s.bron}{s.nPy ? ` (+${s.nPy})` : ""}</span>
                           )}
