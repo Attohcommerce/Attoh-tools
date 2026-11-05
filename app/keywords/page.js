@@ -2216,7 +2216,8 @@ export default function KeywordsPage() {
                 <div className="hint">
                   Regels (bewezen verkoop): alleen keywords met ≥ 3 orders, op volgorde van orders · ≥ 15% van alle orders → 3 producten, de rest 1 · tot het aantal vol is (blijft er over: van boven af bijplussen tot max 3).
                   Koptermen (jeans, shoe, top …) krijgen een verfijnde zoekterm op het best verkopende product: max 3 woorden, kopterm achteraan.
-                  Winstfilter (als de store in Pythago gesynct is): een keyword dat in 30 d onder break-even zit op Ads krijgt max 1 product.
+                  Met een Pythago-sync ook: verliesgevend op Ads (30 d onder break-even) of ≥ 25% refunds → max 1 product · afkoelend (0 orders in 7 d) → max 2 · stijgend (7 d ≥ 1,5× zo snel als het 30-d-gemiddelde) krijgt als eerste een extra product.
+                  Uptrend-ROAS wordt gladgestreken met de store-ROAS (1 order op £1 spend is geen ROAS 50) en telt zwaarder als Google de conversie zelf ook ziet.
                   Effect eerdere weken: keywords die eerder producten kregen worden vergeleken met nu (per bron) — zelfde periode aanhouden.
                   Na stap 2 wordt het blad teruggelezen zoals de scraper het leest en gecheckt (scrape-ready).
                 </div>
@@ -2291,6 +2292,9 @@ export default function KeywordsPage() {
                           <span className="opt"> · {s.g === "M" ? "heren" : "dames"}{s.coll ? ` · ${s.coll}` : " · (geen collectie)"}{s.type === "Gelegenheid" ? " · gelegenheid" : ""}</span>
                           {s.keyword !== s.zoekterm.replace(/^mens /, "") && <span className="opt"> · uit "{s.keyword}"</span>}
                           {s.loss && <span className="opt" style={{ color: "var(--warn)" }}> · verliesgevend op Ads (max 1)</span>}
+                          {s.refundHigh && <span className="opt" style={{ color: "var(--warn)" }}> · veel refunds (max 1)</span>}
+                          {s.momentum === "stijgend" && <span className="opt" style={{ color: "var(--ok, #6bbf59)" }}> · stijgend ▲</span>}
+                          {s.momentum === "afkoelend" && <span className="opt" style={{ color: "var(--warn)" }}> · afkoelend ▼ (max 2)</span>}
                           {s.bron && s.bron !== "Sales" && (
                             <span className="opt" style={{ color: "var(--ok, #6bbf59)" }} title={s.py || ""}> · {s.bron}{s.nPy ? ` (+${s.nPy})` : ""}</span>
                           )}
