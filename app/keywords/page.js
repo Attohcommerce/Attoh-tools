@@ -289,7 +289,10 @@ export default function KeywordsPage() {
      Per store één TPK-sheet (store-geheugen), één blad per week. Orders van
      de laatste 30 dagen → winnende keywords → ±10 producten → scrape-ready blad. */
   const [tStore, setTStore] = useState(""); // domein uit sa_stores
-  const [tSource, setTSource] = useState("shopify"); // shopify | csv
+  const [tSource, setTSource] = useState("shopify"); // shopify | csv (sales-bron)
+  const [tSales, setTSales] = useState(true); // sales-bron aangevinkt (orders of CSV)
+  const [tPy, setTPy] = useState(false); // Pythago uptrend aangevinkt
+  const [tPyN, setTPyN] = useState(5); // extra producten uit Pythago (als beide aan staan)
   const [tDays, setTDays] = useState(30);
   const [tN, setTN] = useState(10);
   const [tTab, setTTab] = useState("");
@@ -349,6 +352,12 @@ export default function KeywordsPage() {
       if (tn > 0) setTN(tn);
       const td = Number(orgLS.getItem("kw_tpk_days"));
       if (td > 0) setTDays(td);
+      const tsl = orgLS.getItem("kw_tpk_sales");
+      const tpy = orgLS.getItem("kw_tpk_py");
+      if (tsl === "0" && tpy === "1") setTSales(false);
+      if (tpy === "1") setTPy(true);
+      const tpn = Number(orgLS.getItem("kw_tpk_pyn"));
+      if (tpn >= 0 && orgLS.getItem("kw_tpk_pyn") !== null) setTPyN(tpn);
     } catch {}
     setSessions(loadSessions());
   }, []);
@@ -1199,7 +1208,21 @@ export default function KeywordsPage() {
     }
     return null;
   })();
-  const canTpkAnalyse = !tBusy && tStore && tSaved && tSaved.tpkSheetId && (tSource === "csv" ? tCsv.trim() : !!tOrdersStore) && Number(tN) > 0;
+  const tSalesOk = !tSales || (tSource === "csv" ? !!tCsv.trim() : !!tOrdersStore);
+  const canTpkAnalyse = !tBusy && tStore && tSaved && tSaved.tpkSheetId && (tSales || tPy) && tSalesOk && Number(tN) > 0;
+  // bronnen aan/uit: orders en CSV sluiten elkaar uit, Pythago kan erbij — nooit allebei uit
+  function tToggleSales(src) {
+    if (tSales && tSource === src) {
+      if (tPy) setTSales(false);
+      return;
+    }
+    setTSales(true);
+    setTSource(src);
+  }
+  function tTogglePy() {
+    if (tPy && !tSales) return;
+    setTPy(!tPy);
+  }
   const canTpkWrite = !tBusy && tResult && tResult.analysis && tTab.trim();
 
   function tRemember() {
@@ -1208,6 +1231,9 @@ export default function KeywordsPage() {
       orgLS.setItem("kw_tpk_source", tSource);
       orgLS.setItem("kw_tpk_n", String(tN));
       orgLS.setItem("kw_tpk_days", String(tDays));
+      orgLS.setItem("kw_tpk_sales", tSales ? "1" : "0");
+      orgLS.setItem("kw_tpk_py", tPy ? "1" : "0");
+      orgLS.setItem("kw_tpk_pyn", String(tPyN));
     } catch {}
   }
 
@@ -1267,13 +1293,22 @@ export default function KeywordsPage() {
     setTLogs([]);
     tRemember();
     try {
-      tPush({ strong: true, text: `— TPK: ${tShop.name || tShop.domain} · ${tSource === "csv" ? "CSV" : `orders laatste ${tDays} dagen`} · ${tN} producten` });
-      tPush({ key: "t-step", text: tSource === "csv" ? "Stap 1/2 · CSV lezen, keywords tellen, verdeling berekenen…" : "Stap 1/2 · Orders uit Shopify halen, keywords tellen, verdeling berekenen…" });
+      const srcLabel = [tSales ? (tSource === "csv" ? "CSV" : `orders laatste ${tDays} dagen`) : "", tPy ? "Pythago uptrend" : ""].filter(Boolean).join(" + ");
+      const nLabel = tSales && tPy ? `${tN} producten + ${tPyN} uit Pythago` : `${tN} producten`;
+      tPush({ strong: true, text: `— TPK: ${tShop.name || tShop.domain} · ${srcLabel} · ${nLabel}` });
+      tPush({
+        key: "t-step",
+        text: !tSales
+          ? "Stap 1/2 · Laatste Pythago-sync lezen, uptrend-producten → keywords, verdeling berekenen…"
+          : `Stap 1/2 · ${tSource === "csv" ? "CSV lezen" : "Orders uit Shopify halen"}${tPy ? " + laatste Pythago-sync lezen" : ""}, keywords tellen, verdeling berekenen…`,
+      });
       const r = await api("/api/tpk", {
         action: "analyse",
         store: { name: tShop.name, domain: tShop.domain, publicDomain: tShop.publicDomain, currency: tShop.currency },
-        ordersStore: tSource === "csv" ? null : tOrdersStore,
-        csvText: tSource === "csv" ? tCsv : "",
+        ordersStore: !tSales || tSource === "csv" ? null : tOrdersStore,
+        csvText: tSales && tSource === "csv" ? tCsv : "",
+        sources: { sales: tSales, pythago: tPy },
+        pyN: Number(tPyN) || 0,
         days: Number(tDays) || 30,
         n: Number(tN) || 10,
         // het blad dat stap 2 gaat schrijven: telt niet mee als "vorige week" (overschrijven = herkansing)
@@ -1285,9 +1320,15 @@ export default function KeywordsPage() {
       tPush({
         ok: true,
         key: "t-step",
-        text: `Stap 1/2 · ${t.orders} orders · ${t.units} stuks${t.netLabel ? ` · ${t.netLabel}` : ""} · ${t.keywords} keywords met verkoop · ${t.winners} winnaar${t.winners === 1 ? "" : "s"} (≥ 10) · ${t.eligible} met ≥ 3 ${t.measure}.`,
+        text: tSales
+          ? `Stap 1/2 · ${t.orders} orders · ${t.units} stuks${t.netLabel ? ` · ${t.netLabel}` : ""} · ${t.keywords} keywords · ${t.winners} winnaar${t.winners === 1 ? "" : "s"} (≥ 10) · ${t.eligible} met ≥ 3 ${t.measure}.`
+          : `Stap 1/2 · ${t.pyProducts} uptrend-producten → ${t.pyKeywords} keywords.`,
       });
-      const top = a.scrape.map((s) => `${s.zoekterm} ${s.n}`).join(" · ");
+      if (tPy && a.pythago) {
+        const ago = a.pythago.syncedAt ? Math.round((Date.now() - Date.parse(a.pythago.syncedAt)) / 3600000) : null;
+        tPush({ text: `Pythago ↗ (sync ${ago != null ? `${ago} uur geleden` : "?"}): ${a.pythago.count} product${a.pythago.count === 1 ? "" : "en"} met extreem goede ROAS én uptrend 30 → 14 → 7 d · ${t.pyKeywords} keyword${t.pyKeywords === 1 ? "" : "s"} · ${t.pyPlanned} product${t.pyPlanned === 1 ? "" : "en"} erbij.` });
+      }
+      const top = a.scrape.map((s) => `${s.zoekterm} ${s.n}${s.nPy ? " ↗" : ""}`).join(" · ");
       tPush({ text: `Verdeling (${t.planned} producten over ${t.fed} keywords${t.big != null ? ` · ${t.big} met ≥ 15% van de orders → 3` : ""}): ${top}` });
       tPush({ muted: true, text: r.weeks && r.weeks.length ? `Trend en TPK t/m nu vergeleken met: ${r.weeks.join(", ")}` : "Geen eerdere TPK-weken — trend = nieuw." });
       if (r.ignoredWeeks && r.ignoredWeeks.length) tPush({ muted: true, text: `Niet meegeteld: ${r.ignoredWeeks.join(", ")} (verwijderd blad, of het blad dat stap 2 nu overschrijft) — stap 2 haalt die regels uit Log en Overzicht.` });
@@ -2114,15 +2155,32 @@ export default function KeywordsPage() {
                   </div>
                 )}
 
-                <div className="field-label">Data</div>
+                <div className="field-label">Data <span className="opt">(één of allebei aanvinken)</span></div>
                 <div className="seg">
                   {[["shopify", "Orders uit Shopify"], ["csv", "CSV plakken"]].map(([val, label]) => (
-                    <button key={val} className={tSource === val ? "on" : ""} onClick={() => setTSource(val)} type="button">
-                      {label}
+                    <button key={val} className={tSales && tSource === val ? "on" : ""} onClick={() => tToggleSales(val)} type="button">
+                      {tSales && tSource === val ? "✓ " : ""}{label}
                     </button>
                   ))}
+                  <button className={tPy ? "on" : ""} onClick={tTogglePy} type="button" title="Producten uit de laatste Pythago-sync met extreem goede ROAS die van 30 → 14 → 7 dagen steeds beter worden">
+                    {tPy ? "✓ " : ""}Pythago uptrend ↗
+                  </button>
                 </div>
-                {tSource === "shopify" ? (
+                {tPy && (
+                  <div className="hint">
+                    Leest de laatste Pythago-sync van deze store (geheugen, elke dag automatisch) en pakt producten die actief zijn,
+                    in 7 dagen minstens 1 order hebben, een extreem goede ROAS (7 d ≥ 1,5 × break-even, minimaal 2,0) en een uptrend:
+                    ROAS 7 d &gt; 14 d ≥ 30 d en 7 d minstens 25% boven 30 d. Hun keywords komen in het weekblad erbij (bron "Pythago ↗").
+                    {tSales ? " Staat het keyword al in de sales, dan krijgt het daar 1 product extra (max 3 per keyword)." : " Het aantal producten hieronder wordt dan helemaal over de uptrend-keywords verdeeld."}
+                  </div>
+                )}
+                {tPy && tSales && (
+                  <>
+                    <div className="field-label">Extra producten uit Pythago <span className="opt">(bovenop het aantal hieronder)</span></div>
+                    <input type="number" style={{ width: 110 }} min={0} max={60} value={tPyN} onChange={(e) => setTPyN(e.target.value)} />
+                  </>
+                )}
+                {!tSales ? null : tSource === "shopify" ? (
                   <>
                     <div className="hint">
                       {tStore && !tOrdersStore
@@ -2147,7 +2205,7 @@ export default function KeywordsPage() {
                   </>
                 )}
 
-                <div className="field-label">Aantal producten deze week</div>
+                <div className="field-label">Aantal producten deze week{tSales ? (tPy ? <span className="opt"> (uit de sales)</span> : null) : <span className="opt"> (uit Pythago uptrend)</span>}</div>
                 <input type="number" style={{ width: 110 }} min={1} max={60} value={tN} onChange={(e) => setTN(e.target.value)} />
                 <div className="hint">
                   Regels (bewezen verkoop): alleen keywords met ≥ 3 orders, op volgorde van orders · ≥ 15% van alle orders → 3 producten, de rest 1 · tot het aantal vol is (blijft er over: van boven af bijplussen tot max 3).
@@ -2224,6 +2282,9 @@ export default function KeywordsPage() {
                           <strong>{s.zoekterm}</strong>
                           <span className="opt"> · {s.g === "M" ? "heren" : "dames"}{s.coll ? ` · ${s.coll}` : " · (geen collectie)"}{s.type === "Gelegenheid" ? " · gelegenheid" : ""}</span>
                           {s.keyword !== s.zoekterm.replace(/^mens /, "") && <span className="opt"> · uit "{s.keyword}"</span>}
+                          {s.bron && s.bron !== "Sales" && (
+                            <span className="opt" style={{ color: "var(--ok, #6bbf59)" }} title={s.py || ""}> · {s.bron}{s.nPy ? ` (+${s.nPy})` : ""}</span>
+                          )}
                         </div>
                         <div style={{ textAlign: "right" }}>{s.m}</div>
                         <div style={{ textAlign: "right" }}>{pct(s.share)}</div>
@@ -2240,6 +2301,20 @@ export default function KeywordsPage() {
                     ))}
                     {a.ana.length > 60 && <div className="logline muted">… en nog {a.ana.length - 60} keywords (staan allemaal in het blad)</div>}
                   </div>
+                  {a.pythago && a.pythago.products && a.pythago.products.length > 0 && (
+                    <>
+                      <div className="hint" style={{ marginTop: 12 }}>
+                        Pythago uptrend — {a.pythago.count} product{a.pythago.count === 1 ? "" : "en"} (ROAS 30 d → 14 d → 7 d{a.pythago.breakEvenRoas ? ` · break-even ${a.pythago.breakEvenRoas}` : ""}):
+                      </div>
+                      <div className="logpanel" style={{ maxHeight: 260, overflow: "auto" }}>
+                        {a.pythago.products.map((p) => (
+                          <div key={p.productId || p.title} className="logline">
+                            <strong>{p.trend}</strong> · {p.title} <span className="opt">— 7 d: {p.orders7} orders · {a.pythago.currency ? a.pythago.currency + " " : ""}{Math.round(p.net7)} · spend {Math.round(p.spend7)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
