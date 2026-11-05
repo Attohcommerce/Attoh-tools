@@ -10,7 +10,7 @@ import { useOrgDef } from "../components/OrgProvider";
 
 // Aantal winkels dat tegelijk wordt doorzocht (snelheid). 6 = ±6× sneller
 // dan één voor één; de catalogi komen uit de cache, dus dat kan veilig.
-const WAVE = 8; // 02-11: 8 winkels per golf (catalogi staan meestal in de cache)
+const WAVE = 12; // 05-11: 12 winkels per golf, in één server-call (catalogi staan meestal in de cache)
 
 const LS = {
   stores: "sa_competitor_stores",
@@ -1569,6 +1569,11 @@ export default function ScraperPage() {
           const alts = altCache[kwLower] || [];
           const provenHit = altHits[kwLower]; // alternatief dat vorige keer scoorde
           let terms = provenHit && provenHit !== kwLower ? [k, provenHit] : [k];
+          /* Vraag-bewijs voor dít keyword: start op de ingestelde stand; blijft
+             "bewezen" achter, dan vult een laatste ronde aan met "kansrijk"
+             (zie onder) — je vraagt 100, je krijgt er 100, en in de sheet
+             staat per product of het Bewezen of Waarschijnlijk is. */
+          let proofNow = proofMode;
 
           /* DE VAKTERM — geldt voor ELK keyword, niet alleen underdogs.
              Shoppers en winkels gebruiken andere woorden voor exact hetzelfde
@@ -1681,7 +1686,8 @@ export default function ScraperPage() {
              bestsellers van de golf, niet blind alles van de eerste winkel.
              Sheet-schrijven gebeurt één keer per golf. */
           const scanStores = async (withStallLogic) => {
-            for (let w = 0; w < stores.length; w += WAVE) {
+            const queue = [...stores]; // winkels die niet in een golf pasten komen hier opnieuw in
+            for (let w = 0; w < queue.length; w += WAVE) {
               await checkControl();
               if (needed <= 0) return;
               if (skipRequested(k)) {
@@ -1697,99 +1703,131 @@ export default function ScraperPage() {
                 const c = relaxUnderdog();
                 if (a || b || c) return "restart";
               }
-              const wave = stores.slice(w, w + WAVE);
+              const wave = queue.slice(w, w + WAVE);
               await Promise.all(wave.map((st) => ensureStoreLang(st)));
               const needAtStart = needed;
+              const tWave = Date.now();
 
-              const results = await Promise.all(
-                wave.map(async (store, wi) => {
-                  const out = { store, wi, items: [], scanned: 0, bsStatus: "", bsTotal: 0, skips: { gender: 0, foreign: 0, vraag: 0, kids: 0, set: 0 } };
-                  const storeLang = (metaNow[store] && metaNow[store].lang) || "en";
-                  const storeTerms =
-                    storeLang !== "en"
-                      ? [...new Set([...((transCache[storeLang] || {})[kwLower] || []), ...terms])]
-                      : terms;
-                  for (const term of storeTerms) {
-                    const pairKey = `${store}|${term.toLowerCase()}`;
-                    if (triedPairs.has(pairKey)) continue;
-                    triedPairs.add(pairKey);
-                    try {
-                      const res = await fetch(udProfile ? "/api/underdog-search" : "/api/scraper-search", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          store,
-                          keyword: udProfile ? k : term,
-                          profile: udProfile || undefined,
-                          relaxBestseller: udRelax || undefined,
-                          gender,
-                          need: needAtStart,
-                          excludeLinks: [...exclude],
-                          maxPerStore: spreadMode === "vol" ? needAtStart : Math.max(2, Math.ceil(target / 3)),
-                          proof: proofMode,
-                          fast: fastMode,
-                        }),
-                      });
-                      const data = await res.json();
-                      if (!res.ok) throw new Error(data.error || res.status);
-                      let found = data.matches || [];
-                      if (udProfile && data.stats && !found.length) {
-                        const st = data.stats;
-                        pushLog({
-                          muted: true,
-                          text:
-                            `${store}: ${data.candidates || 0} kandidaten` +
-                            (st.grensLos ? " (bestseller-grens losgelaten — te weinig in de top)" : "") +
-                            ` · afgevallen: ${st.typeMis || 0} verkeerd producttype, ${st.breekpunt || 0} breekpunt in titel, ${st.geslacht || 0} verkeerd geslacht` +
-                            (st.naarAi ? ` · ${st.naarAi} naar de fotocontrole` : " · niets voor de fotocontrole"),
+              /* SNELLER (05-11): de hele golf gaat in ÉÉN server-call
+                 (/api/scraper-search met `jobs`): per winkel wordt de
+                 catalogus één keer uitgepakt en voor alle zoektermen tegelijk
+                 doorzocht. Daarna rangschikken we de hele golf en sturen we
+                 alleen de bovenste kandidaten door de foto-controle — in één
+                 batch, niet meer per winkel per term. */
+              const results = wave.map((store, wi) => ({
+                store,
+                wi,
+                items: [],
+                scanned: 0,
+                bsStatus: "",
+                bsTotal: 0,
+                skips: { gender: 0, foreign: 0, vraag: 0, kids: 0, set: 0 },
+              }));
+              const outOf = new Map(results.map((r) => [r.store, r]));
+              const storeTermsFor = (store) => {
+                const storeLang = (metaNow[store] && metaNow[store].lang) || "en";
+                const storeTerms = storeLang !== "en" ? [...new Set([...((transCache[storeLang] || {})[kwLower] || []), ...terms])] : terms;
+                return storeTerms.filter((term) => !triedPairs.has(`${store}|${term.toLowerCase()}|${proofNow}`));
+              };
+
+              if (udProfile) {
+                /* Underdogs: eigen server-route met profiel, één term per winkel */
+                await Promise.all(
+                  results.map(async (out) => {
+                    const store = out.store;
+                    for (const term of storeTermsFor(store)) {
+                      triedPairs.add(`${store}|${term.toLowerCase()}|${proofNow}`);
+                      try {
+                        const res = await fetch("/api/underdog-search", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            store,
+                            keyword: k,
+                            profile: udProfile,
+                            relaxBestseller: udRelax || undefined,
+                            gender,
+                            need: needAtStart,
+                            excludeLinks: [...exclude],
+                            maxPerStore: spreadMode === "vol" ? needAtStart : Math.max(2, Math.ceil(target / 3)),
+                            proof: proofNow,
+                            fast: fastMode,
+                          }),
                         });
-                      }
-                      out.scanned = Math.max(out.scanned, data.total || 0);
-                      if (data.bestSellingStatus) out.bsStatus = data.bestSellingStatus;
-                      if (data.rankTotal) out.bsTotal = data.rankTotal;
-                      if (data.skipped) for (const key of Object.keys(out.skips)) out.skips[key] = Math.max(out.skips[key], data.skipped[key] || 0);
-
-                      // Foto-AI alleen bij zwak bewijs of een hulp-zoekterm
-                      const toVerify = udProfile ? [] : term !== k || isOccasion ? found : found.filter((m) => m.needsPhotoProof);
-                      if (toVerify.length) {
-                        try {
-                          const vres = await fetch("/api/verify-products", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              keyword: k,
-                              gender,
-                              brief: kwBrief,
-                              mode: term !== k || isOccasion ? "fit" : "strict",
-                              items: toVerify.map((m) => ({
-                                index: found.indexOf(m),
-                                title: m.title,
-                                image: m.image || null,
-                                images: m.images || null,
-                                needsPhotoProof: !!m.needsPhotoProof,
-                              })),
-                            }),
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || res.status);
+                        const found = data.matches || [];
+                        if (data.stats && !found.length) {
+                          const st = data.stats;
+                          pushLog({
+                            muted: true,
+                            text:
+                              `${store}: ${data.candidates || 0} kandidaten` +
+                              (st.grensLos ? " (bestseller-grens losgelaten — te weinig in de top)" : "") +
+                              ` · afgevallen: ${st.typeMis || 0} verkeerd producttype, ${st.breekpunt || 0} breekpunt in titel, ${st.geslacht || 0} verkeerd geslacht` +
+                              (st.naarAi ? ` · ${st.naarAi} naar de fotocontrole` : " · niets voor de fotocontrole"),
                           });
-                          const vdata = await vres.json();
-                          if (vres.ok && Array.isArray(vdata.reject) && vdata.reject.length) {
-                            const bad = new Set(vdata.reject.map((r) => r.index));
-                            const kept = found.filter((_, fi) => !bad.has(fi));
-                            pushLog({ muted: true, text: `Foto-controle ${store}: ${found.length - kept.length} van ${found.length} afgekeurd voor "${k}"` });
-                            found = kept;
-                          }
-                        } catch {
-                          /* vision niet beschikbaar → gewoon meenemen */
                         }
+                        out.scanned = Math.max(out.scanned, data.total || 0);
+                        if (data.bestSellingStatus) out.bsStatus = data.bestSellingStatus;
+                        if (data.rankTotal) out.bsTotal = data.rankTotal;
+                        if (data.skipped) for (const key of Object.keys(out.skips)) out.skips[key] = Math.max(out.skips[key], data.skipped[key] || 0);
+                        for (const m of found) out.items.push({ ...m, _term: term, _store: store, _wi: out.wi });
+                      } catch (e) {
+                        pushLog({ err: true, text: `${store}: ${e.message}` });
+                        break;
                       }
-                      for (const m of found) out.items.push({ ...m, _term: term, _store: store, _wi: wi });
-                    } catch (e) {
-                      pushLog({ err: true, text: `${store}: ${e.message}` });
-                      break;
                     }
+                  })
+                );
+              } else {
+                const jobs = wave.map((store) => ({ store, terms: storeTermsFor(store) })).filter((j) => j.terms.length);
+                if (jobs.length) {
+                  try {
+                    const res = await fetch("/api/scraper-search", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        jobs,
+                        keyword: k,
+                        gender,
+                        need: needAtStart,
+                        excludeLinks: [...exclude],
+                        maxPerStore: spreadMode === "vol" ? needAtStart : Math.max(2, Math.ceil(target / 3)),
+                        proof: proofNow,
+                        fast: fastMode,
+                      }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || res.status);
+                    const pendingSet = new Set(data.pending || []);
+                    for (const job of jobs) {
+                      if (pendingSet.has(job.store)) continue;
+                      for (const term of job.terms) triedPairs.add(`${job.store}|${term.toLowerCase()}|${proofNow}`);
+                    }
+                    if (pendingSet.size) {
+                      // paste niet meer in de tijdslimiet van deze call → volgende golf
+                      queue.splice(w + WAVE, 0, ...pendingSet);
+                      pushLog({ muted: true, text: `${pendingSet.size} winkel(s) pasten niet meer in deze golf (catalogus nog laden) — gaan mee in de volgende.` });
+                    }
+                    for (const r of data.results || []) {
+                      const out = outOf.get(r.job) || outOf.get(r.store);
+                      if (!out) continue;
+                      if (r.error) {
+                        pushLog({ err: true, text: `${out.store}: ${r.error}` });
+                        continue;
+                      }
+                      out.scanned = Math.max(out.scanned, r.total || 0);
+                      if (r.bestSellingStatus) out.bsStatus = r.bestSellingStatus;
+                      if (r.rankTotal) out.bsTotal = r.rankTotal;
+                      if (r.skipped) for (const key of Object.keys(out.skips)) out.skips[key] = Math.max(out.skips[key], r.skipped[key] || 0);
+                      for (const m of r.matches || []) out.items.push({ ...m, _term: r.term, _store: out.store, _wi: out.wi });
+                    }
+                  } catch (e) {
+                    pushLog({ err: true, text: `Golf ${wave[0]}…: ${e.message}` });
                   }
-                  return out;
-                })
-              );
+                }
+              }
 
               /* Rangschikken over de hele golf: bewezen eerst */
               const proofScore = (m) => {
@@ -1809,29 +1847,86 @@ export default function ScraperPage() {
                   a._wi - b._wi
               );
 
+              /* Foto-AI alleen voor wat de eindronde kan halen: we lopen de
+                 rangorde af in porties, controleren per portie de twijfel-
+                 gevallen in één batch en stoppen zodra het keyword vol is.
+                 Hulp-zoektermen en gelegenheids-keywords: alles controleren
+                 ("fit"); het letterlijke keyword: alleen zwak bewijs ("strict"). */
+              const visionMode = (m) => (udProfile ? null : m._term !== k || isOccasion ? "fit" : !!m.needsPhotoProof ? "strict" : null);
+              const rejectedLinks = new Set();
+              const checkedLinks = new Set();
+              let visionChecked = 0;
+              let visionRejected = 0;
               const take = [];
               const seenLinks = new Set();
-              for (const m of all) {
-                if (take.length >= needed) break;
-                const lk = m.link.toLowerCase().replace(/\/$/, "");
-                if (seenLinks.has(lk) || exclude.has(lk)) continue;
-                seenLinks.add(lk);
-                const nt = normTitle(m.title);
-                if (nt && seenTitles.has(nt)) {
-                  titleDupHits++;
-                  continue;
+              let ptr = 0;
+              while (take.length < needed && ptr < all.length) {
+                const portion = all.slice(ptr, ptr + Math.max(8, Math.min(30, (needed - take.length) * 2 + 4)));
+                ptr += portion.length;
+                const groups = { strict: [], fit: [] };
+                for (const m of portion) {
+                  const md = visionMode(m);
+                  if (md && !checkedLinks.has(m.link)) groups[md].push(m);
                 }
-                const dom = storeOf(m.link) || m._store;
-                if (spreadMode !== "vol") {
-                  const cap = Math.ceil(Math.max(20, Number(totalTarget) || 0) * MAX_STORE_SHARE);
-                  if ((perStore.get(dom) || 0) >= cap) {
-                    storeCapHits++;
+                await Promise.all(
+                  ["strict", "fit"].map(async (md) => {
+                    const grp = groups[md];
+                    if (!grp.length) return;
+                    for (const m of grp) checkedLinks.add(m.link);
+                    try {
+                      const vres = await fetch("/api/verify-products", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          keyword: k,
+                          gender,
+                          brief: kwBrief,
+                          mode: md,
+                          items: grp.map((m, gi) => ({ index: gi, title: m.title, image: m.image || null, images: m.images || null, needsPhotoProof: !!m.needsPhotoProof })),
+                        }),
+                      });
+                      const vdata = await vres.json();
+                      visionChecked += grp.length;
+                      if (vres.ok && Array.isArray(vdata.reject)) {
+                        for (const rj of vdata.reject) {
+                          const m = grp[rj.index];
+                          if (m) rejectedLinks.add(m.link);
+                        }
+                      }
+                    } catch {
+                      /* vision niet beschikbaar → gewoon meenemen */
+                    }
+                  })
+                );
+                for (const m of portion) {
+                  if (take.length >= needed) break;
+                  if (rejectedLinks.has(m.link)) {
+                    visionRejected++;
                     continue;
                   }
+                  const lk = m.link.toLowerCase().replace(/\/$/, "");
+                  if (seenLinks.has(lk) || exclude.has(lk)) continue;
+                  seenLinks.add(lk);
+                  const nt = normTitle(m.title);
+                  if (nt && seenTitles.has(nt)) {
+                    titleDupHits++;
+                    continue;
+                  }
+                  const dom = storeOf(m.link) || m._store;
+                  if (spreadMode !== "vol") {
+                    const cap = Math.ceil(Math.max(20, Number(totalTarget) || 0) * MAX_STORE_SHARE);
+                    if ((perStore.get(dom) || 0) >= cap) {
+                      storeCapHits++;
+                      continue;
+                    }
+                  }
+                  if (nt) seenTitles.add(nt);
+                  perStore.set(dom, (perStore.get(dom) || 0) + 1);
+                  take.push(m);
                 }
-                if (nt) seenTitles.add(nt);
-                perStore.set(dom, (perStore.get(dom) || 0) + 1);
-                take.push(m);
+              }
+              if (visionChecked) {
+                pushLog({ muted: true, text: `Foto-controle golf: ${visionRejected} van ${visionChecked} afgekeurd voor "${k}" · golf in ${Math.round((Date.now() - tWave) / 1000)} s` });
               }
 
               if (take.length) {
@@ -1940,6 +2035,13 @@ export default function ScraperPage() {
           if (needed > 0 && !skipped && !altsFull && (alts.length || ((kwBrief && kwBrief.related) || []).length)) {
             expandAlts("Laatste poging");
             expandBroad();
+            await scanStores(false);
+          }
+          /* Alleen-bewezen levert te weinig? Dan het aantal volmaken met
+             kansrijke producten (score ≥ 25) — zelfde winkels, zelfde termen. */
+          if (needed > 0 && !skipped && proofMode === "bewezen") {
+            proofNow = "kansrijk";
+            pushLog({ ok: true, text: `"${k}": ${target - needed}/${target} met alleen bewezen verkopers — vult aan met kansrijke producten (score ≥ 25); in de sheet zie je per product Bewezen of Waarschijnlijk.` });
             await scanStores(false);
           }
           setStall(null);

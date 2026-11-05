@@ -4,8 +4,17 @@ import { demandScore, fetchReviewsMany, DEMAND_PROVEN, DEMAND_LIKELY } from "@/l
 
 export const maxDuration = 60;
 
-// Doorzoekt ÉÉN store voor ÉÉN keyword. De client loopt zelf over
-// stores/keywords zodat elke serverless-call kort blijft.
+// Doorzoekt concurrent-catalogi voor een keyword.
+//
+// TWEE VORMEN (05-11-2026):
+//   1. klassiek: { store, keyword, ... }        → één store, één zoekterm
+//   2. batch:    { jobs: [{ store, terms: [...] }], keyword, ... }
+//      → een hele golf winkels in ÉÉN serverless-call. Per winkel wordt de
+//        catalogus één keer uit het geheugen/Redis gehaald en daarna voor
+//        álle zoektermen tegelijk doorzocht. Dat scheelt per golf tientallen
+//        round-trips en het uitpakken van dezelfde catalogus per term.
+//        Tijdbewaking: winkels die niet meer binnen de limiet passen komen
+//        terug in `pending`; de client stuurt die in de volgende golf mee.
 //
 // Volgorde: eerst alle titel-matches, dan omschrijving, dan foto's — en
 // BINNEN een tier eerst de producten met bewezen vraag (vraag-score uit
@@ -19,35 +28,96 @@ export const maxDuration = 60;
 //        "kansrijk" → score ≥ 25 of Onbekend
 //        "alles"    → geen vraag-filter (oude gedrag)
 export async function POST(req) {
-  const { store, keyword, gender, need, excludeLinks, maxPerStore, proof, fast } =
-    await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({}));
+  const { store, keyword, gender, need, excludeLinks, maxPerStore, proof, fast } = body;
+
+  const exclude = new Set((excludeLinks || []).map((l) => String(l).toLowerCase().replace(/\/$/, "")));
+  const want = Number(need) || 10;
+  const cap = Math.max(1, Math.min(want, Number(maxPerStore) || want));
+  const mode = proof === "alles" ? "alles" : proof === "kansrijk" ? "kansrijk" : "bewezen";
+  const opts = { gender, exclude, want, cap, mode, fast: !!fast };
+
+  /* ---------- batch: een golf winkels in één call ---------- */
+  if (Array.isArray(body.jobs)) {
+    const t0 = Date.now();
+    const BUDGET_MS = 44000; // daarna geen nieuwe winkel meer starten (limiet 60 s)
+    const jobs = body.jobs
+      .filter((j) => j && j.store && Array.isArray(j.terms) && j.terms.length)
+      .map((j) => ({ store: String(j.store), terms: [...new Set(j.terms.map((t) => String(t || "").trim()).filter(Boolean))] }));
+    const results = [];
+    const pending = [];
+    const queue = [...jobs];
+    const CONCURRENCY = 4; // catalogi uitpakken kost geheugen — niet alles tegelijk
+    async function worker() {
+      while (queue.length) {
+        const job = queue.shift();
+        if (Date.now() - t0 > BUDGET_MS) {
+          pending.push(job.store);
+          continue;
+        }
+        let catalog = null;
+        try {
+          catalog = await fetchCatalog(job.store);
+        } catch (e) {
+          results.push({ job: job.store, store: job.store, term: job.terms[0], error: String((e && e.message) || e), matches: [] });
+          continue;
+        }
+        const mine = [];
+        for (const term of job.terms) {
+          try {
+            const r = searchCatalog(catalog, term, opts);
+            r.job = job.store; // zoals de client de winkel noemt (catalog.domain is opgeschoond)
+            mine.push(r);
+          } catch (e) {
+            mine.push({ job: job.store, store: job.store, term, error: String((e && e.message) || e), matches: [] });
+          }
+        }
+        // reviews (niet-snelmodus) per winkel in één keer voor alle termen
+        if (!opts.fast) await addReviews(mine.filter((r) => r._shortlist), catalog);
+        results.push(...mine);
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, worker));
+    for (const r of results) delete r._shortlist;
+    return NextResponse.json({ ok: true, results, pending, ms: Date.now() - t0 });
+  }
+
+  /* ---------- klassiek: één store, één term ---------- */
   if (!store || !keyword) {
     return NextResponse.json({ error: "store en keyword zijn verplicht" }, { status: 400 });
   }
-
-  const analysis = analyzeKeyword(keyword);
-  if (!analysis) {
+  if (!analyzeKeyword(keyword)) {
     return NextResponse.json({ error: "Leeg keyword" }, { status: 400 });
   }
-
-  const exclude = new Set(
-    (excludeLinks || []).map((l) => String(l).toLowerCase().replace(/\/$/, ""))
-  );
-
   const catalog = await fetchCatalog(store);
-  if (catalog.products.length === 0) {
-    return NextResponse.json({
-      ok: true,
-      store: catalog.domain,
-      usedBestSelling: catalog.usedBestSelling,
-      bestSellingStatus: catalog.bestSellingStatus,
-      lang: catalog.lang || "en",
-      total: 0,
-      matches: [],
-    });
-  }
+  const r = searchCatalog(catalog, keyword, opts);
+  if (!opts.fast) await addReviews([r], catalog);
+  delete r._shortlist;
+  return NextResponse.json(r);
+}
 
-  const skipped = { gender: 0, foreign: 0, vraag: 0, kids: 0, set: 0 };
+/* Eén catalogus × één zoekterm → resultaat (zelfde vorm als vroeger).
+   Reviews worden hier nog niet opgehaald (zie addReviews): in snelmodus
+   nooit, anders na afloop voor de shortlist. */
+function searchCatalog(catalog, keyword, { gender, exclude, want, cap, mode, fast }) {
+  const base = {
+    ok: true,
+    store: catalog.domain,
+    term: keyword,
+    usedBestSelling: catalog.usedBestSelling,
+    bestSellingStatus: catalog.bestSellingStatus,
+    rankTotal: catalog.rankTotal,
+    lang: catalog.lang || "en",
+    total: catalog.products.length,
+    candidates: 0,
+    proof: mode,
+    skipped: { gender: 0, foreign: 0, vraag: 0, kids: 0, set: 0 },
+    matches: [],
+  };
+  const analysis = analyzeKeyword(keyword);
+  if (!analysis || catalog.products.length === 0) return base;
+
+  const skipped = base.skipped;
   const scored = [];
   for (let i = 0; i < catalog.products.length; i++) {
     const p = catalog.products[i];
@@ -57,7 +127,6 @@ export async function POST(req) {
     // Bewust GEEN filters op foto-aantal of voorraad: de voorraad van de
     // concurrent zegt niets over de leverancier — uitverkocht bij de
     // concurrent is eerder een bestseller-signaal dan een bezwaar.
-
     const m = matchProduct(analysis, p);
     if (!m) continue;
 
@@ -84,9 +153,8 @@ export async function POST(req) {
 
     /* Anderstalige titels ("Pull Femme Francesca en Maille", "Manteau
        Doudoune Long à Capuche") kan de Engelse taxonomie niet beoordelen.
-       Vorige run leverde dat een trui, een winterjas én enkellaarsjes op
-       onder het keyword "leggings". Voor die producten telt alleen bewijs
-       uit de TITEL — nooit uit de omschrijving of een bestandsnaam. */
+       Voor die producten telt alleen bewijs uit de TITEL — nooit uit de
+       omschrijving of een bestandsnaam. */
     const foreign = isForeignTitle(p.title);
     if (foreign && m.tier > 1) {
       skipped.foreign++;
@@ -110,10 +178,7 @@ export async function POST(req) {
       needsPhotoProof: !!m.weakAttribute || m.tier > 1 || foreign,
     });
   }
-
-  const want = Number(need) || 10;
-  const cap = Math.max(1, Math.min(want, Number(maxPerStore) || want));
-  const mode = proof === "alles" ? "alles" : proof === "kansrijk" ? "kansrijk" : "bewezen";
+  base.candidates = scored.length;
 
   // Voorlopige rangorde zonder reviews: tier → literal → bestseller → penalty
   scored.sort(
@@ -125,14 +190,32 @@ export async function POST(req) {
       a.idx - b.idx
   );
 
-  /* Reviews alleen voor de shortlist (max 2× de cap, max 8): dat zijn de
-     enige producten die de eindronde kunnen halen, en elke productpagina
-     kost een fetch. */
+  const ctx = { scored, cap, mode, catalog, skipped, base };
   // Snelmodus: geen productpagina's ophalen voor reviews — de score draait
-  // dan op bestseller-positie, uitverkochte varianten en fotoset. Scheelt
-  // per store×keyword tot 8 extra fetches.
-  const shortlist = fast ? [] : scored.slice(0, Math.min(8, cap * 2));
-  const reviews = shortlist.length ? await fetchReviewsMany(shortlist.map((c) => c.link)) : new Map();
+  // dan op bestseller-positie, uitverkochte varianten en fotoset.
+  if (fast) return finish(ctx, new Map());
+  // Reviews alleen voor de shortlist (max 2× de cap, max 8): dat zijn de
+  // enige producten die de eindronde kunnen halen, en elke productpagina
+  // kost een fetch.
+  base._shortlist = { ctx, links: scored.slice(0, Math.min(8, cap * 2)).map((c) => c.link) };
+  return base;
+}
+
+/* Reviews voor de shortlists van één winkel ophalen (alle termen samen,
+   dubbele links maar één keer) en de resultaten afmaken. */
+async function addReviews(results, catalog) {
+  const links = [...new Set(results.flatMap((r) => (r._shortlist ? r._shortlist.links : [])))];
+  const reviews = links.length ? await fetchReviewsMany(links) : new Map();
+  for (const r of results) {
+    if (!r._shortlist) continue;
+    const done = finish(r._shortlist.ctx, reviews);
+    Object.assign(r, done);
+    delete r._shortlist;
+  }
+  void catalog;
+}
+
+function finish({ scored, cap, mode, catalog, skipped, base }, reviews) {
   for (const c of scored) {
     const d = demandScore(c.p, reviews.get(c.link) || null, catalog.bestSellingStatus);
     c.demand = d.score;
@@ -165,34 +248,17 @@ export async function POST(req) {
     return false;
   });
 
-  /* Spreiding binnen één keyword. Zonder grens vulde de eerste (grootste)
-     concurrent in z'n eentje het hele quotum — twaalf van de twaalf boots
-     kwamen uit dezelfde winkel. Met een grens per winkel pak je van elke
-     winkel de bovenkant in plaats van de staart van één winkel. */
-  const matches = filtered
-    .slice(0, cap)
-    .map(({ idx, tier, lit, penalty, p, ...rest }) => ({
-      ...rest,
-      bsRank: p.bsRank || null,
-      bsPct: p.bsPct === null || p.bsPct === undefined ? null : Math.round(p.bsPct * 100),
-      price: p.price || null,
-      soldOutRatio: p.soldOutRatio || 0,
-      signals: (rest.signals || []).join(" · "),
-    }));
-
-  return NextResponse.json({
-    ok: true,
-    store: catalog.domain,
-    usedBestSelling: catalog.usedBestSelling,
-    bestSellingStatus: catalog.bestSellingStatus,
-    rankTotal: catalog.rankTotal,
-    lang: catalog.lang || "en",
-    total: catalog.products.length,
-    candidates: scored.length,
-    proof: mode,
-    skipped,
-    matches,
-  });
+  /* Spreiding binnen één keyword: een grens per winkel, zodat je van elke
+     winkel de bovenkant pakt in plaats van de staart van één winkel. */
+  const matches = filtered.slice(0, cap).map(({ idx, tier, lit, penalty, p, ...rest }) => ({
+    ...rest,
+    bsRank: p.bsRank || null,
+    bsPct: p.bsPct === null || p.bsPct === undefined ? null : Math.round(p.bsPct * 100),
+    price: p.price || null,
+    soldOutRatio: p.soldOutRatio || 0,
+    signals: (rest.signals || []).join(" · "),
+  }));
+  return { ...base, matches, _shortlist: undefined };
 }
 
 // Snelle taaldetectie op de titel: accenten of veelvoorkomende niet-Engelse
