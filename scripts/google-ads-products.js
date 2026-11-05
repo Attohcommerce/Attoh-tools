@@ -56,9 +56,17 @@ function main() {
   // gat-reparatie (05-11): ontbreekt er een dag MIDDEN in de laatste
   // EERSTE_RUN_DAGEN dagen (script stond een paar dagen uit), dan vanaf de
   // oudste ontbrekende dag opnieuw ophalen — anders blijven 7/14/30 d scheef
+  // dagen die al eens zijn opgehaald (ook als er die dag niets draaide) staan in
+  // de scripteigenschappen — anders haalt een dag zonder vertoningen elk uur
+  // opnieuw 35 dagen op
+  var props = PropertiesService.getScriptProperties();
+  var propKey = 'opgehaald_' + STORE;
+  var opgehaald = {};
+  try { opgehaald = JSON.parse(props.getProperty(propKey) || '{}') || {}; } catch (e0) { opgehaald = {}; }
   if (oud.length) {
     var aanwezig = {};
     for (var i1 = 0; i1 < oud.length; i1++) aanwezig[oud[i1][0]] = true;
+    for (var dk0 in opgehaald) aanwezig[dk0] = true;
     for (var k1 = EERSTE_RUN_DAGEN - 1; k1 >= 1; k1--) {
       var dk = dagStr(new Date(nu.getTime() - k1 * 86400000));
       if (!aanwezig[dk]) {
@@ -138,11 +146,15 @@ function main() {
     tmp.getRange('A:B').setNumberFormat('@');
     tmp.getRange('I:I').setNumberFormat('@');
     tmp.getRange(1, 1, 1, kop.length).setValues([kop]);
-    var blok = 10000;
+    // kleinere blokken + opnieuw proberen: Sheets geeft bij grote writes soms
+    // een tijdelijke "systeemfout"
+    var blok = 4000;
     for (var s = 0; s < alles.length; s += blok) {
       var deel = alles.slice(s, s + blok);
-      tmp.getRange(2 + s, 1, deel.length, kop.length).setValues(deel);
-      SpreadsheetApp.flush();
+      opnieuw(function () {
+        tmp.getRange(2 + s, 1, deel.length, kop.length).setValues(deel);
+        SpreadsheetApp.flush();
+      });
     }
     if (tmp.getLastRow() !== nodig) throw new Error('Niet alles geschreven: ' + (tmp.getLastRow() - 1) + ' van ' + alles.length + ' rijen');
   } catch (e) {
@@ -150,7 +162,22 @@ function main() {
     ss.deleteSheet(tmp);
     throw e;
   }
-  ss.deleteSheet(tab);
-  tmp.setName(naam);
+  opnieuw(function () { ss.deleteSheet(tab); });
+  opnieuw(function () { tmp.setName(naam); });
+  // opgehaalde dagen onthouden (alleen de laatste BEWAAR_DAGEN)
+  for (var dg in dagen) opgehaald[dg] = 1;
+  var schoon = {};
+  for (var dg2 in opgehaald) if (dg2 >= grens) schoon[dg2] = 1;
+  props.setProperty(propKey, JSON.stringify(schoon));
   Logger.log(STORE + ' producten: ' + nieuw.length + ' rijen voor ' + van + ' t/m ' + tot + ' · totaal ' + alles.length + ' rijen in ' + naam);
+}
+
+// tot 3× opnieuw proberen bij een tijdelijke fout van Google (Sheets/Ads)
+function opnieuw(fn) {
+  for (var p = 0; ; p++) {
+    try { return fn(); } catch (e) {
+      if (p >= 2) throw e;
+      Utilities.sleep(3000 * (p + 1));
+    }
+  }
 }
