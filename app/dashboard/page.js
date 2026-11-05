@@ -5,8 +5,11 @@
 // 14-dagen-sparkline, 14-dagen-trend omzet vs ad spend, en een kaart per store.
 //
 // Bronnen:
-//  - Shopify via de Orders-app per store (dezelfde sleutels als Bills:
-//    sa_orders_app::<domein>), anders de gewone store-koppeling.
+//  - Shopify (omzet/orders) via de Orders-app per store (dezelfde sleutels als
+//    Bills: sa_orders_app::<domein>), anders de gewone store-koppeling.
+//  - Cashflow (Shopify Payments-uitbetalingen) ALTIJD via de gewone
+//    store-koppeling (sa_stores) — dezelfde Attoh Tools-app als de Importer,
+//    zodat de payments-scopes maar op één app hoeven te staan (05-11-2026).
 //  - Google Ads via de sheet "Attoh Ads Live" (tab Ads_<KEY>), elk uur
 //    gevuld door het Google Ads-script in elk account.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -184,10 +187,21 @@ export default function DashboardPage() {
         };
       }),
     };
-    // Cashflow (Shopify Payments) loopt los van de omzetdata: zelfde stores, eigen call
+    // Cashflow (Shopify Payments) loopt los van de omzetdata: zelfde stores, eigen call,
+    // maar ALTIJD met de gewone store-koppeling (Attoh Tools-app, zelfde als de
+    // Importer) — nooit de Orders-app. Zo staan de payments-scopes op één app.
+    const cfStores = active.map((s) => ({
+      key: (cfg[s.domain] && cfg[s.domain].key) || "",
+      name: s.name,
+      domain: s.domain,
+      currency: s.currency,
+      token: s.token || undefined,
+      clientId: s.token ? undefined : s.clientId,
+      clientSecret: s.token ? undefined : s.clientSecret,
+    }));
     const cfId = ++cfReq.current;
     setCfBusy(true);
-    fetch("/api/cashflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stores: body.stores }), cache: "no-store" })
+    fetch("/api/cashflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stores: cfStores }), cache: "no-store" })
       .then((r) => r.json().then((j) => ({ okHttp: r.ok, j })))
       .then(({ okHttp, j }) => {
         if (cfId !== cfReq.current) return;

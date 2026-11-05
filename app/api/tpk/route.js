@@ -1,22 +1,26 @@
 import { NextResponse } from "next/server";
 import { tpkAnalyseForStore, tpkWriteForStore } from "@/lib/tpk";
+import { getOrg } from "@/lib/org-server";
 
 /* TPK — Top Performing Keywords (Keywords → TPK). Twee acties:
    analyse: orders van de laatste 30 dagen (Orders-app van de store, zelfde
             sleutels als de Bills-pagina) of een geplakte Shopify-CSV
             ("Verkopen per product") → keywords, verdict, verdeling van N
-            producten, zoektermen. Schrijft NIETS.
+            producten, zoektermen. Schrijft NIETS. Bronnen (sources): sales
+            (orders/CSV) en/of pythago (uptrend-producten uit de laatste
+            Pythago-sync, lib/pythago-uptrend.js) — één of allebei.
    write:   het weektab (scrape-ready, verdeling-formaat) + Log + Overzicht
             in de TPK-sheet van de store (store-geheugen). */
 export const maxDuration = 120;
+export const dynamic = "force-dynamic";
 
 export async function POST(req) {
   const body = await req.json().catch(() => ({}));
   const action = String(body.action || "");
   try {
     if (action === "analyse") {
-      const { store, ordersStore, csvText, days, n, useAi, tab } = body;
-      return NextResponse.json(await tpkAnalyseForStore({ store, ordersStore, csvText, days, n, useAi, tab }));
+      const { store, ordersStore, csvText, days, n, useAi, tab, sources, pyN } = body;
+      return NextResponse.json(await tpkAnalyseForStore({ org: getOrg(), store, ordersStore, csvText, days, n, useAi, tab, sources, pyN }));
     }
     if (action === "write") {
       const { store, tab, analysis } = body;
