@@ -107,6 +107,10 @@ export default function DashboardPage() {
   const [sheet, setSheet] = useState(DEFAULT_ADS_SHEET);
   const [today, setToday] = useState(londonDay());
   const [date, setDate] = useState(londonDay());
+  /* Periode-modus (05-11-2026): "7" / "30" = afgelopen 7/30 hele dagen (t/m
+     gisteren), "custom" = eigen van/tot; "day" = de klassieke dagweergave. */
+  const [period, setPeriod] = useState("day"); // day | 7 | 30 | custom
+  const [custom, setCustom] = useState({ from: addDays(londonDay(), -6), to: londonDay() });
   const [data, setData] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -156,8 +160,15 @@ export default function DashboardPage() {
     const id = ++reqId.current;
     setBusy(true);
     setError("");
+    const range =
+      period === "7" || period === "30"
+        ? { from: addDays(today, -Number(period)), to: addDays(today, -1) }
+        : period === "custom"
+        ? { from: custom.from <= custom.to ? custom.from : custom.to, to: custom.to > today ? today : custom.to }
+        : null;
     const body = {
       date,
+      range: range || undefined,
       adsSheetId: sheet,
       stores: active.map((s) => {
         const keys = load(LS_ORDERS_APP + s.domain, null) || {};
@@ -205,14 +216,14 @@ export default function DashboardPage() {
     } finally {
       if (id === reqId.current) setBusy(false);
     }
-  }, [active, cfg, date, sheet]);
+  }, [active, cfg, date, sheet, period, custom, today]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
   useEffect(() => {
-    if (date !== today) return;
+    if (date !== today || period !== "day") return;
     const t = setInterval(refresh, REFRESH_MS);
     const onVis = () => document.visibilityState === "visible" && refresh();
     document.addEventListener("visibilitychange", onVis);
@@ -224,17 +235,34 @@ export default function DashboardPage() {
 
   /* ---------- Afgeleide data ---------- */
   const rows = (data && data.stores) || [];
+  const isRange = Boolean(data && data.mode === "range");
   const dates = useMemo(() => {
     if (!data) return [];
     const out = [];
     for (let d = data.from; d <= data.date; d = addDays(d, 1)) out.push(d);
     return out;
-  }, [data]);
+  }, [data, isRange]);
+  /* Periode-modus: de even lange periode ervoor, dag voor dag uitgelijnd */
+  const prevDates = useMemo(() => {
+    if (!isRange) return [];
+    const out = [];
+    for (let d = data.prevFrom; d <= data.prevTo; d = addDays(d, 1)) out.push(d);
+    return out;
+  }, [data, isRange]);
   const totalsByDate = useMemo(
-    () => Object.fromEntries(dates.map((d) => [d, sumDays(rows.map((r) => r.days && r.days[d]))])),
-    [dates, rows]
+    () => Object.fromEntries([...dates, ...prevDates].map((d) => [d, sumDays(rows.map((r) => r.days && r.days[d]))])),
+    [dates, prevDates, rows]
   );
-  const isToday = Boolean(data && data.date === data.today);
+  // alle store-dagen van een lijst dagen optellen (periode-totalen)
+  const sumPeriod = useCallback((list, ds) => sumDays(list.flatMap((r) => ds.map((d) => r.days && r.days[d]))), []);
+  const periodLabel = useMemo(() => {
+    if (!isRange) return "";
+    const n = dates.length;
+    const span = `${shortDate(data.from)} – ${shortDate(data.to)}`;
+    if (period === "7" || period === "30") return `Afgelopen ${n} dagen · ${span}`;
+    return `${n} dagen · ${span}`;
+  }, [isRange, dates, data, period]);
+  const isToday = Boolean(data && !isRange && data.date === data.today);
   const ctx = useMemo(() => {
     if (!data) return null;
     const minute = isToday ? Number(data.nowMinute) || 0 : 59;
@@ -264,13 +292,29 @@ export default function DashboardPage() {
     },
     [data, ctx]
   );
-  const sel = (data && totalsByDate[data.date]) || {};
-  const prv = useMemo(() => (data ? lflPrev(rows) : {}), [data, rows, lflPrev]);
-  const prvFull = (data && totalsByDate[data.prevDate]) || {};
-  const vsLabel = data ? (isToday ? `vs gisteren t/m ${hhmm(ctx.cut, ctx.minute)}` : `vs ${dayLabel(data.prevDate, data.today).toLowerCase()}`) : "";
+  const sel = useMemo(() => (!data ? {} : isRange ? sumPeriod(rows, dates) : totalsByDate[data.date] || {}), [data, isRange, rows, dates, totalsByDate, sumPeriod]);
+  const prv = useMemo(() => (!data ? {} : isRange ? sumPeriod(rows, prevDates) : lflPrev(rows)), [data, isRange, rows, prevDates, lflPrev, sumPeriod]);
+  const prvFull = isRange ? prv : (data && totalsByDate[data.prevDate]) || {};
+  const vsLabel = data
+    ? isRange
+      ? `vs vorige ${dates.length} dagen (${shortDate(data.prevFrom)} – ${shortDate(data.prevTo)})`
+      : isToday
+      ? `vs gisteren t/m ${hhmm(ctx.cut, ctx.minute)}`
+      : `vs ${dayLabel(data.prevDate, data.today).toLowerCase()}`
+    : "";
+  /* Periode-modus: omzet per dag, deze periode vs de vorige (dag 1 naast dag 1) */
+  const daily = useMemo(() => {
+    if (!isRange) return null;
+    const val = (d) => (totalsByDate[d] && ok(totalsByDate[d].revenue) ? totalsByDate[d].revenue : null);
+    return { day: dates.map(val), prev: prevDates.map(val) };
+  }, [isRange, dates, prevDates, totalsByDate]);
+  const dayShort = (d) => {
+    const [y, m, dd] = d.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, dd, 12)).toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).replace(".", "");
+  };
 
   const hourly = useMemo(() => {
-    if (!data) return null;
+    if (!data || isRange) return null;
     const sumHours = (d) => {
       const out = new Array(24).fill(0);
       for (const r of rows) {
@@ -283,7 +327,7 @@ export default function DashboardPage() {
       day: cumulative(sumHours(data.date), isToday ? data.nowHour : null),
       prev: cumulative(sumHours(data.prevDate), null),
     };
-  }, [data, rows, isToday]);
+  }, [data, rows, isToday, isRange]);
 
   /* Laatste uur: omzet + orders in het lopende uur vs dezelfde 60 min gisteren */
   const lastHour = useMemo(() => {
@@ -337,17 +381,28 @@ export default function DashboardPage() {
         {/* Dagkeuze */}
         <div className="dd-bar">
           <div className="dd-days">
-            <button className="dd-arrow" onClick={() => setDate(addDays(date, -1))} aria-label="Vorige dag">‹</button>
+            <button className="dd-arrow" onClick={() => (setPeriod("day"), setDate(addDays(date, -1)))} aria-label="Vorige dag">‹</button>
             {quick.map((d, i) => (
-              <button key={d} className={"dd-day" + (d === date ? " on" : "")} onClick={() => setDate(d)}>
+              <button key={d} className={"dd-day" + (d === date && period === "day" ? " on" : "")} onClick={() => (setPeriod("day"), setDate(d))}>
                 {["Vandaag", "Gisteren", "Eergisteren"][i]}
               </button>
             ))}
             <button className="dd-arrow" onClick={() => setDate(addDays(date, 1) > today ? today : addDays(date, 1))} disabled={date >= today} aria-label="Volgende dag">›</button>
-            <input type="date" className="dd-date" value={date} max={today} onChange={(e) => e.target.value && setDate(e.target.value)} />
+            <input type="date" className="dd-date" value={date} max={today} onChange={(e) => e.target.value && (setPeriod("day"), setDate(e.target.value))} />
+            <span className="dd-sep" />
+            <button className={"dd-day" + (period === "7" ? " on" : "")} onClick={() => setPeriod("7")} title="De laatste 7 hele dagen (t/m gisteren), vergeleken met de 7 dagen ervoor">7 dagen</button>
+            <button className={"dd-day" + (period === "30" ? " on" : "")} onClick={() => setPeriod("30")} title="De laatste 30 hele dagen (t/m gisteren), vergeleken met de 30 dagen ervoor">30 dagen</button>
+            <button className={"dd-day" + (period === "custom" ? " on" : "")} onClick={() => setPeriod("custom")} title="Eigen periode">Periode</button>
+            {period === "custom" && (
+              <span className="dd-range">
+                <input type="date" className="dd-date" value={custom.from} max={today} onChange={(e) => e.target.value && setCustom((c) => ({ ...c, from: e.target.value }))} />
+                <span className="muted">–</span>
+                <input type="date" className="dd-date" value={custom.to} max={today} onChange={(e) => e.target.value && setCustom((c) => ({ ...c, to: e.target.value }))} />
+              </span>
+            )}
           </div>
           <div className="dd-status">
-            {date === today ? <span className="dd-live"><span className="dd-livedot" />Live</span> : null}
+            {date === today && period === "day" ? <span className="dd-live"><span className="dd-livedot" />Live</span> : null}
             <span className="muted small">{lastAds ? `Ads bijgewerkt ${lastAds.slice(11)}` : ""}</span>
             <button className="dd-refresh" onClick={refresh} disabled={busy} title="Verversen">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={busy ? "spin" : ""}>
@@ -424,10 +479,10 @@ export default function DashboardPage() {
         {data && (
           <>
             {/* Hoofdgrafiek: omzet per uur */}
-            <section className="dd-card dd-hero dd-click" onClick={() => setModal({ id: "revenue" })} title="Klik voor details">
+            <section className={"dd-card dd-hero" + (isRange ? "" : " dd-click")} onClick={() => !isRange && setModal({ id: "revenue" })} title={isRange ? "" : "Klik voor details"}>
               <div className="dd-hero-head">
                 <div>
-                  <div className="dd-eyebrow">Totale omzet · {dayLabel(data.date, data.today)}</div>
+                  <div className="dd-eyebrow">Totale omzet · {isRange ? periodLabel : dayLabel(data.date, data.today)}</div>
                   <div className="dd-big">{gbp(sel.revenue)}</div>
                   <div className="dd-hero-sub">
                     <Delta cur={sel.revenue} prev={prv.revenue} />
@@ -443,10 +498,23 @@ export default function DashboardPage() {
 
                 </div>
                 <div className="dd-legend">
-                  <span><i style={{ background: "#3987e5" }} />{dayLabel(data.date, data.today)}</span>
-                  <span><i className="dashed" />{dayLabel(data.prevDate, data.today)}</span>
+                  <span><i style={{ background: "#3987e5" }} />{isRange ? "Deze periode" : dayLabel(data.date, data.today)}</span>
+                  <span><i className="dashed" />{isRange ? "Vorige periode" : dayLabel(data.prevDate, data.today)}</span>
                 </div>
               </div>
+              {daily && (
+                <LineChart
+                  height={280}
+                  labels={dates.map(dayShort)}
+                  xEvery={dates.length > 14 ? Math.ceil(dates.length / 10) : 1}
+                  fmt={(v, axis) => (axis ? gbpAxis(v) : gbp(v))}
+                  tooltipTitle={(i) => `${dayShort(dates[i])} · vorige periode ${prevDates[i] ? dayShort(prevDates[i]) : "—"}`}
+                  series={[
+                    { name: "Deze periode", color: "#3987e5", values: daily.day },
+                    { name: "Vorige periode", color: PREV_COLOR, values: daily.prev, dashed: true, muted: true },
+                  ]}
+                />
+              )}
               {hourly && (
                 <LineChart
                   height={280}
@@ -467,14 +535,14 @@ export default function DashboardPage() {
               {TILES.map((t) => {
                 const series = dates.map((d) => (totalsByDate[d] ? totalsByDate[d][t.id] : null));
                 return (
-                  <button key={t.id} className="dd-tile dd-click" title={(t.hint ? t.hint + " · " : "") + "Klik voor details"} onClick={() => setModal({ id: t.id })}>
+                  <button key={t.id} className={"dd-tile" + (isRange ? "" : " dd-click")} title={(t.hint ? t.hint + " · " : "") + (isRange ? "" : "Klik voor details")} onClick={() => !isRange && setModal({ id: t.id })}>
                     <div className="dd-tile-top">
                       <span className="dd-tile-label">{t.label}</span>
                       <Delta cur={sel[t.id]} prev={prv[t.id]} lowerIsBetter={t.lowerIsBetter} />
                     </div>
                     <div className="dd-tile-value">{t.fmt(sel[t.id])}</div>
                     <Sparkline values={series} color={t.lowerIsBetter ? "#d95926" : "#3987e5"} />
-                    <div className="dd-tile-foot muted small">{isToday ? `vs gisteren t/m ${hhmm(ctx.cut, ctx.minute)}` : "14 dagen"}</div>
+                    <div className="dd-tile-foot muted small">{isRange ? `vs vorige ${dates.length} dagen` : isToday ? `vs gisteren t/m ${hhmm(ctx.cut, ctx.minute)}` : "14 dagen"}</div>
                   </button>
                 );
               })}
@@ -584,7 +652,7 @@ export default function DashboardPage() {
             <section className="dd-card">
               <div className="dd-hero-head">
                 <div>
-                  <div className="dd-eyebrow">Laatste 14 dagen</div>
+                  <div className="dd-eyebrow">{isRange ? periodLabel : "Laatste 14 dagen"}</div>
                   <div className="dd-mid">Omzet {hasAds ? "vs ad spend" : ""}</div>
                 </div>
                 <div className="dd-legend">
@@ -595,7 +663,7 @@ export default function DashboardPage() {
               <LineChart
                 height={240}
                 labels={dates.map(shortDate)}
-                xEvery={2}
+                xEvery={dates.length > 16 ? Math.ceil(dates.length / 8) : 2}
                 fmt={(v, axis) => (axis ? gbpAxis(v) : gbp(v))}
                 series={[
                   { name: "Omzet", color: "#3987e5", values: trend.revenue },
@@ -608,23 +676,24 @@ export default function DashboardPage() {
             <div className="dd-stores">
               {rows.map((r, i) => {
                 const d = r.days && r.days[data.date];
-                const p = r.days && r.days[data.prevDate];
-                const m = metrics(d);
-                const pm = lflPrev([r]);
+                const m = isRange ? sumPeriod([r], dates) : metrics(d);
+                const pm = isRange ? sumPeriod([r], prevDates) : lflPrev([r]);
                 const color = colorOf(r.key, i);
-                const hDay = cumulative(r.hours && r.hours[data.date] && r.hours[data.date].revenue, isToday ? data.nowHour : null);
-                const hPrev = cumulative(r.hours && r.hours[data.prevDate] && r.hours[data.prevDate].revenue, null);
+                const dayVal = (dd) => (r.days && r.days[dd] && ok(r.days[dd].revenue) ? r.days[dd].revenue : null);
+                const hDay = isRange ? dates.map(dayVal) : cumulative(r.hours && r.hours[data.date] && r.hours[data.date].revenue, isToday ? data.nowHour : null);
+                const hPrev = isRange ? prevDates.map(dayVal) : cumulative(r.hours && r.hours[data.prevDate] && r.hours[data.prevDate].revenue, null);
+                const localSum = isRange ? dates.reduce((a, dd) => a + ((r.days && r.days[dd] && r.days[dd].revenueLocal) || 0), 0) : d && d.revenueLocal;
                 return (
                   <section key={r.domain} className="dd-card dd-store">
                     <div className="dd-store-head">
                       <span className="dd-store-dot" style={{ background: color }} />
                       <strong>{r.key || r.name}</strong>
                       <span className="muted small">{r.name}</span>
-                      {r.currency && r.currency !== "GBP" && d && d.fx ? (
-                        <span className="dd-pill">{r.currency} {nf2.format(d.revenueLocal)}</span>
+                      {r.currency && r.currency !== "GBP" && (isRange ? ok(localSum) : d && d.fx) ? (
+                        <span className="dd-pill">{r.currency} {nf2.format(localSum)}</span>
                       ) : null}
                     </div>
-                    <div className="dd-store-main dd-click" onClick={() => setModal({ id: "revenue", scope: r.domain })} title="Klik voor details">
+                    <div className={"dd-store-main" + (isRange ? "" : " dd-click")} onClick={() => !isRange && setModal({ id: "revenue", scope: r.domain })} title={isRange ? "" : "Klik voor details"}>
                       <div>
                         <div className="dd-mid">{gbp(m.revenue)}</div>
                         <Delta cur={m.revenue} prev={pm.revenue} />
@@ -633,12 +702,12 @@ export default function DashboardPage() {
                         <LineChart
                           height={96}
                           compact
-                          labels={HOURS}
-                          xEvery={6}
+                          labels={isRange ? dates.map(dayShort) : HOURS}
+                          xEvery={isRange ? Math.max(1, Math.ceil(dates.length / 4)) : 6}
                           fmt={(v, axis) => (axis ? gbpAxis(v) : gbp(v))}
                           series={[
-                            { name: dayLabel(data.date, data.today), color, values: hDay },
-                            { name: dayLabel(data.prevDate, data.today), color: PREV_COLOR, values: hPrev, dashed: true, muted: true },
+                            { name: isRange ? "Deze periode" : dayLabel(data.date, data.today), color, values: hDay },
+                            { name: isRange ? "Vorige periode" : dayLabel(data.prevDate, data.today), color: PREV_COLOR, values: hPrev, dashed: true, muted: true },
                           ]}
                         />
                       </div>
@@ -647,7 +716,7 @@ export default function DashboardPage() {
                       {STORE_STATS.map((id) => {
                         const t = METRIC[id];
                         return (
-                          <button key={id} className="dd-stat dd-click" title={(t.hint ? t.hint + " · " : "") + "Klik voor details"} onClick={() => setModal({ id, scope: r.domain })}>
+                          <button key={id} className={"dd-stat" + (isRange ? "" : " dd-click")} title={(t.hint ? t.hint + " · " : "") + (isRange ? "" : "Klik voor details")} onClick={() => !isRange && setModal({ id, scope: r.domain })}>
                             <span className="dd-stat-label">{t.label}</span>
                             <span className="dd-stat-value">{t.fmt(m[id])}</span>
                             <Delta cur={m[id]} prev={pm[id]} lowerIsBetter={t.lowerIsBetter} />
@@ -662,7 +731,7 @@ export default function DashboardPage() {
           </>
         )}
 
-        {modal && data && (
+        {modal && data && !isRange && (
           <MetricModal
             metricId={modal.id}
             initialScope={modal.scope}

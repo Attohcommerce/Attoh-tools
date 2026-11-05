@@ -228,3 +228,7 @@
 .dd-cf-toggle { appearance: none; background: none; border: 0; color: var(--muted); font-size: 12.5px; cursor: pointer; padding: 10px 2px 0; font-family: inherit; }
 .dd-cf-toggle:hover { color: var(--ink); }
 @media (max-width: 900px) { .dd-cf-days { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+/* Periode-keuze (05-11): 7 / 30 dagen / eigen periode naast de dagknoppen */
+.dd-sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
+.dd-range { display: inline-flex; align-items: center; gap: 2px; }
