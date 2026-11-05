@@ -6,7 +6,8 @@ export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 /* CASHFLOW — body: { stores: [{ key, name, domain, currency, clientId, clientSecret, token }] }
-   (zelfde credentials als het omzet-dashboard). Geeft per store de geplande/
+   (credentials van de gewone store-koppeling = Attoh Tools-app, dezelfde als
+   de Importer — niet de Orders-app). Geeft per store de geplande/
    onderweg zijnde Shopify Payments-uitbetalingen, de laatste betaalde, het
    saldo en het schema; plus een totaal per dag (vandaag … +14) in £. */
 export async function POST(req) {
