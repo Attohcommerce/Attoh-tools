@@ -13,6 +13,8 @@
  * laatste DAGEN dagen opnieuw geschreven (gisteren/eergisteren veranderen nog
  * door late conversies); rijen ouder dan BEWAAR_DAGEN gaan eruit.
  * Eerste run (tab nog leeg) haalt vanzelf EERSTE_RUN_DAGEN dagen geschiedenis op.
+ * Ontbreekt er een dag in die periode (script stond uit), dan haalt de volgende
+ * run alles vanaf de oudste ontbrekende dag opnieuw op (gat-reparatie, 05-11).
  */
 var SHEET_ID = '1xac7M4--kCb2DKShQy7s2A13sgfl4NxW8CXbLGW4H8o'; // Attoh Ads Live
 var STORE = 'SSB';          // SSB · LGB · EMC · SW
@@ -50,6 +52,20 @@ function main() {
   if (oud.length && laatste) {
     var gat = Math.round((nu.getTime() - new Date(laatste + 'T12:00:00Z').getTime()) / 86400000) + 1;
     if (gat > DAGEN_NU) DAGEN_NU = Math.min(EERSTE_RUN_DAGEN, gat);
+  }
+  // gat-reparatie (05-11): ontbreekt er een dag MIDDEN in de laatste
+  // EERSTE_RUN_DAGEN dagen (script stond een paar dagen uit), dan vanaf de
+  // oudste ontbrekende dag opnieuw ophalen — anders blijven 7/14/30 d scheef
+  if (oud.length) {
+    var aanwezig = {};
+    for (var i1 = 0; i1 < oud.length; i1++) aanwezig[oud[i1][0]] = true;
+    for (var k1 = EERSTE_RUN_DAGEN - 1; k1 >= 1; k1--) {
+      var dk = dagStr(new Date(nu.getTime() - k1 * 86400000));
+      if (!aanwezig[dk]) {
+        if (k1 + 1 > DAGEN_NU) DAGEN_NU = k1 + 1;
+        break;
+      }
+    }
   }
 
   var dagen = {};

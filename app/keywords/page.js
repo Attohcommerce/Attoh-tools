@@ -1326,7 +1326,7 @@ export default function KeywordsPage() {
       });
       if (tPy && a.pythago) {
         const ago = a.pythago.syncedAt ? Math.round((Date.now() - Date.parse(a.pythago.syncedAt)) / 3600000) : null;
-        tPush({ text: `Pythago ↗ (sync ${ago != null ? `${ago} uur geleden` : "?"}): ${a.pythago.count} product${a.pythago.count === 1 ? "" : "en"} met extreem goede ROAS én uptrend 30 → 14 → 7 d · ${t.pyKeywords} keyword${t.pyKeywords === 1 ? "" : "s"} · ${t.pyPlanned} product${t.pyPlanned === 1 ? "" : "en"} erbij.` });
+        tPush({ text: `Pythago ↗ (sync ${ago != null ? `${ago} uur geleden` : "?"}): ${a.pythago.count} product${a.pythago.count === 1 ? "" : "en"} met extreem goede ROAS én uptrend (7 d t.o.v. dag 8–30) · ${t.pyKeywords} keyword${t.pyKeywords === 1 ? "" : "s"} · ${t.pyPlanned} product${t.pyPlanned === 1 ? "" : "en"} erbij.` });
       }
       const top = a.scrape.map((s) => `${s.zoekterm} ${s.n}${s.nPy ? " ↗" : ""}`).join(" · ");
       tPush({ text: `Verdeling (${t.planned} producten over ${t.fed} keywords${t.big != null ? ` · ${t.big} met ≥ 15% van de orders → 3` : ""}): ${top}` });
@@ -2169,8 +2169,9 @@ export default function KeywordsPage() {
                 {tPy && (
                   <div className="hint">
                     Leest de laatste Pythago-sync van deze store (geheugen, elke dag automatisch) en pakt producten die actief zijn,
-                    in 7 dagen minstens 1 order hebben, een extreem goede ROAS (7 d ≥ 1,5 × break-even, minimaal 2,0) en een uptrend:
-                    ROAS 7 d &gt; 14 d ≥ 30 d en 7 d minstens 25% boven 30 d. Hun keywords komen in het weekblad erbij (bron "Pythago ↗").
+                    genoeg data hebben (≥ 1 order en spend ≥ 3 in 7 d), een extreem goede ROAS (7 d ≥ 1,5 × break-even, minimaal 2,0) en een uptrend:
+                    de laatste 7 dagen minstens 25% beter dan de dagen daarvoor (dag 8–30). Net gestarte producten met ≥ 2 orders tellen mee als "nieuw".
+                    Hun keywords komen in het weekblad erbij (bron "Pythago ↗").
                     {tSales ? " Staat het keyword al in de sales, dan krijgt het daar 1 product extra (max 3 per keyword)." : " Het aantal producten hieronder wordt dan helemaal over de uptrend-keywords verdeeld."}
                   </div>
                 )}
@@ -2304,12 +2305,12 @@ export default function KeywordsPage() {
                   {a.pythago && a.pythago.products && a.pythago.products.length > 0 && (
                     <>
                       <div className="hint" style={{ marginTop: 12 }}>
-                        Pythago uptrend — {a.pythago.count} product{a.pythago.count === 1 ? "" : "en"} (ROAS 30 d → 14 d → 7 d{a.pythago.breakEvenRoas ? ` · break-even ${a.pythago.breakEvenRoas}` : ""}):
+                        Pythago uptrend — {a.pythago.count} product{a.pythago.count === 1 ? "" : "en"} (ROAS dag 8–30 → laatste 7 d{a.pythago.breakEvenRoas ? ` · break-even ${a.pythago.breakEvenRoas}` : ""}):
                       </div>
                       <div className="logpanel" style={{ maxHeight: 260, overflow: "auto" }}>
                         {a.pythago.products.map((p) => (
                           <div key={p.productId || p.title} className="logline">
-                            <strong>{p.trend}</strong> · {p.title} <span className="opt">— 7 d: {p.orders7} orders · {a.pythago.currency ? a.pythago.currency + " " : ""}{Math.round(p.net7)} · spend {Math.round(p.spend7)}</span>
+                            <strong>{p.trend}</strong>{p.kind === "nieuw" ? " · nieuw" : ""} · {p.title} <span className="opt">— 7 d: {p.orders7} orders · {a.pythago.currency ? a.pythago.currency + " " : ""}{Math.round(p.net7)} · spend {Math.round(p.spend7)}</span>
                           </div>
                         ))}
                       </div>
