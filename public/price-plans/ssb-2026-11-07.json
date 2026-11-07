@@ -2,7 +2,7 @@
  "store": "Soul Society Boutique",
  "domain": "soulsocietyboutique.com",
  "date": "2026-11-07",
- "note": "110 producten volgens GMC-prijssuggesties \u00b7 naar beneden op ,95 (bestsellers naar boven) \u00b7 max 50% korting \u00b7 gem. $57.22 \u2192 $49.54",
+ "note": "105 producten volgens GMC-prijssuggesties \u00b7 naar beneden op ,95 (bestsellers naar boven) \u00b7 max 50% korting \u00b7 ondergrens $39.95 \u00b7 gem. $58.24 \u2192 $50.76",
  "items": [
   {
    "id": 10353425744201,
@@ -141,22 +141,22 @@
    "id": 10353432232265,
    "title": "Product #32265",
    "from": 44.95,
-   "price": 34.95,
-   "compareAt": 69.95
+   "price": 39.95,
+   "compareAt": 79.95
   },
   {
    "id": 10353432330569,
    "title": "Product #30569",
    "from": 44.95,
-   "price": 34.95,
-   "compareAt": 69.95
+   "price": 39.95,
+   "compareAt": 79.95
   },
   {
    "id": 10353432428873,
    "title": "Product #28873",
    "from": 44.95,
-   "price": 34.95,
-   "compareAt": 69.95
+   "price": 39.95,
+   "compareAt": 79.95
   },
   {
    "id": 10353432658249,
@@ -178,13 +178,6 @@
    "from": 44.95,
    "price": 39.95,
    "compareAt": 79.95
-  },
-  {
-   "id": 10353433149769,
-   "title": "Product #49769",
-   "from": 39.95,
-   "price": 34.95,
-   "compareAt": 69.95
   },
   {
    "id": 10353433444681,
@@ -295,8 +288,8 @@
    "id": 10353436655945,
    "title": "Product #55945",
    "from": 44.95,
-   "price": 34.95,
-   "compareAt": 69.95
+   "price": 39.95,
+   "compareAt": 79.95
   },
   {
    "id": 10353436688713,
@@ -449,8 +442,8 @@
    "id": 10476587680073,
    "title": "Product #80073",
    "from": 44.95,
-   "price": 34.95,
-   "compareAt": 69.95
+   "price": 39.95,
+   "compareAt": 79.95
   },
   {
    "id": 10476588892489,
@@ -500,13 +493,6 @@
    "from": 59.95,
    "price": 44.95,
    "compareAt": 89.95
-  },
-  {
-   "id": 10486039118153,
-   "title": "Bestseller #18153",
-   "from": 34.95,
-   "price": 29.95,
-   "compareAt": 49.93
   },
   {
    "id": 10493738877257,
@@ -638,15 +624,8 @@
    "id": 10493752148297,
    "title": "Product #48297",
    "from": 44.95,
-   "price": 34.95,
-   "compareAt": 69.95
-  },
-  {
-   "id": 10493752836425,
-   "title": "Bestseller #36425",
-   "from": 34.95,
-   "price": 29.95,
-   "compareAt": 58.25
+   "price": 39.95,
+   "compareAt": 74.92
   },
   {
    "id": 10493753295177,
@@ -705,13 +684,6 @@
    "compareAt": 89.95
   },
   {
-   "id": 10498870280521,
-   "title": "Product #80521",
-   "from": 34.95,
-   "price": 24.95,
-   "compareAt": 44.95
-  },
-  {
    "id": 10506361373001,
    "title": "Product #73001",
    "from": 59.95,
@@ -745,13 +717,6 @@
    "from": 44.95,
    "price": 39.95,
    "compareAt": 79.95
-  },
-  {
-   "id": 10506374971721,
-   "title": "Product #71721",
-   "from": 34.95,
-   "price": 29.95,
-   "compareAt": 54.95
   },
   {
    "id": 10506375070025,
