@@ -1,0 +1,778 @@
+{
+ "store": "Soul Society Boutique",
+ "domain": "soulsocietyboutique.com",
+ "date": "2026-11-07",
+ "note": "110 producten volgens GMC-prijssuggesties \u00b7 naar beneden op ,95 (bestsellers naar boven) \u00b7 max 50% korting \u00b7 gem. $57.22 \u2192 $49.54",
+ "items": [
+  {
+   "id": 10353425744201,
+   "title": "Product #44201",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "id": 10353425842505,
+   "title": "Product #42505",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "id": 10353426202953,
+   "title": "Bestseller #02953",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10353426465097,
+   "title": "Product #65097",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10353426727241,
+   "title": "Product #27241",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "id": 10353428857161,
+   "title": "Product #57161",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 10353429119305,
+   "title": "Bestseller #19305",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 108.95
+  },
+  {
+   "id": 10353429152073,
+   "title": "Bestseller #52073",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 108.95
+  },
+  {
+   "id": 10353429643593,
+   "title": "Bestseller #43593",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353429774665,
+   "title": "Bestseller #74665",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "id": 10353429840201,
+   "title": "Product #40201",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 10353430004041,
+   "title": "Bestseller #04041",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353430167881,
+   "title": "Product #67881",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353430331721,
+   "title": "Product #31721",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353430462793,
+   "title": "Product #62793",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "id": 10353430561097,
+   "title": "Bestseller #61097",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353430692169,
+   "title": "Bestseller #92169",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "id": 10353430757705,
+   "title": "Bestseller #57705",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353431904585,
+   "title": "Product #04585",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "id": 10353432232265,
+   "title": "Product #32265",
+   "from": 44.95,
+   "price": 34.95,
+   "compareAt": 69.95
+  },
+  {
+   "id": 10353432330569,
+   "title": "Product #30569",
+   "from": 44.95,
+   "price": 34.95,
+   "compareAt": 69.95
+  },
+  {
+   "id": 10353432428873,
+   "title": "Product #28873",
+   "from": 44.95,
+   "price": 34.95,
+   "compareAt": 69.95
+  },
+  {
+   "id": 10353432658249,
+   "title": "Bestseller #58249",
+   "from": 44.95,
+   "price": 39.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 10353432789321,
+   "title": "Bestseller #89321",
+   "from": 44.95,
+   "price": 39.95,
+   "compareAt": 79.95
+  },
+  {
+   "id": 10353433084233,
+   "title": "Bestseller #84233",
+   "from": 44.95,
+   "price": 39.95,
+   "compareAt": 79.95
+  },
+  {
+   "id": 10353433149769,
+   "title": "Product #49769",
+   "from": 39.95,
+   "price": 34.95,
+   "compareAt": 69.95
+  },
+  {
+   "id": 10353433444681,
+   "title": "Bestseller #44681",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10353433641289,
+   "title": "Product #41289",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "id": 10353433805129,
+   "title": "Product #05129",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353433903433,
+   "title": "Product #03433",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 10353434231113,
+   "title": "Product #31113",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353434362185,
+   "title": "Bestseller #62185",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353434427721,
+   "title": "Bestseller #27721",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10353434460489,
+   "title": "Product #60489",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "id": 10353434493257,
+   "title": "Product #93257",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10353434591561,
+   "title": "Bestseller #91561",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 10353434886473,
+   "title": "Product #86473",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353435279689,
+   "title": "Bestseller #79689",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353435574601,
+   "title": "Product #74601",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353436131657,
+   "title": "Product #31657",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10353436164425,
+   "title": "Product #64425",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353436655945,
+   "title": "Product #55945",
+   "from": 44.95,
+   "price": 34.95,
+   "compareAt": 69.95
+  },
+  {
+   "id": 10353436688713,
+   "title": "Bestseller #88713",
+   "from": 44.95,
+   "price": 39.95,
+   "compareAt": 79.95
+  },
+  {
+   "id": 10353436950857,
+   "title": "Bestseller #50857",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353437016393,
+   "title": "Product #16393",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353437213001,
+   "title": "Product #13001",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10353437245769,
+   "title": "Product #45769",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "id": 10353437376841,
+   "title": "Product #76841",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10460960129353,
+   "title": "Product #29353",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 91.58
+  },
+  {
+   "id": 10460963832137,
+   "title": "Bestseller #32137",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 92.23
+  },
+  {
+   "id": 10460965241161,
+   "title": "Bestseller #41161",
+   "from": 44.95,
+   "price": 39.95,
+   "compareAt": 69.95
+  },
+  {
+   "id": 10460966814025,
+   "title": "Product #14025",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10460967010633,
+   "title": "Product #10633",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10464679395657,
+   "title": "Product #95657",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 10464681296201,
+   "title": "Product #96201",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.91
+  },
+  {
+   "id": 10464683852105,
+   "title": "Product #52105",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10464685293897,
+   "title": "Product #93897",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10464686735689,
+   "title": "Bestseller #35689",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10464689193289,
+   "title": "Product #93289",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10464690209097,
+   "title": "Product #09097",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10464690274633,
+   "title": "Bestseller #74633",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 118.09
+  },
+  {
+   "id": 10464690569545,
+   "title": "Product #69545",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10464690897225,
+   "title": "Bestseller #97225",
+   "from": 44.95,
+   "price": 39.95,
+   "compareAt": 79.95
+  },
+  {
+   "id": 10476587680073,
+   "title": "Product #80073",
+   "from": 44.95,
+   "price": 34.95,
+   "compareAt": 69.95
+  },
+  {
+   "id": 10476588892489,
+   "title": "Product #92489",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10486035775817,
+   "title": "Product #75817",
+   "from": 54.95,
+   "price": 39.95,
+   "compareAt": 79.95
+  },
+  {
+   "id": 10486036726089,
+   "title": "Product #26089",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10486037348681,
+   "title": "Bestseller #48681",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10486037643593,
+   "title": "Product #43593",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10486038430025,
+   "title": "Bestseller #30025",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 10486038790473,
+   "title": "Product #90473",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "id": 10486039118153,
+   "title": "Bestseller #18153",
+   "from": 34.95,
+   "price": 29.95,
+   "compareAt": 49.93
+  },
+  {
+   "id": 10493738877257,
+   "title": "Product #77257",
+   "from": 69.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10493739106633,
+   "title": "Product #06633",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 108.25
+  },
+  {
+   "id": 10493739270473,
+   "title": "Product #70473",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10493740646729,
+   "title": "Product #46729",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10493741171017,
+   "title": "Bestseller #71017",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10493741367625,
+   "title": "Product #67625",
+   "from": 54.95,
+   "price": 39.95,
+   "compareAt": 79.95
+  },
+  {
+   "id": 10493741695305,
+   "title": "Product #95305",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10493745430857,
+   "title": "Product #30857",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 10493745660233,
+   "title": "Product #60233",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10493746938185,
+   "title": "Product #38185",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 91.58
+  },
+  {
+   "id": 10493747298633,
+   "title": "Product #98633",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 99.92
+  },
+  {
+   "id": 10493747364169,
+   "title": "Bestseller #64169",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10493748281673,
+   "title": "Product #81673",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "id": 10493748642121,
+   "title": "Product #42121",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10493748773193,
+   "title": "Product #73193",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 10493749887305,
+   "title": "Bestseller #87305",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 10493750280521,
+   "title": "Product #80521",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 10493750542665,
+   "title": "Bestseller #42665",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "id": 10493752148297,
+   "title": "Product #48297",
+   "from": 44.95,
+   "price": 34.95,
+   "compareAt": 69.95
+  },
+  {
+   "id": 10493752836425,
+   "title": "Bestseller #36425",
+   "from": 34.95,
+   "price": 29.95,
+   "compareAt": 58.25
+  },
+  {
+   "id": 10493753295177,
+   "title": "Bestseller #95177",
+   "from": 44.95,
+   "price": 39.95,
+   "compareAt": 79.95
+  },
+  {
+   "id": 10493754933577,
+   "title": "Product #33577",
+   "from": 49.95,
+   "price": 39.95,
+   "compareAt": 79.95
+  },
+  {
+   "id": 10493755523401,
+   "title": "Product #23401",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.91
+  },
+  {
+   "id": 10493756145993,
+   "title": "Product #45993",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.92
+  },
+  {
+   "id": 10498866643273,
+   "title": "Product #43273",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10498866708809,
+   "title": "Product #08809",
+   "from": 49.95,
+   "price": 39.95,
+   "compareAt": 79.95
+  },
+  {
+   "id": 10498867167561,
+   "title": "Bestseller #67561",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10498868838729,
+   "title": "Product #38729",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "id": 10498870280521,
+   "title": "Product #80521",
+   "from": 34.95,
+   "price": 24.95,
+   "compareAt": 44.95
+  },
+  {
+   "id": 10506361373001,
+   "title": "Product #73001",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10506361438537,
+   "title": "Bestseller #38537",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.0
+  },
+  {
+   "id": 10506362323273,
+   "title": "Product #23273",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 10506363437385,
+   "title": "Product #37385",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 10506363568457,
+   "title": "Product #68457",
+   "from": 44.95,
+   "price": 39.95,
+   "compareAt": 79.95
+  },
+  {
+   "id": 10506374971721,
+   "title": "Product #71721",
+   "from": 34.95,
+   "price": 29.95,
+   "compareAt": 54.95
+  },
+  {
+   "id": 10506375070025,
+   "title": "Bestseller #70025",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10506375397705,
+   "title": "Product #97705",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 10506375627081,
+   "title": "Product #27081",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  }
+ ]
+}
