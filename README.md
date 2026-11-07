@@ -39,6 +39,18 @@ Code: `lib/reis/*` (engine, bronnen, bestemmingen-database, opslag), `app/reis/*
 
 \* Zonder deze keys werkt alles, maar met geschatte prijzen (duidelijk gemarkeerd). Redis en `ANTHROPIC_API_KEY` worden gedeeld met de rest van Attoh Tools.
 
+## Attoh Pokémon (07-11-2026)
+
+Eigen tool voor de Pokémon-kaartenstore: **/pokemon** (gewone Attoh Tools-login, alleen in ATTOH COMMERCE LTD). Eigen lichte look (`app/pokemon/pokemon.css`, alles onder `.pk`).
+
+| Tab | Wat het doet |
+|---|---|
+| **01 Scraper** | Concurrenten toevoegen (platform wordt herkend). Shopify → `/products.json`, WooCommerce → `/wp-json/wc/store/v1/products`, overige winkels → sitemap + JSON-LD in porties. Filtert op Pokémon (laat One Piece, Magic, Yu-Gi-Oh, Lorcana weg) en deelt elk product in: type, set, era, taal. |
+| **02 Importer** | Alle concurrenten samen, ontdubbeld (zelfde product bij 3 winkels = 1 kaart met prijsbereik). Filters op type/set/taal. AI schrijft eigen titel + omschrijving + SEO (plagiaatcheck op 5-woord-reeksen, > 15% overlap → herschrijven). Prijs = laagste/middelste/hoogste concurrent × factor, eindes ,95 / ,99 / 4,95-9,95. Producten komen op voorraad 0, voorraad bijhouden aan, doorverkopen uit → **Sold out**. Tags = slimme collecties (type, set, era, taal, Sealed Products). 👁 Voorbeeld = bron naast onze tekst. |
+| **03 Store Doctor** | Scan + ⚡ Fix / FIX ALLES: bestelbaar zonder voorraad, concept, geen/1 foto, korte tekst, tekst lijkt op concurrent, noemt concurrent of belooft levering, type/tags/collecties, titelvorm, SEO, alt-teksten, SKU's, prijs 0, dubbele producten. Tab **Voorraad**: aantallen invullen als de levering binnen is. |
+
+Code: `lib/pokemon/*` (catalog = herkennen/indelen/ontdubbelen, scrape, ai, importer, doctor, store = Redis `pk:*`), `app/api/pokemon/*`, `app/pokemon/*`. Shopify-scopes: `write_products`, `write_inventory`, `read_locations`.
+
 ## Wijzigingsplan in Store Doctor (31-10-2026)
 
 Algemene fixes over een hele store in één keer, net als het prijsplan. Claude loopt de store na (geslacht in titel/tags/type/omschrijving, producten zonder categorie, rommelige optie-namen en -waarden, lege producttypes …), schrijft `public/change-plans/<store>-<datum>.json` en zet hem in `public/change-plans/index.json`.

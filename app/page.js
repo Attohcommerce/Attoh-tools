@@ -77,6 +77,18 @@ const MODULES = [
     ),
   },
   {
+    href: "/pokemon",
+    name: "Pokémon",
+    tagline: "Scraper · Importer · Doctor",
+    orgs: ["attoh"],
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="4.5" width="10" height="15" rx="1.8" transform="rotate(-10 9 12)" />
+        <rect x="10" y="4.5" width="10" height="15" rx="1.8" transform="rotate(8 15 12)" />
+      </svg>
+    ),
+  },
+  {
     href: "/qa",
     name: "Store Doctor",
     tagline: "Laatste producten",

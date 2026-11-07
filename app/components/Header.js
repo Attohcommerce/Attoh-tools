@@ -21,6 +21,7 @@ const NAV = [
   { href: "/gmc-checklist", label: "GMC Checklist" },
   { href: "/bills", label: "Bills" },
   { href: "/pythago", label: "Pythago" },
+  { href: "/pokemon", label: "Pokémon" },
 ];
 
 export default function Header({ icon, title, subtitle }) {
