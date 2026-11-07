@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listProductsByIds, getProductMetafieldValues, getProductCategories } from "@/lib/shopify";
+import { listProductsByIds, getProductMetafieldValues, getProductCategories, getProductSeo } from "@/lib/shopify";
 import { applyDoctorFix, FIX_FIELDS } from "@/lib/doctor";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { addTab, appendRows } from "@/lib/sheets";
@@ -93,6 +93,8 @@ function snapshotFor(fix, p) {
       return { prices: vars((x) => [x.id, x.price, x.compare_at_price]) };
     case "fix-size-order":
       return { order: vars((x) => [x.id, x.position, x.title]) };
+    case "fill-seo":
+      return { seo: p.__seo ? { title: p.__seo.title, description: p.__seo.description } : null, note: "alleen lege velden gevuld" };
     case "fill-alt":
       return { alts: (p.images || []).map((im) => [im.id, im.alt || ""]) };
     case "fix-men-template":
@@ -246,6 +248,16 @@ export async function POST(req) {
     if (fix === "set-category" && pending.length) {
       const c = await getProductCategories(store, pending.map((p) => p.id));
       if (c.ok) for (const p of pending) p.__category = c.values[String(p.id)] || null;
+    }
+
+    // SEO-fix: huidige SEO-velden + shopnaam vooraf (backup + alleen lege velden vullen)
+    if (fix === "fill-seo" && pending.length) {
+      const sg = await getProductSeo(store, pending.map((p) => p.id));
+      if (!sg.ok) return NextResponse.json({ error: sg.error }, { status: 422 });
+      for (const p of pending) {
+        p.__seo = sg.values[String(p.id)] || null;
+        p.__shopName = sg.shopName || "";
+      }
     }
 
     // 1. EERST de snapshot van deze chunk wegschrijven — vóór elke wijziging

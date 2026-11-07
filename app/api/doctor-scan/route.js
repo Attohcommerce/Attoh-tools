@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listProducts, listProductMetafieldValues, listProductCategories } from "@/lib/shopify";
+import { listProducts, listProductMetafieldValues, listProductCategories, listProductSeo, getProductSeo } from "@/lib/shopify";
 import { runDoctor, scanThemeSizeGuide } from "@/lib/doctor";
 import { resolveCategory, listCategoryAttrKeys } from "@/lib/category-attrs";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
@@ -125,6 +125,22 @@ export async function POST(req) {
       }
     }
 
+    /* 07-11: SEO-titel/-omschrijving per product (check "missing-seo").
+       Mislukt of geen tijd = check overgeslagen, de rest van de scan gaat door. */
+    let seo = null;
+    if (left() > 6000) {
+      try {
+        const sr = scope.mode === "latest"
+          ? await getProductSeo(store, products.map((p) => String(p.id)))
+          : await listProductSeo(store, { max: Number(max) || 1000 });
+        seo = sr.ok ? sr.values : null;
+      } catch {
+        seo = null;
+      }
+    } else {
+      partial.push("SEO-check overgeslagen (tijd)");
+    }
+
     const storeGenders = await storeGendersOf(store);
     const shoeLabels = await storeShoeLabelsOf(store); // SSB: "us-eu"
     const result = runDoctor(products, {
@@ -136,6 +152,7 @@ export async function POST(req) {
       categories,
       refinedCategories,
       attrKeys,
+      seo,
       storeGenders,
       shoeLabels,
       // Shapes Wardrobe: producttype moet uit de lijst van Cas komen (23-10)
