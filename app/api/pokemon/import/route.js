@@ -5,6 +5,15 @@ import { getImported, markImported, saveSettings, getComps, readCatalog, pkRedis
 import { groupProducts, stripHtml } from "@/lib/pokemon/catalog";
 import { writeListings } from "@/lib/pokemon/ai";
 import { importGroup, DEFAULT_SETTINGS } from "@/lib/pokemon/importer";
+import { bodyImages } from "@/lib/pokemon/brain";
+
+// Bron voor de AI: beste bron + tekst van de andere concurrenten + (strategie 1) foto's in de tekst
+function aiSource(g) {
+  const best = g.best;
+  const others = (g.fullSources || []).filter((x) => x && x.url !== best.url).map((x) => ({ domain: x.domain, text: stripHtml(x.body) })).filter((x) => x.text.length > 80);
+  const withImgs = [best, ...(g.fullSources || [])].find((x) => x && bodyImages(x.body).length);
+  return { ...best, extraSources: others, imageLayout: withImgs ? { body: withImgs.body } : null };
+}
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -35,7 +44,11 @@ export async function POST(req) {
     const todo = body.dryRun || body.force ? picked : picked.filter((g) => !imported[g.key]);
     const skipped = picked.filter((g) => !todo.includes(g)).map((g) => ({ key: g.key, title: g.title, skipped: true, reason: "al geïmporteerd" }));
 
-    const w = todo.length ? await writeListings(todo.map((g) => g.best), { lang: settings.lang, brand: settings.brand }) : { items: [], usage: null };
+    const srcs = todo.map(aiSource);
+    const w = todo.length ? await writeListings(srcs, { lang: settings.lang, brand: settings.brand }) : { items: [], usage: null };
+    w.items.forEach((it, i) => {
+      if (srcs[i].imageLayout) it.bodyImages = bodyImages(srcs[i].imageLayout.body);
+    });
     if (body.dryRun) {
       return NextResponse.json({ previews: todo.map((g, i) => ({ key: g.key, source: { title: g.best.title, url: g.best.url, text: stripHtml(g.best.body).slice(0, 1200) }, listing: w.items[i] })), usage: w.usage });
     }

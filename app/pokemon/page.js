@@ -2,7 +2,8 @@
 
 // ATTOH POKÉMON (07-11-2026) — eigen tool voor de Pokémon-kaartenstore.
 // 1 Scraper   → concurrenten toevoegen, met één klik alles van ze ophalen
-// 2 Importer  → kiezen, eigen teksten laten schrijven, op "Sold out" in de store
+// 2 Importlijst → wat er in de store moet (2026-lijst of eigen CSV), matchen, importeren
+// 3 Importer  → los kiezen, eigen teksten laten schrijven, op "Sold out" in de store
 // 3 Doctor    → store nalopen en fixen; voorraad zetten als de levering binnen is
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -10,12 +11,14 @@ import { loadStores, LS_PICK, lsGet, lsSet } from "./util";
 import StorePicker from "./StorePicker";
 import ScraperTab from "./ScraperTab";
 import ImporterTab from "./ImporterTab";
+import ListTab from "./ListTab";
 import DoctorTab from "./DoctorTab";
 
 const TABS = [
   { id: "scraper", n: "01", label: "Scraper" },
-  { id: "importer", n: "02", label: "Importer" },
-  { id: "doctor", n: "03", label: "Store Doctor" },
+  { id: "list", n: "02", label: "Importlijst" },
+  { id: "importer", n: "03", label: "Importer (los)" },
+  { id: "doctor", n: "04", label: "Store Doctor" },
 ];
 
 export default function PokemonPage() {
@@ -72,6 +75,7 @@ export default function PokemonPage() {
 
       <main className="pk-main">
         {tab === "scraper" && <ScraperTab notify={notify} comps={comps} setComps={setComps} goImport={() => go("importer")} />}
+        {tab === "list" && <ListTab notify={notify} store={store} goDoctor={() => go("doctor")} />}
         {tab === "importer" && <ImporterTab notify={notify} store={store} goScraper={() => go("scraper")} goDoctor={() => go("doctor")} />}
         {tab === "doctor" && <DoctorTab notify={notify} store={store} />}
       </main>
