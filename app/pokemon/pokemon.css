@@ -200,8 +200,10 @@
 .pk-dock .pk-btn:not(.primary):not(.yellow):hover:not(:disabled) { background: rgba(255,255,255,0.08); }
 
 /* ---------- Modal ---------- */
-.pk-modal-bg { position: fixed; inset: 0; background: rgba(22, 21, 26, 0.45); backdrop-filter: blur(3px); z-index: 50; display: grid; place-items: center; padding: 20px; }
-.pk-modal { background: var(--paper); border-radius: 18px; width: min(980px, 100%); max-height: 88vh; overflow: auto; box-shadow: 0 30px 80px -20px rgba(0,0,0,0.5); }
+.pk-modal-bg { position: fixed; inset: 0; background: rgba(22, 21, 26, 0.45); backdrop-filter: blur(3px); z-index: 1000; display: grid; place-items: center; padding: 20px; overflow-y: auto; }
+/* portal-variant (StorePicker): los van de header, altijd in het midden van het scherm, zelf scrollbaar */
+.pk.pk-modal-bg--portal { inset: 0; width: auto; height: auto; background: rgba(22, 21, 26, 0.45); font-size: 14.5px; overflow-y: auto; }
+.pk-modal { background: var(--paper); border-radius: 18px; width: min(980px, 100%); max-height: min(88vh, 900px); overflow: auto; box-shadow: 0 30px 80px -20px rgba(0,0,0,0.5); margin: auto; }
 .pk-modal.narrow { width: min(480px, 100%); }
 .pk-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--paper); z-index: 1; }
 .pk-modal-head h3 { font-size: 17px; }
