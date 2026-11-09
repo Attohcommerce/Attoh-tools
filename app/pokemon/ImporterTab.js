@@ -253,7 +253,7 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
               <div className="pk-field">
                 <div className="pk-label">Taal van de teksten</div>
                 <div className="pk-chips">
-                  {[["en", "English"], ["nl", "Nederlands"], ["de", "Deutsch"], ["fr", "Français"]].map(([k, v]) => (
+                  {[["nl", "Nederlands"], ["en", "English"], ["de", "Deutsch"], ["fr", "Français"]].map(([k, v]) => (
                     <button key={k} className={"pk-chip" + (settings.lang === k ? " on" : "")} onClick={() => upd({ lang: k })}>
                       {v}
                     </button>
@@ -301,8 +301,8 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
                     ["type", "Per type (Elite Trainer Boxes …)"],
                     ["set", "Per set (Surging Sparks …)"],
                     ["era", "Per era (Scarlet & Violet Era)"],
-                    ["lang", "Per taal (Japanese Pokémon Cards)"],
-                    ["sealed", "Sealed Products"],
+                    ["lang", "Per taal (Japanse Pokémon Kaarten)"],
+                    ["sealed", "Sealed Producten"],
                     ["featured", "Per Pokémon (Charizard …)"],
                   ].map(([k, v]) => (
                     <label key={k} className="pk-check">
