@@ -41,6 +41,9 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
   const [setF, setSetF] = useState(() => new Set()); // gekozen sets (leeg = alle)
   const [setPanel, setSetPanel] = useState(false);
   const [sealedOnly, setSealedOnly] = useState(true);
+  // Alleen de taal die bij de set hoort: Engelse set → Engelse producten (geen Chinese/Koreaanse/Duitse versies van die set)
+  const [setLangOnly, setSetLangOnly] = useState(true);
+  const langOfSet = (set) => (ERA_OF[set] === "Japanese" ? "Japanese" : "English");
   const [lang, setLang] = useState("");
   const [status, setStatus] = useState("new");
   const [minSrc, setMinSrc] = useState(1);
@@ -102,6 +105,7 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
       if (type && g.type !== type) return false;
       if (setF.size && !setF.has(g.set)) return false;
       if (sealedOnly && !SEALED_TYPES.has(g.type)) return false;
+      if (setLangOnly && g.set && g.lang !== langOfSet(g.set)) return false;
       if (lang && g.lang !== lang) return false;
       if (status === "new" && imported[g.key]) return false;
       if (status === "done" && !imported[g.key]) return false;
@@ -117,7 +121,7 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
       type: (a, b) => TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type) || a.title.localeCompare(b.title),
     };
     return out.sort(by[sort] || by.sources);
-  }, [groups, q, type, setF, lang, status, minSrc, sort, imported, sealedOnly]);
+  }, [groups, q, type, setF, lang, status, minSrc, sort, imported, sealedOnly, setLangOnly]);
 
   // Sets op volgorde van release (nieuwste eerst), gesplitst in Engels en Japans
   const setLists = useMemo(() => {
@@ -135,9 +139,9 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
   }, [groups]);
   const setCount = useMemo(() => {
     const c = {};
-    for (const g of groups) if (g.set && (!sealedOnly || SEALED_TYPES.has(g.type))) c[g.set] = (c[g.set] || 0) + 1;
+    for (const g of groups) if (g.set && (!sealedOnly || SEALED_TYPES.has(g.type)) && (!setLangOnly || g.lang === langOfSet(g.set))) c[g.set] = (c[g.set] || 0) + 1;
     return c;
-  }, [groups, sealedOnly]);
+  }, [groups, sealedOnly, setLangOnly]);
   function pickSets(names, add = true) {
     setSetF((cur) => {
       const n = add ? new Set(cur) : new Set();
@@ -448,6 +452,9 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
                 <span className="pk-spacer" />
                 <label className="pk-row" style={{ gap: 6, fontSize: 13 }}>
                   <input type="checkbox" checked={sealedOnly} onChange={(e) => setSealedOnly(e.target.checked)} /> Alleen sealed (geen losse kaarten, accessoires)
+                </label>
+                <label className="pk-row" style={{ gap: 6, fontSize: 13 }} title="Engelse set → alleen Engelse producten; Japanse set → alleen Japanse. Geen Chinese, Koreaanse of Duitse versies.">
+                  <input type="checkbox" checked={setLangOnly} onChange={(e) => setSetLangOnly(e.target.checked)} /> Alleen de taal van de set
                 </label>
                 <span className="pk-hint">{setF.size ? `${setF.size} sets · ${list.length} producten` : `${setLists.en.length + setLists.jp.length} sets gevonden`}</span>
               </div>
