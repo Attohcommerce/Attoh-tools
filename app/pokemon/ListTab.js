@@ -186,7 +186,7 @@ export default function ListTab({ notify, store, goDoctor }) {
             } else if (x.ok) {
               st.ok++;
               sfx("ok");
-              addLog(`✓ ${x.title} · ${money(x.price, "EUR")} · ${x.variants > 1 ? x.variants + " varianten · " : ""}${x.images} foto's · strategie ${x.strategy}${x.ai === false ? " · standaardtekst" : ` · ${Math.round((x.copy || 0) * 100)}% overlap`}${x.colErrors && x.colErrors.length ? " · collectie-fout" : ""}`, "ok");
+              addLog(`✓ ${x.title} · ${money(x.price, "EUR")} · ${x.variants > 1 ? x.variants + " varianten · " : ""}${x.images} foto's${x.removedImages ? ` (${x.removedImages} geweigerd: shopbranding)` : ""} · ${Math.round((x.copy || 0) * 100)}% overlap${x.colErrors && x.colErrors.length ? " · collectie-fout" : ""}`, "ok");
               setImported((m) => ({ ...m, [x.id]: { id: x.id, handle: x.handle } }));
             } else {
               st.fail++;

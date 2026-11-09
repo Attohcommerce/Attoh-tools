@@ -33,7 +33,6 @@ const listKey = (id) => `list:${id}`;
 function aiSource(row, m, rowsById) {
   const best = m.match.best || {};
   const others = (m.match.fullSources || []).filter((x) => x && x.url !== best.url).map((x) => ({ domain: x.domain, text: stripHtml(x.body) })).filter((x) => x.text.length > 80);
-  const withImgs = [best, ...(m.match.fullSources || [])].find((x) => x && bodyImages(x.body).length >= 1);
   const hints = [];
   if (row.type === "Case") {
     const b = rowsById.get(row.caseOf);
@@ -52,7 +51,7 @@ function aiSource(row, m, rowsById) {
     lang: row.lang,
     hint: hints.filter(Boolean).join(" "),
     extraSources: others,
-    imageLayout: withImgs ? { body: withImgs.body } : null,
+    imageLayout: null,
   };
 }
 
@@ -106,8 +105,7 @@ export async function POST(req) {
       const srcs = todo.map((m) => aiSource(m.row, m, rowsById));
       const w = srcs.length ? await writeListings(srcs, { lang: settings.lang, brand: settings.brand }) : { items: [], usage: null };
       w.items.forEach((it, i) => {
-        if (srcs[i].imageLayout) it.bodyImages = bodyImages(srcs[i].imageLayout.body);
-      });
+        });
       if (body.dryRun) {
         return NextResponse.json({
           previews: todo.map((m, i) => ({ id: m.id, row: m.row, price: m.price, strategy: srcs[i].imageLayout ? 1 : 2, sources: m.match.sources, listing: w.items[i] })),

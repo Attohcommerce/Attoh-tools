@@ -222,7 +222,7 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
             } else if (x.ok) {
               st.ok++;
               sfx("ok");
-              addLog(`✓ ${x.title} · ${x.price ? x.price.toFixed(2) : "geen prijs"} · ${x.images} foto's · ${Math.round((x.copy || 0) * 100)}% overlap${x.colErrors && x.colErrors.length ? " · collectie-fout" : ""}`, "ok");
+              addLog(`✓ ${x.title} · ${x.price ? x.price.toFixed(2) : "geen prijs"} · ${x.images} foto's${x.removedImages ? ` (${x.removedImages} geweigerd: shopbranding)` : ""} · ${Math.round((x.copy || 0) * 100)}% overlap${x.colErrors && x.colErrors.length ? " · collectie-fout" : ""}`, x.images ? "ok" : "warn");
               setImported((m) => ({ ...m, [x.key]: { id: x.id, handle: x.handle, title: x.title } }));
             } else {
               st.fail++;
