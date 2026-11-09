@@ -19,7 +19,7 @@ import { MARKETS, MARKET_SIZE_GUIDE, BARE_SYSTEMS } from "@/lib/sizes";
 import { orgLS } from "@/lib/org-client";
 import { useOrgDef } from "./OrgProvider";
 import { isShapesWardrobe, SW_TYPE_SHEET } from "@/lib/sw-product-types";
-import { mergePlanItems, groupCounts, planMatchesStore } from "@/lib/change-plan";
+import { mergePlanItems, groupCounts, planMatchesStore, storeOpsOf, storeOpCounts, storeOpLabel } from "@/lib/change-plan";
 import { AI_EST, CUR_MARKET, aiEstimate, scanStore, runFixLoop, runAiLoop, fixAllStore, titleSex } from "@/lib/doctor-engine";
 import RunDashboard, { useRun, ScoreRing } from "./RunDashboard";
 import CollectionFill from "./CollectionFill";
@@ -320,7 +320,7 @@ export default function DoctorPanel({ store, since }) {
     return tot;
   }
 
-  async function runFix(findingId, fix, ids, extraOptions) {
+  async function runFix(findingId, fix, ids, extraOptions, { keepLog = false } = {}) {
     if (!store || fixBusy || busy || aiBusy || !ids.length) return;
     if (fix.danger) {
       const zeker = window.confirm(
@@ -331,7 +331,7 @@ export default function DoctorPanel({ store, since }) {
     const b = askBackupSkip();
     if (!b.ok) return;
     setFixBusy(`${findingId}|${fix.id}`);
-    setFixLog([]);
+    if (!keepLog) setFixLog([]);
     setErr("");
     stopRef.current = false;
     setPausing(false);
@@ -405,7 +405,9 @@ export default function DoctorPanel({ store, since }) {
       const r = await fetch(`/change-plans/${encodeURIComponent(name)}.json`, { cache: "no-store" });
       if (!r.ok) throw new Error(`plan "${name}" niet gevonden (${r.status})`);
       const plan = await r.json();
-      if (!Array.isArray(plan.items) || !plan.items.length) throw new Error("plan is leeg");
+      if (!Array.isArray(plan.items)) plan.items = [];
+      const nOps = ((plan.collections || []).length || 0) + ((plan.menus || []).length || 0);
+      if (!plan.items.length && !nOps) throw new Error("plan is leeg");
       if (!Array.isArray(plan.groups) || !plan.groups.length) plan.groups = [{ id: "__all", label: "Alle wijzigingen", default: true }];
       if (!plan.name) plan.name = name;
       setCp(plan);
@@ -422,8 +424,45 @@ export default function DoctorPanel({ store, since }) {
   }
 
   function cpBuild() {
-    if (!cp || !cpSel.length) return { ids: [], map: {}, count: 0 };
-    return mergePlanItems(cp, cpSel.includes("__all") ? [] : cpSel);
+    const none = { collections: [], menus: [] };
+    if (!cp || !cpSel.length) return { ids: [], map: {}, count: 0, ops: none, nOps: 0 };
+    const m = mergePlanItems(cp, cpSel.includes("__all") ? [] : cpSel);
+    const ops = storeOpsOf(cp, cpSel);
+    return { ...m, ops, nOps: ops.collections.length + ops.menus.length };
+  }
+
+  /* 09-11: store-stappen van het plan (nieuwe collecties, regels, namen, menu-
+     items) via /api/change-plan-store. Altijd vóór de producten: eerst de
+     collectie, dan de tags die hem vullen. Log-regels komen in het fix-log. */
+  async function runPlanStoreOps(ops, { dryRun = false, revert = false } = {}) {
+    const n = ops.collections.length + ops.menus.length;
+    if (!n) return null;
+    const label = `${dryRun ? "Controle: " : revert ? "Terugdraaien: " : ""}collecties + menu (${n} stap${n === 1 ? "" : "pen"})`;
+    const blockId = newBlock(label, n);
+    runApi.step(label, { total: n });
+    let data;
+    try {
+      const r = await fetch("/api/change-plan-store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ store: storeBody, ops, dryRun, revert }),
+      });
+      data = await r.json().catch(() => ({ error: `server gaf geen JSON (${r.status})` }));
+      if (!r.ok || data.error) throw new Error(data.error || `HTTP ${r.status}`);
+    } catch (e) {
+      const msg = String(e.message || e);
+      blockDone(blockId, `gestopt: ${msg.slice(0, 120)}`, 1);
+      runApi.log(`${label} gestopt: ${msg}`, "err");
+      throw e;
+    }
+    blockDetail(blockId, data.lines || []);
+    (data.lines || []).filter(isAlarm).slice(0, 3).forEach((l) => runApi.log(l, "warn"));
+    const sum = dryRun
+      ? `controle: ${data.done} zouden veranderen · ${data.skipped} al goed of overgeslagen · ${data.failed} mislukt — er is niets aangepast`
+      : `${data.done} aangepast · ${data.skipped} overgeslagen · ${data.failed} mislukt`;
+    blockDone(blockId, sum, data.failed);
+    runApi.log(`${label}: ${sum}`, data.failed ? "warn" : "ok");
+    return data;
   }
 
   function cpStoreOk() {
@@ -433,8 +472,8 @@ export default function DoctorPanel({ store, since }) {
 
   async function checkChangePlan() {
     if (!cp || !store || fixBusy || busy || aiBusy) return;
-    const { ids, map } = cpBuild();
-    if (!ids.length) return setErr("Wijzigingsplan: vink minstens één groep aan.");
+    const { ids, map, ops, nOps } = cpBuild();
+    if (!ids.length && !nOps) return setErr("Wijzigingsplan: vink minstens één groep aan.");
     if (!cpStoreOk()) return;
     setFixBusy("change-plan|check");
     setFixLog([]);
@@ -442,13 +481,17 @@ export default function DoctorPanel({ store, since }) {
     stopRef.current = false;
     runApi.start(`Controle wijzigingsplan ${cp.name || cpName}`, { phases: [{ key: "fixes", label: "Controle" }], sub: "droge run — er verandert niets" });
     try {
-      const tot = await execFix(
-        { id: "apply-change-plan", label: `Controle "${cp.name || cpName}" — verandert niets` },
-        ids,
-        fixOptions({ plan: map, dryRun: true }),
-        true
-      );
-      setCpCheck(tot);
+      const so = await runPlanStoreOps(ops, { dryRun: true });
+      let tot = { fixed: 0, skipped: 0, failed: 0 };
+      if (ids.length) {
+        tot = await execFix(
+          { id: "apply-change-plan", label: `Controle "${cp.name || cpName}" — verandert niets` },
+          ids,
+          fixOptions({ plan: map, dryRun: true }),
+          true
+        );
+      }
+      setCpCheck({ ...tot, ops: so, failed: tot.failed + ((so && so.failed) || 0) });
       runApi.finish("done", "Controle klaar");
       sfx(tot.failed ? "error" : "success");
     } catch (e) {
@@ -461,10 +504,10 @@ export default function DoctorPanel({ store, since }) {
     }
   }
 
-  function applyChangePlan(revert) {
-    if (!cp || !store) return;
-    const { ids, map, count } = cpBuild();
-    if (!ids.length) return setErr("Wijzigingsplan: vink minstens één groep aan.");
+  async function applyChangePlan(revert) {
+    if (!cp || !store || fixBusy || busy || aiBusy) return;
+    const { ids, map, count, ops, nOps } = cpBuild();
+    if (!ids.length && !nOps) return setErr("Wijzigingsplan: vink minstens één groep aan.");
     if (!cpStoreOk()) return;
     const types = Object.values(map).filter((m) => m.set && m.set.product_type != null).length;
     const status = Object.values(map).filter((m) => m.set && m.set.status != null).length;
@@ -472,17 +515,40 @@ export default function DoctorPanel({ store, since }) {
       types ? `\n⚠ ${types} producttype-wijziging(en) — kan een vermeldingsgroep van de mediabuyer raken.` : "",
       status ? `\n⚠ ${status} product(en) krijgen een andere status (draft = niet meer zichtbaar in de winkel).` : "",
     ].join("");
+    const opsTxt = nOps
+      ? revert
+        ? `\n+ ${nOps} collectie/menu-stap(pen) terug (namen en regels terug, menu-items weg; nieuwe collecties blijven staan — die verwijder je zelf).`
+        : `\n+ eerst ${nOps} collectie/menu-stap(pen): nieuwe collecties, regels, namen en menu-items.`
+      : "";
     const msg = revert
-      ? `TERUGDRAAIEN: ${ids.length} producten uit "${cp.name || cpName}" terug naar hoe ze waren (alleen waar de plan-waarde nog staat). Omschrijvingen en metafields gaan niet automatisch terug — die staan in het backup-tabblad. Starten?`
-      : `${ids.length} producten (${count} wijzigingen) uit "${cp.name || cpName}" doorvoeren. Eerst gaat alles naar het backup-tabblad; producten die intussen veranderd zijn worden overgeslagen.${warn}\n\nStarten?`;
+      ? `TERUGDRAAIEN: ${ids.length} producten uit "${cp.name || cpName}" terug naar hoe ze waren (alleen waar de plan-waarde nog staat). Omschrijvingen en metafields gaan niet automatisch terug — die staan in het backup-tabblad.${opsTxt}\n\nStarten?`
+      : `${ids.length} producten (${count} wijzigingen) uit "${cp.name || cpName}" doorvoeren. Eerst gaat alles naar het backup-tabblad; producten die intussen veranderd zijn worden overgeslagen.${warn}${opsTxt}\n\nStarten?`;
     if (!window.confirm(msg)) return;
     setCpCheck(null);
-    runFix(
-      "change-plan",
-      { id: "apply-change-plan", label: `${revert ? "Terugdraaien" : "Wijzigingsplan"} ${cp.name || cpName}` },
-      ids,
-      { plan: map, revert: !!revert }
-    );
+    const label = `${revert ? "Terugdraaien" : "Wijzigingsplan"} ${cp.name || cpName}`;
+    if (nOps) {
+      setFixBusy("change-plan|store-ops");
+      setFixLog([]);
+      setErr("");
+      stopRef.current = false;
+      runApi.start(`${label}: collecties + menu`, { phases: [{ key: "fixes", label: "Collecties + menu" }], sub: `${nOps} stap(pen) · ${store.name || store.domain}` });
+      runApi.phase("fixes", "Collecties + menu");
+      try {
+        const so = await runPlanStoreOps(ops, { revert: !!revert });
+        runApi.finish(so && so.failed ? "error" : "done");
+        if (!ids.length) sfx(so && so.failed ? "error" : "success");
+      } catch (e) {
+        setErr(`Collecties/menu gestopt: ${String(e.message || e)}`);
+        runApi.finish("error");
+        sfx("error");
+        setFixBusy(null);
+        return;
+      }
+      setFixBusy(null);
+    }
+    if (ids.length) {
+      runFix("change-plan", { id: "apply-change-plan", label }, ids, { plan: map, revert: !!revert }, { keepLog: nOps > 0 });
+    }
   }
 
   /* ============ SW · PRODUCTTYPES VAN CAS ============
@@ -1453,7 +1519,9 @@ export default function DoctorPanel({ store, since }) {
           {cp &&
             (() => {
               const counts = groupCounts(cp);
+              const opCounts = storeOpCounts(cp);
               const sel = cpBuild();
+              const selOps = [...sel.ops.collections, ...sel.ops.menus];
               const types = Object.values(sel.map).filter((m) => m.set && m.set.product_type != null).length;
               const shown = (cp.items || []).filter((it) => cpSel.includes("__all") || cpSel.includes(it.group));
               const cpBusy = !!fixBusy || busy || !!aiBusy;
@@ -1467,7 +1535,14 @@ export default function DoctorPanel({ store, since }) {
                       <input type="checkbox" checked={cpSel.includes(g.id)} onChange={() => toggleCpGroup(g.id)} style={{ marginTop: 3 }} />
                       <span>
                         <strong>{g.label}</strong>{" "}
-                        <span className="muted">({g.id === "__all" ? cp.items.length : counts[g.id] || 0} producten)</span>
+                        <span className="muted">
+                          {(() => {
+                            const np = g.id === "__all" ? cp.items.length : counts[g.id] || 0;
+                            const no = g.id === "__all" ? Object.values(opCounts).reduce((a, b) => a + b, 0) : opCounts[g.id] || 0;
+                            const parts = [np || !no ? `${np} producten` : "", no ? `${no} collectie/menu-stap${no === 1 ? "" : "pen"}` : ""].filter(Boolean);
+                            return `(${parts.join(" · ")})`;
+                          })()}
+                        </span>
                         {g.desc ? (
                           <span className="hint" style={{ display: "block", marginTop: 2 }}>
                             {g.desc}
@@ -1482,26 +1557,40 @@ export default function DoctorPanel({ store, since }) {
                     </div>
                   )}
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
-                    <button className="btn-ghost btn-small" disabled={cpBusy || !sel.ids.length} onClick={checkChangePlan}>
+                    <button className="btn-ghost btn-small" disabled={cpBusy || (!sel.ids.length && !sel.nOps)} onClick={checkChangePlan}>
                       {fixBusy === "change-plan|check" ? "Bezig…" : "🔍 Controleer eerst (verandert niets)"}
                     </button>
-                    <button className="btn-ghost btn-small" disabled={cpBusy || !sel.ids.length} onClick={() => applyChangePlan(false)}>
-                      {fixBusy === "change-plan|apply-change-plan" ? "Bezig…" : `⚡ Zet ${sel.ids.length} producten door`}
+                    <button className="btn-ghost btn-small" disabled={cpBusy || (!sel.ids.length && !sel.nOps)} onClick={() => applyChangePlan(false)}>
+                      {fixBusy === "change-plan|apply-change-plan" || fixBusy === "change-plan|store-ops"
+                        ? "Bezig…"
+                        : `⚡ Zet ${[sel.ids.length ? `${sel.ids.length} producten` : "", sel.nOps ? `${sel.nOps} collectie/menu-stappen` : ""].filter(Boolean).join(" + ")} door`}
                     </button>
-                    <button className="btn-ghost btn-small" disabled={cpBusy || !sel.ids.length} onClick={() => applyChangePlan(true)}>
+                    <button className="btn-ghost btn-small" disabled={cpBusy || (!sel.ids.length && !sel.nOps)} onClick={() => applyChangePlan(true)}>
                       ↩ Draai terug
                     </button>
                   </div>
                   {cpCheck && (
                     <div className="hint">
-                      Controle: <strong>{cpCheck.fixed}</strong> zouden veranderen · {cpCheck.skipped} al goed of overgeslagen · {cpCheck.failed} mislukt —
-                      details in het fix-log.
+                      Controle: <strong>{cpCheck.fixed}</strong> producten zouden veranderen · {cpCheck.skipped} al goed of overgeslagen
+                      {cpCheck.ops ? (
+                        <>
+                          {" "}
+                          · collecties/menu: <strong>{cpCheck.ops.done}</strong> zouden veranderen, {cpCheck.ops.skipped} al goed
+                        </>
+                      ) : null}{" "}
+                      · {cpCheck.failed} mislukt — details in het fix-log.
                     </div>
                   )}
                   <details style={{ marginTop: 8 }}>
                     <summary className="hint" style={{ cursor: "pointer" }}>
-                      Bekijk de {shown.length} wijzigingen
+                      Bekijk de {shown.length + selOps.length} wijzigingen
                     </summary>
+                    {selOps.map((o, i) => (
+                      <div key={`op-${i}`} className="hint" style={{ marginTop: 2 }}>
+                        <strong>{storeOpLabel(o)}</strong>
+                        {o.why ? <span className="muted"> — {o.why}</span> : null}
+                      </div>
+                    ))}
                     {shown.slice(0, 400).map((it, i) => (
                       <div key={`${it.id}-${i}`} className="hint" style={{ marginTop: 2 }}>
                         <a className="linklike" href={adminUrl(it.id)} target="_blank" rel="noreferrer noopener">

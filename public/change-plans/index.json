@@ -1,6 +1,15 @@
 {
  "plans": [
   {
+   "name": "emc-2026-11-09",
+   "store": "Everman Clothing",
+   "domain": "evermanclothing.com",
+   "date": "2026-11-09",
+   "items": 163,
+   "products": 149,
+   "storeSteps": 18
+  },
+  {
    "name": "cc-2026-10-31",
    "store": "Clove & Cloth",
    "domain": "cloveandcloth.com",

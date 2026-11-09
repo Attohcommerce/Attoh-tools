@@ -1,0 +1,162 @@
+{
+ "store": "Everman Clothing",
+ "domain": "evermanclothing.com",
+ "date": "2026-11-09",
+ "note": "nieuwe upload: pakken A$149,95–189,95 (± €94–119, 3-delig het duurst) · blazers A$129,95–149,95 · linnen sets A$114,95–129,95 (± €72–81) · 3 losse linnen broeken op het linnen-broek-niveau A$64,95 · doorgestreepte prijs houdt hetzelfde kortingspercentage",
+ "items": [
+  {
+   "id": 16102033129853,
+   "title": "Men's 3 Piece Suit | Tailored Blazer Waistcoat Trousers",
+   "from": 144.95,
+   "price": 189.95,
+   "compareAt": 344.95
+  },
+  {
+   "id": 16102033097085,
+   "title": "Men's 3 Piece Suit | Checked Pattern Notched Lapels Double Button",
+   "from": 144.95,
+   "price": 189.95,
+   "compareAt": 314.95
+  },
+  {
+   "id": 16102032540029,
+   "title": "Men's Formal Suit | Notch Lapel Three-Piece Tailored Fit",
+   "from": 144.95,
+   "price": 189.95,
+   "compareAt": 289.95
+  },
+  {
+   "id": 16102033064317,
+   "title": "Men's 3 Piece Suit | Single-Breasted Two-Button Tailored",
+   "from": 114.95,
+   "price": 184.95,
+   "compareAt": 309.95
+  },
+  {
+   "id": 16102032605565,
+   "title": "Men's Suit | Two-Button Single Breasted Three-Piece Tailored",
+   "from": 114.95,
+   "price": 179.95,
+   "compareAt": 324.95
+  },
+  {
+   "id": 16102032638333,
+   "title": "Men's Suit | Slim Fit Single Breasted Button Closure",
+   "from": 144.95,
+   "price": 179.95,
+   "compareAt": 254.95
+  },
+  {
+   "id": 16102032474493,
+   "title": "Men's Suit | Tailored Jacket Button Closure Trousers",
+   "from": 139.95,
+   "price": 169.95,
+   "compareAt": 309.95
+  },
+  {
+   "id": 16102032834941,
+   "title": "Men's Suit | Notch Lapel Two Button Slim Fit",
+   "from": 114.95,
+   "price": 164.95,
+   "compareAt": 274.95
+  },
+  {
+   "id": 16102032572797,
+   "title": "Men's Suit | Two-Piece Linen Button-Front Tailored",
+   "from": 144.95,
+   "price": 159.95,
+   "compareAt": 264.95
+  },
+  {
+   "id": 16102032966013,
+   "title": "Men's Linen Suit | Relaxed Blazer Drawstring Trousers Notch Lapel",
+   "from": 114.95,
+   "price": 149.95,
+   "compareAt": 274.95
+  },
+  {
+   "id": 16102032769405,
+   "title": "Men's Blazer | Double-Breasted Notch Collar Pinstripe",
+   "from": 114.95,
+   "price": 149.95,
+   "compareAt": 249.95
+  },
+  {
+   "id": 16102032867709,
+   "title": "Men's Blazer | Single Button Notch Lapel Floral Embroidered",
+   "from": 114.95,
+   "price": 149.95,
+   "compareAt": 274.95
+  },
+  {
+   "id": 16102032900477,
+   "title": "Men's Blazer | High Collar Button Closure Tailored",
+   "from": 114.95,
+   "price": 139.95,
+   "compareAt": 214.95
+  },
+  {
+   "id": 16102032703869,
+   "title": "Men's Blazer | Linen Blend Lightweight Tailored",
+   "from": 114.95,
+   "price": 134.95,
+   "compareAt": 194.95
+  },
+  {
+   "id": 16102032802173,
+   "title": "Men's Blazer | Single Button Tailored Contrast Pockets",
+   "from": 94.95,
+   "price": 129.95,
+   "compareAt": 214.95
+  },
+  {
+   "id": 16102033162621,
+   "title": "Men's Linen Set | Long-Sleeve Button-Down Straight-Leg",
+   "from": 94.95,
+   "price": 129.95,
+   "compareAt": 214.95
+  },
+  {
+   "id": 16102033260925,
+   "title": "Men's Linen Set | Short Sleeve Button Front Relaxed Fit",
+   "from": 79.95,
+   "price": 119.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 16102033457533,
+   "title": "Men's Linen Set | Short Sleeve Collar Button Closure",
+   "from": 79.95,
+   "price": 119.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 16102033391997,
+   "title": "Men's Linen Set | Polo Shirt Short Sleeve Button Closure Drawstring Shorts",
+   "from": 79.95,
+   "price": 114.95,
+   "compareAt": 164.95
+  },
+  {
+   "id": 16102032933245,
+   "title": "Men's Linen Pants | Relaxed Fit Straight Leg Drawstring Pockets",
+   "from": 114.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 16102032998781,
+   "title": "Men's Linen Pants | Relaxed Fit Drawstring Waist Straight Leg",
+   "from": 114.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 16102033293693,
+   "title": "Men's Linen Pants | Relaxed Fit Drawstring Straight Leg",
+   "from": 114.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  }
+ ]
+}

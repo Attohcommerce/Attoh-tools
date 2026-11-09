@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listProductsByIds, getProductMetafieldValues, getProductCategories, getProductSeo } from "@/lib/shopify";
+import { listProductsByIds, getProductMetafieldValues, getProductCategories, getProductSeo, listSmartCollections } from "@/lib/shopify";
 import { applyDoctorFix, FIX_FIELDS } from "@/lib/doctor";
 import { SG_NS, SG_KEY } from "@/lib/sizeguide";
 import { addTab, appendRows } from "@/lib/sheets";
@@ -47,6 +47,8 @@ const CHUNK_FOR = {
   "fix-gender-from-title": 8,
   "gender-tags": 8,
   "fix-collection-fit": 8,
+  // per product: 1 lees-call (handmatige collecties) + 1 PUT (+ soms een nieuwe collectie)
+  "fix-category-collection": 10,
   "archive-products": 15,
   "set-prices": 10,
   // wijzigingsplan: 1 PUT per product (+ evt. doorverwijzing/metafield)
@@ -110,6 +112,7 @@ function snapshotFor(fix, p) {
     case "archive-products":
       return { status: p.status || "", title: p.title || "" };
     case "fix-collection-fit":
+    case "fix-category-collection":
       return { tags: p.tags || "" };
     case "delete-flagged-images":
       return { images: (p.images || []).map((im) => [im.id, im.src]) };
@@ -242,6 +245,13 @@ export async function POST(req) {
       } catch {
         /* dan deelt de fix elk product los in */
       }
+    }
+
+    // 09-11: categorie-collectie — alle smart collections mét regels (één keer per stap)
+    if (fix === "fix-category-collection" && pending.length && !Array.isArray(options.collections)) {
+      const lc = await listSmartCollections(store);
+      if (!lc.ok) return NextResponse.json({ error: `collecties ophalen: ${lc.error}` }, { status: 422 });
+      options.collections = lc.collections;
     }
 
     // Categorie-fix: huidige categorie erbij (REST geeft die niet) — voor backup + "stond al goed"

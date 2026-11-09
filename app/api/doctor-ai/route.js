@@ -42,11 +42,19 @@ export async function POST(req) {
       if (!r.ok) return NextResponse.json({ error: r.error }, { status: 422 });
       const products = (r.products || []).filter((p) => p.status !== "archived");
       const storeGenders = await storeGendersOf(store).catch(() => null);
-      // Collectienamen = tag-conventie van de store ("Blouses", "Men's Shirts" …)
+      /* Tags die een product écht in een collectie zetten ("Blouses", "Men's Shirts" …).
+         09-11 (EMC): vroeger alle collectienamen — maar een sub-collectie die op
+         de TITEL werkt ("Sneakers", "Henleys") vul je niet met een tag; zo kregen
+         producten een nutteloze tag en vielen ze in geen enkele collectie.
+         Nu alleen de tag-voorwaarden uit de smart collections. */
       const knownTags = new Set();
-      for (const kind of ["smart_collections", "custom_collections"]) {
-        const c = await storeRequest(store, `/${kind}.json?fields=title&limit=250`);
-        if (c.ok) for (const x of (c.data && c.data[kind]) || []) if (x.title) knownTags.add(String(x.title).trim());
+      const sc = await storeRequest(store, `/smart_collections.json?fields=title,rules&limit=250`);
+      if (sc.ok) {
+        for (const x of (sc.data && sc.data.smart_collections) || []) {
+          for (const r of x.rules || []) {
+            if (r.column === "tag" && r.relation === "equals" && String(r.condition || "").trim()) knownTags.add(String(r.condition).trim());
+          }
+        }
       }
       const items = products.map((p, i) => ({
         index: i,

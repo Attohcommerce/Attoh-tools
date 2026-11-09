@@ -51,6 +51,17 @@ Eigen tool voor de Pokémon-kaartenstore: **/pokemon** (gewone Attoh Tools-login
 
 Code: `lib/pokemon/*` (catalog = herkennen/indelen/ontdubbelen, scrape, ai, importer, doctor, store = Redis `pk:*`), `app/api/pokemon/*`, `app/pokemon/*`. Shopify-scopes: `write_products`, `write_inventory`, `read_locations`.
 
+## Collecties, menu en fitnote-maat in Store Doctor (09-11-2026)
+- **Wijzigingsplan kan nu ook collecties en het menu aanpassen.** Naast `items` (per product) mag een plan `collections` en `menus` hebben, elk met een groep:
+  - collecties: `create` (nieuwe smart collection met regels), `rename` (bv. dubbele collecties markeren als "DUBBEL - … (verwijderen)") en `rules` (regels van een bestaande collectie, met `from` als veiligheid);
+  - menu: `menu-add` (item onder een pad van titels, na een bepaald item, met sub-items). Bestaande menu-items houden hun id en blijven precies staan.
+  - 🔍 Controleer eerst doet ook de collectie/menu-stappen als droge run. ⚡ Zet door doet eerst de collecties + het menu, daarna de producten. ↩ Draai terug zet namen en regels terug en haalt de menu-items weg; een nieuwe collectie wordt nooit automatisch verwijderd.
+  - Code: `lib/plan-store-ops.js`, route `app/api/change-plan-store`, knoppen in `components/DoctorPanel.js`, hulpjes in `lib/change-plan.js`.
+  - Voor het menu heeft de app de scopes `read_online_store_navigation` en `write_online_store_navigation` nodig (Dev Dashboard → app → Versions). Zonder die scopes zegt de stap dat en staat in het log wat je met de hand moet zetten. Menu-calls gebruiken API-versie 2025-01 (`storeGraphql(…, { version })`).
+- **Nieuwe check "Product in geen enkele categorie-collectie"** (fix `fix-category-collection`, ook in ⚡ FIX ALLES, ná het geslacht). Een product dat alleen in Men/Women/Sale valt, krijgt de tag van de juiste hoofdcollectie. Bestaat die nog niet (bv. Suits & Blazers), dan maakt de fix hem aan. Alleen collecties die op één tag werken tellen. Heeft de store bijna geen tag-collecties, of hangt het product handmatig in een collectie, dan gebeurt er niets. Code: `lib/category-collection.js`, `listSmartCollections` in `lib/shopify.js`.
+- **Foto-audit zet geen nutteloze tags meer.** Hij koos de tag uit alle collectienamen, ook sub-collecties die op de titel werken ("Sneakers", "Henleys"). Zo'n tag doet niets, dus het product viel in geen enkele collectie. Nu telt alleen een tag die in een tag-regel van een smart collection staat (`app/api/doctor-ai`).
+- **Fitnote: herenmodel één maat groter** (`MEN_STEP` = 2 in `lib/fit-note.js`, man normaal M → XL). Knop **Heren-model +1 maat** bij Fitnotes (actie `resize`): die telt eerst en zet na bevestigen alleen de fitnotes die nog precies op de oude regel staan één maat omhoog. Handmatig aangepaste fitnotes blijven staan.
+
 ## Wijzigingsplan in Store Doctor (31-10-2026)
 
 Algemene fixes over een hele store in één keer, net als het prijsplan. Claude loopt de store na (geslacht in titel/tags/type/omschrijving, producten zonder categorie, rommelige optie-namen en -waarden, lege producttypes …), schrijft `public/change-plans/<store>-<datum>.json` en zet hem in `public/change-plans/index.json`.

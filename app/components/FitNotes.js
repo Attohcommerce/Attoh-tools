@@ -198,6 +198,34 @@ export default function FitNotes({ store, scanKey }) {
     }
   }
 
+  /* 09-11 (EMC): heren-model één maat groter. Eerst tellen (verandert niets),
+     dan na een vinkje doorzetten. Alleen fitnotes die nog precies op de oude
+     regel staan; handmatig aangepaste blijven zoals ze zijn. */
+  async function resizeMen() {
+    if (!body) return;
+    setBusy("resize");
+    setErr("");
+    setMsg("");
+    try {
+      const d = await call({ action: "resize", store: body, dryRun: true });
+      if (!d.todo) {
+        setMsg(`✓ Heren-fitnotes: niets te doen (${d.men} heren-fitnotes, ${d.untouched} met een eigen maat blijven staan)`);
+        return;
+      }
+      const ex = (d.rows || []).slice(0, 4).map((r) => `• ${String(r.title).split("|")[0].trim()}: ${r.from} → ${r.size}`).join("\n");
+      const ok = window.confirm(`${d.todo} heren-fitnotes gaan één maat omhoog (model draagt een maatje groter):\n${ex}${d.todo > 4 ? "\n…" : ""}\n\n${d.untouched} fitnotes met een eigen maat blijven staan. Doorzetten?`);
+      if (!ok) return;
+      const w = await call({ action: "resize", store: body, dryRun: false });
+      if (w.errors && w.errors.length) throw new Error(w.errors.join(" · "));
+      setMsg(`✓ ${w.saved} heren-fitnotes staan nu één maat groter`);
+      setData(await call({ action: "scan", store: body }));
+    } catch (e) {
+      setErr(String(e.message || e));
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function copyLiquid() {
     try {
       await navigator.clipboard.writeText(FIT_NOTE_LIQUID);
@@ -220,6 +248,9 @@ export default function FitNotes({ store, scanKey }) {
           <button className="sd-btn sd-btn--small" onClick={copyLiquid}>{copied ? "✓ gekopieerd" : "Liquid-snippet kopiëren"}</button>
           <button className="sd-btn sd-btn--small" onClick={scan} disabled={!!busy}>
             {busy === "scan" ? "Scannen…" : data ? "Opnieuw scannen" : "Fitnotes scannen"}
+          </button>
+          <button className="sd-btn sd-btn--small" onClick={resizeMen} disabled={!!busy} title="Bestaande heren-fitnotes van de oude regel één maat groter (eerst tellen, dan bevestigen)">
+            {busy === "resize" ? "Bezig…" : "Heren-model +1 maat"}
           </button>
         </div>
       </div>

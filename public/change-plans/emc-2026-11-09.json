@@ -1,0 +1,2415 @@
+{
+ "kind": "change-plan",
+ "version": 1,
+ "name": "emc-2026-11-09",
+ "store": "Everman Clothing",
+ "domain": "evermanclothing.com",
+ "date": "2026-11-09",
+ "note": "collecties + menu op orde: suits & blazers, linnen sets, boots, denim shorts; 148 producten in de juiste collectie; 2 dubbele collecties gemarkeerd",
+ "groups": [
+  {
+   "id": "collections",
+   "label": "Nieuwe collecties + slimmere regels",
+   "desc": "Maakt Men's Suits & Blazers, Suits, Blazers, Men's Linen Sets, Boots en Denim Shorts aan. Past de regels aan van Sneakers (op producttype), Boat & Casual Shoes (boots en sneakers eruit), Beach & Sport Shorts (board shorts en swim trunks erbij), Chino & Tailored Shorts (board/denim eruit), Cargo & Work Shorts en Cargo & Hiking Pants (vielen producten buiten).",
+   "default": true
+  },
+  {
+   "id": "menu",
+   "label": "Menu: Suits & Blazers, Denim Shorts en Boots",
+   "desc": "Main menu → Men: nieuwe kop \"Suits & Blazers\" na Pants (All Suits & Blazers · Suits · Blazers · Linen Sets), \"Denim Shorts\" onder Shorts, \"Boots\" onder Shoes. Shop-menu: \"Suits & Blazers\" na Jeans. Bestaande menu-items blijven precies staan.",
+   "default": true
+  },
+  {
+   "id": "new-range",
+   "label": "Pakken, blazers en linnen sets in hun collectie",
+   "desc": "De nieuwe upload (nog draft): 10 pakken + 5 blazers → Suits & Blazers, 4 linnen sets → Linen Sets, 3 losse linnen broeken → Pants.",
+   "default": true
+  },
+  {
+   "id": "collections-tags",
+   "label": "Producten in de juiste collectie",
+   "desc": "Op de foto gecheckt of op de titel overduidelijk: hoodies uit Jackets, T-shirts uit Sweaters, shorts uit Shirts, jeans uit Trousers, schoenen zonder collectie → Men's Shoes, zwemshorts → Swimwear. Tags van sub-collecties die op de titel werken (\"Sneakers\", \"Henleys\" …) gaan eraf: die deden niets.",
+   "default": true
+  },
+  {
+   "id": "titles-types",
+   "label": "Verkeerde titels en producttypes rechtzetten",
+   "desc": "Bv. \"Men's Sandals | Slip-On Loafer\" is een loafer, \"Men's Linen Suit\" zonder jasje is een broek, type \"retry\" of \"Men's Dresses\". Let op: producttype-wijzigingen kunnen een vermeldingsgroep van de mediabuyer raken.",
+   "default": true
+  },
+  {
+   "id": "duplicates",
+   "label": "Dubbele collecties markeren",
+   "desc": "men-1 en men-2 zijn precies dezelfde collectie als /collections/men. Ze heten straks \"DUBBEL - Men (verwijderen)\" — daarna verwijder je ze zelf in Shopify (niet in het menu gebruikt).",
+   "default": true
+  },
+  {
+   "id": "women",
+   "label": "Optioneel: dames-producten op draft",
+   "desc": "3 dames-producten in een herenstore (denim jasje + short, damesloafer, dames sneaker). Alleen aanvinken als je ze niet meer in de winkel wilt — draft, niet verwijderd, terugdraaien kan altijd.",
+   "default": false
+  }
+ ],
+ "collections": [
+  {
+   "op": "create",
+   "group": "collections",
+   "handle": "mens-suits-blazers",
+   "title": "Men's Suits & Blazers",
+   "rules": [
+    {
+     "column": "tag",
+     "relation": "equals",
+     "condition": "Men's Suits & Blazers"
+    }
+   ],
+   "disjunctive": false,
+   "sort_order": "best-selling",
+   "why": "hoofdcollectie voor pakken en blazers (tag Men's Suits & Blazers)"
+  },
+  {
+   "op": "create",
+   "group": "collections",
+   "handle": "suits",
+   "title": "Suits",
+   "rules": [
+    {
+     "column": "tag",
+     "relation": "equals",
+     "condition": "Men's Suits & Blazers"
+    },
+    {
+     "column": "type",
+     "relation": "contains",
+     "condition": "Suit"
+    }
+   ],
+   "disjunctive": false,
+   "sort_order": "best-selling",
+   "why": "alle pakken (producttype bevat Suit)"
+  },
+  {
+   "op": "create",
+   "group": "collections",
+   "handle": "blazers",
+   "title": "Blazers",
+   "rules": [
+    {
+     "column": "tag",
+     "relation": "equals",
+     "condition": "Men's Suits & Blazers"
+    },
+    {
+     "column": "type",
+     "relation": "contains",
+     "condition": "Blazer"
+    }
+   ],
+   "disjunctive": false,
+   "sort_order": "best-selling",
+   "why": "losse blazers (producttype bevat Blazer)"
+  },
+  {
+   "op": "create",
+   "group": "collections",
+   "handle": "mens-linen-sets",
+   "title": "Men's Linen Sets",
+   "rules": [
+    {
+     "column": "tag",
+     "relation": "equals",
+     "condition": "Men's Linen Sets"
+    }
+   ],
+   "disjunctive": false,
+   "sort_order": "best-selling",
+   "why": "linnen sets (shirt + broek/short)"
+  },
+  {
+   "op": "create",
+   "group": "collections",
+   "handle": "boots",
+   "title": "Boots",
+   "rules": [
+    {
+     "column": "tag",
+     "relation": "equals",
+     "condition": "Men's Shoes"
+    },
+    {
+     "column": "title",
+     "relation": "contains",
+     "condition": "Boot"
+    }
+   ],
+   "disjunctive": false,
+   "sort_order": "best-selling",
+   "why": "boots zaten nu tussen Boat & Casual Shoes"
+  },
+  {
+   "op": "create",
+   "group": "collections",
+   "handle": "denim-shorts",
+   "title": "Denim Shorts",
+   "rules": [
+    {
+     "column": "tag",
+     "relation": "equals",
+     "condition": "Men's Shorts"
+    },
+    {
+     "column": "title",
+     "relation": "contains",
+     "condition": "Denim"
+    }
+   ],
+   "disjunctive": false,
+   "sort_order": "best-selling",
+   "why": "18 denim shorts zaten nu tussen Chino & Tailored Shorts"
+  },
+  {
+   "op": "rules",
+   "group": "collections",
+   "handle": "sneakers",
+   "why": "op producttype i.p.v. titel: nu 5 → straks alle sneakers en hardloopschoenen",
+   "from": {
+    "disjunctive": false,
+    "rules": [
+     {
+      "column": "tag",
+      "relation": "equals",
+      "condition": "Men's Shoes"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Sneaker"
+     }
+    ]
+   },
+   "set": {
+    "disjunctive": false,
+    "rules": [
+     {
+      "column": "tag",
+      "relation": "equals",
+      "condition": "Men's Shoes"
+     },
+     {
+      "column": "type",
+      "relation": "contains",
+      "condition": "Sneaker"
+     }
+    ]
+   }
+  },
+  {
+   "op": "rules",
+   "group": "collections",
+   "handle": "boat-casual-shoes",
+   "why": "boots en sneakers eruit (die hebben nu een eigen collectie)",
+   "from": {
+    "disjunctive": false,
+    "rules": [
+     {
+      "column": "tag",
+      "relation": "equals",
+      "condition": "Men's Shoes"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Loafer"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Sneaker"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Dress"
+     }
+    ]
+   },
+   "set": {
+    "disjunctive": false,
+    "rules": [
+     {
+      "column": "tag",
+      "relation": "equals",
+      "condition": "Men's Shoes"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Loafer"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Sneaker"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Dress"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Boot"
+     },
+     {
+      "column": "type",
+      "relation": "not_contains",
+      "condition": "Sneaker"
+     }
+    ]
+   }
+  },
+  {
+   "op": "rules",
+   "group": "collections",
+   "handle": "beach-sport-shorts",
+   "why": "board shorts en swim trunks horen hier (zaten in Chino & Tailored Shorts) + tag Beach & Sport Shorts telt mee",
+   "from": {
+    "disjunctive": true,
+    "rules": [
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Beach Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Surf Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Sport Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Swim Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Athletic Shorts"
+     }
+    ]
+   },
+   "set": {
+    "disjunctive": true,
+    "rules": [
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Beach Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Surf Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Sport Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Swim Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Athletic Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Board Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Swim Trunk"
+     },
+     {
+      "column": "tag",
+      "relation": "equals",
+      "condition": "Beach & Sport Shorts"
+     }
+    ]
+   }
+  },
+  {
+   "op": "rules",
+   "group": "collections",
+   "handle": "cargo-work-shorts",
+   "why": "workwear- en camo-shorts zaten nergens + tag Cargo & Work Shorts telt mee",
+   "from": {
+    "disjunctive": true,
+    "rules": [
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Cargo Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Work Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Utility Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Short Cargo"
+     }
+    ]
+   },
+   "set": {
+    "disjunctive": true,
+    "rules": [
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Cargo Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Work Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Utility Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Short Cargo"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Workwear Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Camo Shorts"
+     },
+     {
+      "column": "tag",
+      "relation": "equals",
+      "condition": "Cargo & Work Shorts"
+     }
+    ]
+   }
+  },
+  {
+   "op": "rules",
+   "group": "collections",
+   "handle": "chino-tailored-shorts",
+   "why": "board shorts en denim shorts eruit",
+   "from": {
+    "disjunctive": false,
+    "rules": [
+     {
+      "column": "tag",
+      "relation": "equals",
+      "condition": "Men's Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Cargo"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Work Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Beach"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Surf"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Sport"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Swim"
+     }
+    ]
+   },
+   "set": {
+    "disjunctive": false,
+    "rules": [
+     {
+      "column": "tag",
+      "relation": "equals",
+      "condition": "Men's Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Cargo"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Work Shorts"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Beach"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Surf"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Sport"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Swim"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Board"
+     },
+     {
+      "column": "title",
+      "relation": "not_contains",
+      "condition": "Denim"
+     }
+    ]
+   }
+  },
+  {
+   "op": "rules",
+   "group": "collections",
+   "handle": "cargo-hiking-pants",
+   "why": "hiking- en camo-broeken zonder 'Cargo' in de titel vielen erbuiten",
+   "from": {
+    "disjunctive": false,
+    "rules": [
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Cargo"
+     },
+     {
+      "column": "tag",
+      "relation": "equals",
+      "condition": "Men's Trousers"
+     }
+    ]
+   },
+   "set": {
+    "disjunctive": true,
+    "rules": [
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Cargo Pants"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Hiking Pants"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Camo Pants"
+     },
+     {
+      "column": "title",
+      "relation": "contains",
+      "condition": "Cargo Trousers"
+     },
+     {
+      "column": "tag",
+      "relation": "equals",
+      "condition": "Cargo & Hiking Pants"
+     }
+    ]
+   }
+  },
+  {
+   "op": "rename",
+   "group": "duplicates",
+   "handle": "men-1",
+   "from": "Men",
+   "set": "DUBBEL - Men (verwijderen)",
+   "why": "zelfde regel als /collections/men"
+  },
+  {
+   "op": "rename",
+   "group": "duplicates",
+   "handle": "men-2",
+   "from": "Men",
+   "set": "DUBBEL - Men (verwijderen)",
+   "why": "zelfde regel als /collections/men"
+  }
+ ],
+ "menus": [
+  {
+   "op": "menu-add",
+   "group": "menu",
+   "menu": "main-menu",
+   "parent": [
+    "Men"
+   ],
+   "after": "Pants",
+   "title": "Suits & Blazers",
+   "collection": "mens-suits-blazers",
+   "children": [
+    {
+     "title": "All Suits & Blazers",
+     "collection": "mens-suits-blazers"
+    },
+    {
+     "title": "Suits",
+     "collection": "suits"
+    },
+    {
+     "title": "Blazers",
+     "collection": "blazers"
+    },
+    {
+     "title": "Linen Sets",
+     "collection": "mens-linen-sets"
+    }
+   ],
+   "why": "nieuwe kop onder Men, na Pants"
+  },
+  {
+   "op": "menu-add",
+   "group": "menu",
+   "menu": "main-menu",
+   "parent": [
+    "Men",
+    "Shorts"
+   ],
+   "after": "Chino & Tailored Shorts",
+   "title": "Denim Shorts",
+   "collection": "denim-shorts",
+   "why": "onder Shorts"
+  },
+  {
+   "op": "menu-add",
+   "group": "menu",
+   "menu": "main-menu",
+   "parent": [
+    "Men",
+    "Shoes"
+   ],
+   "after": "Dress Shoes",
+   "title": "Boots",
+   "collection": "boots",
+   "why": "onder Shoes"
+  },
+  {
+   "op": "menu-add",
+   "group": "menu",
+   "menu": "shop",
+   "parent": [],
+   "after": "Jeans",
+   "title": "Suits & Blazers",
+   "collection": "mens-suits-blazers",
+   "why": "Shop-menu (footer/mobiel)"
+  }
+ ],
+ "items": [
+  {
+   "id": 16102033097085,
+   "title": "Men's 3 Piece Suit | Checked Pattern Notched Lapels Double Button",
+   "group": "new-range",
+   "why": "pak → Suits & Blazers",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102033064317,
+   "title": "Men's 3 Piece Suit | Single-Breasted Two-Button Tailored",
+   "group": "new-range",
+   "why": "pak → Suits & Blazers",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102033129853,
+   "title": "Men's 3 Piece Suit | Tailored Blazer Waistcoat Trousers",
+   "group": "new-range",
+   "why": "pak → Suits & Blazers",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032769405,
+   "title": "Men's Blazer | Double-Breasted Notch Collar Pinstripe",
+   "group": "new-range",
+   "why": "blazer → Suits & Blazers (blijft ook bij Jackets)",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032900477,
+   "title": "Men's Blazer | High Collar Button Closure Tailored",
+   "group": "new-range",
+   "why": "blazer → Suits & Blazers (blijft ook bij Jackets)",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032703869,
+   "title": "Men's Blazer | Linen Blend Lightweight Tailored",
+   "group": "new-range",
+   "why": "blazer → Suits & Blazers (blijft ook bij Jackets)",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032867709,
+   "title": "Men's Blazer | Single Button Notch Lapel Floral Embroidered",
+   "group": "new-range",
+   "why": "blazer → Suits & Blazers (blijft ook bij Jackets)",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032802173,
+   "title": "Men's Blazer | Single Button Tailored Contrast Pockets",
+   "group": "new-range",
+   "why": "blazer → Suits & Blazers (blijft ook bij Jackets)",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032540029,
+   "title": "Men's Formal Suit | Notch Lapel Three-Piece Tailored Fit",
+   "group": "new-range",
+   "why": "pak → Suits & Blazers",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032998781,
+   "title": "Men's Linen Pants | Relaxed Fit Drawstring Waist Straight Leg",
+   "group": "new-range",
+   "why": "linnen broek (geen pak, foto gecheckt) → Pants / Linen Pants",
+   "tagsAdd": [
+    "Men's Trousers"
+   ]
+  },
+  {
+   "id": 16102033162621,
+   "title": "Men's Linen Set | Long-Sleeve Button-Down Straight-Leg",
+   "group": "new-range",
+   "why": "linnen set → Linen Sets",
+   "tagsAdd": [
+    "Men's Linen Sets"
+   ]
+  },
+  {
+   "id": 16102033391997,
+   "title": "Men's Linen Set | Polo Shirt Short Sleeve Button Closure Drawstring Shorts",
+   "group": "new-range",
+   "why": "linnen set → Linen Sets",
+   "tagsAdd": [
+    "Men's Linen Sets"
+   ]
+  },
+  {
+   "id": 16102033260925,
+   "title": "Men's Linen Set | Short Sleeve Button Front Relaxed Fit",
+   "group": "new-range",
+   "why": "linnen set → Linen Sets",
+   "tagsAdd": [
+    "Men's Linen Sets"
+   ]
+  },
+  {
+   "id": 16102033457533,
+   "title": "Men's Linen Set | Short Sleeve Collar Button Closure",
+   "group": "new-range",
+   "why": "linnen set → Linen Sets",
+   "tagsAdd": [
+    "Men's Linen Sets"
+   ]
+  },
+  {
+   "id": 16102032966013,
+   "title": "Men's Linen Suit | Relaxed Blazer Drawstring Trousers Notch Lapel",
+   "group": "new-range",
+   "why": "pak → Suits & Blazers",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102033293693,
+   "title": "Men's Linen Suit | Relaxed Fit Drawstring Straight Leg",
+   "group": "new-range",
+   "why": "linnen broek (geen pak, foto gecheckt) → Pants / Linen Pants",
+   "tagsAdd": [
+    "Men's Trousers"
+   ]
+  },
+  {
+   "id": 16102032933245,
+   "title": "Men's Linen Suit | Relaxed Fit Straight Leg Drawstring Pockets",
+   "group": "new-range",
+   "why": "linnen broek (geen pak, foto gecheckt) → Pants / Linen Pants",
+   "tagsAdd": [
+    "Men's Trousers"
+   ]
+  },
+  {
+   "id": 16102032834941,
+   "title": "Men's Suit | Notch Lapel Two Button Slim Fit",
+   "group": "new-range",
+   "why": "pak → Suits & Blazers",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032638333,
+   "title": "Men's Suit | Slim Fit Single Breasted Button Closure",
+   "group": "new-range",
+   "why": "pak → Suits & Blazers",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032474493,
+   "title": "Men's Suit | Tailored Jacket Button Closure Trousers",
+   "group": "new-range",
+   "why": "pak → Suits & Blazers",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032605565,
+   "title": "Men's Suit | Two-Button Single Breasted Three-Piece Tailored",
+   "group": "new-range",
+   "why": "pak → Suits & Blazers",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16102032572797,
+   "title": "Men's Suit | Two-Piece Linen Button-Front Tailored",
+   "group": "new-range",
+   "why": "pak → Suits & Blazers",
+   "tagsAdd": [
+    "Men's Suits & Blazers"
+   ]
+  },
+  {
+   "id": 16097749270909,
+   "title": "Black Shoe For Men | Lace-Up Leather Cushioned Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Boat & Casual Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Boat & Casual Shoes"
+   ]
+  },
+  {
+   "id": 16023937384829,
+   "title": "Brown Slip On Shoe For Women | Round Toe Loafer Leather Flat",
+   "group": "collections-tags",
+   "why": "tag Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsRemove": [
+    "Shoes"
+   ]
+  },
+  {
+   "id": 16023922704765,
+   "title": "Casual Shoe For Women | Lace-Up Mesh Knit Rounded Toe",
+   "group": "collections-tags",
+   "why": "tag Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsRemove": [
+    "Shoes"
+   ]
+  },
+  {
+   "id": 16023929127293,
+   "title": "Men's Baggy Jeans | Comfort Fit Denim Five-Pocket Button Closure",
+   "group": "collections-tags",
+   "why": "jeans, stond bij Trousers (kwam zo in Chinos & Dress Pants)",
+   "tagsAdd": [
+    "Men's Jeans"
+   ],
+   "tagsRemove": [
+    "Men's Trousers"
+   ]
+  },
+  {
+   "id": 16023929913725,
+   "title": "Men's Baggy Jeans | High Waist Loose Fit Denim",
+   "group": "collections-tags",
+   "why": "jeans, stond bij Trousers (kwam zo in Chinos & Dress Pants)",
+   "tagsAdd": [
+    "Men's Jeans"
+   ],
+   "tagsRemove": [
+    "Men's Trousers"
+   ]
+  },
+  {
+   "id": 16023915069821,
+   "title": "Men's Beach Shorts | Short Sleeve Button-Up Collared Linen",
+   "group": "collections-tags",
+   "why": "linnen set (shirt + short) op de foto, zat in geen enkele hoofdcollectie",
+   "tagsAdd": [
+    "Men's Linen Sets"
+   ]
+  },
+  {
+   "id": 16095652807037,
+   "title": "Men's Black Hoodie | Zip Up Knit Hood Adjustable",
+   "group": "collections-tags",
+   "why": "hoodie met rits op de foto, stond bij Jackets",
+   "tagsAdd": [
+    "Men's Hoodies"
+   ],
+   "tagsRemove": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 16023933452669,
+   "title": "Men's Black Short Cargo Pants | Relaxed Fit Utility Pockets",
+   "group": "collections-tags",
+   "why": "korte cargo short op de foto, stond bij Trousers",
+   "tagsAdd": [
+    "Men's Shorts"
+   ],
+   "tagsRemove": [
+    "Men's Trousers"
+   ]
+  },
+  {
+   "id": 16023909728637,
+   "title": "Men's Board Shorts | Cargo Pockets Drawstring Relaxed Fit",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023909663101,
+   "title": "Men's Board Shorts | Cargo Pockets Relaxed Fit Cotton",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023910220157,
+   "title": "Men's Board Shorts | Elastic Waist Drawstring Closure Quick Dry",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Shorts"
+   ]
+  },
+  {
+   "id": 16073592897917,
+   "title": "Men's Board Shorts | Elastic Waist Drawstring Quick-Dry",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023909925245,
+   "title": "Men's Board Shorts | Flamingo Print Inner Liner Pocket",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Shorts"
+   ]
+  },
+  {
+   "id": 16023909794173,
+   "title": "Men's Board Shorts | Geometric Print Drawstring Swim",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16073593127293,
+   "title": "Men's Board Shorts | Graffiti Print Quick Dry Adjustable",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023910383997,
+   "title": "Men's Board Shorts | Patchwork Mid-Waist Drawstring",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16073592799613,
+   "title": "Men's Board Shorts | Quick Dry Mesh Lining Side Slits",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Shorts"
+   ]
+  },
+  {
+   "id": 16023910056317,
+   "title": "Men's Board Shorts | Quick-Dry Nylon Drawstring Athletic Fit",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Shorts"
+   ]
+  },
+  {
+   "id": 16023910285693,
+   "title": "Men's Board Shorts | Quick-Drying Elastic Waistband Zip Pockets",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16095651692925,
+   "title": "Men's Board Shorts | Quick-Drying Stretch Drawstring Pocket",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023910646141,
+   "title": "Men's Board Shorts | Relaxed Fit Drawstring Closure Side Pockets",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16095651791229,
+   "title": "Men's Board Shorts | Relaxed Fit Drawstring Elastic Waist",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023909695869,
+   "title": "Men's Board Shorts | Striped Drawstring Mid-Thigh",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023910187389,
+   "title": "Men's Board Shorts | Tropical Print Drawstring Quick Dry",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023910252925,
+   "title": "Men's Board Shorts | Tropical Print Quick-Dry Compression Liner",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16095651660157,
+   "title": "Men's Board Shorts | Waffle Texture Drawstring Relaxed Fit",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16095045976445,
+   "title": "Men's Camo Cargo Shorts | Loose Fit Cargo Pockets Drawstring",
+   "group": "collections-tags",
+   "why": "short zonder hoofdcollectie",
+   "tagsAdd": [
+    "Men's Shorts"
+   ]
+  },
+  {
+   "id": 16095045943677,
+   "title": "Men's Camo Cargo Shorts | Relaxed Fit Multiple Pockets Drawstring",
+   "group": "collections-tags",
+   "why": "short zonder hoofdcollectie",
+   "tagsAdd": [
+    "Men's Shorts"
+   ]
+  },
+  {
+   "id": 16089819971965,
+   "title": "Men's Cowboy Boots | Western Stitching Leather Square Toe",
+   "group": "collections-tags",
+   "why": "cowboy boots, stonden bij Jackets",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 16023918674301,
+   "title": "Men's Denim Shirt | Camouflage Print Button Down Long Sleeve",
+   "group": "collections-tags",
+   "why": "overhemd op de foto, stond bij Jackets",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 16095046107517,
+   "title": "Men's Dress Shirt | Button-Down Collar Long Sleeves Denim",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag Casual & Linen Shirts weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Casual & Linen Shirts"
+   ]
+  },
+  {
+   "id": 16095046336893,
+   "title": "Men's Dress Shirt | Collared Long Sleeve Button Closure Linen",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag Casual & Linen Shirts weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Casual & Linen Shirts"
+   ]
+  },
+  {
+   "id": 16095046173053,
+   "title": "Men's Dress Shirt | Slim Fit Button Closure Satin",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag Casual & Linen Shirts weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Casual & Linen Shirts"
+   ]
+  },
+  {
+   "id": 16095046205821,
+   "title": "Men's Dress Shirt | Slim Fit Button Down Collar Stretch",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag Casual & Linen Shirts weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Casual & Linen Shirts"
+   ]
+  },
+  {
+   "id": 16095046238589,
+   "title": "Men's Dress Shirt | Slim Fit Long Sleeve Button Closure",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag Casual & Linen Shirts weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Casual & Linen Shirts"
+   ]
+  },
+  {
+   "id": 16023937155453,
+   "title": "Men's Graphic Oversized Tee | Crew Neck Short Sleeve Print",
+   "group": "collections-tags",
+   "why": "T-shirt op de foto, stond bij Sweaters",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Sweaters"
+   ]
+  },
+  {
+   "id": 16023937352061,
+   "title": "Men's Graphic Oversized Tee | Short Sleeve Crew Neck Print",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts",
+   "tagsAdd": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16023937188221,
+   "title": "Men's High Waisted Pants | Relaxed Fit Cargo Pockets Cotton",
+   "group": "collections-tags",
+   "why": "cargo broek zonder 'Cargo Pants' in de titel → Cargo & Hiking Pants",
+   "tagsAdd": [
+    "Cargo & Hiking Pants"
+   ]
+  },
+  {
+   "id": 16095655068029,
+   "title": "Men's Hiking Pants | Pleated Buckled Closure Relaxed Fit",
+   "group": "collections-tags",
+   "why": "broek zonder hoofdcollectie · tag Linen Pants weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Trousers"
+   ],
+   "tagsRemove": [
+    "Linen Pants"
+   ]
+  },
+  {
+   "id": 16095655100797,
+   "title": "Men's Hiking Pants | Straight-Leg Elastic Waist Linen",
+   "group": "collections-tags",
+   "why": "linnen broek, zat in geen enkele hoofdcollectie · tag Linen Pants weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Trousers"
+   ],
+   "tagsRemove": [
+    "Linen Pants"
+   ]
+  },
+  {
+   "id": 16023922278781,
+   "title": "Men's Hooded Sweatshirt | Full Zip Knit Relaxed Fit Pockets",
+   "group": "collections-tags",
+   "why": "hooded sweatshirt, stond alleen bij Sweaters",
+   "tagsAdd": [
+    "Men's Hoodies"
+   ]
+  },
+  {
+   "id": 16095652348285,
+   "title": "Men's Hoodie | Fleece-Lined Zip-Up Abstract Print Oversized",
+   "group": "collections-tags",
+   "why": "hoodie op de foto, stond bij Jackets",
+   "tagsAdd": [
+    "Men's Hoodies"
+   ],
+   "tagsRemove": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 16023907139965,
+   "title": "Men's Hoodie | Zip Closure Hood Knit Reversible",
+   "group": "collections-tags",
+   "why": "hoodie, stond alleen bij Sweaters",
+   "tagsAdd": [
+    "Men's Hoodies"
+   ]
+  },
+  {
+   "id": 16023917527421,
+   "title": "Men's Jeans | Slim Fit Denim Zip Fly Five Pocket",
+   "group": "collections-tags",
+   "why": "jeans, stond bij Trousers (kwam zo in Chinos & Dress Pants)",
+   "tagsAdd": [
+    "Men's Jeans"
+   ],
+   "tagsRemove": [
+    "Men's Trousers"
+   ]
+  },
+  {
+   "id": 16023912317309,
+   "title": "Men's Linen Shirt | Mandarin Collar Button Front Relaxed Fit",
+   "group": "collections-tags",
+   "why": "linnen overhemd op de foto, stond bij Jackets",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 16023925064061,
+   "title": "Men's Linen Shorts | Cargo Pockets Drawstring Relaxed Fit",
+   "group": "collections-tags",
+   "why": "linnen short met cargozakken → Cargo & Work Shorts",
+   "tagsAdd": [
+    "Cargo & Work Shorts"
+   ]
+  },
+  {
+   "id": 16023925031293,
+   "title": "Men's Linen Shorts | Relaxed Fit Cargo Pockets Drawstring",
+   "group": "collections-tags",
+   "why": "linnen short met cargozakken → Cargo & Work Shorts",
+   "tagsAdd": [
+    "Cargo & Work Shorts"
+   ]
+  },
+  {
+   "id": 16023932699005,
+   "title": "Men's Linen Slacks | Short Sleeve Button Closure Relaxed",
+   "group": "collections-tags",
+   "why": "linnen set (shirt + broek) op de foto, stond bij Shirts",
+   "tagsAdd": [
+    "Men's Linen Sets"
+   ],
+   "tagsRemove": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16095653003645,
+   "title": "Men's Loafers | Ethnic Print Slip-On Round Toe Fabric",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Dress Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Dress Shoes"
+   ]
+  },
+  {
+   "id": 16095653036413,
+   "title": "Men's Loafers | Slip On Leather Cushioned Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Dress Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Dress Shoes"
+   ]
+  },
+  {
+   "id": 16095652970877,
+   "title": "Men's Loafers | Slip On Perforated Cushioned Moccasin Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Dress Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Dress Shoes"
+   ]
+  },
+  {
+   "id": 16095653069181,
+   "title": "Men's Loafers | Slip-On Canvas Round Toe Flexible Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Dress Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Dress Shoes"
+   ]
+  },
+  {
+   "id": 16095653364093,
+   "title": "Men's Long Sleeve Henley | Hooded Cotton Linen Henley Shirt",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag Henleys weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Henleys"
+   ]
+  },
+  {
+   "id": 16023936205181,
+   "title": "Men's Long Sleeve Henley | Raglan Crew Neck Knit",
+   "group": "collections-tags",
+   "why": "henley met lange mouw, stond bij Sweaters",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Sweaters"
+   ]
+  },
+  {
+   "id": 16095653200253,
+   "title": "Men's Long Sleeve Henley | Striped Linen Button Closure Relaxed",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag Henleys weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Henleys"
+   ]
+  },
+  {
+   "id": 16023936762237,
+   "title": "Men's Long Surf Shorts | Elastic Waistband Drawstring Quick-Dry Pockets",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023936270717,
+   "title": "Men's Long Surf Shorts | Quick Dry Elastic Waistband Drawstring",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023936336253,
+   "title": "Men's Long Surf Shorts | Striped Pattern Elastic Waist Quick Drying",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023936303485,
+   "title": "Men's Long Surf Shorts | Tropical Print Quick Dry Drawstring",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023934075261,
+   "title": "Men's No Sleeve Shirt | Crew Neck Sleeveless Knit Athletic",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts",
+   "tagsAdd": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16095653134717,
+   "title": "Men's No Sleeve Shirt | Denim Button-Up Chest Pocket Long Sleeves",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag Henleys weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Henleys"
+   ]
+  },
+  {
+   "id": 16095653167485,
+   "title": "Men's No Sleeve Shirt | Henley Neckline Button Relaxed Fit",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag Henleys weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Henleys"
+   ]
+  },
+  {
+   "id": 16023933911421,
+   "title": "Men's No Sleeve Shirt | Henley Neckline Knit Sleeveless",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts",
+   "tagsAdd": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16023934402941,
+   "title": "Men's No Sleeve Shirt | Stand Collar Button Front Knit",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts",
+   "tagsAdd": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16095653265789,
+   "title": "Men's No Sleeve Shirt | V-Neck Relaxed Fit Breathable",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag Henleys weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Henleys"
+   ]
+  },
+  {
+   "id": 16097749303677,
+   "title": "Men's Rugby Shirt | Collar Placket Short Sleeve Polo",
+   "group": "collections-tags",
+   "why": "korte mouw polo op de foto, stond bij Sweaters",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Sweaters"
+   ]
+  },
+  {
+   "id": 16097749238141,
+   "title": "Men's Rugby Shirt | Textured Knit Collar Button Closure",
+   "group": "collections-tags",
+   "why": "korte mouw shirt op de foto, stond bij Sweaters",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Sweaters"
+   ]
+  },
+  {
+   "id": 16095652151677,
+   "title": "Men's Running Shoe | Knit Upper Cushioned Flexible Sole",
+   "group": "collections-tags",
+   "why": "hardloopschoen, stond bij Sandals",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Men's Sandals"
+   ]
+  },
+  {
+   "id": 16095652675965,
+   "title": "Men's Running Shoe | Knit Upper Lace Closure Cushioned Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Sneakers weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Sneakers"
+   ]
+  },
+  {
+   "id": 16095652446589,
+   "title": "Men's Running Shoe | Lace-Up Mesh Cushioned Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Sneakers weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Sneakers"
+   ]
+  },
+  {
+   "id": 16095652184445,
+   "title": "Men's Running Shoe | Mesh Knit Lace-Up Cushioned Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Sneakers weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Sneakers"
+   ]
+  },
+  {
+   "id": 16023908221309,
+   "title": "Men's Shirt | Ribbed Knit Short Sleeve Crew Neck",
+   "group": "collections-tags",
+   "why": "korte mouw knit T-shirt, stond bij Sweaters",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Sweaters"
+   ]
+  },
+  {
+   "id": 16095652872573,
+   "title": "Men's Shoes Dress | Pointed Toe Monk Strap Buckle Closure Leather",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Dress Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Dress Shoes"
+   ]
+  },
+  {
+   "id": 16095652938109,
+   "title": "Men's Shoes Dress | Slip-On Loafer Crocodile Leather Cushioned",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Dress Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Dress Shoes"
+   ]
+  },
+  {
+   "id": 16095651823997,
+   "title": "Men's Short Swim Trunk | Adjustable Waist Quick-Dry Lightweight",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16095651856765,
+   "title": "Men's Short Swim Trunk | Drawstring Waist Quick-Dry Relaxed Fit",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16095651627389,
+   "title": "Men's Short Swim Trunk | Drawstring Waist Relaxed Fit Pockets",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16095651987837,
+   "title": "Men's Short Swim Trunk | Linen Regular Fit Drawstring",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16089820201341,
+   "title": "Men's Short Swim Trunk | Quick Dry Elastic Waist Drawstring Closure",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16095651758461,
+   "title": "Men's Short Swim Trunk | Relaxed Fit Drawstring Linen",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16080714858877,
+   "title": "Men's Short Swim Trunk | Striped Drawstring Quick-Dry Mesh Lining",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16095651889533,
+   "title": "Men's Short Swim Trunk | Striped Elastic Waist Side Pockets",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16023908385149,
+   "title": "Men's Shorts | Cargo Pockets Elastic Waist Short Length",
+   "group": "collections-tags",
+   "why": "short met cargozakken → Cargo & Work Shorts",
+   "tagsAdd": [
+    "Cargo & Work Shorts"
+   ]
+  },
+  {
+   "id": 16023908352381,
+   "title": "Men's Shorts | Elastic Waist Drawcord Relaxed Fit",
+   "group": "collections-tags",
+   "why": "zwemshort op de foto, stond bij Trousers",
+   "tagsAdd": [
+    "Men's Shorts",
+    "Men's Swimwear"
+   ],
+   "tagsRemove": [
+    "Men's Trousers"
+   ]
+  },
+  {
+   "id": 16023908647293,
+   "title": "Men's Shorts | Printed Drawstring Mid-Thigh Swim",
+   "group": "collections-tags",
+   "why": "zwemshort → Beach & Sport Shorts + Swimwear",
+   "tagsAdd": [
+    "Beach & Sport Shorts",
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16080713548157,
+   "title": "Men's Singlet Top | Ribbed Knit Sleeveless Crew Neck",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts",
+   "tagsAdd": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16080713417085,
+   "title": "Men's Singlet Top | Sleeveless Notch Neckline Relaxed Fit",
+   "group": "collections-tags",
+   "why": "mouwloze top op de foto, stond bij Jackets",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 16089820037501,
+   "title": "Men's Singlet Top | Striped Knit Sleeveless Breathable",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts",
+   "tagsAdd": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16080716202365,
+   "title": "Men's Slip On Shoe | Canvas Upper Espadrille Lightweight",
+   "group": "collections-tags",
+   "why": "espadrille (schoen), stond bij Shorts",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Men's Shorts"
+   ]
+  },
+  {
+   "id": 16095652086141,
+   "title": "Men's Sneakers | Lace Up Leather Cushioned Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Sneakers weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Sneakers"
+   ]
+  },
+  {
+   "id": 16023916446077,
+   "title": "Men's Sneakers | Lace-Up Knit Mesh Toe Guard Work",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes",
+   "tagsAdd": [
+    "Men's Shoes"
+   ]
+  },
+  {
+   "id": 16095651922301,
+   "title": "Men's Sneakers | Lace-Up Leather Cushioned Rubber Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Sneakers weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Sneakers"
+   ]
+  },
+  {
+   "id": 16095652249981,
+   "title": "Men's Sneakers | Leather Upper Lace Closure Rubber Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Sneakers weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Sneakers"
+   ]
+  },
+  {
+   "id": 16095652053373,
+   "title": "Men's Sneakers | Mesh Lace-Up Breathable Flexible Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Sneakers weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Sneakers"
+   ]
+  },
+  {
+   "id": 16095652118909,
+   "title": "Men's Sneakers | Suede Lace-Up Cushioned Gum Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Sneakers weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Sneakers"
+   ]
+  },
+  {
+   "id": 16023931355517,
+   "title": "Men's Sweater Vest | Cable Knit V-Neck Ribbed Armholes",
+   "group": "collections-tags",
+   "why": "gebreid spencer, stond bij Jackets",
+   "tagsAdd": [
+    "Men's Sweaters"
+   ],
+   "tagsRemove": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 16023930634621,
+   "title": "Men's Sweater Vest | Knit Zip-Up Collar Closure",
+   "group": "collections-tags",
+   "why": "gebreid spencer/vest, stond bij Jackets",
+   "tagsAdd": [
+    "Men's Sweaters"
+   ],
+   "tagsRemove": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 16023932469629,
+   "title": "Men's Sweater Vest | V-Neck Argyle Knit Sleeveless",
+   "group": "collections-tags",
+   "why": "gebreid spencer, stond bij Jackets",
+   "tagsAdd": [
+    "Men's Sweaters"
+   ],
+   "tagsRemove": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 16023932174717,
+   "title": "Men's Sweater Vest | V-Neck Cable Knit Sleeveless",
+   "group": "collections-tags",
+   "why": "gebreid spencer, stond bij Jackets",
+   "tagsAdd": [
+    "Men's Sweaters"
+   ],
+   "tagsRemove": [
+    "Men's Jackets & Coats"
+   ]
+  },
+  {
+   "id": 16095652610429,
+   "title": "Men's Sweatshirt | Crew Neck Long Sleeve Halloween Print",
+   "group": "collections-tags",
+   "why": "sweatshirt op de foto, stond bij Shirts",
+   "tagsAdd": [
+    "Men's Hoodies"
+   ],
+   "tagsRemove": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16073593160061,
+   "title": "Men's Swim Shorts | Linen Quick-Dry Drawstring Mid-Thigh",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16073593094525,
+   "title": "Men's Swim Shorts | Striped Quick-Dry Elastic Waist",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16080714662269,
+   "title": "Men's Swim Trunk | Lightweight Quick Drying Drawstring Closure",
+   "group": "collections-tags",
+   "why": "zwemshort → Shorts + Swimwear (Swim & Beach)",
+   "tagsAdd": [
+    "Men's Swimwear"
+   ]
+  },
+  {
+   "id": 16095654969725,
+   "title": "Men's T Shirt | Crew Neck Long Sleeve Knit",
+   "group": "collections-tags",
+   "why": "lange mouw knit T-shirt, stond alleen bij Sweaters",
+   "tagsAdd": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16095654707581,
+   "title": "Men's T Shirt | Crew Neck Short Sleeve Breathable",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag T-Shirts weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "T-Shirts"
+   ]
+  },
+  {
+   "id": 16023907467645,
+   "title": "Men's T Shirt | Crew Neck Short Sleeve Knit",
+   "group": "collections-tags",
+   "why": "korte mouw knit T-shirt, stond bij Sweaters",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Sweaters"
+   ]
+  },
+  {
+   "id": 16095653986685,
+   "title": "Men's T Shirt | Crew Neck Short Sleeve Knit",
+   "group": "collections-tags",
+   "why": "shirt zonder hoofdcollectie Men's Shirts · tag T-Shirts weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "T-Shirts"
+   ]
+  },
+  {
+   "id": 16023907598717,
+   "title": "Men's T Shirt | Crewneck Stripe Detail Knit",
+   "group": "collections-tags",
+   "why": "korte mouw knit T-shirt, stond bij Sweaters",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Sweaters"
+   ]
+  },
+  {
+   "id": 16095653953917,
+   "title": "Men's T Shirt | Geometric Jacquard Crew Neck Short Sleeve Knit",
+   "group": "collections-tags",
+   "why": "korte mouw knit T-shirt, stond bij Sweaters",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Sweaters"
+   ]
+  },
+  {
+   "id": 16095654084989,
+   "title": "Men's T Shirt | Short Sleeve Diamond Knit Crew Neck",
+   "group": "collections-tags",
+   "why": "korte mouw knit T-shirt, stond bij Sweaters",
+   "tagsAdd": [
+    "Men's Shirts"
+   ],
+   "tagsRemove": [
+    "Men's Sweaters"
+   ]
+  },
+  {
+   "id": 16023910613373,
+   "title": "Men's Tapered Pants | Cargo Pockets Jogger Drawstring",
+   "group": "collections-tags",
+   "why": "cargo jogger zonder 'Cargo Pants' in de titel → Cargo & Hiking Pants",
+   "tagsAdd": [
+    "Cargo & Hiking Pants"
+   ]
+  },
+  {
+   "id": 16023916577149,
+   "title": "Men's Work Shorts | Cargo Pockets Relaxed Fit Water-Repellent",
+   "group": "collections-tags",
+   "why": "werkshort, stond bij Shirts",
+   "tagsAdd": [
+    "Men's Shorts"
+   ],
+   "tagsRemove": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16089820070269,
+   "title": "Men's Workwear Shorts | Cargo Pockets Elastic Waistband Regular Fit Drawstring",
+   "group": "collections-tags",
+   "why": "werkshort, stond bij Shirts",
+   "tagsAdd": [
+    "Men's Shorts"
+   ],
+   "tagsRemove": [
+    "Men's Shirts"
+   ]
+  },
+  {
+   "id": 16095652282749,
+   "title": "Running Shoe For Men | Lace-Up Mesh Cushioned Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Sneakers weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Sneakers"
+   ]
+  },
+  {
+   "id": 16095652905341,
+   "title": "Shoes Dress For Men | Leather Slip-Resistant Oxford Cushioned",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Dress Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Dress Shoes"
+   ]
+  },
+  {
+   "id": 16095653233021,
+   "title": "Slip On Loafers For Men | Round Toe Woven Leather Rubber Sole",
+   "group": "collections-tags",
+   "why": "schoen zonder hoofdcollectie Men's Shoes · tag Dress Shoes weg (sub-collectie op titel, tag deed niets)",
+   "tagsAdd": [
+    "Men's Shoes"
+   ],
+   "tagsRemove": [
+    "Dress Shoes"
+   ]
+  },
+  {
+   "id": 16095652577661,
+   "title": "Women's Sweatshirt | Crew Neck Long Sleeve Skeleton Print",
+   "group": "collections-tags",
+   "why": "herensweater (skelet-print), had alleen de tag Women",
+   "tagsAdd": [
+    "Men",
+    "Men's Hoodies"
+   ],
+   "tagsRemove": [
+    "Women"
+   ]
+  },
+  {
+   "id": 16023915069821,
+   "title": "Men's Beach Shorts | Short Sleeve Button-Up Collared Linen",
+   "group": "titles-types",
+   "why": "linnen set op de foto, titel zei Beach Shorts",
+   "set": {
+    "title": "Men's Linen Set | Short Sleeve Button-Up Collared Beach",
+    "product_type": "Men's Linen Set"
+   },
+   "from": {
+    "title": "Men's Beach Shorts | Short Sleeve Button-Up Collared Linen",
+    "product_type": "Men's Beach Shorts"
+   }
+  },
+  {
+   "id": 16023933354365,
+   "title": "Men's Black Short Cargo Pants | Elastic Waist Drawstring Cargo Pockets",
+   "group": "titles-types",
+   "why": "cargo short (foto), titel zei Short Cargo Pants — kwam straks anders in Cargo & Hiking Pants",
+   "set": {
+    "title": "Men's Black Cargo Shorts | Elastic Waist Drawstring Cargo Pockets",
+    "product_type": "Men's Cargo Shorts"
+   },
+   "from": {
+    "title": "Men's Black Short Cargo Pants | Elastic Waist Drawstring Cargo Pockets",
+    "product_type": "Men's Black Short Cargo Pants"
+   }
+  },
+  {
+   "id": 16023933419901,
+   "title": "Men's Black Short Cargo Pants | Relaxed Fit Cargo Shorts Multi-Pocket Denim",
+   "group": "titles-types",
+   "why": "cargo short (foto), titel zei Short Cargo Pants — kwam straks anders in Cargo & Hiking Pants",
+   "set": {
+    "title": "Men's Black Cargo Shorts | Relaxed Fit Multi-Pocket Denim",
+    "product_type": "Men's Cargo Shorts"
+   },
+   "from": {
+    "title": "Men's Black Short Cargo Pants | Relaxed Fit Cargo Shorts Multi-Pocket Denim",
+    "product_type": "Men's Black Short Cargo Pants"
+   }
+  },
+  {
+   "id": 16023933256061,
+   "title": "Men's Black Short Cargo Pants | Relaxed Fit Multi-Pocket Durable",
+   "group": "titles-types",
+   "why": "lange cargo broek; door 'Short Cargo' kwam hij in Cargo & Work Shorts",
+   "set": {
+    "title": "Men's Black Cargo Pants | Relaxed Fit Multi-Pocket Durable",
+    "product_type": "Men's Cargo Pants"
+   },
+   "from": {
+    "title": "Men's Black Short Cargo Pants | Relaxed Fit Multi-Pocket Durable",
+    "product_type": "Men's Black Short Cargo Pants"
+   }
+  },
+  {
+   "id": 16023933452669,
+   "title": "Men's Black Short Cargo Pants | Relaxed Fit Utility Pockets",
+   "group": "titles-types",
+   "why": "korte cargo short op de foto, titel zei Pants",
+   "set": {
+    "title": "Men's Cargo Shorts | Relaxed Fit Utility Pockets",
+    "product_type": "Men's Cargo Shorts"
+   },
+   "from": {
+    "title": "Men's Black Short Cargo Pants | Relaxed Fit Utility Pockets",
+    "product_type": "Men's Black Short Cargo Pants"
+   }
+  },
+  {
+   "id": 16023933288829,
+   "title": "Men's Black Short Cargo Pants | Ripstop Nylon Relaxed Fit Multiple Pockets",
+   "group": "titles-types",
+   "why": "cargo short (foto), titel zei Short Cargo Pants — kwam straks anders in Cargo & Hiking Pants",
+   "set": {
+    "title": "Men's Black Cargo Shorts | Ripstop Nylon Relaxed Fit Multiple Pockets",
+    "product_type": "Men's Cargo Shorts"
+   },
+   "from": {
+    "title": "Men's Black Short Cargo Pants | Ripstop Nylon Relaxed Fit Multiple Pockets",
+    "product_type": "Men's Black Short Cargo Pants"
+   }
+  },
+  {
+   "id": 16023912186237,
+   "title": "Men's Chino | Pleated Tailored Regular Fit Rolled Hem",
+   "group": "titles-types",
+   "why": "korte chino op de foto",
+   "set": {
+    "title": "Men's Chino Shorts | Pleated Tailored Regular Fit Rolled Hem",
+    "product_type": "Men's Chino Shorts"
+   },
+   "from": {
+    "title": "Men's Chino | Pleated Tailored Regular Fit Rolled Hem",
+    "product_type": "Chinos"
+   }
+  },
+  {
+   "id": 16023911793021,
+   "title": "Men's Chino | Slim Fit Flat Front Stretch",
+   "group": "titles-types",
+   "why": "chino, type zei Men's Flats",
+   "set": {
+    "product_type": "Men's Chino Pants"
+   },
+   "from": {
+    "product_type": "Men's Flats"
+   }
+  },
+  {
+   "id": 16095655100797,
+   "title": "Men's Hiking Pants | Straight-Leg Elastic Waist Linen",
+   "group": "titles-types",
+   "why": "linnen broek, titel zei Hiking Pants",
+   "set": {
+    "title": "Men's Linen Pants | Straight-Leg Elastic Waist",
+    "product_type": "Men's Linen Pants"
+   },
+   "from": {
+    "title": "Men's Hiking Pants | Straight-Leg Elastic Waist Linen",
+    "product_type": "Men's Hiking Pants"
+   }
+  },
+  {
+   "id": 16102032998781,
+   "title": "Men's Linen Pants | Relaxed Fit Drawstring Waist Straight Leg",
+   "group": "titles-types",
+   "why": "linnen broek, type zei Linen Suit",
+   "set": {
+    "product_type": "Men's Linen Pants"
+   },
+   "from": {
+    "product_type": "Men's Linen Suit"
+   }
+  },
+  {
+   "id": 16023932699005,
+   "title": "Men's Linen Slacks | Short Sleeve Button Closure Relaxed",
+   "group": "titles-types",
+   "why": "linnen set op de foto, titel zei Linen Slacks",
+   "set": {
+    "title": "Men's Linen Set | Short Sleeve Button Closure Relaxed",
+    "product_type": "Men's Linen Set"
+   },
+   "from": {
+    "title": "Men's Linen Slacks | Short Sleeve Button Closure Relaxed",
+    "product_type": "Men's Linen Slacks"
+   }
+  },
+  {
+   "id": 16102033293693,
+   "title": "Men's Linen Suit | Relaxed Fit Drawstring Straight Leg",
+   "group": "titles-types",
+   "why": "alleen een broek op de foto, titel zei Linen Suit",
+   "set": {
+    "title": "Men's Linen Pants | Relaxed Fit Drawstring Straight Leg",
+    "product_type": "Men's Linen Pants"
+   },
+   "from": {
+    "title": "Men's Linen Suit | Relaxed Fit Drawstring Straight Leg",
+    "product_type": "Men's Linen Suit"
+   }
+  },
+  {
+   "id": 16102032933245,
+   "title": "Men's Linen Suit | Relaxed Fit Straight Leg Drawstring Pockets",
+   "group": "titles-types",
+   "why": "alleen een broek op de foto, titel zei Linen Suit",
+   "set": {
+    "title": "Men's Linen Pants | Relaxed Fit Straight Leg Drawstring Pockets",
+    "product_type": "Men's Linen Pants"
+   },
+   "from": {
+    "title": "Men's Linen Suit | Relaxed Fit Straight Leg Drawstring Pockets",
+    "product_type": "Men's Linen Suit"
+   }
+  },
+  {
+   "id": 16080716923261,
+   "title": "Men's Monk Strap Shoe | Buckle Closure Reptile Emboss Leather",
+   "group": "titles-types",
+   "why": "monk strap schoen, type zei Men's Dresses",
+   "set": {
+    "product_type": "Men's Dress Shoes"
+   },
+   "from": {
+    "product_type": "Men's Dresses"
+   }
+  },
+  {
+   "id": 16023933813117,
+   "title": "Men's No Sleeve Shirt | Stand Collar Quilted Puffer",
+   "group": "titles-types",
+   "why": "bodywarmer op de foto, titel zei No Sleeve Shirt",
+   "set": {
+    "title": "Men's Puffer Vest | Stand Collar Quilted",
+    "product_type": "Men's Puffer Vest"
+   },
+   "from": {
+    "title": "Men's No Sleeve Shirt | Stand Collar Quilted Puffer",
+    "product_type": "Men's No Sleeve Shirt"
+   }
+  },
+  {
+   "id": 16095652675965,
+   "title": "Men's Running Shoe | Knit Upper Lace Closure Cushioned Sole",
+   "group": "titles-types",
+   "why": "hardloopschoen, type zei Men's Sweater",
+   "set": {
+    "product_type": "Men's Sneakers"
+   },
+   "from": {
+    "product_type": "Men's Sweater"
+   }
+  },
+  {
+   "id": 16095652446589,
+   "title": "Men's Running Shoe | Lace-Up Mesh Cushioned Sole",
+   "group": "titles-types",
+   "why": "hardloopschoen, komt zo in Sneakers",
+   "set": {
+    "product_type": "Men's Sneakers"
+   },
+   "from": {
+    "product_type": "Men's Shoes"
+   }
+  },
+  {
+   "id": 16023912743293,
+   "title": "Men's Sandals | Slip-On Loafer Round Toe Cushioned",
+   "group": "titles-types",
+   "why": "loafer op de foto, titel/type zeiden Sandals",
+   "set": {
+    "title": "Men's Loafers | Slip-On Round Toe Cushioned",
+    "product_type": "Men's Loafers"
+   },
+   "from": {
+    "title": "Men's Sandals | Slip-On Loafer Round Toe Cushioned",
+    "product_type": "Men's Sandals"
+   }
+  },
+  {
+   "id": 16080714662269,
+   "title": "Men's Swim Trunk | Lightweight Quick Drying Drawstring Closure",
+   "group": "titles-types",
+   "why": "type stond op 'retry'",
+   "set": {
+    "product_type": "Men's Short Swim Trunk"
+   },
+   "from": {
+    "product_type": "retry"
+   }
+  },
+  {
+   "id": 16095652282749,
+   "title": "Running Shoe For Men | Lace-Up Mesh Cushioned Sole",
+   "group": "titles-types",
+   "why": "hardloopschoen, komt zo in Sneakers",
+   "set": {
+    "product_type": "Men's Sneakers"
+   },
+   "from": {
+    "product_type": "Shoes"
+   }
+  },
+  {
+   "id": 16095652577661,
+   "title": "Women's Sweatshirt | Crew Neck Long Sleeve Skeleton Print",
+   "group": "titles-types",
+   "why": "herensweater, titel zei Women's",
+   "set": {
+    "title": "Men's Sweatshirt | Crew Neck Long Sleeve Skeleton Print"
+   },
+   "from": {
+    "title": "Women's Sweatshirt | Crew Neck Long Sleeve Skeleton Print"
+   }
+  },
+  {
+   "id": 16023937384829,
+   "title": "Brown Slip On Shoe For Women | Round Toe Loafer Leather Flat",
+   "group": "women",
+   "why": "damesloafer",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023922704765,
+   "title": "Casual Shoe For Women | Lace-Up Mesh Knit Rounded Toe",
+   "group": "women",
+   "why": "dames sneaker",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16095655002493,
+   "title": "Women's Denim Shorts | Layered Denim Jacket Relaxed Fit Soft-Touch",
+   "group": "women",
+   "why": "dames denim jasje + short op de foto",
+   "set": {
+    "status": "draft"
+   },
+   "from": {
+    "status": "active"
+   }
+  }
+ ]
+}

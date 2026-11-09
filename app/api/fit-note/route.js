@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { scanFitNotes, analyzeFitNotes, writeFitNotes, scanSizeCharts, applySizeChartsSmall, autoFitNotes } from "@/lib/fit-note";
+import { scanFitNotes, analyzeFitNotes, writeFitNotes, scanSizeCharts, applySizeChartsSmall, autoFitNotes, resizeFitNotes } from "@/lib/fit-note";
 
 /* FITNOTES (Store Doctor, 03-11-2026)
    scan:    kleding-producten + huidige fitnote (metafields custom.model_height_cm / custom.model_size)
    analyze: AI-voorstel voor max 10 ids (draagt een model het product? lengte + maat)
-   write:   rows [{id, height, size}] → metafields (leeg = wissen) */
+   write:   rows [{id, height, size}] → metafields (leeg = wissen)
+   resize:  09-11 — bestaande heren-fitnotes van de oude regel één maat groter (dryRun = alleen tellen) */
 export const maxDuration = 60;
 
 export async function POST(req) {
@@ -16,6 +17,7 @@ export async function POST(req) {
     if (action === "sizecharts-scan") return NextResponse.json(await scanSizeCharts(body.store));
     if (action === "sizecharts-apply") return NextResponse.json(await applySizeChartsSmall(body.store, body.ids));
     if (action === "auto") return NextResponse.json(await autoFitNotes(body.store, body.ids));
+    if (action === "resize") return NextResponse.json(await resizeFitNotes(body.store, { dryRun: body.dryRun !== false }));
     if (action === "write") return NextResponse.json(await writeFitNotes(body.store, body.rows));
     return NextResponse.json({ error: "Onbekende actie" }, { status: 400 });
   } catch (e) {
