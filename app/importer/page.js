@@ -788,6 +788,10 @@ export default function ImporterPage() {
         if (iData.categoryWarn) {
           pushLog({ ok: false, text: `${nr} · CATEGORIE NIET GEZET: ${iData.categoryWarn}` });
         }
+        // 09-11: geen keyword-collectie → product staat alleen in Men/Women
+        if (iData.collectionWarn) {
+          pushLog({ ok: false, text: `${nr} · COLLECTIE: ${iData.collectionWarn}` });
+        }
         if (iData.categoryAttrs) {
           pushLog({ info: true, text: `${nr} · Category metafields: ${iData.categoryAttrs}` });
         }

@@ -339,6 +339,12 @@ export async function POST(req) {
     /^men'?s\b/i.test(collectionTitle) ||
     (!genderRaw && String(s.detectedGender || "").toLowerCase() === "men");
   const genderTag = isMen ? "Men" : "Women";
+  /* 09-11 (EMC): kolom COLLECTIE leeg én het keyword kent geen collectie →
+     het product valt alleen in Men/Women (zo belandden de nieuwe suits
+     nergens). Niet stil laten gebeuren: de importer meldt het per product. */
+  const collectionWarn = collectionTitle
+    ? ""
+    : `geen categorie-collectie voor keyword "${s.keyword || "?"}" (kolom COLLECTIE leeg), staat alleen in ${genderTag}. Vul COLLECTIE in of draai de Store Doctor-check "Product in geen enkele categorie-collectie".`;
 
   const tagList = String(s.tags || "")
     .split(",")
@@ -681,6 +687,7 @@ export async function POST(req) {
     collection: collectionInfo ? collectionInfo.title : null,
     collectionCreated: collectionInfo ? collectionInfo.created : false,
     collections: collectionInfos,
+    collectionWarn,
     tags: tagList,
     gender: genderTag,
     templateSuffix: payload.template_suffix || null,
