@@ -25,6 +25,7 @@ const LS = {
   orgTabByStore: "sa_org_tab_by_store", // laatst gebruikte bladnaam per store ("domein" = organization, "domein|tpk" = TPK-sheet)
   orgSource: "sa_org_source", // "org" = organization/aanvul-sheet, "tpk" = TPK-sheet (top performing keywords)
   importTabByStore: "sa_import_tab_by_store", // laatst gebruikte import-lijst-blad per store (scraper + importer)
+  retry: "sa_scraper_retry", // 08-11: keywords die hun aantal niet haalden → knop "opnieuw scrapen"
 };
 
 /* Weeknummer uit een bladnaam: "Scraper W3" / "Week 3 (26 Oct-1 Nov)" / "W3" → 3. */
@@ -251,6 +252,7 @@ export default function ScraperPage() {
   const [orgSource, setOrgSource] = useState("org"); // "org" | "tpk"
 
   const [running, setRunning] = useState(false);
+  const [retryList, setRetryList] = useState([]); // 08-11: keywords onder hun aantal na de laatste run
   const [checkBusy, setCheckBusy] = useState("");
   const [logs, setLogs] = useState([]);
   // Instructie-paneel voor vastgelopen keywords
@@ -351,6 +353,10 @@ export default function ScraperPage() {
     setMemSheet(DEFAULT_MEM_SHEET);
     save(LS.memSheet, DEFAULT_MEM_SHEET);
     setRunTab(load(LS.runTab, ""));
+    {
+      const rt = load(LS.retry, null);
+      if (rt && Array.isArray(rt.list)) setRetryList(rt.list);
+    }
     setNewTabName(load(LS.newTab, ""));
     {
       // oude LGB-AUS-sheet uit de browser vergeten
@@ -1118,20 +1124,41 @@ export default function ScraperPage() {
     }
   }
 
-  async function start() {
-    if (running) return;
+  /* 08-11 (Justin): "soms vindt hij maar 50%, ik wil gewoon mijn aantal".
+     opts.flex = 1 → automatische aanvulronde direct na de run (alleen de keywords
+     die tekort kwamen, zelfde tabblad, flexibeler zoeken: geen bewijs-eis, geen
+     winkel-cap, alternatieven + breed vangnet meteen aan).
+     opts.flex = 2 → knop "Niet-gevonden opnieuw scrapen": nog ruimer — ook
+     alternatieven/breed vangnet die een eigenschap laten vallen. De foto-controle
+     ("past dit product bij het keyword?") blijft altijd aan, dus het aantal gaat
+     omhoog zonder dat er verkeerde producten in komen. */
+  async function start(opts) {
+    if (running && !(opts && opts.chained)) return;
+    const flex = opts && opts.flex ? Number(opts.flex) : 0;
+    const only = flex && Array.isArray(opts.only) ? opts.only : null;
     const stores = storeList;
-    const groups = [
-      ["Vrouw", kw.vrouw.filter((r) => r.k.trim())],
-      ["Man", kw.man.filter((r) => r.k.trim())],
-    ];
+    const groups = only
+      ? [
+          ["Vrouw", only.filter((r) => r.gender === "Vrouw")],
+          ["Man", only.filter((r) => r.gender === "Man")],
+        ]
+      : [
+          ["Vrouw", kw.vrouw.filter((r) => r.k.trim())],
+          ["Man", kw.man.filter((r) => r.k.trim())],
+        ];
+    const spreadNow = flex ? "vol" : spreadMode;
+    const shortfalls = []; // keywords die hun aantal niet haalden
     const totalKw = groups.reduce((a, [, rows]) => a + rows.length, 0);
     if (!stores.length) return alert2("Voeg eerst competitor stores toe.");
     if (!totalKw) return alert2("Voeg minstens één keyword toe.");
     if (!workSheet.trim()) return alert2("Vul de werk-sheet in.");
 
     setRunning(true);
-    setLogs([]);
+    setRetryList([]);
+    if (!flex) {
+      setLogs([]);
+      save(LS.retry, null);
+    }
     controlRef.current = "run";
     setPaused(false);
     // Voortgangsbalk meteen tonen — mét de besturingsknoppen erin
@@ -1143,6 +1170,7 @@ export default function ScraperPage() {
     let runTabId = null;
     let runTabTitle = "";
     let memAdded = 0;
+    let chainFlex = null; // 08-11: tekort na de run → aanvulronde start daarna vanzelf
 
     // Pauze = wachten tot Hervat; Stop = netjes uit alle loops breken
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -1160,7 +1188,16 @@ export default function ScraperPage() {
       // Eigen bladnaam ingevuld? Die gebruiken — anders automatisch "Run d-m uu:mm".
       const d = new Date();
       const autoTitle = `Run ${d.getDate()}-${d.getMonth() + 1} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-      const runTitle = newTabName.trim() || autoTitle;
+      const runTitle = (flex && opts.tab) || newTabName.trim() || autoTitle;
+      if (flex) {
+        pushLog({
+          strong: true,
+          text:
+            flex === 1
+              ? `— Aanvulronde: ${groups.reduce((a, [, r]) => a + r.length, 0)} keywords haalden hun aantal niet — flexibeler zoeken (geen bewijs-eis, geen winkel-limiet, alternatieven + breed vangnet meteen aan). Foto-controle blijft aan.`
+              : `— Opnieuw scrapen (nog ruimer): ${groups.reduce((a, [, r]) => a + r.length, 0)} keywords — ook alternatieven die een eigenschap laten vallen; de foto-controle beslist of het product echt bij het keyword past.`,
+        });
+      }
       const tabRes = await sheetsCall({
         action: "createTab",
         sheetId: workSheet,
@@ -1522,7 +1559,8 @@ export default function ScraperPage() {
       let preFilled = 0; // producten die al in het tabblad stonden
       const hardKeywords = []; // bleef op 0 ondanks alles
       for (const [gender, rows] of groups) {
-        for (const { k, n, col, type } of rows) {
+        for (const kwRow of rows) {
+          const { k, n, col, type } = kwRow;
           const fullTarget = Number(n) || 10;
           const already = takeFromTab(k, gender, fullTarget);
           if (already >= fullTarget) {
@@ -1573,7 +1611,7 @@ export default function ScraperPage() {
              "bewezen" achter, dan vult een laatste ronde aan met "kansrijk"
              (zie onder) — je vraagt 100, je krijgt er 100, en in de sheet
              staat per product of het Bewezen of Waarschijnlijk is. */
-          let proofNow = proofMode;
+          let proofNow = flex ? "alles" : proofMode;
 
           /* DE VAKTERM — geldt voor ELK keyword, niet alleen underdogs.
              Shoppers en winkels gebruiken andere woorden voor exact hetzelfde
@@ -1631,7 +1669,7 @@ export default function ScraperPage() {
             // "cargo pants" en "gold heels" → "heels" leverden vorige run
             // producten op die het keyword totaal niet waren.
             const pool = [...new Set([...alts, ...((kwBrief && kwBrief.related) || [])])];
-            const safeAlts = pool.filter((a) => alternativeIsSafe(k, a));
+            const safeAlts = flex >= 2 ? pool.filter((a) => a && a.toLowerCase() !== kwLower) : pool.filter((a) => alternativeIsSafe(k, a));
             const dropped = pool.filter((a) => !safeAlts.includes(a));
             if (dropped.length) {
               pushLog({ muted: true, text: `Alternatieven geweigerd (verliezen "${hardAttributes(k).join(", ")}"): ${dropped.join(" · ")}` });
@@ -1649,7 +1687,7 @@ export default function ScraperPage() {
             broadActive = true;
             // Bij een keyword met een harde eigenschap bestaat er geen breed
             // vangnet: "boots" is geen vervanging voor "waterproof boots".
-            if (hardAttributes(k).length) {
+            if (hardAttributes(k).length && flex < 2) {
               pushLog({ muted: true, text: `Geen breed vangnet voor "${k}" — de eigenschap "${hardAttributes(k).join(", ")}" mag niet wegvallen.` });
               return false;
             }
@@ -1749,7 +1787,7 @@ export default function ScraperPage() {
                             gender,
                             need: needAtStart,
                             excludeLinks: [...exclude],
-                            maxPerStore: spreadMode === "vol" ? needAtStart : Math.max(2, Math.ceil(target / 3)),
+                            maxPerStore: spreadNow === "vol" ? needAtStart : Math.max(2, Math.ceil(target / 3)),
                             proof: proofNow,
                             fast: fastMode,
                           }),
@@ -1793,7 +1831,7 @@ export default function ScraperPage() {
                         gender,
                         need: needAtStart,
                         excludeLinks: [...exclude],
-                        maxPerStore: spreadMode === "vol" ? needAtStart : Math.max(2, Math.ceil(target / 3)),
+                        maxPerStore: spreadNow === "vol" ? needAtStart : Math.max(2, Math.ceil(target / 3)),
                         proof: proofNow,
                         fast: fastMode,
                       }),
@@ -1913,7 +1951,7 @@ export default function ScraperPage() {
                     continue;
                   }
                   const dom = storeOf(m.link) || m._store;
-                  if (spreadMode !== "vol") {
+                  if (spreadNow !== "vol") {
                     const cap = Math.ceil(Math.max(20, Number(totalTarget) || 0) * MAX_STORE_SHARE);
                     if ((perStore.get(dom) || 0) >= cap) {
                       storeCapHits++;
@@ -2022,6 +2060,31 @@ export default function ScraperPage() {
              bestseller-grens los) begint hij opnieuw bij winkel 1. Zo krijgt
              de beste winkel élke aanpak als eerste te zien, in plaats van
              alleen de eerste en slechtste variant ervan. */
+          if (flex) {
+            expandAlts(flex >= 2 ? "Opnieuw scrapen" : "Aanvulronde");
+            expandBroad();
+            relaxUnderdog();
+            /* Flexibel: ook de AI-alternatieven opnieuw ophalen als er nog geen
+               zijn (sommige keywords hadden er nooit), zodat er echt méér
+               zoektermen meegaan. */
+            if (!udProfile && !alts.length) {
+              try {
+                const ares = await fetch("/api/keyword-fallback", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ keywords: [{ kw: kwLower, gender }] }),
+                });
+                const adata = await ares.json().catch(() => ({}));
+                const extra = ((adata && adata.map && adata.map[kwLower]) || []).filter((a) => a && a.toLowerCase() !== kwLower && (flex >= 2 || alternativeIsSafe(k, a)));
+                if (extra.length) {
+                  terms = [...new Set([...terms, ...extra])];
+                  pushLog({ ok: true, text: `Extra zoektermen voor "${k}": ${extra.join(" · ")}` });
+                }
+              } catch {
+                /* geen extra termen → gewoon door */
+              }
+            }
+          }
           for (let ronde = 0; ronde < MAX_LADDER_ROUNDS; ronde++) {
             const res = await scanStores(true);
             if (res !== "restart") break;
@@ -2039,7 +2102,7 @@ export default function ScraperPage() {
           }
           /* Alleen-bewezen levert te weinig? Dan het aantal volmaken met
              kansrijke producten (score ≥ 25) — zelfde winkels, zelfde termen. */
-          if (needed > 0 && !skipped && proofMode === "bewezen") {
+          if (needed > 0 && !skipped && proofMode === "bewezen" && !flex) {
             proofNow = "kansrijk";
             pushLog({ ok: true, text: `"${k}": ${target - needed}/${target} met alleen bewezen verkopers — vult aan met kansrijke producten (score ≥ 25); in de sheet zie je per product Bewezen of Waarschijnlijk.` });
             await scanStores(false);
@@ -2059,6 +2122,7 @@ export default function ScraperPage() {
           } else {
             pushLog({ ok: true, text: `"${k}": ${target}/${target} compleet.` });
           }
+          if (needed > 0) shortfalls.push({ ...kwRow, n: fullTarget, gender, missing: needed });
           kwDone++;
           setProg((p) => ({ ...p, kwDone, found: grandTotal + preFilled }));
         }
@@ -2088,6 +2152,26 @@ export default function ScraperPage() {
       /* De drie controles stonden als losse knoppen en werden daardoor
          vergeten — kolom F, G en H bleven leeg terwijl er wél mannenproducten
          en dubbele foto's in de lijst zaten. Ze draaien nu automatisch. */
+      if (!flex && shortfalls.length) {
+        chainFlex = shortfalls;
+        pushLog({
+          ok: true,
+          text: `${shortfalls.length} keyword(s) haalden hun aantal niet (${shortfalls.reduce((a, x) => a + x.missing, 0)} producten tekort) — de aanvulronde start nu automatisch op hetzelfde tabblad.`,
+        });
+      }
+      if (flex) {
+        setRetryList(shortfalls);
+        save(LS.retry, { tab: runTabTitle, list: shortfalls });
+        if (shortfalls.length) {
+          pushLog({
+            warn: true,
+            text: `Nog tekort na de aanvulronde: ${shortfalls.map((x) => `${x.k} (${x.n - x.missing}/${x.n})`).join(", ")} — klik op "Niet-gevonden opnieuw scrapen" voor een nog ruimere ronde, of voeg meer concurrenten toe.`,
+          });
+        } else {
+          pushLog({ ok: true, text: "Alle keywords staan nu op hun aantal." });
+        }
+      }
+      if (!chainFlex) {
       pushLog({ strong: true, text: "— Eindcontroles starten automatisch" });
       try {
         await runGenderCheck(runTabTitle);
@@ -2107,6 +2191,7 @@ export default function ScraperPage() {
         try {
           await runChaimTab(runTabTitle);
         } catch {}
+      }
       }
     } catch (e) {
       if (e && e.stop === "save") {
@@ -2142,6 +2227,9 @@ export default function ScraperPage() {
       setPaused(false);
       controlRef.current = "run";
       setRunning(false);
+    }
+    if (chainFlex && runTabTitle) {
+      await start({ flex: 1, only: chainFlex, tab: runTabTitle, chained: true });
     }
   }
 
@@ -3216,9 +3304,23 @@ export default function ScraperPage() {
             </div>
 
             <div className="sc-start" id="sec-run">
-              <button className="btn" onClick={start} disabled={!!busy}>
+              <button className="btn" onClick={() => start()} disabled={!!busy}>
                 {running ? "Bezig met scrapen…" : "⌕ Starten"}
               </button>
+              {!running && retryList.length > 0 && (
+                <button
+                  className="btn-ghost"
+                  style={{ marginLeft: 10 }}
+                  disabled={!!busy}
+                  title="Zoekt alleen de keywords die hun aantal niet haalden opnieuw, op hetzelfde tabblad, met ruimere zoekcriteria. De foto-controle blijft aan."
+                  onClick={() => {
+                    const rt = load(LS.retry, null);
+                    start({ flex: 2, only: retryList, tab: (rt && rt.tab) || runTab });
+                  }}
+                >
+                  🔁 Niet-gevonden opnieuw scrapen ({retryList.length} keywords · {retryList.reduce((a, x) => a + (x.missing || 0), 0)} producten)
+                </button>
+              )}
             </div>
           </div>
 
