@@ -101,9 +101,9 @@ export default function StorePicker({ stores, setStores, picked, setPicked, stat
                   <div className="pk-label">Admin API token</div>
                   <input type="password" value={f.token} onChange={(e) => setF({ ...f, token: e.target.value })} />
                 </div>
-              , document.body)}
+              )}
               <p className="pk-hint" style={{ marginTop: 10 }}>
-                Scopes die de app nodig heeft: write_products, write_inventory, read_locations (voor de voorraad), write_publications is niet nodig.
+                Scopes die de app nodig heeft: read/write_products, read/write_inventory, read_locations, read/write_files.
               </p>
               {err && <p style={{ color: "var(--bad)", marginTop: 10, fontSize: 13 }}>{err}</p>}
               <div className="pk-row" style={{ marginTop: 16, justifyContent: "flex-end" }}>
@@ -113,7 +113,8 @@ export default function StorePicker({ stores, setStores, picked, setPicked, stat
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
