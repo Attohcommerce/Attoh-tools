@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { getComps, upsertComp, writeCatalog, readCatalog, getGenState, setGenState, clearGenState, pkRedisAvailable } from "@/lib/pokemon/store";
 import { detectPlatform, scrapeApi, sitemapProductUrls, scrapeGenericChunk, filterAndClassify, cleanDomain } from "@/lib/pokemon/scrape";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 const POKE_URL_RE = /pokemon|pok%c3%a9mon|ptcg/i;

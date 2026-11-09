@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { scanStore, runFix, getLocations, setStock, stockList } from "@/lib/pokemon/doctor";
 import { getComps, getImported, getSettings, pkRedisAvailable } from "@/lib/pokemon/store";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 function storeFrom(b) {

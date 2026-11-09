@@ -8,7 +8,7 @@ import { writeListings } from "@/lib/pokemon/ai";
 import { importListItem, DEFAULT_SETTINGS } from "@/lib/pokemon/importer";
 import { bodyImages, contentsHint, BRAIN_VERSION } from "@/lib/pokemon/brain";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 const storeFrom = (b) => {
@@ -38,7 +38,7 @@ function aiSource(row, m, rowsById) {
   if (row.type === "Case") {
     const b = rowsById.get(row.caseOf);
     hints.push(
-      `This is a sealed CASE of ${m.qty} × "Pokémon TCG: ${b ? b.title : row.caseOf}". In "What's inside": first "${m.qty} × sealed ${b ? b.title : "product"}", then a nested list with the contents of ONE ${b ? b.type : "box"}, then the totals (e.g. total booster packs = ${m.qty} × packs per box). Product type in the details: "${b ? b.type : ""} Case". Mention it ships as the original sealed case from the distributor where possible; if not, as ${m.qty} sealed units.`,
+      `This is a sealed CASE of ${m.qty} × "Pokémon ${b ? b.title : row.caseOf}". In "What's inside": first "${m.qty} × sealed ${b ? b.title : "product"}", then a nested list with the contents of ONE ${b ? b.type : "box"}, then the totals (e.g. total booster packs = ${m.qty} × packs per box). Product type in the details: "${b ? b.type : ""} Case". Mention it ships as the original sealed case from the distributor where possible; if not, as ${m.qty} sealed units.`,
       b ? contentsHint(b.type, row.lang) : ""
     );
   }
@@ -46,7 +46,7 @@ function aiSource(row, m, rowsById) {
   if (row.note) hints.push(`Note from the shop owner: ${row.note}`);
   return {
     ...best,
-    fixedTitle: `Pokémon TCG: ${row.title}`,
+    fixedTitle: row.title,
     type: row.type === "Case" ? "Case" : row.type,
     set: row.set || best.set,
     lang: row.lang,
@@ -118,6 +118,10 @@ export async function POST(req) {
       const log = {};
       for (let i = 0; i < todo.length; i++) {
         const m = todo[i];
+        if (!w.items[i] || w.items[i].error || !w.items[i].descriptionHtml) {
+          results.push({ id: m.id, title: (w.items[i] && w.items[i].title) || m.row.title, ok: false, error: (w.items[i] && w.items[i].error) || "AI-tekst mislukt" });
+          continue;
+        }
         const spec = {
           row: m.row,
           best: m.match.best,

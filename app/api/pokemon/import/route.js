@@ -15,7 +15,7 @@ function aiSource(g) {
   return { ...best, extraSources: others, imageLayout: withImgs ? { body: withImgs.body } : null };
 }
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 function storeFrom(b) {
@@ -59,6 +59,11 @@ export async function POST(req) {
     for (let i = 0; i < todo.length; i++) {
       const g = todo[i];
       const listing = w.items[i];
+      if (!listing || listing.error || !listing.descriptionHtml) {
+        // Geen AI-tekst → NIET importeren (geen standaardtekst meer in de store); melden zodat hij opnieuw kan
+        results.push({ key: g.key, title: (listing && listing.title) || g.title, ok: false, error: (listing && listing.error) || "AI-tekst mislukt" });
+        continue;
+      }
       const r = await importGroup(store, g, listing, settings);
       results.push({ key: g.key, title: listing.title, ...r, copy: listing.copy, ai: listing.ai, note: listing.note });
       if (r.ok) log[g.key] = { id: r.id, handle: r.handle, title: listing.title, at: Date.now(), src: g.best.url, srcText: stripHtml(g.best.body).slice(0, 1500) };

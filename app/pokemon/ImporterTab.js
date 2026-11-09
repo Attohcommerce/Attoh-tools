@@ -188,7 +188,17 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
       notify("Kies eerst rechtsboven je Pokémon-store", true);
       return;
     }
-    const keys = [...sel].filter((k) => !imported[k]);
+    const byKey = new Map(groups.map((g) => [g.key, g]));
+    // Volgorde: oud → nieuw per set (release), binnen een set per type. Shopify toont nieuwste
+    // aanmaak bovenaan, dus de nieuwste set (Delta Reign) komt zo bovenaan te staan.
+    const rel = (g) => RELEASE_DATES[g.set] || (g.set && SET_NAMES.indexOf(g.set) >= 0 ? `0000-${String(999 - SET_NAMES.indexOf(g.set)).padStart(3, "0")}` : "0000-000");
+    const keys = [...sel]
+      .filter((k) => !imported[k] && byKey.get(k))
+      .sort((a, b) => {
+        const ga = byKey.get(a);
+        const gb = byKey.get(b);
+        return rel(ga).localeCompare(rel(gb)) || String(ga.set).localeCompare(String(gb.set)) || TYPE_ORDER.indexOf(ga.type) - TYPE_ORDER.indexOf(gb.type) || ga.title.localeCompare(gb.title);
+      });
     if (!keys.length) return;
     if (!window.confirm(`${keys.length} producten importeren in ${store.name || store.domain}?\n\nZe komen op "${settings.status === "draft" ? "concept" : "actief"}" en uitverkocht (voorraad 0).`)) return;
     stopRef.current = false;
@@ -197,7 +207,8 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
     setLog([]);
     addLog(`▶ ${keys.length} producten naar ${store.domain}`);
     const chunks = [];
-    for (let i = 0; i < keys.length; i += 3) chunks.push(keys.slice(i, i + 3));
+    // porties van 2 (AI + foto's per product duurt 20–40 s; zo blijft elke aanroep ruim onder de limiet)
+    for (let i = 0; i < keys.length; i += 2) chunks.push(keys.slice(i, i + 2));
     async function worker() {
       while (chunks.length && !stopRef.current) {
         const ck = chunks.shift();
@@ -211,7 +222,7 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
             } else if (x.ok) {
               st.ok++;
               sfx("ok");
-              addLog(`✓ ${x.title} · ${x.price ? x.price.toFixed(2) : "geen prijs"} · ${x.images} foto's${x.ai === false ? " · standaardtekst" : ` · ${Math.round((x.copy || 0) * 100)}% overlap`}${x.colErrors && x.colErrors.length ? " · collectie-fout" : ""}`, "ok");
+              addLog(`✓ ${x.title} · ${x.price ? x.price.toFixed(2) : "geen prijs"} · ${x.images} foto's · ${Math.round((x.copy || 0) * 100)}% overlap${x.colErrors && x.colErrors.length ? " · collectie-fout" : ""}`, "ok");
               setImported((m) => ({ ...m, [x.key]: { id: x.id, handle: x.handle, title: x.title } }));
             } else {
               st.fail++;
@@ -227,11 +238,39 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
         setRun({ ...st });
       }
     }
-    await Promise.all([worker(), worker()]);
+    await Promise.all([worker(), worker(), worker()]);
     setSel(new Set());
     setRun({ ...st, finished: true });
     sfx(st.fail ? "error" : "success");
     notify(`Klaar: ${st.ok} geïmporteerd, ${st.skipped} overgeslagen, ${st.fail} mislukt`, !!st.fail);
+  }
+
+  // OPNIEUW BEGINNEN: alle door de importer gemaakte producten uit de store + importlog leeg
+  async function purge() {
+    if (!store) {
+      notify("Kies eerst rechtsboven je Pokémon-store", true);
+      return;
+    }
+    if (!window.confirm(`Alle door de importer gemaakte producten uit ${store.name || store.domain} verwijderen?\n\nDit kan niet ongedaan worden gemaakt. Producten die je zelf hebt aangemaakt blijven staan.`)) return;
+    stopRef.current = false;
+    setLog([]);
+    addLog(`▶ Opnieuw beginnen: producten verwijderen uit ${store.domain}`);
+    let total = 0;
+    try {
+      for (let round = 0; round < 40; round++) {
+        const r = await postJSON("/api/pokemon/catalog", { action: "purge", store: creds(store) });
+        total += r.deleted || 0;
+        for (const e of r.errors || []) addLog(`✕ ${e}`, "err");
+        addLog(`🗑 ${total} verwijderd`, "dim");
+        if (!r.more) break;
+      }
+      setImported({});
+      notify(`${total} producten verwijderd. Je kunt opnieuw importeren.`);
+      addLog(`✓ Klaar: ${total} producten verwijderd, importlog leeg`, "ok");
+    } catch (e) {
+      notify(e.message, true);
+      addLog(`✕ ${e.message}`, "err");
+    }
   }
 
   async function forget(key) {
@@ -275,7 +314,7 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
         <div>
           <h1>Importer</h1>
           <p>
-            {groups.length.toLocaleString("nl-NL")} unieke producten van al je concurrenten samen (zelfde product bij meerdere winkels = één kaart). Kies wat je wilt, de AI schrijft eigen titels en omschrijvingen, en alles komt op <b>Sold out</b> in je store.
+            {groups.length.toLocaleString("nl-NL")} unieke producten van al je concurrenten samen (zelfde product bij meerdere winkels = één kaart). Kies wat je wilt; de tool schrijft eigen titels ("Pokémon &lt;Set&gt; &lt;product&gt; &lt;code&gt;") en omschrijvingen in één vaste opbouw, importeert van oud naar nieuw per set, en alles komt op <b>Uitverkocht</b> in je store.
           </p>
         </div>
         <div className="pk-row">
@@ -283,6 +322,11 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
           <button className="pk-btn sm" onClick={load}>
             ↻ Vernieuwen
           </button>
+          {store && (
+            <button className="pk-btn sm danger" onClick={purge} title="Alle door de importer gemaakte producten uit de store halen en het importlog leegmaken">
+              Opnieuw beginnen
+            </button>
+          )}
         </div>
       </div>
 

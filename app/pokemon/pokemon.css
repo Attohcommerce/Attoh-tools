@@ -120,6 +120,8 @@
 .pk-btn.dark:hover:not(:disabled) { background: #000; }
 .pk-btn.yellow { background: var(--yellow); border-color: #e9b800; color: var(--ink); }
 .pk-btn.sm { padding: 7px 10px; font-size: 12.5px; border-radius: 8px; }
+.pk-btn.danger { border-color: #e5484d; color: #e5484d; background: transparent; }
+.pk-btn.danger:hover { background: rgba(229, 72, 77, 0.08); }
 .pk-btn.ghost { border-color: transparent; background: transparent; }
 .pk-btn.ghost:hover:not(:disabled) { background: var(--bg); }
 .pk-btn.big { padding: 13px 20px; font-size: 15px; border-radius: 12px; }
