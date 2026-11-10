@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { checkAgentKey, agentNext, agentDone, agentFail, agentSource } from "@/lib/photo-queue";
+import { checkAgentKey, agentNext, agentDone, agentFail, agentSource, agentRepos } from "@/lib/photo-queue";
 
 /* Ingang voor Claude (geen login, wel sleutel in header x-photo-key).
    next: openstaande opdrachten + het brein · done: foto-URL → op het product · fail: afgekeurd · source: bronfoto van een opdracht */
@@ -14,6 +14,7 @@ export async function POST(req) {
       const img = await agentSource(body);
       return new NextResponse(img.buf, { headers: { "content-type": img.type, "cache-control": "no-store" } });
     }
+    if (body.action === "repos") return NextResponse.json(await agentRepos(body));
     if (body.action === "done") return NextResponse.json(await agentDone(body));
     if (body.action === "fail") return NextResponse.json(await agentFail(body));
     return NextResponse.json(await agentNext({ limit: body.limit, store: body.store }));
