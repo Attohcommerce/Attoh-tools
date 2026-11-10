@@ -797,6 +797,15 @@ export default function ScraperPage() {
     `https://docs.google.com/spreadsheets/d/${source === "tpk" ? e.tpkSheetId : e.orgSheetId || e.aanvulSheetId}/edit`;
   const tabKey = (domain, source) => (source === "tpk" ? `${domain}|tpk` : domain);
   const memEntry = memStores.find((x) => x.domain === memStore) || null;
+  // Vangnet (10-11, Justin): de geheugen-sheet volgt ALTIJD de gekozen store —
+  // eigen geheugen-sheet uit Keywords → Geheugen, anders de vaste van de organisatie.
+  // Wat er ook tussendoor nog een oude waarde terugzet, dit wint.
+  const memEntrySheet = memEntry ? (memEntry.memSheetId ? `https://docs.google.com/spreadsheets/d/${memEntry.memSheetId}/edit` : DEFAULT_MEM_SHEET) : "";
+  useEffect(() => {
+    if (!memEntrySheet) return;
+    setMemSheet((cur) => (cur === memEntrySheet ? cur : memEntrySheet));
+    save(LS.memSheet, memEntrySheet);
+  }, [memEntrySheet, memSheet]);
 
   /* Standaard-tabblad.
      Organization: laatst gebruikt voor deze store, anders het eerste
@@ -3178,7 +3187,7 @@ export default function ScraperPage() {
                 {orgDef.memorySheet.format === "chaim"
                   ? " Eén geheugen voor elke Sa Collective-store (tab Geheugen, Chaim-formaat: Keyword · Competitor · Match · Productnaam · URL): wat erin staat wordt overgeslagen, nieuwe producten schrijven we er in hetzelfde formaat bij."
                   : ""}{" "}
-                <a className="linklike" href={DEFAULT_MEM_SHEET} target="_blank" rel="noreferrer noopener">
+                <a className="linklike" href={memSheet || DEFAULT_MEM_SHEET} target="_blank" rel="noreferrer noopener">
                   Openen ↗
                 </a>
               </div>
