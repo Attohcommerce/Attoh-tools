@@ -275,8 +275,13 @@ export default function ScraperPage() {
   useEffect(() => {
     setSecOpen(load("sa_scraper_open", {}));
   }, []);
-  const isOpen = (id, dflt) => (secOpen[id] === undefined ? !!dflt : !!secOpen[id]);
-  const secCls = (id, dflt) => "card sec" + (isOpen(id, dflt) ? " open" : "");
+  /* Tabs i.p.v. scrollen (10-11-2026): de stappenstrook is de tabbalk; alleen de
+     kaarten van de gekozen stap staan in beeld, altijd open, en de linkerkolom
+     scrolt binnen zichzelf. De Start-knop blijft onderaan staan. */
+  const [pane, setPane] = useState("stores"); // stores | verdeling | sheet | run | achteraf
+  const PANE_OF = { compsheet: "stores", stores: "stores", verdeling: "verdeling", keywords: "verdeling", sheet: "sheet", settings: "run", run: "run", gender: "achteraf", dupes: "achteraf", literal: "achteraf", photo: "achteraf", chaim: "achteraf" };
+  const isOpen = (id, dflt) => (PANE_OF[id] ? PANE_OF[id] === pane : secOpen[id] === undefined ? !!dflt : !!secOpen[id]);
+  const secCls = (id, dflt) => "card sec" + (isOpen(id, dflt) ? " open" : "") + (PANE_OF[id] && PANE_OF[id] !== pane ? " sc-hide" : "");
   function toggleSec(id, dflt) {
     setSecOpen((o) => {
       const cur = o[id] === undefined ? !!dflt : !!o[id];
@@ -286,6 +291,8 @@ export default function ScraperPage() {
     });
   }
   function jumpTo(id) {
+    setPane(PANE_OF[id] || "stores");
+    if (PANE_OF[id]) return;
     setSecOpen((o) => {
       const n = { ...o, [id]: true };
       save("sa_scraper_open", n);
@@ -2668,38 +2675,46 @@ export default function ScraperPage() {
       <div className="page">
         {/* -------- Stappenstrook (zoals Keywords → Geheugen): klik = naar de kaart -------- */}
         <div className="gh-steps sc-steps">
-          <div className={"gh-step" + (storeList.length ? " done" : "")} onClick={() => jumpTo("stores")} role="button" tabIndex={0}>
+          <div className={"gh-step" + (storeList.length ? " done" : "")} data-on={pane === "stores" ? "1" : undefined} onClick={() => jumpTo("stores")} role="button" tabIndex={0}>
             <div className="gh-step-n">{storeList.length ? "✓" : "1"}</div>
             <div>
               <div className="gh-step-t">Stores</div>
               <div className="gh-step-s">{storeList.length ? `${storeList.length} stores · ${cachedCount} catalogi in cache` : "nog geen stores"}</div>
             </div>
           </div>
-          <div className={"gh-step" + (orgInfo ? " done" : "")} onClick={() => jumpTo("verdeling")} role="button" tabIndex={0}>
+          <div className={"gh-step" + (orgInfo ? " done" : "")} data-on={pane === "verdeling" ? "1" : undefined} onClick={() => jumpTo("verdeling")} role="button" tabIndex={0}>
             <div className="gh-step-n">{orgInfo ? "✓" : "2"}</div>
             <div>
               <div className="gh-step-t">Verdeling</div>
               <div className="gh-step-s">{orgInfo ? `${memStoreName || "handmatig"} · ${orgTab} · ${orgInfo.vrouwN + orgInfo.manN} producten` : "store + tabblad kiezen"}</div>
             </div>
           </div>
-          <div className={"gh-step" + (workSheet.trim() ? " done" : "")} onClick={() => jumpTo("sheet")} role="button" tabIndex={0}>
+          <div className={"gh-step" + (workSheet.trim() ? " done" : "")} data-on={pane === "sheet" ? "1" : undefined} onClick={() => jumpTo("sheet")} role="button" tabIndex={0}>
             <div className="gh-step-n">{workSheet.trim() ? "✓" : "3"}</div>
             <div>
               <div className="gh-step-t">Import-lijst</div>
               <div className="gh-step-s">{workSheet.trim() ? `blad: ${newTabName.trim() || "automatisch"}` : "geen sheet"}</div>
             </div>
           </div>
-          <div className={"gh-step" + (prog && !running ? " done" : "")} onClick={() => jumpTo("run")} role="button" tabIndex={0}>
+          <div className={"gh-step" + (prog && !running ? " done" : "")} data-on={pane === "run" ? "1" : undefined} onClick={() => jumpTo("run")} role="button" tabIndex={0}>
             <div className="gh-step-n">{running ? "…" : prog ? "✓" : "4"}</div>
             <div>
               <div className="gh-step-t">Run</div>
-              <div className="gh-step-s">{prog ? `${prog.found} / ${prog.target} producten${running ? " · bezig" : ""}` : "klaar om te starten"}</div>
+              <div className="gh-step-s">{prog ? `${prog.found} / ${prog.target} producten${running ? " · bezig" : ""}` : "instellingen · starten"}</div>
+            </div>
+          </div>
+          <div className="gh-step" data-on={pane === "achteraf" ? "1" : undefined} onClick={() => setPane("achteraf")} role="button" tabIndex={0}>
+            <div className="gh-step-n">5</div>
+            <div>
+              <div className="gh-step-t">Achteraf</div>
+              <div className="gh-step-s">geslacht · dubbelen · letterlijk · foto's</div>
             </div>
           </div>
         </div>
         <div className="layout-scraper">
           {/* -------- Linker kolom -------- */}
           <div>
+            <div className="sc-pane">
             <div className={secCls("compsheet", false)} id="sec-compsheet">
               <SecHead id="compsheet" dflt={false} sum={compTab.trim() ? `tab: ${compTab}` : "AI kiest uit de sheet"}>
                 Competitor-sheet <span className="opt">(slimme selectie)</span>
@@ -3337,6 +3352,7 @@ export default function ScraperPage() {
 
             </div>
 
+            </div>
             <div className="sc-start" id="sec-run">
               <button className="btn" onClick={() => start()} disabled={!!busy}>
                 {running ? "Bezig met scrapen…" : "⌕ Starten"}
