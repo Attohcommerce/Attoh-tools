@@ -36,8 +36,10 @@ export async function POST(req) {
     if (!sheetId) return NextResponse.json({ error: "sheetId ontbreekt" }, { status: 400 });
 
     // Tabbladen van een sheet (naam + id) — voor de tabblad-keuze in de scraper
+    // en Keywords → TPK. Verborgen tabbladen (bv. een afgeronde CVR BOOST)
+    // komen niet in de keuzelijst (10-11, Justin).
     if (action === "tabs") {
-      const tabs = (await getSheetSizes(sheetId)).map((t) => ({ title: t.title, tabId: t.tabId }));
+      const tabs = (await getSheetSizes(sheetId)).filter((t) => !t.hidden).map((t) => ({ title: t.title, tabId: t.tabId }));
       return NextResponse.json({ ok: true, tabs });
     }
     if (action === "read") {

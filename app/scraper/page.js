@@ -855,7 +855,13 @@ export default function ScraperPage() {
     if (!entry) return;
     if (entry.importSheetId) {
       const url = `https://docs.google.com/spreadsheets/d/${entry.importSheetId}/edit`;
-      if (url !== workSheet) saveSheets(url, memSheet);
+      // alleen de import-lijst zetten — NIET de geheugen-sheet meegeven: die
+      // waarde is hier nog die van de vorige store (stale state), waardoor
+      // bij SSB de geheugen-sheet van EMC bleef staan (10-11, Justin)
+      if (url !== workSheet) {
+        setWorkSheet(url);
+        save(LS.workSheet, url);
+      }
     }
     const tabName = suggestImportTab(entry, sourceTab);
     if (tabName) {
