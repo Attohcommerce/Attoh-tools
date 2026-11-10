@@ -1716,6 +1716,17 @@ export default function ImporterPage() {
                   <button type="button" className={photoPer === 2 ? "on" : ""} onClick={() => setPhotoPer(2)}>2</button>
                 </div>
 
+                <div className="field-label">4 · Waarmee maken</div>
+                <div className="seg">
+                  <button type="button" className="on">Higgsfield via Claude</button>
+                  <button type="button" disabled title="Komt eraan: de tool maakt de foto's zelf, direct na je klik" style={{ opacity: 0.55, cursor: "not-allowed" }}>
+                    OpenAI API <span className="badge badge-amber" style={{ marginLeft: 6 }}>coming soon</span>
+                  </button>
+                </div>
+                <div className="hint" style={{ margin: "6px 0 10px" }}>
+                  Higgsfield via Claude: GPT Image 2 op je Higgsfield-credits, Claude maakt en plaatst de foto's. OpenAI API: zelfde model, de tool maakt ze zelf zodra je klikt.
+                </div>
+
                 <div className="imp-photo-sum">
                   <div>
                     <b>{photoProducts}</b> producten gekozen{photoProducts ? ` · schatting ${Math.max(1, Math.round(photoProducts * (photoMode === "all" ? 3 : 1.5) * photoPer))} foto's · ±${Math.max(1, Math.round(photoProducts * (photoMode === "all" ? 3 : 1.5) * photoPer)) * 2} credits` : ""}
