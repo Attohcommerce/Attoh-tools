@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { checkAgentKey, agentNext, agentDone, agentFail, agentSource, agentRepos, agentDesc } from "@/lib/photo-queue";
+import { checkAgentKey, agentNext, agentDone, agentFail, agentSource, agentRepos, agentDesc, agentJudge, agentCheck } from "@/lib/photo-queue";
 
 /* Ingang voor Claude (geen login, wel sleutel in header x-photo-key).
    next: openstaande opdrachten + het brein · done: foto-URL → op het product · fail: afgekeurd · source: bronfoto van een opdracht */
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 export async function POST(req) {
@@ -14,6 +14,8 @@ export async function POST(req) {
       const img = await agentSource(body);
       return new NextResponse(img.buf, { headers: { "content-type": img.type, "cache-control": "no-store" } });
     }
+    if (body.action === "judge") return NextResponse.json(await agentJudge(body));
+    if (body.action === "check") return NextResponse.json(await agentCheck(body));
     if (body.action === "desc") return NextResponse.json(await agentDesc(body));
     if (body.action === "repos") return NextResponse.json(await agentRepos(body));
     if (body.action === "done") return NextResponse.json(await agentDone(body));
