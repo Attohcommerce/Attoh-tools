@@ -242,7 +242,7 @@ export default function ScraperPage() {
   /* Store-geheugen (Keywords → Geheugen → 2 · Store-geheugen): per store staat
      daar de organization/aanvul-sheet. Store kiezen = sheet + tabbladen
      automatisch ingevuld; alleen bij LGB stond de sheet tot nu toe vast. */
-  const [memStores, setMemStores] = useState([]); // [{name, domain, market, genders, aanvulSheetId, orgSheetId, orgTab, tpkSheetId, importSheetId}]
+  const [memStores, setMemStores] = useState([]); // [{name, domain, market, genders, aanvulSheetId, orgSheetId, orgTab, tpkSheetId, importSheetId, memSheetId}]
   const [memStore, setMemStore] = useState(""); // gekozen domein ("" = handmatige link)
   const [orgTabs, setOrgTabs] = useState([]); // tabbladen van de gekozen sheet
   const [orgTabsBusy, setOrgTabsBusy] = useState(false);
@@ -915,11 +915,20 @@ export default function ScraperPage() {
       setWorkSheet(iurl);
       save(LS.workSheet, iurl);
     }
+    // Geheugen-sheet van deze store (10-11): heeft de store een eigen
+    // geheugen, dan slaat de scraper alleen over wat al voor DEZE store
+    // gescraped is (zelfde producten mogen op andere stores/markten).
+    // Geen eigen geheugen = de vaste geheugen-sheet van de organisatie.
+    {
+      const murl = entry.memSheetId ? `https://docs.google.com/spreadsheets/d/${entry.memSheetId}/edit` : DEFAULT_MEM_SHEET;
+      setMemSheet(murl);
+      save(LS.memSheet, murl);
+    }
     const titles = await loadOrgTabs(url, entry.domain, entry, source);
     if (!quiet) {
       pushLog({
         ok: true,
-        text: `Store-geheugen: ${entry.name || entry.domain} (${entry.market || "?"} · ${entry.genders || "MV"}) → ${source === "tpk" ? "TPK-sheet" : "organization-sheet"} geladen, ${titles.length} tabbladen${entry.importSheetId ? " · import-lijst van de store ingevuld" : ""}.`,
+        text: `Store-geheugen: ${entry.name || entry.domain} (${entry.market || "?"} · ${entry.genders || "MV"}) → ${source === "tpk" ? "TPK-sheet" : "organization-sheet"} geladen, ${titles.length} tabbladen${entry.importSheetId ? " · import-lijst van de store ingevuld" : ""}${entry.memSheetId ? " · eigen geheugen-sheet van de store" : ""}.`,
         href: url,
       });
     }
@@ -3148,8 +3157,18 @@ export default function ScraperPage() {
                 onChange={(e) => saveSheets(workSheet, e.target.value)}
               />
               <div className="hint">
-                Staat altijd op <b>{orgDef.memorySheet.name}</b> — ook na herladen, Reset session of een nieuwe login (leegmaken
-                zet hem meteen terug). Voorkomt dat dezelfde producten terugkomen.
+                {memEntry && memEntry.memSheetId ? (
+                  <>
+                    Eigen geheugen-sheet van <b>{memEntry.name || memEntry.domain}</b> (Keywords → Geheugen → Store-geheugen): alleen wat al
+                    voor déze store gescraped is wordt overgeslagen — dezelfde producten mogen op andere stores.{" "}
+                  </>
+                ) : (
+                  <>
+                    Staat op <b>{orgDef.memorySheet.name}</b> — ook na herladen, Reset session of een nieuwe login (leegmaken
+                    zet hem meteen terug). Geef een store in Keywords → Geheugen een eigen geheugen-sheet, dan gebruikt de scraper die.{" "}
+                  </>
+                )}
+                Voorkomt dat dezelfde producten terugkomen.
                 {orgDef.memorySheet.format === "chaim"
                   ? " Eén geheugen voor elke Sa Collective-store (tab Geheugen, Chaim-formaat: Keyword · Competitor · Match · Productnaam · URL): wat erin staat wordt overgeslagen, nieuwe producten schrijven we er in hetzelfde formaat bij."
                   : ""}{" "}

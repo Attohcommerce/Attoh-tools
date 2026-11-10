@@ -319,7 +319,7 @@ export default function KeywordsPage() {
   const allFileInput = useRef(null);
   const [shopStores, setShopStores] = useState([]); // zelfde lijst als de Importer (sa_stores)
   const [stSel, setStSel] = useState("");
-  const [stForm, setStForm] = useState({ market: "", genders: "MV", aanvul: "", orgSheet: "", orgTab: "", tpk: "", importSheet: "" });
+  const [stForm, setStForm] = useState({ market: "", genders: "MV", aanvul: "", orgSheet: "", orgTab: "", tpk: "", importSheet: "", memSheet: "" });
   const [stBusy, setStBusy] = useState(""); // "" | save | snap
 
   const fileInput = useRef(null);
@@ -782,6 +782,8 @@ export default function KeywordsPage() {
       // TPK-sheet (top performing keywords) en import-lijst (scraper/importer) — optioneel
       tpk: (saved && saved.tpkUrl) || "",
       importSheet: (saved && saved.importUrl) || "",
+      // Geheugen-sheet van deze store (10-11) — leeg = vaste geheugen-sheet van de organisatie
+      memSheet: (saved && saved.memUrl) || "",
     });
   }
 
@@ -798,8 +800,9 @@ export default function KeywordsPage() {
       orgTab: stForm.orgTab,
       tpk: stForm.tpk,
       importSheet: stForm.importSheet,
+      memSheet: stForm.memSheet,
     });
-    if (!quiet) gLog({ ok: true, text: `Store-geheugen ${r.entry.name || r.entry.domain} opgeslagen (${r.entry.market} · ${r.entry.genders}${r.entry.tpkSheetId ? " · TPK-sheet gekoppeld" : " · geen TPK-sheet"}${r.entry.importSheetId ? " · import-lijst gekoppeld" : " · geen import-lijst"}).`, href: r.entry.aanvulUrl });
+    if (!quiet) gLog({ ok: true, text: `Store-geheugen ${r.entry.name || r.entry.domain} opgeslagen (${r.entry.market} · ${r.entry.genders}${r.entry.tpkSheetId ? " · TPK-sheet gekoppeld" : " · geen TPK-sheet"}${r.entry.importSheetId ? " · import-lijst gekoppeld" : " · geen import-lijst"}${r.entry.memSheetId ? " · eigen geheugen-sheet" : " · vaste geheugen-sheet"}).`, href: r.entry.aanvulUrl });
     return r.entry;
   }
 
@@ -2006,6 +2009,15 @@ export default function KeywordsPage() {
                             placeholder="Google Sheet van de import-lijst, gedeeld met attoh-sheets@attoh-tools.iam.gserviceaccount.com — leeg = geen"
                             value={stForm.importSheet}
                             onChange={(e) => setStForm((f) => ({ ...f, importSheet: e.target.value }))}
+                          />
+                        </div>
+                        <div className="gh-span2">
+                          <div className="gh-sub">Geheugen-sheet <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>(scraper — links die al voor déze store gescraped zijn; dezelfde producten mogen op andere stores · leeg = vaste geheugen-sheet)</span></div>
+                          <input
+                            type="text"
+                            placeholder="Google Sheet voor het geheugen van deze store, gedeeld met attoh-sheets@attoh-tools.iam.gserviceaccount.com — leeg = vaste geheugen-sheet"
+                            value={stForm.memSheet}
+                            onChange={(e) => setStForm((f) => ({ ...f, memSheet: e.target.value }))}
                           />
                         </div>
                       </div>
