@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { sfx } from "../components/sfx";
 import { postJSON, creds, money, lsGet } from "./util";
+import { RELEASE_DATES } from "@/lib/pokemon/brain";
 
 const SET_ORDER = ["Delta Reign", "30th Celebration", "Ascended Heroes", "Perfect Order", "Chaos Rising", "Pitch Black", "", "Nihil Zero", "Ninja Spinner", "Abyss Eye", "Storm Emeralda"];
 
@@ -161,8 +162,15 @@ export default function ListTab({ notify, store, goDoctor }) {
     setRun({ ...st });
     setLog([]);
     addLog(`▶ ${ids.length} regels naar ${store.domain}`);
-    // cases als laatste: dan staat het losse product al in de store
-    ids.sort((a, b) => (rows.find((r) => r.id === a).type === "Case") - (rows.find((r) => r.id === b).type === "Case"));
+    // Volgorde: oud → nieuw per set (nieuwste set komt als laatste → bovenaan in Shopify); cases als
+    // allerlaatste, dan staat het losse product al in de store.
+    const rowOf = (id) => rows.find((r) => r.id === id) || {};
+    const rel = (r) => RELEASE_DATES[r.set] || "0000";
+    ids.sort((a, b) => {
+      const ra = rowOf(a);
+      const rb = rowOf(b);
+      return (ra.type === "Case") - (rb.type === "Case") || rel(ra).localeCompare(rel(rb)) || String(ra.set).localeCompare(String(rb.set));
+    });
     const chunks = [];
     for (let i = 0; i < ids.length; i += 2) chunks.push(ids.slice(i, i + 2));
     async function worker() {
@@ -178,7 +186,7 @@ export default function ListTab({ notify, store, goDoctor }) {
             } else if (x.ok) {
               st.ok++;
               sfx("ok");
-              addLog(`✓ ${x.title} · ${money(x.price, "EUR")} · ${x.variants > 1 ? x.variants + " varianten · " : ""}${x.images} foto's · strategie ${x.strategy}${x.ai === false ? " · standaardtekst" : ` · ${Math.round((x.copy || 0) * 100)}% overlap`}${x.colErrors && x.colErrors.length ? " · collectie-fout" : ""}`, "ok");
+              addLog(`✓ ${x.title} · ${money(x.price, "EUR")} · ${x.variants > 1 ? x.variants + " varianten · " : ""}${x.images} foto's${x.removedImages ? ` (${x.removedImages} geweigerd: shopbranding)` : ""} · ${Math.round((x.copy || 0) * 100)}% overlap${x.colErrors && x.colErrors.length ? " · collectie-fout" : ""}`, "ok");
               setImported((m) => ({ ...m, [x.id]: { id: x.id, handle: x.handle } }));
             } else {
               st.fail++;
@@ -194,7 +202,7 @@ export default function ListTab({ notify, store, goDoctor }) {
         setRun({ ...st });
       }
     }
-    await Promise.all([worker(), worker()]);
+    await Promise.all([worker(), worker(), worker()]);
     setSel(new Set());
     setRun({ ...st, finished: true });
     sfx(st.fail ? "error" : "success");

@@ -1,10 +1,19 @@
 "use client";
 // Store kiezen (zelfde koppelingen als de Importer) + nieuwe store koppelen.
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { saveStores } from "./util";
 
 export default function StorePicker({ stores, setStores, picked, setPicked, status }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
   const [f, setF] = useState({ name: "", domain: "", mode: "client", token: "", clientId: "", clientSecret: "" });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -50,8 +59,8 @@ export default function StorePicker({ stores, setStores, picked, setPicked, stat
           <option value="__add">＋ Nieuwe store koppelen</option>
         </select>
       </div>
-      {open && (
-        <div className="pk-modal-bg" onClick={() => setOpen(false)}>
+      {open && mounted && createPortal(
+        <div className="pk pk-modal-bg pk-modal-bg--portal" onClick={() => setOpen(false)}>
           <div className="pk-modal narrow" onClick={(e) => e.stopPropagation()}>
             <div className="pk-modal-head">
               <h3>Store koppelen</h3>
@@ -94,7 +103,7 @@ export default function StorePicker({ stores, setStores, picked, setPicked, stat
                 </div>
               )}
               <p className="pk-hint" style={{ marginTop: 10 }}>
-                Scopes die de app nodig heeft: write_products, write_inventory, read_locations (voor de voorraad), write_publications is niet nodig.
+                Scopes die de app nodig heeft: read/write_products, read/write_inventory, read_locations, read/write_files.
               </p>
               {err && <p style={{ color: "var(--bad)", marginTop: 10, fontSize: 13 }}>{err}</p>}
               <div className="pk-row" style={{ marginTop: 16, justifyContent: "flex-end" }}>
@@ -104,7 +113,8 @@ export default function StorePicker({ stores, setStores, picked, setPicked, stat
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

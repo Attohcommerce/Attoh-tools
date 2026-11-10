@@ -7,15 +7,14 @@ import { writeListings } from "@/lib/pokemon/ai";
 import { importGroup, DEFAULT_SETTINGS } from "@/lib/pokemon/importer";
 import { bodyImages } from "@/lib/pokemon/brain";
 
-// Bron voor de AI: beste bron + tekst van de andere concurrenten + (strategie 1) foto's in de tekst
+// Bron voor de AI: beste bron + tekst van de andere concurrenten (foto's uit hun omschrijving nemen we NIET over, 09-11)
 function aiSource(g) {
   const best = g.best;
   const others = (g.fullSources || []).filter((x) => x && x.url !== best.url).map((x) => ({ domain: x.domain, text: stripHtml(x.body) })).filter((x) => x.text.length > 80);
-  const withImgs = [best, ...(g.fullSources || [])].find((x) => x && bodyImages(x.body).length);
-  return { ...best, extraSources: others, imageLayout: withImgs ? { body: withImgs.body } : null };
+  return { ...best, extraSources: others, imageLayout: null };
 }
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 function storeFrom(b) {
@@ -47,7 +46,6 @@ export async function POST(req) {
     const srcs = todo.map(aiSource);
     const w = todo.length ? await writeListings(srcs, { lang: settings.lang, brand: settings.brand }) : { items: [], usage: null };
     w.items.forEach((it, i) => {
-      if (srcs[i].imageLayout) it.bodyImages = bodyImages(srcs[i].imageLayout.body);
     });
     if (body.dryRun) {
       return NextResponse.json({ previews: todo.map((g, i) => ({ key: g.key, source: { title: g.best.title, url: g.best.url, text: stripHtml(g.best.body).slice(0, 1200) }, listing: w.items[i] })), usage: w.usage });
@@ -59,6 +57,11 @@ export async function POST(req) {
     for (let i = 0; i < todo.length; i++) {
       const g = todo[i];
       const listing = w.items[i];
+      if (!listing || listing.error || !listing.descriptionHtml) {
+        // Geen AI-tekst → NIET importeren (geen standaardtekst meer in de store); melden zodat hij opnieuw kan
+        results.push({ key: g.key, title: (listing && listing.title) || g.title, ok: false, error: (listing && listing.error) || "AI-tekst mislukt" });
+        continue;
+      }
       const r = await importGroup(store, g, listing, settings);
       results.push({ key: g.key, title: listing.title, ...r, copy: listing.copy, ai: listing.ai, note: listing.note });
       if (r.ok) log[g.key] = { id: r.id, handle: r.handle, title: listing.title, at: Date.now(), src: g.best.url, srcText: stripHtml(g.best.body).slice(0, 1500) };

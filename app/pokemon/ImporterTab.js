@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { sfx } from "../components/sfx";
 import { postJSON, creds, money, lsGet, lsSet } from "./util";
+import { RELEASE_DATES, CLASSIC_SETS } from "@/lib/pokemon/brain";
+import { SET_NAMES, ERA_OF, SEALED_TYPES } from "@/lib/pokemon/catalog";
 
 const TYPE_ORDER = [
   "Elite Trainer Box", "Booster Box", "Booster Bundle", "Booster Pack", "Blister", "Collection Box",
@@ -36,7 +38,12 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
   const [sel, setSel] = useState(() => new Set());
   const [q, setQ] = useState("");
   const [type, setType] = useState("");
-  const [setF, setSetF] = useState("");
+  const [setF, setSetF] = useState(() => new Set()); // gekozen sets (leeg = alle)
+  const [setPanel, setSetPanel] = useState(false);
+  const [sealedOnly, setSealedOnly] = useState(true);
+  // Alleen de taal die bij de set hoort: Engelse set → Engelse producten (geen Chinese/Koreaanse/Duitse versies van die set)
+  const [setLangOnly, setSetLangOnly] = useState(true);
+  const langOfSet = (set) => (ERA_OF[set] === "Japanese" ? "Japanese" : "English");
   const [lang, setLang] = useState("");
   const [status, setStatus] = useState("new");
   const [minSrc, setMinSrc] = useState(1);
@@ -96,7 +103,9 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
     const qq = q.trim().toLowerCase();
     let out = groups.filter((g) => {
       if (type && g.type !== type) return false;
-      if (setF && g.set !== setF) return false;
+      if (setF.size && !setF.has(g.set)) return false;
+      if (sealedOnly && !SEALED_TYPES.has(g.type)) return false;
+      if (setLangOnly && g.set && g.lang !== langOfSet(g.set)) return false;
       if (lang && g.lang !== lang) return false;
       if (status === "new" && imported[g.key]) return false;
       if (status === "done" && !imported[g.key]) return false;
@@ -112,7 +121,43 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
       type: (a, b) => TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type) || a.title.localeCompare(b.title),
     };
     return out.sort(by[sort] || by.sources);
-  }, [groups, q, type, setF, lang, status, minSrc, sort, imported]);
+  }, [groups, q, type, setF, lang, status, minSrc, sort, imported, sealedOnly, setLangOnly]);
+
+  // Sets op volgorde van release (nieuwste eerst), gesplitst in Engels en Japans
+  const setLists = useMemo(() => {
+    const present = new Set(groups.map((g) => g.set).filter(Boolean));
+    const order = (a, b) => {
+      const da = RELEASE_DATES[a], db = RELEASE_DATES[b];
+      if (da && db) return db.localeCompare(da);
+      const ia = SET_NAMES.indexOf(a), ib = SET_NAMES.indexOf(b);
+      if (da && !db) return ia - ib;
+      return ia - ib;
+    };
+    const all = SET_NAMES.filter((n) => present.has(n)).sort(order);
+    for (const n of present) if (!SET_NAMES.includes(n)) all.push(n);
+    return { en: all.filter((n) => ERA_OF[n] !== "Japanese"), jp: all.filter((n) => ERA_OF[n] === "Japanese") };
+  }, [groups]);
+  const setCount = useMemo(() => {
+    const c = {};
+    for (const g of groups) if (g.set && (!sealedOnly || SEALED_TYPES.has(g.type)) && (!setLangOnly || g.lang === langOfSet(g.set))) c[g.set] = (c[g.set] || 0) + 1;
+    return c;
+  }, [groups, sealedOnly, setLangOnly]);
+  function pickSets(names, add = true) {
+    setSetF((cur) => {
+      const n = add ? new Set(cur) : new Set();
+      for (const x of names) n.add(x);
+      return n;
+    });
+    setShown(PAGE);
+  }
+  function toggleSet(name) {
+    setSetF((cur) => {
+      const n = new Set(cur);
+      n.has(name) ? n.delete(name) : n.add(name);
+      return n;
+    });
+    setShown(PAGE);
+  }
 
   function toggle(k) {
     setSel((s) => {
@@ -147,7 +192,17 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
       notify("Kies eerst rechtsboven je Pokémon-store", true);
       return;
     }
-    const keys = [...sel].filter((k) => !imported[k]);
+    const byKey = new Map(groups.map((g) => [g.key, g]));
+    // Volgorde: oud → nieuw per set (release), binnen een set per type. Shopify toont nieuwste
+    // aanmaak bovenaan, dus de nieuwste set (Delta Reign) komt zo bovenaan te staan.
+    const rel = (g) => RELEASE_DATES[g.set] || (g.set && SET_NAMES.indexOf(g.set) >= 0 ? `0000-${String(999 - SET_NAMES.indexOf(g.set)).padStart(3, "0")}` : "0000-000");
+    const keys = [...sel]
+      .filter((k) => !imported[k] && byKey.get(k))
+      .sort((a, b) => {
+        const ga = byKey.get(a);
+        const gb = byKey.get(b);
+        return rel(ga).localeCompare(rel(gb)) || String(ga.set).localeCompare(String(gb.set)) || TYPE_ORDER.indexOf(ga.type) - TYPE_ORDER.indexOf(gb.type) || ga.title.localeCompare(gb.title);
+      });
     if (!keys.length) return;
     if (!window.confirm(`${keys.length} producten importeren in ${store.name || store.domain}?\n\nZe komen op "${settings.status === "draft" ? "concept" : "actief"}" en uitverkocht (voorraad 0).`)) return;
     stopRef.current = false;
@@ -156,7 +211,8 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
     setLog([]);
     addLog(`▶ ${keys.length} producten naar ${store.domain}`);
     const chunks = [];
-    for (let i = 0; i < keys.length; i += 3) chunks.push(keys.slice(i, i + 3));
+    // porties van 2 (AI + foto's per product duurt 20–40 s; zo blijft elke aanroep ruim onder de limiet)
+    for (let i = 0; i < keys.length; i += 2) chunks.push(keys.slice(i, i + 2));
     async function worker() {
       while (chunks.length && !stopRef.current) {
         const ck = chunks.shift();
@@ -170,7 +226,7 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
             } else if (x.ok) {
               st.ok++;
               sfx("ok");
-              addLog(`✓ ${x.title} · ${x.price ? x.price.toFixed(2) : "geen prijs"} · ${x.images} foto's${x.ai === false ? " · standaardtekst" : ` · ${Math.round((x.copy || 0) * 100)}% overlap`}${x.colErrors && x.colErrors.length ? " · collectie-fout" : ""}`, "ok");
+              addLog(`✓ ${x.title} · ${x.price ? x.price.toFixed(2) : "geen prijs"} · ${x.images} foto's${x.removedImages ? ` (${x.removedImages} geweigerd: shopbranding)` : ""} · ${Math.round((x.copy || 0) * 100)}% overlap${x.colErrors && x.colErrors.length ? " · collectie-fout" : ""}`, x.images ? "ok" : "warn");
               setImported((m) => ({ ...m, [x.key]: { id: x.id, handle: x.handle, title: x.title } }));
             } else {
               st.fail++;
@@ -186,11 +242,39 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
         setRun({ ...st });
       }
     }
-    await Promise.all([worker(), worker()]);
+    await Promise.all([worker(), worker(), worker()]);
     setSel(new Set());
     setRun({ ...st, finished: true });
     sfx(st.fail ? "error" : "success");
     notify(`Klaar: ${st.ok} geïmporteerd, ${st.skipped} overgeslagen, ${st.fail} mislukt`, !!st.fail);
+  }
+
+  // OPNIEUW BEGINNEN: alle door de importer gemaakte producten uit de store + importlog leeg
+  async function purge() {
+    if (!store) {
+      notify("Kies eerst rechtsboven je Pokémon-store", true);
+      return;
+    }
+    if (!window.confirm(`Alle door de importer gemaakte producten uit ${store.name || store.domain} verwijderen?\n\nDit kan niet ongedaan worden gemaakt. Producten die je zelf hebt aangemaakt blijven staan.`)) return;
+    stopRef.current = false;
+    setLog([]);
+    addLog(`▶ Opnieuw beginnen: producten verwijderen uit ${store.domain}`);
+    let total = 0;
+    try {
+      for (let round = 0; round < 40; round++) {
+        const r = await postJSON("/api/pokemon/catalog", { action: "purge", store: creds(store) });
+        total += r.deleted || 0;
+        for (const e of r.errors || []) addLog(`✕ ${e}`, "err");
+        addLog(`🗑 ${total} verwijderd`, "dim");
+        if (!r.more) break;
+      }
+      setImported({});
+      notify(`${total} producten verwijderd. Je kunt opnieuw importeren.`);
+      addLog(`✓ Klaar: ${total} producten verwijderd, importlog leeg`, "ok");
+    } catch (e) {
+      notify(e.message, true);
+      addLog(`✕ ${e.message}`, "err");
+    }
   }
 
   async function forget(key) {
@@ -234,7 +318,7 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
         <div>
           <h1>Importer</h1>
           <p>
-            {groups.length.toLocaleString("nl-NL")} unieke producten van al je concurrenten samen (zelfde product bij meerdere winkels = één kaart). Kies wat je wilt, de AI schrijft eigen titels en omschrijvingen, en alles komt op <b>Sold out</b> in je store.
+            {groups.length.toLocaleString("nl-NL")} unieke producten van al je concurrenten samen (zelfde product bij meerdere winkels = één kaart). Kies wat je wilt; de tool schrijft eigen titels ("Pokémon &lt;Set&gt; &lt;product&gt; &lt;code&gt;") en omschrijvingen in één vaste opbouw, importeert van oud naar nieuw per set, en alles komt op <b>Uitverkocht</b> in je store.
           </p>
         </div>
         <div className="pk-row">
@@ -242,6 +326,11 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
           <button className="pk-btn sm" onClick={load}>
             ↻ Vernieuwen
           </button>
+          {store && (
+            <button className="pk-btn sm danger" onClick={purge} title="Alle door de importer gemaakte producten uit de store halen en het importlog leegmaken">
+              Opnieuw beginnen
+            </button>
+          )}
         </div>
       </div>
 
@@ -323,16 +412,9 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
         <div>
           <div className="pk-toolbar">
             <input type="search" placeholder="Zoek op naam, set, type…" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE); }} />
-            <select value={setF} onChange={(e) => setSetF(e.target.value)}>
-              <option value="">Alle sets</option>
-              {Object.entries(counts.s)
-                .sort((a, b) => b[1] - a[1])
-                .map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {k} ({v})
-                  </option>
-                ))}
-            </select>
+            <button type="button" className={"pk-btn sm" + (setF.size ? " dark" : "")} onClick={() => setSetPanel((v) => !v)}>
+              {setF.size ? `${setF.size} sets gekozen` : "Sets kiezen"} {setPanel ? "▴" : "▾"}
+            </button>
             <select value={lang} onChange={(e) => setLang(e.target.value)}>
               <option value="">Alle talen</option>
               {Object.entries(counts.l).map(([k, v]) => (
@@ -359,7 +441,42 @@ export default function ImporterTab({ notify, store, goScraper, goDoctor }) {
               <option value="priceLow">Goedkoopste eerst</option>
             </select>
           </div>
-          <div className="pk-chips" style={{ marginBottom: 14 }}>
+                    {setPanel && (
+            <div className="pk-card" style={{ marginBottom: 12 }}>
+              <div className="pk-row" style={{ flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+                <button className="pk-btn sm" onClick={() => pickSets(setLists.en.slice(0, 20), false)}>Laatste 20 Engelse sets</button>
+                <button className="pk-btn sm" onClick={() => pickSets(setLists.en.slice(0, 10))}>+ laatste 10 Engels</button>
+                <button className="pk-btn sm" onClick={() => pickSets(setLists.jp.slice(0, 10))}>+ laatste 10 Japans</button>
+                <button className="pk-btn sm" onClick={() => pickSets(CLASSIC_SETS.filter((n) => setCount[n]))}>+ klassiekers (151, Prismatic, Evolving Skies …)</button>
+                <button className="pk-btn sm ghost" onClick={() => pickSets([], false)} disabled={!setF.size}>Wissen</button>
+                <span className="pk-spacer" />
+                <label className="pk-row" style={{ gap: 6, fontSize: 13 }}>
+                  <input type="checkbox" checked={sealedOnly} onChange={(e) => setSealedOnly(e.target.checked)} /> Alleen sealed (geen losse kaarten, accessoires)
+                </label>
+                <label className="pk-row" style={{ gap: 6, fontSize: 13 }} title="Engelse set → alleen Engelse producten; Japanse set → alleen Japanse. Geen Chinese, Koreaanse of Duitse versies.">
+                  <input type="checkbox" checked={setLangOnly} onChange={(e) => setSetLangOnly(e.target.checked)} /> Alleen de taal van de set
+                </label>
+                <span className="pk-hint">{setF.size ? `${setF.size} sets · ${list.length} producten` : `${setLists.en.length + setLists.jp.length} sets gevonden`}</span>
+              </div>
+              <p className="pk-label" style={{ margin: "6px 0" }}>Engels (nieuwste eerst)</p>
+              <div className="pk-chips">
+                {setLists.en.map((n) => (
+                  <button key={n} className={"pk-chip" + (setF.has(n) ? " on" : "")} onClick={() => toggleSet(n)} title={RELEASE_DATES[n] || ""}>
+                    {n} <span>{setCount[n] || 0}</span>{RELEASE_DATES[n] ? <small style={{ opacity: 0.6, marginLeft: 4 }}>{RELEASE_DATES[n].slice(0, 4)}</small> : null}
+                  </button>
+                ))}
+              </div>
+              <p className="pk-label" style={{ margin: "10px 0 6px" }}>Japans (nieuwste eerst)</p>
+              <div className="pk-chips">
+                {setLists.jp.map((n) => (
+                  <button key={n} className={"pk-chip" + (setF.has(n) ? " on" : "")} onClick={() => toggleSet(n)} title={RELEASE_DATES[n] || ""}>
+                    {n} <span>{setCount[n] || 0}</span>{RELEASE_DATES[n] ? <small style={{ opacity: 0.6, marginLeft: 4 }}>{RELEASE_DATES[n].slice(0, 4)}</small> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+<div className="pk-chips" style={{ marginBottom: 14 }}>
             <button className={"pk-chip" + (!type ? " on" : "")} onClick={() => setType("")}>
               Alles<span className="c">{groups.length}</span>
             </button>
