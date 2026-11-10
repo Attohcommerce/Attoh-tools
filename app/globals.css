@@ -3980,3 +3980,51 @@ details.sd-card[open] > summary::before { transform: rotate(90deg); }
 .fn-row select, .fn-size { width: 96px; }
 .fn-skip { grid-column: 4 / 6; text-align: right; }
 @media (max-width: 640px) { .fn-row { grid-template-columns: 18px 40px minmax(0,1fr); } .fn-h, .fn-row select, .fn-size, .fn-skip { grid-column: 3; } }
+
+
+/* ---------- Importer: één scherm met tabs, scrollen binnen het vak (10-11-2026) ---------- */
+.imp-main { min-width: 0; }
+.imp-tabs { position: sticky; top: 0; z-index: 5; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 8px; margin-bottom: 12px; border: 1px solid var(--line, rgba(255,255,255,.08)); border-radius: 12px; background: var(--card, rgba(20,20,22,.92)); backdrop-filter: blur(8px); }
+.imp-tabs > button:not(.btn) { background: transparent; border: 1px solid transparent; color: var(--muted, #9a9aa3); padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+.imp-tabs > button:not(.btn):hover { color: var(--text, #fff); }
+.imp-tabs > button.on { color: var(--accent-hi, #e0b341); border-color: var(--accent, #c9a227); background: var(--accent-dim, rgba(201,162,39,.12)); }
+.imp-tabs__b { font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,.08); color: var(--text, #fff); }
+.imp-tabs__b.soon { background: rgba(240,179,90,.18); color: #f0b35a; text-transform: uppercase; letter-spacing: .04em; }
+.imp-tabs .grow { flex: 1; }
+.imp-tabs__go { width: auto; padding: 8px 16px; white-space: nowrap; }
+.imp-pane { max-height: calc(100vh - 250px); min-height: 200px; overflow-y: auto; padding-right: 6px; scrollbar-width: thin; }
+.imp-pane::-webkit-scrollbar { width: 6px; }
+.imp-pane::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 3px; }
+.imp-types { display: flex; flex-wrap: wrap; gap: 8px; }
+.imp-type { display: inline-flex; gap: 8px; align-items: center; padding: 6px 10px; border: 1px solid var(--line, rgba(255,255,255,.1)); border-radius: 8px; font-size: 13px; cursor: pointer; opacity: .6; }
+.imp-type.on { opacity: 1; border-color: var(--accent, #c9a227); }
+.imp-type input { width: auto; margin: 0; }
+.imp-type b { font-size: 11.5px; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,.08); }
+.imp-photo-sum { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line, rgba(255,255,255,.08)); flex-wrap: wrap; }
+.imp-photo-sum .btn { width: auto; }
+
+
+/* ---------- Scraper: stappen als tabs, kaarten per stap, scrollen binnen de kolom (10-11-2026) ---------- */
+.sc-steps { grid-template-columns: repeat(5, minmax(0, 1fr)); position: sticky; top: 0; z-index: 6; padding: 8px 0; background: var(--bg, #0b0b0d); }
+.sc-steps .gh-step[data-on] { border-color: var(--accent, #c9a227); background: var(--accent-dim, rgba(201,162,39,.12)); }
+.layout-scraper { grid-template-columns: minmax(380px, 460px) 1fr; }
+.sc-pane { max-height: calc(100vh - 330px); overflow-y: auto; padding-right: 6px; scrollbar-width: thin; }
+.sc-pane::-webkit-scrollbar { width: 6px; }
+.sc-pane::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 3px; }
+.sc-pane .card.sec.sc-hide { display: none; }
+.sc-pane .card.sec > h2.sec-h2 { cursor: default; }
+.sc-pane .card.sec > h2.sec-h2 .sec-chev { display: none; }
+.sc-start { position: static; }
+@media (max-width: 980px) {
+  .sc-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); position: static; }
+  .layout-scraper { grid-template-columns: 1fr; }
+  .sc-pane { max-height: none; }
+}
+.sc-pane > .card { margin-top: 0; margin-bottom: 14px; }
+
+.imp-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; }
+.imp-photo-card { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; color: var(--muted, #9a9aa3); text-decoration: none; border: 1px solid var(--line, rgba(255,255,255,.08)); border-radius: 10px; padding: 6px; }
+.imp-photo-card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+.imp-photo-card.failed { border-color: rgba(229,72,77,.5); }
+.imp-photo-card em { color: #e5484d; font-style: normal; }
+.imp-photo-x { display: grid; place-items: center; aspect-ratio: 1; font-size: 28px; color: #e5484d; background: rgba(229,72,77,.08); border-radius: 6px; }

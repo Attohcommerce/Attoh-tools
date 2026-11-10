@@ -158,6 +158,9 @@ export default function PythagoPage() {
   const [cols, setCols] = useState({ order: ALL_COL_IDS, hidden: makeColumns(30).filter((c) => c.def === false).map((c) => c.id), img: 44 });
   const [full, setFull] = useState(false);
   const [modal, setModal] = useState(null); // { kind, ... }
+  const [quar, setQuar] = useState({}); // hygiëne: productId → { at, label, … }
+  const [hyPicked, setHyPicked] = useState(() => new Set());
+  const [hyOpen, setHyOpen] = useState(true);
   const [showTasks, setShowTasks] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [syncMeta, setSyncMeta] = useState(null); // lokale taak zolang de server-taak nog niet gepolld is
@@ -257,6 +260,7 @@ export default function PythagoPage() {
       setAuto(d.auto);
       setPresets(d.presets || []);
       setNotes(d.notes || {});
+      setQuar(d.quar || {});
       if (d.tasks && d.tasks.some((t) => t.status === "running")) startPolling(domain);
     } catch (e) {
       setError(String(e.message || e));
@@ -502,6 +506,71 @@ export default function PythagoPage() {
     setF({ advies: ["Draften"] });
     setFlash(`${ids.length} draft-kandidaten aangevinkt${counts.inBoost ? ` (producten in een lopende boost overgeslagen)` : ""}.`);
   }
+  /* ---- hygiëne / quarantaine (RTM-regels, 10-11-2026) ---- */
+  const HY_STORES = [/soulsociety/i]; // alleen SSB (RTM); uitbreiden per store
+  const hyStore = !!(store && HY_STORES.some((re) => re.test(store.domain || "") || re.test(store.name || "")));
+  const hyLabel = Number(settings.quarLabel) >= 0 ? Number(settings.quarLabel) : 4;
+  const fxRate = (data && data.fx && data.fx.rate) || 1;
+  const hygiene = useMemo(() => {
+    if (!data) return { cands: [], inQuar: [] };
+    const minAge = Number(settings.minAge) || 14;
+    const cands = [];
+    const inQuar = [];
+    for (const r of data.rows || []) {
+      if (!r.onStore || r.status !== "active") continue;
+      const q = quar[r.productId];
+      const p30 = r.per[30], p14 = r.per[14], p7 = r.per[7];
+      const priceAds = r.price != null ? r.price * fxRate : null;
+      const thr = Math.max(25, priceAds || 0);
+      const reasons = [];
+      if (p30.spend >= thr && p30.orders === 0 && p30.conv < 0.5) reasons.push(`£${Math.round(p30.spend)} spend ≥ ${priceAds ? "1× prijs" : "£25"}, 0 sales (30 d)`);
+      if (p30.clicks >= 100 && p30.orders === 0) reasons.push(`${p30.clicks} kliks, 0 sales (30 d)`);
+      if (p7.spend >= Math.max(15, (priceAds || 0) * 0.5) && p7.orders === 0 && p14.orders === 0 && p14.spend >= thr * 0.75) reasons.push(`loopt weg: £${Math.round(p7.spend)} in 7 d, 0 sales in 14 d`);
+      if (q) {
+        const days = Math.max(0, Math.round((Date.now() - new Date(q.at).getTime()) / 86400000));
+        inQuar.push({ ...r, q, qDays: days, reasons, ready: days >= 14 && p14.orders === 0 });
+        continue;
+      }
+      if (!reasons.length) continue;
+      if (r.boost && r.boost.active) continue;
+      if (r.age != null && r.age < minAge) continue;
+      cands.push({ ...r, reasons, thr });
+    }
+    cands.sort((a, b) => b.per[30].spend - a.per[30].spend);
+    inQuar.sort((a, b) => b.qDays - a.qDays);
+    return { cands, inQuar };
+  }, [data, quar, settings.minAge, fxRate]);
+  function hyToggle(id) {
+    setHyPicked((p) => {
+      const n = new Set(p);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
+  async function doQuarantine(ids, on) {
+    setModal(null);
+    setSyncing(true);
+    try {
+      const rowsFor = (data ? data.rows : []).filter((r) => ids.includes(r.productId)).map((r) => ({ productId: r.productId, title: r.title, tags: r.tags, per: { 30: { spend: r.per[30].spend, clicks: r.per[30].clicks } } }));
+      const r = await api({ action: "quarantine", store: creds(), productIds: ids, on, label: hyLabel, rows: rowsFor });
+      if (r.quar) setQuar(r.quar);
+      setData((d) => {
+        if (!d) return d;
+        const set = new Set(ids);
+        return { ...d, rows: d.rows.map((row) => (set.has(row.productId) ? { ...row, tags: on ? [...(row.tags || []).filter((t) => t !== "quarantine"), "quarantine"] : (row.tags || []).filter((t) => t !== "quarantine") } : row)) };
+      });
+      setHyPicked(new Set());
+      sfx(r.failed && r.failed.length ? "error" : "success");
+      setFlash(`${r.done} product(en) ${on ? "in quarantaine gezet" : "uit quarantaine gehaald"} (feed-label custom_label_${r.label} + tag "quarantine")${r.failed && r.failed.length ? ` · ${r.failed.length} mislukt: ${r.failed[0].error}` : ""}.`);
+    } catch (e) {
+      setError(String(e.message || e));
+      sfx("error");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   function askStatus(status, ids) {
     const list = (ids || [...picked]).filter(Boolean);
     if (!list.length) return;
@@ -518,6 +587,8 @@ export default function PythagoPage() {
         return { ...d, rows: d.rows.map((row) => (set.has(row.productId) ? { ...row, status, advies: status !== "active" ? "Al draft" : row.advies === "Al draft" ? "Verkoopt" : row.advies } : row)) };
       });
       setPicked(new Set());
+      setHyPicked(new Set());
+      if (r.quar) setQuar(r.quar);
       sfx("success");
       setFlash(`${r.done} product(en) op ${status} gezet${r.failed.length ? ` · ${r.failed.length} mislukt` : ""}.`);
     } catch (e) {
@@ -1152,7 +1223,128 @@ export default function PythagoPage() {
               <button onClick={() => setPage(pageCount - 1)} disabled={page >= pageCount - 1}>»</button>
             </div>
           </div>
+
+          {/* ================================================================
+              HYGIËNE — zombie-producten volgens de RTM-regels (alleen SSB)
+              ================================================================ */}
+          {hyStore && (
+            <div className="card pyd-tablecard pyd-hy" style={{ marginTop: 18 }}>
+              <div className="pyd-hy__head">
+                <div>
+                  <h3 style={{ margin: 0 }}>Hygiëne <span className="pyd-sub">zombie-producten · RTM-regels</span></h3>
+                  <div className="pyd-sub" style={{ marginTop: 4 }}>
+                    Kandidaat = 30 d: spend ≥ 1× verkoopprijs (min. £25) en 0 sales, óf ≥ 100 kliks en 0 sales; "loopt weg" = £15+ in 7 d zonder sale. Nieuwe producten (&lt; {settings.minAge || 14} d) en lopende boosts slaan we over.
+                    <br />
+                    <b>Quarantaine</b> = feed-label <code>custom_label_{hyLabel} = quarantine</code> + Shopify-tag "quarantine" → RTM sluit dat label uit in Main en test het klein. Na 14 d zonder sale → <b>Archiveren</b> (verdwijnt direct uit GMC; draft kan 30 d blijven hangen).
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span className="pyd-pill">{hygiene.cands.length} kandidaten</span>
+                  <span className="pyd-pill">{hygiene.inQuar.length} in quarantaine</span>
+                  <button className="btn-ghost btn-small" onClick={() => setHyOpen((v) => !v)}>{hyOpen ? "Inklappen" : "Uitklappen"}</button>
+                </div>
+              </div>
+              {hyOpen && (
+                <>
+                  <div className="pyd-hy__bar">
+                    <span className="pyd-sub">{hyPicked.size} aangevinkt</span>
+                    <button className="btn-ghost btn-small" onClick={() => setHyPicked(new Set(hygiene.cands.map((r) => r.productId)))} disabled={!hygiene.cands.length}>Alle kandidaten</button>
+                    <button className="btn-ghost btn-small" onClick={() => setHyPicked(new Set(hygiene.inQuar.filter((r) => r.ready).map((r) => r.productId)))} disabled={!hygiene.inQuar.some((r) => r.ready)}>Alle 14+ d zonder sale</button>
+                    <button className="btn-ghost btn-small" onClick={() => setHyPicked(new Set())} disabled={!hyPicked.size}>Niets</button>
+                    <div className="grow" />
+                    <button className="btn btn-small" disabled={!hyPicked.size || syncing} onClick={() => setModal({ kind: "quar", on: true, ids: [...hyPicked].filter((id) => !quar[id]) })}>Quarantaine ({[...hyPicked].filter((id) => !quar[id]).length})</button>
+                    <button className="btn-ghost btn-small" disabled={!hyPicked.size || syncing} onClick={() => setModal({ kind: "quar", on: false, ids: [...hyPicked].filter((id) => quar[id]) })}>Terug naar normaal ({[...hyPicked].filter((id) => quar[id]).length})</button>
+                    <button className="btn-ghost btn-small" style={{ color: "var(--bad, #e5484d)" }} disabled={!hyPicked.size || syncing} onClick={() => askStatus("archived", [...hyPicked])}>Archiveren ({hyPicked.size})</button>
+                  </div>
+                  {[{ title: "Kandidaten", list: hygiene.cands, empty: "Geen zombie-kandidaten volgens de regels. Mooi." }, { title: "In quarantaine", list: hygiene.inQuar, empty: "Niets in quarantaine." }].map((blk) => (
+                    <div key={blk.title} style={{ marginTop: 10 }}>
+                      <div className="pyd-hy__sub">{blk.title} <span className="pyd-sub">({blk.list.length})</span></div>
+                      {!blk.list.length ? (
+                        <div className="pyd-empty">{blk.empty}</div>
+                      ) : (
+                        <div className="pyd-wrap">
+                          <table className="pyd-table pyd-hy__table">
+                            <thead>
+                              <tr>
+                                <th />
+                                <th>Product</th>
+                                <th>Prijs</th>
+                                <th className="r">Spend 30 d</th>
+                                <th className="r">Kliks 30 d</th>
+                                <th className="r">Sales 30 d</th>
+                                <th className="r">Spend 14 d</th>
+                                <th className="r">Sales 14 d</th>
+                                <th className="r">Spend 7 d</th>
+                                <th className="r">Sales 7 d</th>
+                                <th>{blk.title === "In quarantaine" ? "Sinds" : "Waarom"}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {blk.list.map((r) => (
+                                <tr key={r.productId} className={hyPicked.has(r.productId) ? "pyd-active" : ""}>
+                                  <td><input type="checkbox" checked={hyPicked.has(r.productId)} onChange={() => hyToggle(r.productId)} /></td>
+                                  <td className="pyd-prod">
+                                    {r.image ? <img className="pyd-img" src={r.image} alt="" style={{ width: 32, height: 32 }} /> : <span className="pyd-noimg" />}
+                                    <span>
+                                      <b>{r.title}</b>
+                                      <span className="pyd-id">{r.productId}{r.type ? ` · ${r.type}` : ""}{r.age != null ? ` · ${r.age} d live` : ""}</span>
+                                    </span>
+                                  </td>
+                                  <td>{fmtMoney(r.price, shopCur)}</td>
+                                  <td className="r">{fmtMoney(r.per[30].spend, adsCur)}</td>
+                                  <td className="r">{fmtNum(r.per[30].clicks)}</td>
+                                  <td className="r">{r.per[30].orders}</td>
+                                  <td className="r">{fmtMoney(r.per[14].spend, adsCur)}</td>
+                                  <td className="r">{r.per[14].orders}</td>
+                                  <td className="r">{fmtMoney(r.per[7].spend, adsCur)}</td>
+                                  <td className="r">{r.per[7].orders}</td>
+                                  <td>
+                                    {blk.title === "In quarantaine" ? (
+                                      <span>
+                                        <b>{r.qDays} d</b> <span className="pyd-sub">({fmtDate(r.q.at)})</span>
+                                        {r.ready ? <span className="pyd-pill" style={{ marginLeft: 6, color: "var(--bad, #e5484d)" }}>14+ d, 0 sales → archiveren</span> : r.per[14].orders > 0 ? <span className="pyd-pill" style={{ marginLeft: 6, color: "var(--ok, #2f9e5a)" }}>verkoopt weer</span> : null}
+                                      </span>
+                                    ) : (
+                                      r.reasons.map((x) => <span key={x} className="pyd-pill" style={{ marginRight: 4 }}>{x}</span>)
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
         </>
+      )}
+
+      {modal && modal.kind === "quar" && (
+        <div className="pyd-modal" onClick={() => setModal(null)}>
+          <div className="pyd-box md" onClick={(e) => e.stopPropagation()}>
+            <div className="pyd-box__head">
+              <div>
+                <h3>{modal.ids.length} product(en) {modal.on ? "in quarantaine zetten" : "uit quarantaine halen"}</h3>
+                <div className="sub">{modal.on ? `Zet feed-label custom_label_${hyLabel} = "quarantine" en tag "quarantine" in Shopify (${store.name || sel}). Het product blijft actief; RTM sluit het label uit in Main.` : "Haalt het feed-label en de tag weg; het product draait weer normaal mee."}</div>
+              </div>
+              <button className="x" onClick={() => setModal(null)}>×</button>
+            </div>
+            <div className="pyd-list">
+              {modal.ids.map((id) => {
+                const r = (data ? data.rows : []).find((x) => x.productId === id);
+                return <div className="li" key={id}><span className="grow">{r ? r.title : id}</span><span className="pyd-pill">{r ? `${fmtMoney(r.per[30].spend, adsCur)} · ${r.per[30].clicks} kliks · ${r.per[30].orders} sales` : ""}</span></div>;
+              })}
+            </div>
+            <div className="pyd-box__foot">
+              <button className="btn-ghost" onClick={() => setModal(null)}>Annuleren</button>
+              <button className="btn" disabled={!modal.ids.length} onClick={() => doQuarantine(modal.ids, modal.on)}>{modal.on ? "Ja, in quarantaine" : "Ja, terug naar normaal"}</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ====================================================================

@@ -11,7 +11,7 @@ import { ORG_COOKIE, normOrg, toolAllowed } from "./lib/org";
 // /tp = lege verificatiepagina voor Travelpayouts (vluchtprijzen reisplanner)
 // /api/pythago/cron = dagelijkse Pythago-sync (Vercel Cron; eist zelf CRON_SECRET)
 // /api/competitor-finder/tick = cloud-run van de Competitor finder (zelfde opzet als de Size Guide-tick)
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/kw", "/api/size-guide/job/tick", "/api/competitor-finder/tick", "/api/competitor-finder/cron", "/tp", "/api/pythago/cron"];
+const PUBLIC_PATHS = ["/login", "/api/auth/login", "/kw", "/api/size-guide/job/tick", "/api/competitor-finder/tick", "/api/competitor-finder/cron", "/tp", "/api/pythago/cron", "/api/photo-queue/agent"];
 
 // Reisplanner (27-10-2026): /reis + /api/reis hebben een EIGEN login
 // (cookie attoh_reis_session, gebruikers Justin + Quinty) en staan los van

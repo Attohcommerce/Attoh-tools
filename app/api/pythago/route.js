@@ -3,7 +3,7 @@ import { analysePythago, writePythagoTab, draftProducts } from "@/lib/pythago";
 import { applyBoostState } from "@/lib/cvr-boost";
 import {
   syncStore, loadData, isStale, listTasks, autoGet, autoSet, loadVariants,
-  presetsList, presetSave, presetDelete, notesGet, noteSet, setStatus, patchStatus,
+  presetsList, presetSave, presetDelete, notesGet, noteSet, setStatus, patchStatus, quarList, quarantine, quarForget,
 } from "@/lib/pythago-sync";
 import { getOrg } from "@/lib/org-server";
 
@@ -13,6 +13,7 @@ import { getOrg } from "@/lib/org-server";
    tasks:    lopende/afgeronde taken
    auto:     automatisch syncen aan/uit (koppeling bewaren voor de cron)
    status:   aangevinkte producten op active / draft / archived (nooit vanzelf)
+   quarantine: zombie-producten in/uit quarantaine (feed-label + tag), zie lib/pythago-sync.js
    variants: variant-uitsplitsing van één product
    presets:  opgeslagen filters (list / save / delete)
    notes:    notities per product (get / set)
@@ -29,10 +30,10 @@ export async function POST(req) {
     if (action === "load") {
       const domain = String(body.domain || "");
       if (!domain) return NextResponse.json({ error: "Geen store" }, { status: 400 });
-      const [data, tasks, auto, presets, notes] = await Promise.all([
-        loadData(org, domain), listTasks(org, domain), autoGet(org, domain), presetsList(org, domain), notesGet(org, domain),
+      const [data, tasks, auto, presets, notes, quar] = await Promise.all([
+        loadData(org, domain), listTasks(org, domain), autoGet(org, domain), presetsList(org, domain), notesGet(org, domain), quarList(org, domain),
       ]);
-      return NextResponse.json({ ok: true, data, stale: isStale(data), tasks, auto: auto ? { enabled: auto.enabled !== false, savedAt: auto.savedAt } : null, presets, notes });
+      return NextResponse.json({ ok: true, data, stale: isStale(data), tasks, auto: auto ? { enabled: auto.enabled !== false, savedAt: auto.savedAt } : null, presets, notes, quar });
     }
     if (action === "sync") {
       const { store, ordersStore, adsSheetId, key, settings } = body;
@@ -55,6 +56,12 @@ export async function POST(req) {
       const r = await setStatus({ store, productIds, status });
       const okIds = r.results.filter((x) => x.ok).map((x) => x.productId);
       if (okIds.length) await patchStatus(org, store.domain, okIds, status).catch(() => {});
+      if (okIds.length && status !== "active") r.quar = await quarForget(org, store.domain, okIds).catch(() => undefined);
+      return NextResponse.json(r);
+    }
+    if (action === "quarantine") {
+      // { store, productIds, on, label, rows } — feed-label + tag "quarantine" zetten of weghalen
+      const r = await quarantine({ org, store: body.store, productIds: body.productIds, on: body.on !== false, label: body.label, rows: body.rows || [] });
       return NextResponse.json(r);
     }
     if (action === "variants") {

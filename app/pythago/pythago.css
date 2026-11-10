@@ -261,3 +261,16 @@
 .pyd-setup { display: grid; gap: 10px; }
 .pyd-setup ol { margin: 0; padding-left: 20px; font-size: 13px; color: var(--ink-2); line-height: 1.6; }
 .pyd-setup code { background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 5px; font-size: 12px; }
+
+
+/* ---------- Hygiëne / quarantaine (10-11-2026) ---------- */
+.pyd-hy { padding: 16px 18px; }
+.pyd-hy__head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.pyd-hy__head code { font-size: 11.5px; padding: 1px 5px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); }
+.pyd-hy__bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line, rgba(255, 255, 255, 0.08)); }
+.pyd-hy__bar .grow { flex: 1; }
+.pyd-hy__sub { font-weight: 600; margin: 6px 0 6px; }
+.pyd-hy__table td, .pyd-hy__table th { white-space: nowrap; }
+.pyd-hy__table td.r, .pyd-hy__table th.r { text-align: right; }
+.pyd-hy__table .pyd-prod { display: flex; gap: 8px; align-items: center; white-space: normal; min-width: 260px; }
+.pyd-hy__table .pyd-prod b { display: block; font-weight: 600; }
