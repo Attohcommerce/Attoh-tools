@@ -1680,7 +1680,7 @@ export default function ImporterPage() {
               </h2>
               <div className="imp-pane">
                 <div className="hint" style={{ marginTop: 0 }}>
-                  Na een import geeft de tool de nieuwe producten één of twee modelfoto's (zoals de test op de kersttrui), gekoppeld aan de juiste kleurvariant. De originele productfoto blijft altijd staan als tweede beeld. Kies de productsoorten, zet ze klaar en zeg tegen Claude dat hij de foto's maakt.
+                  Na een import krijgen de producten die het nodig hebben een AI-modelfoto: hetzelfde kledingstuk, op een model uit de doelgroep. De nieuwe foto komt vooraan bij de juiste kleur en in de omschrijving; de foto's van de leverancier blijven erachter staan.
                 </div>
 
                 <div className="field-label">1 · Welke productsoorten <span className="opt">({importedCount ? `${runTypes.length} soorten · ${importedCount} producten in deze batch` : "nog geen import in deze sessie"})</span></div>
