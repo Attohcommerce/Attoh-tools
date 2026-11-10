@@ -4021,3 +4021,10 @@ details.sd-card[open] > summary::before { transform: rotate(90deg); }
   .sc-pane { max-height: none; }
 }
 .sc-pane > .card { margin-top: 0; margin-bottom: 14px; }
+
+.imp-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; }
+.imp-photo-card { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; color: var(--muted, #9a9aa3); text-decoration: none; border: 1px solid var(--line, rgba(255,255,255,.08)); border-radius: 10px; padding: 6px; }
+.imp-photo-card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+.imp-photo-card.failed { border-color: rgba(229,72,77,.5); }
+.imp-photo-card em { color: #e5484d; font-style: normal; }
+.imp-photo-x { display: grid; place-items: center; aspect-ratio: 1; font-size: 28px; color: #e5484d; background: rgba(229,72,77,.08); border-radius: 6px; }

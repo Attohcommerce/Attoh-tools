@@ -58,6 +58,24 @@ export default function ImporterPage() {
   const [photoTypes, setPhotoTypes] = useState({}); // AI-foto's (coming soon): productsoort → aan/uit
   const [photoMode, setPhotoMode] = useState("5050"); // all | 5050 | ai
   const [photoPer, setPhotoPer] = useState(1);
+  const [pq, setPq] = useState(null); // foto-wachtrij: { batches, items }
+  const [pqKey, setPqKey] = useState("");
+  const [pqBusy, setPqBusy] = useState(false);
+  const [pqMsg, setPqMsg] = useState("");
+  async function pqCall(body) {
+    const res = await fetch("/api/photo-queue", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
+    if (d.queue) setPq(d.queue);
+    if (d.key) setPqKey(d.key);
+    return d;
+  }
+  useEffect(() => {
+    if (pane !== "photos") return;
+    pqCall({ action: "list" }).catch(() => {});
+    const t = setInterval(() => pqCall({ action: "list" }).catch(() => {}), 15000);
+    return () => clearInterval(t);
+  }, [pane]);
   const [urlsText, setUrlsText] = useState("");
   const [sheetId, setSheetId] = useState("");
   const [sheetTab, setSheetTab] = useState("");
@@ -1035,20 +1053,23 @@ export default function ImporterPage() {
       if (!l.ok || !l.href) continue;
       const title = String(l.text || "").replace(/^\s*\d+\s*[·.)-]\s*/, "");
       const type = (title.split("|")[0] || "").trim() || "Overig";
+      const pid = (String(l.href || "").match(/\/products\/(\d+)/) || [])[1] || "";
       if (!m.has(type)) m.set(type, []);
       m.get(type).push(title);
+      if (pid) (m.get(type).ids = m.get(type).ids || []).push(pid);
     }
-    return [...m.entries()].map(([type, titles]) => ({ type, titles })).sort((a, b) => b.titles.length - a.titles.length);
+    return [...m.entries()].map(([type, titles]) => ({ type, titles, ids: titles.ids || [] })).sort((a, b) => b.titles.length - a.titles.length);
   }, [logs]);
   const importedCount = runTypes.reduce((a, t) => a + t.titles.length, 0);
   const photoProducts = runTypes.filter((t) => photoTypes[t.type] !== false).reduce((a, t) => a + t.titles.length, 0);
   const okCount = logs.filter((l) => l.ok && l.href).length;
   const errCount = logs.filter((l) => !l.ok && !l.info && !l.muted && !l.strong).length;
+  const pqPending = pq ? pq.batches.reduce((x, b) => x + b.pending, 0) : 0;
   const PANES = [
     { id: "urls", label: "1 · Producten", badge: urls.length || "" },
     { id: "settings", label: "2 · Instellingen", badge: "" },
     { id: "run", label: "3 · Import", badge: running ? `${progress.done}/${progress.total}` : okCount ? `${okCount} ✓` : "" },
-    { id: "photos", label: "4 · AI-foto's", badge: "soon" },
+    { id: "photos", label: "4 · AI-foto's", badge: pqPending || "" },
     { id: "checks", label: "5 · Controles", badge: "" },
     { id: "queue", label: "Wachtrij", badge: queue.length || "" },
   ];
@@ -1648,12 +1669,12 @@ export default function ImporterPage() {
             <div className="card" style={{ display: pane === "photos" ? "block" : "none" }}>
               <h2>
                 ✦ AI-modelfoto's
-                <span className="badge badge-amber" style={{ marginLeft: 10 }}>Coming soon</span>
+                <span className="badge badge-green" style={{ marginLeft: 10 }}>via Claude</span>
                 <span style={{ marginLeft: "auto" }} className="hint">Higgsfield · na het importeren</span>
               </h2>
               <div className="imp-pane">
                 <div className="hint" style={{ marginTop: 0 }}>
-                  Na een import geeft de tool de nieuwe producten één of twee modelfoto's (zoals de test op de kersttrui), gekoppeld aan de juiste kleurvariant. De originele productfoto blijft altijd staan als tweede beeld. Hieronder zie je hoe het gaat werken; de knop Genereer gaat aan zodra de Higgsfield-koppeling live is.
+                  Na een import geeft de tool de nieuwe producten één of twee modelfoto's (zoals de test op de kersttrui), gekoppeld aan de juiste kleurvariant. De originele productfoto blijft altijd staan als tweede beeld. Kies de productsoorten, zet ze klaar en zeg tegen Claude dat hij de foto's maakt.
                 </div>
 
                 <div className="field-label">1 · Welke productsoorten <span className="opt">({importedCount ? `${runTypes.length} soorten · ${importedCount} producten in deze batch` : "nog geen import in deze sessie"})</span></div>
@@ -1697,11 +1718,64 @@ export default function ImporterPage() {
 
                 <div className="imp-photo-sum">
                   <div>
-                    <b>{photoProducts}</b> producten gekozen{photoProducts ? ` · schatting ${Math.max(1, Math.round(photoProducts * (photoMode === "ai" ? 0.5 : 1) * (photoMode === "all" ? 3 : 1.5) * photoPer))} foto's` : ""}
-                    <div className="hint" style={{ margin: "2px 0 0" }}>Elke foto wordt met vision tegen het origineel gecheckt (patroon, kleur, kraag) voordat hij op het product komt.</div>
+                    <b>{photoProducts}</b> producten gekozen{photoProducts ? ` · schatting ${Math.max(1, Math.round(photoProducts * (photoMode === "all" ? 3 : 1.5) * photoPer))} foto's · ±${Math.max(1, Math.round(photoProducts * (photoMode === "all" ? 3 : 1.5) * photoPer)) * 2} credits` : ""}
+                    <div className="hint" style={{ margin: "2px 0 0" }}>GPT Image 2 · medium · 2k. Elke foto wordt tegen het origineel gecheckt voordat hij op het product komt; het origineel blijft staan.</div>
                   </div>
-                  <button type="button" className="btn" disabled title="Komt zodra de Higgsfield-koppeling live is">✦ Genereer — coming soon</button>
+                  <button
+                    type="button" className="btn" disabled={!photoProducts || !selectedStore || pqBusy}
+                    onClick={async () => {
+                      setPqBusy(true);
+                      setPqMsg("");
+                      try {
+                        const ids = runTypes.filter((t) => photoTypes[t.type] !== false).flatMap((t) => t.ids);
+                        const d = await pqCall({ action: "enqueue", store: selectedStore, productIds: ids, mode: photoMode === "ai" ? "5050" : photoMode, per: photoPer });
+                        setPqMsg(`${d.added} foto-opdrachten klaargezet${d.skipped && d.skipped.length ? ` · ${d.skipped.length} overgeslagen (${d.skipped[0].why})` : ""}. Zeg tegen Claude: "maak de foto's voor ${selectedStore.name}".`);
+                      } catch (e) {
+                        setPqMsg("Mislukt: " + String(e.message || e));
+                      } finally {
+                        setPqBusy(false);
+                      }
+                    }}
+                  >
+                    {pqBusy ? "Bezig…" : `✦ Zet klaar voor Claude (${photoProducts})`}
+                  </button>
                 </div>
+                {pqMsg && <div className="hint" style={{ color: "var(--accent-hi)" }}>{pqMsg}</div>}
+
+                <div className="field-label">Wachtrij <span className="opt">(ververst elke 15 s)</span></div>
+                {!pq || !pq.batches.length ? (
+                  <div className="hint">Nog niets klaargezet.</div>
+                ) : (
+                  <table className="mini-table">
+                    <tbody>
+                      {pq.batches.map((b) => (
+                        <tr key={b.batch}>
+                          <td><strong>{b.batch}</strong></td>
+                          <td>{b.pending ? `${b.pending} wacht` : "klaar"} · {b.done} ✓{b.failed ? ` · ${b.failed} afgekeurd` : ""}</td>
+                          <td style={{ textAlign: "right" }}><button className="linklike" onClick={() => pqCall({ action: "clear", batch: b.batch }).catch(() => {})}>verwijderen</button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {pq && pq.items.some((x) => x.status !== "pending") && (
+                  <div className="imp-photo-grid">
+                    {pq.items.filter((x) => x.status !== "pending").slice(0, 40).map((x) => (
+                      <a key={x.id} className={"imp-photo-card " + x.status} href={`https://${x.domain}/admin/products/${x.productId}`} target="_blank" rel="noreferrer" title={x.reason || ""}>
+                        {x.resultUrl ? <img src={x.resultUrl} alt="" /> : <span className="imp-photo-x">✗</span>}
+                        <span>{String(x.title).split("|")[0]}{x.color ? ` · ${x.color}` : ""}</span>
+                        {x.status === "failed" && <em>{x.reason}</em>}
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {pqKey && (
+                  <details style={{ marginTop: 12 }}>
+                    <summary className="hint" style={{ cursor: "pointer" }}>Sleutel voor Claude</summary>
+                    <div className="hint">Geef deze één keer aan Claude; daarmee kan hij alleen de foto-wachtrij lezen en foto's op de klaargezette producten zetten.</div>
+                    <input type="text" readOnly value={pqKey} onFocus={(e) => e.target.select()} />
+                  </details>
+                )}
               </div>
             </div>
 
