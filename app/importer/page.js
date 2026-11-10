@@ -54,6 +54,10 @@ export default function ImporterPage() {
 
   // Input
   const [tab, setTab] = useState("urls"); // urls | sheet
+  const [pane, setPane] = useState("urls"); // urls | settings | run | photos | checks | queue — één scherm, tabs i.p.v. scrollen
+  const [photoTypes, setPhotoTypes] = useState({}); // AI-foto's (coming soon): productsoort → aan/uit
+  const [photoMode, setPhotoMode] = useState("5050"); // all | 5050 | ai
+  const [photoPer, setPhotoPer] = useState(1);
   const [urlsText, setUrlsText] = useState("");
   const [sheetId, setSheetId] = useState("");
   const [sheetTab, setSheetTab] = useState("");
@@ -519,6 +523,7 @@ export default function ImporterPage() {
     pauseRef.current = false;
     setPaused(false);
     setRunning(true);
+    setPane("run");
     setLogs([]);
     setProgress({ done: 0, total: urls.length });
     // 2 min marge tegen klok-verschil met Shopify's created_at
@@ -1023,6 +1028,30 @@ export default function ImporterPage() {
   }
 
   const canImport = selectedStore && urls.length > 0 && !running;
+  // productsoorten van de laatste run (titel vóór de "|") — voor de AI-foto-sectie
+  const runTypes = useMemo(() => {
+    const m = new Map();
+    for (const l of logs) {
+      if (!l.ok || !l.href) continue;
+      const title = String(l.text || "").replace(/^\s*\d+\s*[·.)-]\s*/, "");
+      const type = (title.split("|")[0] || "").trim() || "Overig";
+      if (!m.has(type)) m.set(type, []);
+      m.get(type).push(title);
+    }
+    return [...m.entries()].map(([type, titles]) => ({ type, titles })).sort((a, b) => b.titles.length - a.titles.length);
+  }, [logs]);
+  const importedCount = runTypes.reduce((a, t) => a + t.titles.length, 0);
+  const photoProducts = runTypes.filter((t) => photoTypes[t.type] !== false).reduce((a, t) => a + t.titles.length, 0);
+  const okCount = logs.filter((l) => l.ok && l.href).length;
+  const errCount = logs.filter((l) => !l.ok && !l.info && !l.muted && !l.strong).length;
+  const PANES = [
+    { id: "urls", label: "1 · Producten", badge: urls.length || "" },
+    { id: "settings", label: "2 · Instellingen", badge: "" },
+    { id: "run", label: "3 · Import", badge: running ? `${progress.done}/${progress.total}` : okCount ? `${okCount} ✓` : "" },
+    { id: "photos", label: "4 · AI-foto's", badge: "soon" },
+    { id: "checks", label: "5 · Controles", badge: "" },
+    { id: "queue", label: "Wachtrij", badge: queue.length || "" },
+  ];
 
   return (
     <>
@@ -1150,9 +1179,21 @@ export default function ImporterPage() {
             </div>
           </div>
 
-          {/* -------- Hoofdkolom -------- */}
-          <div>
-            <div className="card">
+          {/* -------- Hoofdkolom: één scherm, tabs + scrollen binnen het vak -------- */}
+          <div className="imp-main">
+            <div className="imp-tabs">
+              {PANES.map((p) => (
+                <button key={p.id} type="button" className={pane === p.id ? "on" : ""} onClick={() => setPane(p.id)}>
+                  {p.label}
+                  {p.badge !== "" && <span className={"imp-tabs__b" + (p.badge === "soon" ? " soon" : "")}>{p.badge}</span>}
+                </button>
+              ))}
+              <span className="grow" />
+              <button type="button" className="btn imp-tabs__go" disabled={!canImport} onClick={runImport}>
+                {running ? `Bezig… ${progress.done}/${progress.total}` : "⇪ Import products"}
+              </button>
+            </div>
+            <div className="card" style={{ display: ["urls", "settings", "run"].includes(pane) ? "block" : "none" }}>
               <h2>
                 ⇪ Product URLs
                 <span style={{ marginLeft: "auto" }}>
@@ -1163,6 +1204,8 @@ export default function ImporterPage() {
                   )}
                 </span>
               </h2>
+
+              <div className="imp-pane" style={{ display: pane === "urls" ? "block" : "none" }}>
 
               <div className="seg" style={{ marginBottom: 10 }}>
                 <button className={tab === "urls" ? "on" : ""} onClick={() => setTab("urls")}>
@@ -1247,7 +1290,10 @@ export default function ImporterPage() {
                 </>
               )}
 
-              <div className="field-label">
+              </div>
+
+              <div className="imp-pane" style={{ display: pane === "settings" ? "block" : "none" }}>
+              <div className="field-label" style={{ marginTop: 0 }}>
                 Required keyword <span className="opt">(optional)</span>
               </div>
               <input
@@ -1500,7 +1546,15 @@ export default function ImporterPage() {
                 admin- én preview-link (preview werkt ook voor drafts).
               </div>
 
-              <div style={{ marginTop: 16 }}>
+              </div>
+
+              <div className="imp-pane" style={{ display: pane === "run" ? "block" : "none" }}>
+              {!running && !logs.length && (
+                <div className="hint" style={{ marginTop: 0 }}>
+                  {urls.length ? `${urls.length} product-URL's klaar` : "Nog geen URL's — plak ze bij 1 · Producten"}{selectedStore ? ` · store: ${selectedStore.name}` : " · kies links een store"}. Check 2 · Instellingen en klik op Import.
+                </div>
+              )}
+              <div style={{ marginTop: 10 }}>
                 <button className="btn" disabled={!canImport} onClick={runImport}>
                   {running ? step || `Bezig… ${progress.done}/${progress.total}` : "⇪ Import products"}
                 </button>
@@ -1581,11 +1635,80 @@ export default function ImporterPage() {
                   </div>
                 </div>
               )}
+              {!running && okCount > 0 && (
+                <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                  <button type="button" className="btn-ghost btn-small" onClick={() => setPane("photos")}>→ AI-foto's voor deze batch</button>
+                  <button type="button" className="btn-ghost btn-small" onClick={() => setPane("checks")}>→ Controles &amp; fixes</button>
+                </div>
+              )}
+              </div>
+            </div>
+
+            {/* -------- AI-modelfoto's (Higgsfield) — coming soon -------- */}
+            <div className="card" style={{ display: pane === "photos" ? "block" : "none" }}>
+              <h2>
+                ✦ AI-modelfoto's
+                <span className="badge badge-amber" style={{ marginLeft: 10 }}>Coming soon</span>
+                <span style={{ marginLeft: "auto" }} className="hint">Higgsfield · na het importeren</span>
+              </h2>
+              <div className="imp-pane">
+                <div className="hint" style={{ marginTop: 0 }}>
+                  Na een import geeft de tool de nieuwe producten één of twee modelfoto's (zoals de test op de kersttrui), gekoppeld aan de juiste kleurvariant. De originele productfoto blijft altijd staan als tweede beeld. Hieronder zie je hoe het gaat werken; de knop Genereer gaat aan zodra de Higgsfield-koppeling live is.
+                </div>
+
+                <div className="field-label">1 · Welke productsoorten <span className="opt">({importedCount ? `${runTypes.length} soorten · ${importedCount} producten in deze batch` : "nog geen import in deze sessie"})</span></div>
+                {!runTypes.length ? (
+                  <div className="hint">Draai eerst een import; daarna staan hier de productsoorten van die batch (T-Shirt, Cargo Shorts, Jacket…) om aan te vinken.</div>
+                ) : (
+                  <div className="imp-types">
+                    {runTypes.map((t) => (
+                      <label key={t.type} className={"imp-type" + (photoTypes[t.type] !== false ? " on" : "")} title={t.titles.slice(0, 8).join("\n")}>
+                        <input type="checkbox" checked={photoTypes[t.type] !== false} onChange={() => setPhotoTypes((m) => ({ ...m, [t.type]: m[t.type] === false }))} />
+                        <span>{t.type}</span>
+                        <b>{t.titles.length}</b>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {runTypes.length > 0 && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button type="button" className="btn-ghost btn-small" onClick={() => setPhotoTypes({})}>Alles</button>
+                    <button type="button" className="btn-ghost btn-small" onClick={() => setPhotoTypes(Object.fromEntries(runTypes.map((t) => [t.type, false])))}>Niets</button>
+                  </div>
+                )}
+
+                <div className="field-label">2 · Welke producten en kleuren</div>
+                <div className="seg">
+                  <button type="button" className={photoMode === "5050" ? "on" : ""} onClick={() => setPhotoMode("5050")}>50-50</button>
+                  <button type="button" className={photoMode === "all" ? "on" : ""} onClick={() => setPhotoMode("all")}>Alle kleuren</button>
+                  <button type="button" className={photoMode === "ai" ? "on" : ""} onClick={() => setPhotoMode("ai")}>AI kiest</button>
+                </div>
+                <div className="hint">
+                  {photoMode === "5050" && "50-50: de helft van de kleuren van elk product krijgt een AI-modelfoto, de andere helft blijft zoals hij is (4 kleuren → 2 met modelfoto)."}
+                  {photoMode === "all" && "Alle kleuren van elk gekozen product krijgen een AI-modelfoto."}
+                  {photoMode === "ai" && "AI kiest: vision geeft de bestaande productfoto's een cijfer; alleen producten met een laag cijfer (geen model, rommelige achtergrond, te weinig foto's) krijgen AI-foto's. Je ziet de keuze eerst en vinkt zelf aan of uit."}
+                </div>
+
+                <div className="field-label">3 · Foto's per kleur</div>
+                <div className="seg">
+                  <button type="button" className={photoPer === 1 ? "on" : ""} onClick={() => setPhotoPer(1)}>1</button>
+                  <button type="button" className={photoPer === 2 ? "on" : ""} onClick={() => setPhotoPer(2)}>2</button>
+                </div>
+
+                <div className="imp-photo-sum">
+                  <div>
+                    <b>{photoProducts}</b> producten gekozen{photoProducts ? ` · schatting ${Math.max(1, Math.round(photoProducts * (photoMode === "ai" ? 0.5 : 1) * (photoMode === "all" ? 3 : 1.5) * photoPer))} foto's` : ""}
+                    <div className="hint" style={{ margin: "2px 0 0" }}>Elke foto wordt met vision tegen het origineel gecheckt (patroon, kleur, kraag) voordat hij op het product komt.</div>
+                  </div>
+                  <button type="button" className="btn" disabled title="Komt zodra de Higgsfield-koppeling live is">✦ Genereer — coming soon</button>
+                </div>
+              </div>
             </div>
 
             {/* -------- Controles (Store Doctor, gescoped op deze run) -------- */}
+            {pane === "checks" && !selectedStore && <div className="card"><div className="hint" style={{ margin: 0 }}>Kies links een store om de controles te draaien.</div></div>}
             {selectedStore && (
-              <div className="card">
+              <div className="card" style={{ display: pane === "checks" ? "block" : "none" }}>
                 <h2>✚ Controles &amp; fixes</h2>
                 <div className="hint" style={{ marginTop: 0 }}>
                   Zelfde motor als de Store Doctor, hier standaard gescoped op de producten van de
@@ -1593,12 +1716,14 @@ export default function ImporterPage() {
                   en per gevonden probleem een 1-tik-fix. AI-checks (geslacht, kleur↔foto, watermerk)
                   staan er als aparte knoppen met de kosten vooraf in beeld.
                 </div>
-                <DoctorPanel store={selectedStore} since={runStamp} />
+                <div className="imp-pane">
+                  <DoctorPanel store={selectedStore} since={runStamp} />
+                </div>
               </div>
             )}
 
             {/* -------- URL Queue -------- */}
-            <div className="card">
+            <div className="card" style={{ display: pane === "queue" ? "block" : "none" }}>
               <h2>≣ URL Queue</h2>
               <textarea
                 placeholder="Paste URLs or collection links to save for later…"
