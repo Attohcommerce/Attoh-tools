@@ -1094,6 +1094,9 @@ export default function PythagoPage() {
                   <option value="archived">Archiveren</option>
                 </select>
               )}
+              {picked.size > 0 && (
+                <button className="pyd-ibtn on" title="AI-modelfoto's maken voor de aangevinkte producten" onClick={() => setModal({ kind: "aiphoto", ids: [...picked], mode: "5050", busy: false, msg: "" })}>✦ AI-foto's ({picked.size})</button>
+              )}
               <div className="pyd-dd">
                 <button className="pyd-ibtn" onMouseDown={(e) => e.stopPropagation()} onClick={() => setMenu(menu === "cols" ? "" : "cols")} title="Kolommen">▦ Kolommen</button>
                 {menu === "cols" && (
@@ -1382,6 +1385,53 @@ export default function PythagoPage() {
             if (resync) setTimeout(() => sync("instellingen gewijzigd"), 100);
           }}
         />
+      )}
+
+      {modal && modal.kind === "aiphoto" && (
+        <div className="pyd-modal" onClick={() => !modal.busy && setModal(null)}>
+          <div className="pyd-box md" onClick={(e) => e.stopPropagation()}>
+            <div className="pyd-box__head">
+              <div><h3>AI-modelfoto's voor {modal.ids.length} product(en)</h3><div className="sub">De nieuwe foto komt vooraan bij de juiste kleur en in de omschrijving; de bestaande foto's blijven staan ({store.name || sel}).</div></div>
+              <button className="x" onClick={() => !modal.busy && setModal(null)}>×</button>
+            </div>
+            <div style={{ padding: "4px 18px 0" }}>
+              <div className="sub" style={{ margin: "8px 0 6px" }}>Waarmee maken</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button className="pyd-ibtn on">Claude · Higgsfield MCP</button>
+                <button className="pyd-ibtn" disabled style={{ opacity: 0.55, cursor: "not-allowed" }}>OpenAI API · coming soon</button>
+              </div>
+              <div className="sub" style={{ margin: "12px 0 6px" }}>Welke kleuren</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button className={`pyd-ibtn ${modal.mode === "5050" ? "on" : ""}`} onClick={() => setModal({ ...modal, mode: "5050" })}>50-50 (helft van de kleuren)</button>
+                <button className={`pyd-ibtn ${modal.mode === "all" ? "on" : ""}`} onClick={() => setModal({ ...modal, mode: "all" })}>Alle kleuren</button>
+              </div>
+            </div>
+            <div className="pyd-list">
+              {modal.ids.map((id) => {
+                const r = rows.find((x) => x.productId === id);
+                return <div className="li" key={id}><span className="grow">{r ? r.title : id}</span></div>;
+              })}
+            </div>
+            {modal.msg && <div className="sub" style={{ padding: "0 18px 8px" }}>{modal.msg}</div>}
+            <div className="pyd-box__foot">
+              <button className="btn-ghost" disabled={modal.busy} onClick={() => setModal(null)}>{modal.done ? "Sluiten" : "Annuleren"}</button>
+              {!modal.done && (
+                <button className="btn" disabled={modal.busy} onClick={async () => {
+                  setModal({ ...modal, busy: true, msg: "Klaarzetten…" });
+                  try {
+                    const res = await fetch("/api/photo-queue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "enqueue", store, productIds: modal.ids, mode: modal.mode, per: 1 }) });
+                    const d = await res.json();
+                    if (!res.ok || d.error) throw new Error(d.error || "Klaarzetten mislukt");
+                    const sk = (d.skipped || []).length;
+                    setModal((m) => (m ? { ...m, busy: false, done: true, msg: `${d.added || 0} foto-opdracht(en) klaargezet${sk ? ` · ${sk} overgeslagen (schoenen, tassen, accessoires)` : ""}. Claude pakt ze op; de stand zie je in Importer → tab 4.` } : m));
+                  } catch (e) {
+                    setModal((m) => (m ? { ...m, busy: false, msg: String(e.message || e) } : m));
+                  }
+                }}>✦ Zet klaar ({modal.ids.length})</button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {modal && modal.kind === "status" && (
