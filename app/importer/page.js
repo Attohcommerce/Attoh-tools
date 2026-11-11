@@ -73,6 +73,9 @@ export default function ImporterPage() {
   const [photoEngine, setPhotoEngine] = useState("claude"); // claude | openai
   const [pqSkipped, setPqSkipped] = useState([]);
   const [pqPicked, setPqPicked] = useState([]);
+  const [storeProducts, setStoreProducts] = useState(null); // tab 4: producten uit de store zelf geladen (na verversen of op een andere pc)
+  const [loadBusy, setLoadBusy] = useState("");
+  const [loadMsg, setLoadMsg] = useState("");
   async function pqCall(body) {
     const res = await fetch("/api/photo-queue", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const d = await res.json().catch(() => ({}));
@@ -247,6 +250,10 @@ export default function ImporterPage() {
   }, [tab, urlsText, sheetLinks]);
 
   const selectedStore = stores.find((s) => s.domain === selected) || null;
+  useEffect(() => {
+    setStoreProducts(null);
+    setLoadMsg("");
+  }, [selected]);
   const aiSale = discount === "ai"; // AI kiest per product 30/40/50
   const mixMode = discount === "mix"; // meerdere percentages door elkaar
   const discountPct =
@@ -1059,20 +1066,27 @@ export default function ImporterPage() {
   }
 
   const canImport = selectedStore && urls.length > 0 && !running;
-  // productsoorten van de laatste run (titel vóór de "|") — voor de AI-foto-sectie
+  // productsoorten (titel vóór de "|") voor de AI-foto-sectie: van de laatste run,
+  // of uit de store zelf geladen (knoppen in tab 4), zodat het overzicht er na verversen ook is
   const runTypes = useMemo(() => {
     const m = new Map();
-    for (const l of logs) {
-      if (!l.ok || !l.href) continue;
-      const title = String(l.text || "").replace(/^\s*\d+\s*[·.)-]\s*/, "");
-      const type = (title.split("|")[0] || "").trim() || "Overig";
-      const pid = (String(l.href || "").match(/\/products\/(\d+)/) || [])[1] || "";
+    const add = (title, pid) => {
+      const type = (String(title || "").split("|")[0] || "").trim() || "Overig";
       if (!m.has(type)) m.set(type, []);
       m.get(type).push(title);
-      if (pid) (m.get(type).ids = m.get(type).ids || []).push(pid);
+      if (pid) (m.get(type).ids = m.get(type).ids || []).push(String(pid));
+    };
+    if (storeProducts) {
+      for (const p of storeProducts) add(p.title, p.id);
+    } else {
+      for (const l of logs) {
+        if (!l.ok || !l.href) continue;
+        const title = String(l.text || "").replace(/^\s*\d+\s*[·.)-]\s*/, "");
+        add(title, (String(l.href || "").match(/\/products\/(\d+)/) || [])[1] || "");
+      }
     }
     return [...m.entries()].map(([type, titles]) => ({ type, titles, ids: titles.ids || [] })).sort((a, b) => b.titles.length - a.titles.length);
-  }, [logs]);
+  }, [logs, storeProducts]);
   const importedCount = runTypes.reduce((a, t) => a + t.titles.length, 0);
   const photoProducts = runTypes.filter((t) => photoTypes[t.type] !== false).reduce((a, t) => a + t.titles.length, 0);
   const okCount = logs.filter((l) => l.ok && l.href).length;
@@ -1690,9 +1704,37 @@ export default function ImporterPage() {
                   Na een import krijgen de producten die het nodig hebben een AI-modelfoto: hetzelfde kledingstuk, op een model uit de doelgroep. De nieuwe foto komt vooraan bij de juiste kleur en in de omschrijving; de foto's van de leverancier blijven erachter staan.
                 </div>
 
-                <div className="field-label">1 · Welke productsoorten <span className="opt">({importedCount ? `${runTypes.length} soorten · ${importedCount} producten in deze batch` : "nog geen import in deze sessie"})</span></div>
+                <div className="field-label">1 · Welke productsoorten <span className="opt">({importedCount ? `${runTypes.length} soorten · ${importedCount} producten ${storeProducts ? "uit de store" : "in deze batch"}` : "nog geen import in deze sessie"})</span></div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", margin: "0 0 8px" }}>
+                  <span className="hint" style={{ margin: 0 }}>Laad producten uit de store:</span>
+                  {[["Vandaag", 1], ["7 dagen", 7], ["30 dagen", 30], ["Alles", 0]].map(([label, days]) => (
+                    <button
+                      key={label} type="button" className="btn-ghost btn-small" disabled={!selectedStore || !!loadBusy}
+                      onClick={async () => {
+                        setLoadBusy(label);
+                        setLoadMsg("");
+                        try {
+                          const d = await pqCall({ action: "products", store: selectedStore, days });
+                          setStoreProducts(d.products || []);
+                          setPhotoTypes({});
+                          setLoadMsg(`${(d.products || []).length} producten uit ${selectedStore.name || selectedStore.domain}${days ? ` (toegevoegd in de laatste ${days === 1 ? "24 uur" : days + " dagen"})` : ""}.`);
+                        } catch (e) {
+                          setLoadMsg("Laden mislukt: " + String(e.message || e));
+                        } finally {
+                          setLoadBusy("");
+                        }
+                      }}
+                    >
+                      {loadBusy === label ? "Laden…" : label}
+                    </button>
+                  ))}
+                  {storeProducts && okCount > 0 && (
+                    <button type="button" className="btn-ghost btn-small" onClick={() => { setStoreProducts(null); setPhotoTypes({}); setLoadMsg(""); }}>Terug naar deze import</button>
+                  )}
+                </div>
+                {loadMsg && <div className="hint" style={{ color: "var(--accent-hi)" }}>{loadMsg}</div>}
                 {!runTypes.length ? (
-                  <div className="hint">Draai eerst een import; daarna staan hier de productsoorten van die batch (T-Shirt, Cargo Shorts, Jacket…) om aan te vinken.</div>
+                  <div className="hint">Draai een import, of laad de producten uit de store met de knoppen hierboven. Daarna staan hier de productsoorten (T-Shirt, Cargo Shorts, Jacket…) om aan te vinken. Dat werkt ook na verversen en op een andere pc.</div>
                 ) : (
                   <div className="imp-types">
                     {runTypes.map((t) => (
@@ -1720,7 +1762,7 @@ export default function ImporterPage() {
                 <div className="hint">
                   {photoMode === "5050" && "50-50: de helft van de kleuren van elk product krijgt een AI-modelfoto, de andere helft blijft zoals hij is (4 kleuren → 2 met modelfoto)."}
                   {photoMode === "all" && "Alle kleuren van elk gekozen product krijgen een AI-modelfoto."}
-                  {photoMode === "ai" && "AI kiest: vision bekijkt de hele galerij van elk product en geeft een cijfer. Een mooie set (meerdere nette foto's op een model, studio of rustige achtergrond) krijgt een 7 of hoger en blijft zoals hij is. Een 6 of lager krijgt AI-foto's, voor de helft van de kleuren: maar 1 foto, mockup, leveranciersfoto, hanger of plat gelegd, spiegelselfie, product nergens helemaal in beeld. Onder de knop zie je per product het cijfer en de reden, ook van de producten die wel foto's krijgen."}
+                  {photoMode === "ai" && "AI kiest: vision bekijkt de hele galerij van elk product en geeft een cijfer. Een mooie set krijgt een 7 of hoger en blijft zoals hij is: meerdere nette foto's op een model, of nette productfoto's zonder model (packshots op een witte of rustige achtergrond). Een 6 of lager krijgt AI-foto's, voor de helft van de kleuren: maar 1 foto, mockup, leveranciersfoto, amateurfoto op hanger of bed, spiegelselfie, product nergens helemaal in beeld. Onder de knop zie je per product het cijfer en de reden, ook van de producten die wel foto's krijgen."}
                 </div>
 
                 <div className="field-label">3 · Foto's per kleur</div>
@@ -1771,7 +1813,18 @@ export default function ImporterPage() {
                       setPqMsg("");
                       try {
                         const ids = runTypes.filter((t) => photoTypes[t.type] !== false).flatMap((t) => t.ids);
-                        const d = await pqCall({ action: "enqueue", store: selectedStore, productIds: ids, mode: photoMode, per: photoPer, engine: photoEngine });
+                        // in stukken van 250 naar de server (één batch in de wachtrij), zodat ook een hele store in één klik kan
+                        const d = { added: 0, skipped: [], picked: [], judged: 0 };
+                        let batch = "";
+                        for (let i = 0; i < ids.length; i += 250) {
+                          if (ids.length > 250) setPqMsg(`Bezig: ${Math.min(i + 250, ids.length)} van ${ids.length} producten…`);
+                          const part = await pqCall({ action: "enqueue", store: selectedStore, productIds: ids.slice(i, i + 250), mode: photoMode, per: photoPer, engine: photoEngine, batch });
+                          batch = batch || part.batch || "";
+                          d.added += part.added || 0;
+                          d.judged += part.judged || 0;
+                          d.skipped.push(...(part.skipped || []));
+                          d.picked.push(...(part.picked || []));
+                        }
                         setPqSkipped(d.skipped || []);
                         setPqPicked(d.picked || []);
                         setPqMsg(`${d.added} foto-opdracht(en) klaargezet${d.skipped && d.skipped.length ? ` · ${d.skipped.length} overgeslagen` : ""}${d.judged ? ` · ${d.judged} producten een fotocijfer gegeven` : ""}. ${photoEngine === "openai" ? "De tool is begonnen; je kunt deze pagina sluiten." : "Claude pakt ze op zodra hij de wachtrij draait."}`);

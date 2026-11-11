@@ -55,12 +55,13 @@ Code: `lib/pokemon/*` (catalog = herkennen/indelen/ontdubbelen, scrape, ai, impo
 
 Importer → tab 4 en Pythago → AI-foto's. "AI kiest" bepaalt per product of er AI-modelfoto's nodig zijn.
 
-- **Mooie set = overslaan.** Meerdere nette foto's waarop het product door een model gedragen wordt (studio of rustige achtergrond, product heel in beeld) krijgen een 7 of hoger en blijven zoals ze zijn.
-- **Dunne of zwakke galerij = maken** (6 of lager): maar 1 foto, mockup, leveranciersfoto, hanger of plat gelegd, spiegelselfie, product nergens helemaal in beeld.
+- **Mooie set = overslaan.** Meerdere nette foto's krijgen een 7 of hoger en blijven zoals ze zijn. Dat geldt voor foto's op een model én voor nette productfoto's zonder model (packshots: ghost mannequin of strak neergelegd, witte of rustige achtergrond). Het gaat om hoe mooi de foto's zijn, niet om of er een model op staat.
+- **Dunne of zwakke galerij = maken** (6 of lager): maar 1 foto, mockup, leveranciersfoto, amateurfoto zonder model (hanger aan een deur, op bed of vloer), spiegelselfie, product nergens helemaal in beeld.
 - **Twee lagen.** De AI kijkt naar de galerij en geeft `worn`, `full`, `look`, `score` en `why` (`GALLERY_RUBRIC` in `lib/photo-brain.js`). Daarna beslissen vaste regels (`galleryVerdict`), zodat de keuze voorspelbaar is. De AI krijgt ook het totaal aantal foto's mee, niet alleen de eerste zes.
 - **Zichtbaar in tab 4.** Onder de knop staan twee lijsten met cijfer en reden: "Krijgt AI-foto's" en "Overgeslagen".
 - Regels aanpassen: alleen in `lib/photo-brain.js` (rubriek + `galleryVerdict`).
 - **Tot 500 producten per klik** (was 150). De wachtrij haalt de producten nu per 50 op in plaats van één voor één en beoordeelt 6 groepjes tegelijk. Raakt de tijd toch op, dan krijgt de rest geen cijfer en geen foto's; nog een keer klikken pakt ze alsnog, zonder dubbele opdrachten.
+- **Laad producten uit de store** (tab 4). Knoppen Vandaag · 7 dagen · 30 dagen · Alles halen de producten van de gekozen store op, zodat het overzicht met productsoorten er ook is na verversen of op een andere pc. Een grote selectie gaat in stukken van 250 naar de server en komt als één batch in de wachtrij.
 
 ## Collecties, menu en fitnote-maat in Store Doctor (09-11-2026)
 - **Wijzigingsplan kan nu ook collecties en het menu aanpassen.** Naast `items` (per product) mag een plan `collections` en `menus` hebben, elk met een groep:
