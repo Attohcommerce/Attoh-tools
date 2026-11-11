@@ -51,6 +51,16 @@ Eigen tool voor de Pokémon-kaartenstore: **/pokemon** (gewone Attoh Tools-login
 
 Code: `lib/pokemon/*` (catalog = herkennen/indelen/ontdubbelen, scrape, ai, importer, doctor, store = Redis `pk:*`), `app/api/pokemon/*`, `app/pokemon/*`. Shopify-scopes: `write_products`, `write_inventory`, `read_locations`.
 
+## AI-modelfoto's: AI kiest op galerijcijfer (11-11-2026)
+
+Importer → tab 4 en Pythago → AI-foto's. "AI kiest" bepaalt per product of er AI-modelfoto's nodig zijn.
+
+- **Mooie set = overslaan.** Meerdere nette foto's waarop het product door een model gedragen wordt (studio of rustige achtergrond, product heel in beeld) krijgen een 7 of hoger en blijven zoals ze zijn.
+- **Dunne of zwakke galerij = maken** (6 of lager): maar 1 foto, mockup, leveranciersfoto, hanger of plat gelegd, spiegelselfie, product nergens helemaal in beeld.
+- **Twee lagen.** De AI kijkt naar de galerij en geeft `worn`, `full`, `look`, `score` en `why` (`GALLERY_RUBRIC` in `lib/photo-brain.js`). Daarna beslissen vaste regels (`galleryVerdict`), zodat de keuze voorspelbaar is. De AI krijgt ook het totaal aantal foto's mee, niet alleen de eerste zes.
+- **Zichtbaar in tab 4.** Onder de knop staan twee lijsten met cijfer en reden: "Krijgt AI-foto's" en "Overgeslagen".
+- Regels aanpassen: alleen in `lib/photo-brain.js` (rubriek + `galleryVerdict`).
+
 ## Collecties, menu en fitnote-maat in Store Doctor (09-11-2026)
 - **Wijzigingsplan kan nu ook collecties en het menu aanpassen.** Naast `items` (per product) mag een plan `collections` en `menus` hebben, elk met een groep:
   - collecties: `create` (nieuwe smart collection met regels), `rename` (bv. dubbele collecties markeren als "DUBBEL - … (verwijderen)") en `rules` (regels van een bestaande collectie, met `from` als veiligheid);

@@ -72,6 +72,7 @@ export default function ImporterPage() {
   const [pqSet, setPqSet] = useState(null); // { model, size, quality }
   const [photoEngine, setPhotoEngine] = useState("claude"); // claude | openai
   const [pqSkipped, setPqSkipped] = useState([]);
+  const [pqPicked, setPqPicked] = useState([]);
   async function pqCall(body) {
     const res = await fetch("/api/photo-queue", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const d = await res.json().catch(() => ({}));
@@ -1719,7 +1720,7 @@ export default function ImporterPage() {
                 <div className="hint">
                   {photoMode === "5050" && "50-50: de helft van de kleuren van elk product krijgt een AI-modelfoto, de andere helft blijft zoals hij is (4 kleuren → 2 met modelfoto)."}
                   {photoMode === "all" && "Alle kleuren van elk gekozen product krijgen een AI-modelfoto."}
-                  {photoMode === "ai" && "AI kiest: vision bekijkt de hele galerij van elk product en geeft een cijfer. Alleen producten met een 6 of lager (hanger, plat gelegd, spiegelselfie, rommelige achtergrond, afgesneden) krijgen AI-foto's, voor de helft van de kleuren. Nette studiofoto's blijven zoals ze zijn. Onder de knop zie je per product het cijfer en de reden."}
+                  {photoMode === "ai" && "AI kiest: vision bekijkt de hele galerij van elk product en geeft een cijfer. Een mooie set (meerdere nette foto's op een model, studio of rustige achtergrond) krijgt een 7 of hoger en blijft zoals hij is. Een 6 of lager krijgt AI-foto's, voor de helft van de kleuren: maar 1 foto, mockup, leveranciersfoto, hanger of plat gelegd, spiegelselfie, product nergens helemaal in beeld. Onder de knop zie je per product het cijfer en de reden, ook van de producten die wel foto's krijgen."}
                 </div>
 
                 <div className="field-label">3 · Foto's per kleur</div>
@@ -1772,6 +1773,7 @@ export default function ImporterPage() {
                         const ids = runTypes.filter((t) => photoTypes[t.type] !== false).flatMap((t) => t.ids);
                         const d = await pqCall({ action: "enqueue", store: selectedStore, productIds: ids, mode: photoMode, per: photoPer, engine: photoEngine });
                         setPqSkipped(d.skipped || []);
+                        setPqPicked(d.picked || []);
                         setPqMsg(`${d.added} foto-opdracht(en) klaargezet${d.skipped && d.skipped.length ? ` · ${d.skipped.length} overgeslagen` : ""}${d.judged ? ` · ${d.judged} producten een fotocijfer gegeven` : ""}. ${photoEngine === "openai" ? "De tool is begonnen; je kunt deze pagina sluiten." : "Claude pakt ze op zodra hij de wachtrij draait."}`);
                       } catch (e) {
                         setPqMsg("Mislukt: " + String(e.message || e));
@@ -1784,6 +1786,18 @@ export default function ImporterPage() {
                   </button>
                 </div>
                 {pqMsg && <div className="hint" style={{ color: "var(--accent-hi)" }}>{pqMsg}</div>}
+                {pqPicked.length > 0 && (
+                  <details style={{ margin: "4px 0 4px" }}>
+                    <summary className="hint" style={{ cursor: "pointer" }}>Krijgt AI-foto's ({pqPicked.length}), met cijfer en reden</summary>
+                    <table className="mini-table">
+                      <tbody>
+                        {pqPicked.map((x, i) => (
+                          <tr key={i}><td>{String(x.title || x.productId).split("|")[0]}</td><td>cijfer {x.score}: {x.why}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </details>
+                )}
                 {pqSkipped.length > 0 && (
                   <details style={{ margin: "4px 0 8px" }}>
                     <summary className="hint" style={{ cursor: "pointer" }}>Overgeslagen ({pqSkipped.length}) — met reden</summary>

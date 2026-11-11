@@ -1407,7 +1407,7 @@ export default function PythagoPage() {
               </div>
               <div className="sub" style={{ margin: "12px 0 6px" }}>Welke kleuren</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button className={`pyd-ibtn ${modal.mode === "ai" ? "on" : ""}`} onClick={() => setModal({ ...modal, mode: "ai" })}>AI kiest (op fotocijfer)</button>
+                <button className={`pyd-ibtn ${modal.mode === "ai" ? "on" : ""}`} onClick={() => setModal({ ...modal, mode: "ai" })}>AI kiest (mooie sets overslaan)</button>
                 <button className={`pyd-ibtn ${modal.mode === "5050" ? "on" : ""}`} onClick={() => setModal({ ...modal, mode: "5050" })}>50-50 (helft van de kleuren)</button>
                 <button className={`pyd-ibtn ${modal.mode === "all" ? "on" : ""}`} onClick={() => setModal({ ...modal, mode: "all" })}>Alle kleuren</button>
               </div>
