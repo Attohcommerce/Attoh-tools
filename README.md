@@ -60,6 +60,7 @@ Importer → tab 4 en Pythago → AI-foto's. "AI kiest" bepaalt per product of e
 - **Twee lagen.** De AI kijkt naar de galerij en geeft `worn`, `full`, `look`, `score` en `why` (`GALLERY_RUBRIC` in `lib/photo-brain.js`). Daarna beslissen vaste regels (`galleryVerdict`), zodat de keuze voorspelbaar is. De AI krijgt ook het totaal aantal foto's mee, niet alleen de eerste zes.
 - **Zichtbaar in tab 4.** Onder de knop staan twee lijsten met cijfer en reden: "Krijgt AI-foto's" en "Overgeslagen".
 - Regels aanpassen: alleen in `lib/photo-brain.js` (rubriek + `galleryVerdict`).
+- **Tot 500 producten per klik** (was 150). De wachtrij haalt de producten nu per 50 op in plaats van één voor één en beoordeelt 6 groepjes tegelijk. Raakt de tijd toch op, dan krijgt de rest geen cijfer en geen foto's; nog een keer klikken pakt ze alsnog, zonder dubbele opdrachten.
 
 ## Collecties, menu en fitnote-maat in Store Doctor (09-11-2026)
 - **Wijzigingsplan kan nu ook collecties en het menu aanpassen.** Naast `items` (per product) mag een plan `collections` en `menus` hebben, elk met een groep:
