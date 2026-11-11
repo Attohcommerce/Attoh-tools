@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import DoctorPanel from "../components/DoctorPanel";
 import { normSourceUrl, findExisting } from "@/lib/source-match";
 import { orgLS } from "@/lib/org-client";
+import { visibleStores, mergeStores } from "@/lib/store-scope";
 import { parseImportRows } from "@/lib/import-format";
 
 const LS = {
@@ -26,6 +27,11 @@ function save(key, val) {
   try {
     orgLS.setItem(key, JSON.stringify(val));
   } catch {}
+}
+/* Store-lijst: hier alleen de fashion-stores; de Pokémon-store (/pokemon) en
+   uit het overzicht gehaalde stores blijven buiten beeld maar gaan niet verloren. */
+function saveStores(visible) {
+  save(LS.stores, mergeStores(load(LS.stores, []), visible, "fashion"));
 }
 
 function parseUrls(text) {
@@ -152,7 +158,7 @@ export default function ImporterPage() {
   const [sheetAuto, setSheetAuto] = useState(""); // melding: van welke store de import-lijst ingevuld staat
 
   useEffect(() => {
-    setStores(load(LS.stores, []));
+    setStores(visibleStores(load(LS.stores, []), "fashion"));
     setSelected(load(LS.selected, null));
     setQueue(load(LS.queue, []));
     // Log-sheet: eigen instelling, anders de werk-sheet van de scraper overnemen
@@ -216,7 +222,7 @@ export default function ImporterPage() {
         if (currency === st.currency && publicDomain === (st.publicDomain || "")) return;
         setStores((prev) => {
           const next = prev.map((x) => (x.domain === st.domain ? { ...x, currency, publicDomain } : x));
-          save(LS.stores, next);
+          saveStores(next);
           return next;
         });
       })
@@ -331,7 +337,7 @@ export default function ImporterPage() {
       };
       const next = [...stores.filter((s) => s.domain !== store.domain), store];
       setStores(next);
-      save(LS.stores, next);
+      saveStores(next);
       setSelected(store.domain);
       save(LS.selected, store.domain);
       setNewStore({ name: "", domain: "", clientId: "", clientSecret: "", token: "" });
@@ -346,7 +352,7 @@ export default function ImporterPage() {
   function removeStore(domain) {
     const next = stores.filter((s) => s.domain !== domain);
     setStores(next);
-    save(LS.stores, next);
+    saveStores(next);
     if (selected === domain) {
       setSelected(null);
       save(LS.selected, null);

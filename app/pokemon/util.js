@@ -1,20 +1,26 @@
 "use client";
 // Kleine helpers voor de Pokémon-tool (browserkant).
 import { orgLS } from "@/lib/org-client";
+import { visibleStores, mergeStores } from "@/lib/store-scope";
 
 export const LS_STORES = "sa_stores"; // dezelfde Shopify-koppelingen als de Importer
 export const LS_PICK = "pk_store";
 
-export function loadStores() {
+function readAll() {
   try {
     return JSON.parse(orgLS.getItem(LS_STORES) || "[]") || [];
   } catch {
     return [];
   }
 }
+/** Alleen de Pokémon-store(s); de fashion-stores van de andere tools blijven hier buiten beeld. */
+export function loadStores() {
+  return visibleStores(readAll(), "pokemon");
+}
+/** Schrijft de Pokémon-stores terug zonder de fashion-stores te overschrijven. */
 export function saveStores(list) {
   try {
-    orgLS.setItem(LS_STORES, JSON.stringify(list));
+    orgLS.setItem(LS_STORES, JSON.stringify(mergeStores(readAll(), list, "pokemon")));
   } catch {}
 }
 export function lsGet(k, fb) {

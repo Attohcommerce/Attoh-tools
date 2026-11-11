@@ -16,6 +16,7 @@
 // een store zonder instellingen blijven buiten de analyse.
 
 import { useEffect, useRef, useState } from "react";
+import { visibleStores } from "@/lib/store-scope";
 import Header from "../components/Header";
 
 const LS_STORES = "sa_stores";
@@ -81,7 +82,7 @@ export default function BillsPage() {
   const fileRef = useRef(null);
 
   useEffect(() => {
-    const list = load(LS_STORES, []);
+    const list = visibleStores(load(LS_STORES, []), "fashion");
     setStores(list);
     setSelected(load(LS_SELECTED, null));
     // Oude koppelingen met een dubbel opgeslagen code samenvoegen.

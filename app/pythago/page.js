@@ -14,6 +14,7 @@
 // Klassieke flow (CSV) + Conversion Booster: /pythago/booster — de knop
 // "Conversion Booster" geeft het gesynchroniseerde resultaat daar door.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { visibleStores } from "@/lib/store-scope";
 import Header from "../components/Header";
 import { sfx } from "../components/sfx";
 import { orgLS } from "@/lib/org-client";
@@ -193,7 +194,7 @@ export default function PythagoPage() {
 
   /* ---------- store kiezen + laden ---------- */
   useEffect(() => {
-    const list = load(LS_STORES, []) || [];
+    const list = visibleStores(load(LS_STORES, []), "fashion");
     setStores(list);
     setAdsSheet(load(LS_ADS_SHEET, "") || DEFAULT_ADS_SHEET);
     const last = load(LS_STORE, "");

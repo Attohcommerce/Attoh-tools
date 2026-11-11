@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { visibleStores } from "@/lib/store-scope";
 import Header from "../components/Header";
 import { orderWindow, storeProfile } from "@/lib/verdeling";
 import { seasonCheck, genderCheck, parseMonthLabel } from "@/lib/market-season";
@@ -614,7 +615,7 @@ export default function KeywordsPage() {
 
   async function loadGeheugen() {
     try {
-      setShopStores(JSON.parse(orgLS.getItem("sa_stores") || "[]") || []);
+      setShopStores(visibleStores(JSON.parse(orgLS.getItem("sa_stores") || "[]") || [], "fashion"));
     } catch {
       setShopStores([]);
     }

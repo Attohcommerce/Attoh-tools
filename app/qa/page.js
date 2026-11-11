@@ -5,6 +5,7 @@
 // AI-checks) zit in components/DoctorPanel.js en draait óók in de importer
 // als "Controles" over een verse import-run.
 import { useEffect, useState } from "react";
+import { visibleStores } from "@/lib/store-scope";
 import Header from "../components/Header";
 import DoctorPanel from "../components/DoctorPanel";
 import AllStoresDoctor from "../components/AllStoresDoctor";
@@ -33,7 +34,7 @@ export default function QaPage() {
   const orgDoc = useOrgDef().doctor;
 
   useEffect(() => {
-    setStores(load(LS_STORES, []));
+    setStores(visibleStores(load(LS_STORES, []), "fashion"));
     setSelected(load(LS_SELECTED, null));
     try {
       setShowAll(orgLS.getItem(LS_ALLVIEW) === "1");

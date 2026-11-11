@@ -31,7 +31,7 @@ export default function StorePicker({ stores, setStores, picked, setPicked, stat
       const res = await fetch("/api/shopify-test", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ domain, ...c }) });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || "Koppelen mislukt");
-      const store = { name: f.name.trim() || d.shop.name, domain, ...c, currency: d.shop.currency };
+      const store = { name: f.name.trim() || d.shop.name, domain, ...c, currency: d.shop.currency, kind: "pokemon" };
       const next = [...stores.filter((s) => s.domain !== domain), store];
       setStores(next);
       saveStores(next);
