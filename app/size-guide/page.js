@@ -5,6 +5,7 @@
 // custom.size_guide, getoond door de theme-snippet (theme/snippets/size-guide.liquid).
 // Motor in components/SizeGuidePanel.js; spec: maattabel-module-spec.md.
 import { useEffect, useState } from "react";
+import { visibleStores } from "@/lib/store-scope";
 import Header from "../components/Header";
 import SizeGuidePanel from "../components/SizeGuidePanel";
 
@@ -25,7 +26,7 @@ export default function SizeGuidePage() {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    setStores(load(LS_STORES, []));
+    setStores(visibleStores(load(LS_STORES, []), "fashion"));
     setSelected(load(LS_SELECTED, null));
   }, []);
 

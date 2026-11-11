@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import DoctorPanel from "../components/DoctorPanel";
 import { normSourceUrl, findExisting } from "@/lib/source-match";
 import { orgLS } from "@/lib/org-client";
+import { visibleStores, mergeStores } from "@/lib/store-scope";
 import { parseImportRows } from "@/lib/import-format";
 
 const LS = {
@@ -26,6 +27,11 @@ function save(key, val) {
   try {
     orgLS.setItem(key, JSON.stringify(val));
   } catch {}
+}
+/* Store-lijst: hier alleen de fashion-stores; de Pokémon-store (/pokemon) en
+   uit het overzicht gehaalde stores blijven buiten beeld maar gaan niet verloren. */
+function saveStores(visible) {
+  save(LS.stores, mergeStores(load(LS.stores, []), visible, "fashion"));
 }
 
 function parseUrls(text) {
@@ -62,12 +68,18 @@ export default function ImporterPage() {
   const [pqKey, setPqKey] = useState("");
   const [pqBusy, setPqBusy] = useState(false);
   const [pqMsg, setPqMsg] = useState("");
+  const [pqOpenai, setPqOpenai] = useState(false); // staat OPENAI_API_KEY in Vercel?
+  const [pqSet, setPqSet] = useState(null); // { model, size, quality }
+  const [photoEngine, setPhotoEngine] = useState("claude"); // claude | openai
+  const [pqSkipped, setPqSkipped] = useState([]);
   async function pqCall(body) {
     const res = await fetch("/api/photo-queue", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const d = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
     if (d.queue) setPq(d.queue);
     if (d.key) setPqKey(d.key);
+    if (typeof d.openai === "boolean") setPqOpenai(d.openai);
+    if (d.openaiSettings) setPqSet(d.openaiSettings);
     return d;
   }
   useEffect(() => {
@@ -146,7 +158,7 @@ export default function ImporterPage() {
   const [sheetAuto, setSheetAuto] = useState(""); // melding: van welke store de import-lijst ingevuld staat
 
   useEffect(() => {
-    setStores(load(LS.stores, []));
+    setStores(visibleStores(load(LS.stores, []), "fashion"));
     setSelected(load(LS.selected, null));
     setQueue(load(LS.queue, []));
     // Log-sheet: eigen instelling, anders de werk-sheet van de scraper overnemen
@@ -210,7 +222,7 @@ export default function ImporterPage() {
         if (currency === st.currency && publicDomain === (st.publicDomain || "")) return;
         setStores((prev) => {
           const next = prev.map((x) => (x.domain === st.domain ? { ...x, currency, publicDomain } : x));
-          save(LS.stores, next);
+          saveStores(next);
           return next;
         });
       })
@@ -325,7 +337,7 @@ export default function ImporterPage() {
       };
       const next = [...stores.filter((s) => s.domain !== store.domain), store];
       setStores(next);
-      save(LS.stores, next);
+      saveStores(next);
       setSelected(store.domain);
       save(LS.selected, store.domain);
       setNewStore({ name: "", domain: "", clientId: "", clientSecret: "", token: "" });
@@ -340,7 +352,7 @@ export default function ImporterPage() {
   function removeStore(domain) {
     const next = stores.filter((s) => s.domain !== domain);
     setStores(next);
-    save(LS.stores, next);
+    saveStores(next);
     if (selected === domain) {
       setSelected(null);
       save(LS.selected, null);
@@ -1674,7 +1686,7 @@ export default function ImporterPage() {
               </h2>
               <div className="imp-pane">
                 <div className="hint" style={{ marginTop: 0 }}>
-                  Na een import geeft de tool de nieuwe producten één of twee modelfoto's (zoals de test op de kersttrui), gekoppeld aan de juiste kleurvariant. De originele productfoto blijft altijd staan als tweede beeld. Kies de productsoorten, zet ze klaar en zeg tegen Claude dat hij de foto's maakt.
+                  Na een import krijgen de producten die het nodig hebben een AI-modelfoto: hetzelfde kledingstuk, op een model uit de doelgroep. De nieuwe foto komt vooraan bij de juiste kleur en in de omschrijving; de foto's van de leverancier blijven erachter staan.
                 </div>
 
                 <div className="field-label">1 · Welke productsoorten <span className="opt">({importedCount ? `${runTypes.length} soorten · ${importedCount} producten in deze batch` : "nog geen import in deze sessie"})</span></div>
@@ -1707,30 +1719,49 @@ export default function ImporterPage() {
                 <div className="hint">
                   {photoMode === "5050" && "50-50: de helft van de kleuren van elk product krijgt een AI-modelfoto, de andere helft blijft zoals hij is (4 kleuren → 2 met modelfoto)."}
                   {photoMode === "all" && "Alle kleuren van elk gekozen product krijgen een AI-modelfoto."}
-                  {photoMode === "ai" && "AI kiest: vision geeft de bestaande productfoto's een cijfer; alleen producten met een laag cijfer (geen model, rommelige achtergrond, te weinig foto's) krijgen AI-foto's. Je ziet de keuze eerst en vinkt zelf aan of uit."}
+                  {photoMode === "ai" && "AI kiest: vision bekijkt de hele galerij van elk product en geeft een cijfer. Alleen producten met een 6 of lager (hanger, plat gelegd, spiegelselfie, rommelige achtergrond, afgesneden) krijgen AI-foto's, voor de helft van de kleuren. Nette studiofoto's blijven zoals ze zijn. Onder de knop zie je per product het cijfer en de reden."}
                 </div>
 
                 <div className="field-label">3 · Foto's per kleur</div>
                 <div className="seg">
-                  <button type="button" className={photoPer === 1 ? "on" : ""} onClick={() => setPhotoPer(1)}>1</button>
-                  <button type="button" className={photoPer === 2 ? "on" : ""} onClick={() => setPhotoPer(2)}>2</button>
+                  {[1, 2, 3, 4].map((n) => (
+                    <button key={n} type="button" className={photoPer === n ? "on" : ""} onClick={() => setPhotoPer(n)}>{n}</button>
+                  ))}
+                </div>
+                <div className="hint">
+                  {photoPer === 1 && "1 foto: vooraanzicht op het model."}
+                  {photoPer === 2 && "2 foto's: vooraanzicht + schuin van opzij (zelfde model)."}
+                  {photoPer === 3 && "3 foto's: vooraanzicht + schuin van opzij + product plat gelegd."}
+                  {photoPer === 4 && "4 foto's: vooraanzicht + schuin van opzij + detail + product plat gelegd."}
+                  {" "}Geen achteraanzicht: de achterkant staat niet op de bronfoto en zou verzonnen zijn.
                 </div>
 
                 <div className="field-label">4 · Waarmee maken</div>
                 <div className="seg">
-                  <button type="button" className="on">Higgsfield via Claude</button>
-                  <button type="button" disabled title="Komt eraan: de tool maakt de foto's zelf, direct na je klik" style={{ opacity: 0.55, cursor: "not-allowed" }}>
-                    OpenAI API <span className="badge badge-amber" style={{ marginLeft: 6 }}>coming soon</span>
+                  <button type="button" className={photoEngine === "claude" ? "on" : ""} onClick={() => setPhotoEngine("claude")}>Higgsfield via Claude</button>
+                  <button
+                    type="button" className={photoEngine === "openai" ? "on" : ""} disabled={!pqOpenai}
+                    title={pqOpenai ? "De tool maakt de foto's zelf, direct na je klik" : "Zet eerst OPENAI_API_KEY in Vercel"}
+                    style={pqOpenai ? undefined : { opacity: 0.55, cursor: "not-allowed" }}
+                    onClick={() => pqOpenai && setPhotoEngine("openai")}
+                  >
+                    OpenAI API {!pqOpenai && <span className="badge badge-amber" style={{ marginLeft: 6 }}>coming soon</span>}
                   </button>
                 </div>
                 <div className="hint" style={{ margin: "6px 0 10px" }}>
-                  Higgsfield via Claude: GPT Image 2 op je Higgsfield-credits, Claude maakt en plaatst de foto's. OpenAI API: zelfde model, de tool maakt ze zelf zodra je klikt.
+                  {photoEngine === "claude"
+                    ? "Higgsfield via Claude: GPT Image 2 op je Higgsfield-credits. Claude maakt, controleert en plaatst de foto's zodra hij de wachtrij oppakt."
+                    : `OpenAI API: de tool maakt de foto's zelf en gaat door, ook als je deze pagina sluit (${pqSet ? `${pqSet.model} · ${pqSet.quality} · ${pqSet.size}` : "gpt-image-2"}). Elke foto wordt door vision tegen het origineel gecontroleerd; bij afkeur één nieuwe poging.`}
+                  {!pqOpenai && " OpenAI API gaat aan zodra de sleutel OPENAI_API_KEY in Vercel staat."}
                 </div>
 
                 <div className="imp-photo-sum">
                   <div>
-                    <b>{photoProducts}</b> producten gekozen{photoProducts ? ` · schatting ${Math.max(1, Math.round(photoProducts * (photoMode === "all" ? 3 : 1.5) * photoPer))} foto's · ±${Math.max(1, Math.round(photoProducts * (photoMode === "all" ? 3 : 1.5) * photoPer)) * 2} credits` : ""}
-                    <div className="hint" style={{ margin: "2px 0 0" }}>GPT Image 2 · medium · 2k. Elke foto wordt tegen het origineel gecheckt voordat hij op het product komt; het origineel blijft staan.</div>
+                    <b>{photoProducts}</b> producten gekozen{photoProducts ? (() => {
+                      const n = Math.max(1, Math.round(photoProducts * (photoMode === "all" ? 3 : 1.5) * photoPer));
+                      return ` · hoogstens ±${n} foto's · ${photoEngine === "openai" ? `±$${(n * 0.07).toFixed(2)}` : `±${n * 2} credits`}${photoMode === "ai" ? " (AI kiest: meestal minder)" : ""}`;
+                    })() : ""}
+                    <div className="hint" style={{ margin: "2px 0 0" }}>Elke foto wordt tegen het origineel gecheckt voordat hij op het product komt. De AI-foto komt vooraan en in de omschrijving; de bestaande foto's blijven staan.</div>
                   </div>
                   <button
                     type="button" className="btn" disabled={!photoProducts || !selectedStore || pqBusy}
@@ -1739,8 +1770,9 @@ export default function ImporterPage() {
                       setPqMsg("");
                       try {
                         const ids = runTypes.filter((t) => photoTypes[t.type] !== false).flatMap((t) => t.ids);
-                        const d = await pqCall({ action: "enqueue", store: selectedStore, productIds: ids, mode: photoMode === "ai" ? "5050" : photoMode, per: photoPer });
-                        setPqMsg(`${d.added} foto-opdrachten klaargezet${d.skipped && d.skipped.length ? ` · ${d.skipped.length} overgeslagen (${d.skipped[0].why})` : ""}. Zeg tegen Claude: "maak de foto's voor ${selectedStore.name}".`);
+                        const d = await pqCall({ action: "enqueue", store: selectedStore, productIds: ids, mode: photoMode, per: photoPer, engine: photoEngine });
+                        setPqSkipped(d.skipped || []);
+                        setPqMsg(`${d.added} foto-opdracht(en) klaargezet${d.skipped && d.skipped.length ? ` · ${d.skipped.length} overgeslagen` : ""}${d.judged ? ` · ${d.judged} producten een fotocijfer gegeven` : ""}. ${photoEngine === "openai" ? "De tool is begonnen; je kunt deze pagina sluiten." : "Claude pakt ze op zodra hij de wachtrij draait."}`);
                       } catch (e) {
                         setPqMsg("Mislukt: " + String(e.message || e));
                       } finally {
@@ -1748,10 +1780,22 @@ export default function ImporterPage() {
                       }
                     }}
                   >
-                    {pqBusy ? "Bezig…" : `✦ Zet klaar voor Claude (${photoProducts})`}
+                    {pqBusy ? (photoMode === "ai" ? "Foto's beoordelen…" : "Bezig…") : photoEngine === "openai" ? `✦ Maak foto's (${photoProducts})` : `✦ Zet klaar voor Claude (${photoProducts})`}
                   </button>
                 </div>
                 {pqMsg && <div className="hint" style={{ color: "var(--accent-hi)" }}>{pqMsg}</div>}
+                {pqSkipped.length > 0 && (
+                  <details style={{ margin: "4px 0 8px" }}>
+                    <summary className="hint" style={{ cursor: "pointer" }}>Overgeslagen ({pqSkipped.length}) — met reden</summary>
+                    <table className="mini-table">
+                      <tbody>
+                        {pqSkipped.map((x, i) => (
+                          <tr key={i}><td>{String(x.title || x.productId).split("|")[0]}</td><td>{x.why}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </details>
+                )}
 
                 <div className="field-label">Wachtrij <span className="opt">(ververst elke 15 s)</span></div>
                 {!pq || !pq.batches.length ? (
@@ -1762,20 +1806,20 @@ export default function ImporterPage() {
                       {pq.batches.map((b) => (
                         <tr key={b.batch}>
                           <td><strong>{b.batch}</strong></td>
-                          <td>{b.pending ? `${b.pending} wacht` : "klaar"} · {b.done} ✓{b.failed ? ` · ${b.failed} afgekeurd` : ""}</td>
+                          <td>{b.pending ? `${b.pending} wacht` : "klaar"} · {b.done} ✓{b.failed ? ` · ${b.failed} afgekeurd` : ""}{b.skipped ? ` · ${b.skipped} overgeslagen` : ""}{b.engine === "openai" ? ` · OpenAI${b.usd ? ` $${b.usd.toFixed(2)}` : ""}` : ""}</td>
                           <td style={{ textAlign: "right" }}><button className="linklike" onClick={() => pqCall({ action: "clear", batch: b.batch }).catch(() => {})}>verwijderen</button></td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 )}
-                {pq && pq.items.some((x) => x.status !== "pending") && (
+                {pq && pq.items.some((x) => x.status !== "pending" && x.status !== "working") && (
                   <div className="imp-photo-grid">
-                    {pq.items.filter((x) => x.status !== "pending").slice(0, 40).map((x) => (
-                      <a key={x.id} className={"imp-photo-card " + x.status} href={`https://${x.domain}/admin/products/${x.productId}`} target="_blank" rel="noreferrer" title={x.reason || ""}>
+                    {pq.items.filter((x) => x.status !== "pending" && x.status !== "working").slice(0, 40).map((x) => (
+                      <a key={x.id} className={"imp-photo-card " + (x.status === "skipped" ? "failed" : x.status)} href={`https://${x.domain}/admin/products/${x.productId}`} target="_blank" rel="noreferrer" title={x.reason || ""}>
                         {x.resultUrl ? <img src={x.resultUrl} alt="" /> : <span className="imp-photo-x">✗</span>}
                         <span>{String(x.title).split("|")[0]}{x.color ? ` · ${x.color}` : ""}</span>
-                        {x.status === "failed" && <em>{x.reason}</em>}
+                        {(x.status === "failed" || x.status === "skipped") && <em>{x.reason}</em>}
                       </a>
                     ))}
                   </div>

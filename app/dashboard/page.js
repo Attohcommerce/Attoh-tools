@@ -13,6 +13,7 @@
 //  - Google Ads via de sheet "Attoh Ads Live" (tab Ads_<KEY>), elk uur
 //    gevuld door het Google Ads-script in elk account.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { visibleStores } from "@/lib/store-scope";
 import Header from "../components/Header";
 import { orgLS } from "@/lib/org-client";
 import { LineChart, Sparkline } from "./charts";
@@ -128,7 +129,7 @@ export default function DashboardPage() {
   const cfReq = useRef(0);
 
   useEffect(() => {
-    const list = load(LS_STORES, []);
+    const list = visibleStores(load(LS_STORES, []), "fashion");
     setStores(list);
     const saved = load(LS_CFG, {});
     const next = {};

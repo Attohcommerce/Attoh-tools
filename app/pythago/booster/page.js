@@ -18,6 +18,7 @@
 // Draften" over; na het venster toont de tabel of de boost werkte.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { visibleStores } from "@/lib/store-scope";
 import Header from "../../components/Header";
 import { sfx } from "../../components/sfx";
 import { parseAdsExport, combineExports, slimAds } from "@/lib/pythago-csv";
@@ -127,7 +128,7 @@ export default function PythagoBoosterPage() {
   const creds = () => (store ? { name: store.name, domain: store.domain, currency: store.currency, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret } : null);
 
   useEffect(() => {
-    const list = load(LS_STORES, []) || [];
+    const list = visibleStores(load(LS_STORES, []), "fashion");
     setStores(list);
     const last = load(LS_STORE, "");
     // BRUG (03-11-2026): het nieuwe dashboard (/pythago) zet zijn gesynchroniseerde

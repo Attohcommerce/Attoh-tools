@@ -14,6 +14,7 @@
 // Klassieke flow (CSV) + Conversion Booster: /pythago/booster — de knop
 // "Conversion Booster" geeft het gesynchroniseerde resultaat daar door.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { visibleStores } from "@/lib/store-scope";
 import Header from "../components/Header";
 import { sfx } from "../components/sfx";
 import { orgLS } from "@/lib/org-client";
@@ -193,7 +194,7 @@ export default function PythagoPage() {
 
   /* ---------- store kiezen + laden ---------- */
   useEffect(() => {
-    const list = load(LS_STORES, []) || [];
+    const list = visibleStores(load(LS_STORES, []), "fashion");
     setStores(list);
     setAdsSheet(load(LS_ADS_SHEET, "") || DEFAULT_ADS_SHEET);
     const last = load(LS_STORE, "");
@@ -1095,7 +1096,11 @@ export default function PythagoPage() {
                 </select>
               )}
               {picked.size > 0 && (
-                <button className="pyd-ibtn on" title="AI-modelfoto's maken voor de aangevinkte producten" onClick={() => setModal({ kind: "aiphoto", ids: [...picked], mode: "5050", busy: false, msg: "" })}>✦ AI-foto's ({picked.size})</button>
+                <button className="pyd-ibtn on" title="AI-modelfoto's maken voor de aangevinkte producten" onClick={() => (async () => {
+                  let openai = false;
+                  try { const d = await (await fetch("/api/photo-queue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "list" }) })).json(); openai = !!d.openai; } catch {}
+                  setModal({ kind: "aiphoto", ids: [...picked], mode: "ai", engine: "claude", per: 1, openai, busy: false, msg: "" });
+                })()}>✦ AI-foto's ({picked.size})</button>
               )}
               <div className="pyd-dd">
                 <button className="pyd-ibtn" onMouseDown={(e) => e.stopPropagation()} onClick={() => setMenu(menu === "cols" ? "" : "cols")} title="Kolommen">▦ Kolommen</button>
@@ -1397,13 +1402,18 @@ export default function PythagoPage() {
             <div style={{ padding: "4px 18px 0" }}>
               <div className="sub" style={{ margin: "8px 0 6px" }}>Waarmee maken</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button className="pyd-ibtn on">Claude · Higgsfield MCP</button>
-                <button className="pyd-ibtn" disabled style={{ opacity: 0.55, cursor: "not-allowed" }}>OpenAI API · coming soon</button>
+                <button className={`pyd-ibtn ${modal.engine === "claude" ? "on" : ""}`} onClick={() => setModal({ ...modal, engine: "claude" })}>Claude · Higgsfield MCP</button>
+                <button className={`pyd-ibtn ${modal.engine === "openai" ? "on" : ""}`} disabled={!modal.openai} style={modal.openai ? undefined : { opacity: 0.55, cursor: "not-allowed" }} onClick={() => modal.openai && setModal({ ...modal, engine: "openai" })}>OpenAI API{modal.openai ? "" : " · coming soon"}</button>
               </div>
               <div className="sub" style={{ margin: "12px 0 6px" }}>Welke kleuren</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button className={`pyd-ibtn ${modal.mode === "ai" ? "on" : ""}`} onClick={() => setModal({ ...modal, mode: "ai" })}>AI kiest (op fotocijfer)</button>
                 <button className={`pyd-ibtn ${modal.mode === "5050" ? "on" : ""}`} onClick={() => setModal({ ...modal, mode: "5050" })}>50-50 (helft van de kleuren)</button>
                 <button className={`pyd-ibtn ${modal.mode === "all" ? "on" : ""}`} onClick={() => setModal({ ...modal, mode: "all" })}>Alle kleuren</button>
+              </div>
+              <div className="sub" style={{ margin: "12px 0 6px" }}>Foto's per kleur</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {[1, 2, 3, 4].map((n) => <button key={n} className={`pyd-ibtn ${modal.per === n ? "on" : ""}`} onClick={() => setModal({ ...modal, per: n })}>{n}</button>)}
               </div>
             </div>
             <div className="pyd-list">
@@ -1417,13 +1427,13 @@ export default function PythagoPage() {
               <button className="btn-ghost" disabled={modal.busy} onClick={() => setModal(null)}>{modal.done ? "Sluiten" : "Annuleren"}</button>
               {!modal.done && (
                 <button className="btn" disabled={modal.busy} onClick={async () => {
-                  setModal({ ...modal, busy: true, msg: "Klaarzetten…" });
+                  setModal({ ...modal, busy: true, msg: modal.mode === "ai" ? "Foto's beoordelen en klaarzetten…" : "Klaarzetten…" });
                   try {
-                    const res = await fetch("/api/photo-queue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "enqueue", store, productIds: modal.ids, mode: modal.mode, per: 1 }) });
+                    const res = await fetch("/api/photo-queue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "enqueue", store, productIds: modal.ids, mode: modal.mode, per: modal.per, engine: modal.engine }) });
                     const d = await res.json();
                     if (!res.ok || d.error) throw new Error(d.error || "Klaarzetten mislukt");
                     const sk = (d.skipped || []).length;
-                    setModal((m) => (m ? { ...m, busy: false, done: true, msg: `${d.added || 0} foto-opdracht(en) klaargezet${sk ? ` · ${sk} overgeslagen (schoenen, tassen, accessoires)` : ""}. Claude pakt ze op; de stand zie je in Importer → tab 4.` } : m));
+                    setModal((m) => (m ? { ...m, busy: false, done: true, msg: `${d.added || 0} foto-opdracht(en) klaargezet${sk ? ` · ${sk} overgeslagen${d.skipped[0] && d.skipped[0].why ? ` (o.a. ${d.skipped[0].why})` : ""}` : ""}. ${m.engine === "openai" ? "De tool is begonnen en gaat vanzelf door." : "Claude pakt ze op."} De stand zie je in Importer → tab 4.` } : m));
                   } catch (e) {
                     setModal((m) => (m ? { ...m, busy: false, msg: String(e.message || e) } : m));
                   }
