@@ -49,6 +49,9 @@ const CHUNK_FOR = {
   "fix-collection-fit": 8,
   // per product: 1 lees-call (handmatige collecties) + 1 PUT (+ soms een nieuwe collectie)
   "fix-category-collection": 10,
+  // 12-11: 1 PUT per product
+  "fix-wrong-category": 15,
+  "fix-title-gender-name": 12,
   "archive-products": 15,
   "set-prices": 10,
   // wijzigingsplan: 1 PUT per product (+ evt. doorverwijzing/metafield)
@@ -108,11 +111,13 @@ function snapshotFor(fix, p) {
       return { product: { id: p.id, title: p.title, handle: p.handle, status: p.status, tags: p.tags } };
     case "gender-tags":
     case "fix-gender-from-title":
+    case "fix-title-gender-name":
       return { title: p.title || "", product_type: p.product_type || "", tags: p.tags || "", template_suffix: p.template_suffix || "" };
     case "archive-products":
       return { status: p.status || "", title: p.title || "" };
     case "fix-collection-fit":
     case "fix-category-collection":
+    case "fix-wrong-category":
       return { tags: p.tags || "" };
     case "delete-flagged-images":
       return { images: (p.images || []).map((im) => [im.id, im.src]) };
@@ -248,7 +253,7 @@ export async function POST(req) {
     }
 
     // 09-11: categorie-collectie — alle smart collections mét regels (één keer per stap)
-    if (fix === "fix-category-collection" && pending.length && !Array.isArray(options.collections)) {
+    if ((fix === "fix-category-collection" || fix === "fix-wrong-category") && pending.length && !Array.isArray(options.collections)) {
       const lc = await listSmartCollections(store);
       if (!lc.ok) return NextResponse.json({ error: `collecties ophalen: ${lc.error}` }, { status: 422 });
       options.collections = lc.collections;

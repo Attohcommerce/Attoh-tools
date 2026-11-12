@@ -14,6 +14,7 @@ import { productSummary, standardGuide, KIND_LABEL, SG_NS, SG_KEY, SG_STATUS_KEY
 import { storeProfileOf } from "@/lib/store-gender";
 import { SRC_NS, SRC_KEY, normSourceUrl } from "@/lib/source-match";
 import { collectionFor } from "@/lib/verdeling";
+import { storeCollectionsCached, importCollectionFix } from "@/lib/store-order";
 import { flagBrandedImages } from "@/lib/ai";
 import { analyzeKeyword } from "@/lib/fashion";
 import { canonOptionName, translateValue } from "@/lib/lang";
@@ -325,6 +326,22 @@ export async function POST(req) {
     const kw = String(s.keyword).toLowerCase().trim();
     const hit = collectionFor(kw, { storeGenders });
     if (hit && hit.col) collectionTitle = hit.col;
+  }
+  /* 12-11 (LGB): COLLECTIE past niet bij het kledingstuk in de nieuwe titel
+     (mules in Heels, loafers in Knitwear, jurk in Flats & Loafers)? Dan de
+     passende collectie van de store. Zie lib/store-order.js. */
+  let collectionFixNote = "";
+  if (collectionTitle && listing.title) {
+    try {
+      const cols = await storeCollectionsCached(store);
+      const cfix = importCollectionFix({ title: listing.title, product_type: product.productType || "", handle: "" }, collectionTitle, cols, storeGenders);
+      if (cfix) {
+        collectionFixNote = cfix.why;
+        if (cfix.col) collectionTitle = cfix.col;
+      }
+    } catch {
+      /* nice-to-have: dan blijft de COLLECTIE uit de planning staan */
+    }
   }
 
   /* Geslacht bepalen: sheet-kolom → collectienaam → AI-detectie → forceMens.
@@ -688,6 +705,7 @@ export async function POST(req) {
     collectionCreated: collectionInfo ? collectionInfo.created : false,
     collections: collectionInfos,
     collectionWarn,
+    collectionFixNote,
     tags: tagList,
     gender: genderTag,
     templateSuffix: payload.template_suffix || null,

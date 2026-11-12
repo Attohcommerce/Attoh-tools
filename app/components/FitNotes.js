@@ -226,6 +226,62 @@ export default function FitNotes({ store, scanKey }) {
     }
   }
 
+  /* 12-11 Justin (LGB): "Lijkt me onrealistisch dat zij een XL draagt" — de AI
+     kijkt opnieuw naar de foto van elk product MET fitnote (postuur + lengte).
+     Wijkt de maat of lengte (meer dan 4 cm) af, dan eerst een lijstje tonen en
+     pas na een vinkje opslaan. Producten zonder zichtbaar model blijven staan. */
+  async function recheckExisting() {
+    const list = existing.slice();
+    if (!list.length || !body) return;
+    setBusy("recheck");
+    setErr("");
+    setMsg("");
+    let usd = 0;
+    const changes = [];
+    setProg({ done: 0, total: list.length, usd: 0 });
+    try {
+      for (let i = 0; i < list.length; i += CHUNK) {
+        const part = list.slice(i, i + CHUNK);
+        let d;
+        for (let t = 0; t < 3; t++) {
+          try {
+            d = await call({ action: "analyze", store: body, ids: part.map((r) => r.id) });
+            break;
+          } catch (e) {
+            if (t === 2) throw e;
+            await new Promise((r) => setTimeout(r, 1500));
+          }
+        }
+        usd += d.aiUsd || 0;
+        const by = new Map((d.rows || []).map((r) => [String(r.id), r]));
+        for (const cur of part) {
+          const a = by.get(String(cur.id));
+          if (!a || !a.model || !a.size || !a.height) continue;
+          const sizeDiff = String(a.size).trim().toUpperCase() !== String(cur.size).trim().toUpperCase();
+          const hDiff = Math.abs(Number(a.height) - Number(cur.height)) > 4;
+          if (sizeDiff || hDiff) changes.push({ id: cur.id, title: cur.title, fromSize: cur.size, fromHeight: cur.height, size: a.size, height: a.height, build: a.build });
+        }
+        setProg({ done: Math.min(list.length, i + CHUNK), total: list.length, usd });
+      }
+      if (!changes.length) {
+        setMsg(`✓ Bestaande fitnotes: alles klopt met de foto's (${list.length} gecontroleerd · $${usd.toFixed(3)})`);
+        return;
+      }
+      const ex = changes.slice(0, 6).map((r) => `• ${String(r.title).split("|")[0].trim()}: ${r.fromSize} → ${r.size} (${r.build}, ${r.fromHeight} → ${r.height} cm)`).join("\n");
+      const ok = window.confirm(`${changes.length} van ${list.length} fitnotes kloppen niet met het model op de foto:\n${ex}${changes.length > 6 ? "\n…" : ""}\n\nAanpassen naar wat de foto laat zien?`);
+      if (!ok) {
+        setMsg(`${changes.length} fitnotes wijken af — niets aangepast`);
+        return;
+      }
+      setBusy("");
+      await save(changes.map((r) => ({ id: r.id, height: r.height, size: r.size })), "Fitnotes gecorrigeerd");
+    } catch (e) {
+      setErr(String(e.message || e));
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function copyLiquid() {
     try {
       await navigator.clipboard.writeText(FIT_NOTE_LIQUID);
@@ -289,6 +345,9 @@ export default function FitNotes({ store, scanKey }) {
                 {analyzed.length ? ` · ${analyzed.length - noModel} met model · ${noModel} zonder model` : ""}
               </span>
             )}
+            <button className="sd-btn sd-btn--small" onClick={recheckExisting} disabled={!!busy || !existing.length} title="AI kijkt opnieuw naar de foto: past de maat bij het postuur van het model? (eerst een lijstje, dan bevestigen)">
+              {busy === "recheck" && prog ? `Controleren… ${prog.done}/${prog.total}` : `Bestaande fitnotes controleren (AI) · ${existing.length}`}
+            </button>
             <label className="cf-toggle">
               <input type="checkbox" checked={showExisting} onChange={(e) => setShowExisting(e.target.checked)} /> bestaande fitnotes tonen / aanpassen
             </label>
