@@ -376,17 +376,42 @@ export default function DoctorPanel({ store, since }) {
     }
   }
 
-  function applyPricePlan() {
+  async function applyPricePlan() {
     if (!pricePlan || !store) return;
     const hay = `${store.name || ""} ${store.domain || ""} ${store.publicDomain || ""}`.toLowerCase();
     const want = String(pricePlan.domain || "").toLowerCase().replace(/\.(com|co\.uk|com\.au)$/, "");
     if (want && !hay.includes(want.replace(/[^a-z0-9]/g, "").slice(0, 8)) && !hay.replace(/[^a-z0-9]/g, "").includes(want.replace(/[^a-z0-9]/g, ""))) {
       if (!window.confirm(`Dit plan is voor ${pricePlan.store || pricePlan.domain}, maar de gekozen store is ${store.name || store.domain}. Toch doorgaan?`)) return;
     }
-    if (!window.confirm(`${pricePlan.items.length} producten krijgen een nieuwe prijs (${pricePlan.note || pricePlan.store}). Starten?`)) return;
+    // 12-11: plannen uit een productexport hebben alleen een handle — eerst de id's opzoeken
+    let items = pricePlan.items;
+    if (items.some((it) => !it.id && it.handle)) {
+      setErr("");
+      try {
+        const r = await fetch("/api/price-plan-resolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ store, handles: items.filter((it) => !it.id && it.handle).map((it) => it.handle) }),
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.ok) throw new Error(j.error || `HTTP ${r.status}`);
+        items = items.map((it) => (it.id ? it : { ...it, id: j.ids[it.handle] || null })).filter((it) => it.id);
+        if (j.missing && j.missing.length) {
+          if (!window.confirm(`${j.missing.length} producten uit het plan staan niet (meer) in deze store en worden overgeslagen. Doorgaan met ${items.length}?`)) return;
+        }
+      } catch (e) {
+        setErr(`Prijsplan: id's opzoeken mislukt — ${String(e.message || e)}`);
+        return;
+      }
+    }
+    if (!items.length) {
+      setErr("Prijsplan: geen producten uit dit plan gevonden in deze store.");
+      return;
+    }
+    if (!window.confirm(`${items.length} producten krijgen een nieuwe prijs (${pricePlan.note || pricePlan.store}). Starten?`)) return;
     const prices = {};
-    for (const it of pricePlan.items) prices[String(it.id)] = { price: it.price, compareAt: it.compareAt, from: it.from };
-    runFix("price-plan", { id: "set-prices", label: `Prijsplan ${pricePlan.store || ""} ${pricePlan.date || ""}`.trim() }, pricePlan.items.map((it) => it.id), { prices });
+    for (const it of items) prices[String(it.id)] = { price: it.price, compareAt: it.compareAt, from: it.from };
+    runFix("price-plan", { id: "set-prices", label: `Prijsplan ${pricePlan.store || ""} ${pricePlan.date || ""}`.trim() }, items.map((it) => it.id), { prices });
   }
 
   /* ============ WIJZIGINGSPLAN TOEPASSEN (31-10) ============

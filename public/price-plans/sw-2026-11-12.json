@@ -1,0 +1,582 @@
+{
+ "store": "Shapes Wardrobe",
+ "domain": "shapeswardrobe.com",
+ "date": "2026-11-12",
+ "note": "82 producten omhoog naar break-even ROAS ±1,65 (verkocht 1,65 · nieuw 1,70) · eindigt op 4,95/9,95 · max +50% · gem. A$65.80 → A$78.55",
+ "items": [
+  {
+   "handle": "womens-corset-top-sweetheart-neckline-lace-trim-underbust",
+   "title": "Women's Corset Top | Sweetheart Neckline Lace Trim Underbust",
+   "from": 54.95,
+   "price": 69.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-period-swimwear-high-waist-racerback-nylon",
+   "title": "Women's Period Swimwear | High Waist Racerback Nylon",
+   "from": 49.95,
+   "price": 59.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "mens-cargo-shorts-drawstring-waist-patch-pocket",
+   "title": "Men's Cargo Shorts | Drawstring Waist Patch Pocket",
+   "from": 54.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-tailored-shorts-regular-fit-woven-functional-pockets",
+   "title": "Men's Tailored Shorts | Regular Fit Woven Functional Pockets",
+   "from": 64.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  },
+  {
+   "handle": "mens-chino-pleated-tailored-cuffed-shorts",
+   "title": "Men's Chino | Pleated Tailored Cuffed Shorts",
+   "from": 69.95,
+   "price": 74.95,
+   "compareAt": 139.95
+  },
+  {
+   "handle": "mens-henley-v-neck-long-sleeve-linen-relaxed-fit",
+   "title": "Men's Henley | V-Neck Long Sleeve Linen Relaxed Fit",
+   "from": 59.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "mens-shorts-knee-length-pull-on-linen",
+   "title": "Men's Shorts | Knee Length Pull-On Linen",
+   "from": 59.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-tote-bag-nylon-structured-magnetic-closure-leather-handles",
+   "title": "Women's Tote Bag | Nylon Structured Magnetic Closure Leather Handles",
+   "from": 69.95,
+   "price": 74.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "cowboy-shoe-for-men-leather-western-almond-toe-stacked-heel",
+   "title": "Cowboy Shoe For Men | Leather Western Almond Toe Stacked Heel",
+   "from": 69.95,
+   "price": 104.95,
+   "compareAt": 214.95
+  },
+  {
+   "handle": "mens-dress-shoe-lace-up-derby-polished-leather",
+   "title": "Men's Dress Shoe | Lace-Up Derby Polished Leather",
+   "from": 74.95,
+   "price": 104.95,
+   "compareAt": 214.95
+  },
+  {
+   "handle": "mens-henley-v-neck-short-sleeve-knit",
+   "title": "Men's Henley | V-Neck Short Sleeve Knit",
+   "from": 59.95,
+   "price": 64.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-jeans-slim-fit-ripped-denim",
+   "title": "Men's Jeans | Slim Fit Ripped Denim",
+   "from": 79.95,
+   "price": 84.95,
+   "compareAt": 154.95
+  },
+  {
+   "handle": "mens-white-shirt-henley-neckline-relaxed-fit-knit",
+   "title": "Men's White Shirt | Henley Neckline Relaxed Fit Knit",
+   "from": 64.95,
+   "price": 69.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-white-shirt-short-sleeve-collar-button-closure",
+   "title": "Men's White Shirt | Short Sleeve Collar Button Closure",
+   "from": 54.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-work-shirt-henley-neckline-long-sleeve-linen",
+   "title": "Men's Work Shirt | Henley Neckline Long Sleeve Linen",
+   "from": 64.95,
+   "price": 69.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-one-piece-swimsuit-scoop-neck-open-back",
+   "title": "Women's One Piece Swimsuit | Scoop Neck Open Back",
+   "from": 54.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-sandals-open-toe-block-heel-ankle-strap-metallic",
+   "title": "Women's Sandals | Open Toe Block Heel Ankle Strap Metallic",
+   "from": 64.95,
+   "price": 99.95,
+   "compareAt": 204.95
+  },
+  {
+   "handle": "womens-summer-dress-midi-length-v-neckline-twist-waist",
+   "title": "Women's Summer Dress | Midi Length V-Neckline Twist Waist",
+   "from": 64.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  },
+  {
+   "handle": "mens-boat-shoe-lace-up-contrasting-collar-flexible-sole",
+   "title": "Men's Boat Shoe | Lace-Up Contrasting Collar Flexible Sole",
+   "from": 69.95,
+   "price": 74.95,
+   "compareAt": 149.95
+  },
+  {
+   "handle": "mens-boat-shoe-two-tone-lace-leather-casual",
+   "title": "Men's Boat Shoe | Two-Tone Lace Leather Casual",
+   "from": 69.95,
+   "price": 74.95,
+   "compareAt": 149.95
+  },
+  {
+   "handle": "mens-collared-shirt-slim-fit-button-down-short-sleeve",
+   "title": "Men's Collared Shirt | Slim Fit Button-Down Short Sleeve",
+   "from": 64.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  },
+  {
+   "handle": "mens-crossbody-bag-canvas-magnetic-closure-adjustable-strap",
+   "title": "Men's Crossbody Bag | Canvas Magnetic Closure Adjustable Strap",
+   "from": 69.95,
+   "price": 89.95,
+   "compareAt": 179.95
+  },
+  {
+   "handle": "mens-hiking-pants-cargo-pockets-quick-dry-regular-fit",
+   "title": "Men's Hiking Pants | Cargo Pockets Quick-Dry Regular Fit",
+   "from": 64.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  },
+  {
+   "handle": "mens-jeans-slim-fit-button-fly-leather",
+   "title": "Men's Jeans | Slim Fit Button Fly Leather",
+   "from": 74.95,
+   "price": 79.95,
+   "compareAt": 159.95
+  },
+  {
+   "handle": "mens-leather-slide-open-toe-flat-sole-comfort",
+   "title": "Men's Leather Slide | Open Toe Flat Sole Comfort",
+   "from": 69.95,
+   "price": 89.95,
+   "compareAt": 184.95
+  },
+  {
+   "handle": "mens-linen-shirt-short-sleeve-collared-button-front",
+   "title": "Men's Linen Shirt | Short Sleeve Collared Button Front",
+   "from": 69.95,
+   "price": 74.95,
+   "compareAt": 149.95
+  },
+  {
+   "handle": "mens-long-sleeve-top-slim-fit-wool-point-collar-button",
+   "title": "Men's Long Sleeve Top | Slim Fit Wool Point Collar Button",
+   "from": 54.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-sandals-open-toe-adjustable-velcro-leather",
+   "title": "Men's Sandals | Open Toe Adjustable Velcro Leather",
+   "from": 64.95,
+   "price": 84.95,
+   "compareAt": 174.95
+  },
+  {
+   "handle": "mens-sandals-open-toe-hook-and-loop-straps-cushioned",
+   "title": "Men's Sandals | Open Toe Hook And Loop Straps Cushioned",
+   "from": 69.95,
+   "price": 79.95,
+   "compareAt": 159.95
+  },
+  {
+   "handle": "mens-shirt-corduroy-collared-long-sleeve-button-front",
+   "title": "Men's Shirt | Corduroy Collared Long Sleeve Button Front",
+   "from": 64.95,
+   "price": 84.95,
+   "compareAt": 169.95
+  },
+  {
+   "handle": "mens-singlet-top-v-neckline-sleeveless-relaxed-fit-knit",
+   "title": "Men's Singlet Top | V-Neckline Sleeveless Relaxed Fit Knit",
+   "from": 54.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-t-shirt-henley-neckline-short-sleeve-button-placket-ribbed",
+   "title": "Men's T Shirt | Henley Neckline Short Sleeve Button Placket Ribbed",
+   "from": 49.95,
+   "price": 64.95,
+   "compareAt": 134.95
+  },
+  {
+   "handle": "mens-tailored-shorts-knee-length-cargo-denim",
+   "title": "Men's Tailored Shorts | Knee Length Cargo Denim",
+   "from": 64.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  },
+  {
+   "handle": "womens-blouse-v-neck-lace-long-sleeve-slim-fit",
+   "title": "Women's Blouse | V Neck Lace Long Sleeve Slim Fit",
+   "from": 59.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-cargo-shorts-quick-dry-drawstring-pockets",
+   "title": "Women's Cargo Shorts | Quick Dry Drawstring Pockets",
+   "from": 64.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  },
+  {
+   "handle": "womens-formal-dress-maxi-lace-cap-sleeve-high-slit",
+   "title": "Women's Formal Dress | Maxi Lace Cap Sleeve High Slit",
+   "from": 64.95,
+   "price": 84.95,
+   "compareAt": 174.95
+  },
+  {
+   "handle": "womens-formal-dress-midi-lace-mock-neck-long-sleeve",
+   "title": "Women's Formal Dress | Midi Lace Mock Neck Long Sleeve",
+   "from": 64.95,
+   "price": 89.95,
+   "compareAt": 184.95
+  },
+  {
+   "handle": "womens-maxi-dress-high-neckline-puff-sleeve-tie-waist",
+   "title": "Women's Maxi Dress | High Neckline Puff Sleeve Tie Waist",
+   "from": 84.95,
+   "price": 109.95,
+   "compareAt": 224.95
+  },
+  {
+   "handle": "womens-midi-skirt-high-waist-tailored-fit-knee-length",
+   "title": "Women's Midi Skirt | High Waist Tailored Fit Knee Length",
+   "from": 64.95,
+   "price": 74.95,
+   "compareAt": 154.95
+  },
+  {
+   "handle": "womens-period-swimwear-ruched-botanical-one-piece",
+   "title": "Women's Period Swimwear | Ruched Botanical One Piece",
+   "from": 64.95,
+   "price": 69.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-skort-midi-length-leather-belt-pockets",
+   "title": "Women's Skort | Midi Length Leather Belt Pockets",
+   "from": 64.95,
+   "price": 99.95,
+   "compareAt": 204.95
+  },
+  {
+   "handle": "womens-structured-handbag-tote-spacious-gold-hardware",
+   "title": "Women's Structured Handbag | Tote Spacious Gold Hardware",
+   "from": 69.95,
+   "price": 84.95,
+   "compareAt": 174.95
+  },
+  {
+   "handle": "womens-tank-top-layered-round-neck-short-sleeves-flared",
+   "title": "Women's Tank Top | Layered Round Neck Short Sleeves Flared",
+   "from": 64.95,
+   "price": 79.95,
+   "compareAt": 149.95
+  },
+  {
+   "handle": "womens-tote-bag-structured-silhouette-shoulder-straps-leather",
+   "title": "Women's Tote Bag | Structured Silhouette Shoulder Straps Leather",
+   "from": 69.95,
+   "price": 89.95,
+   "compareAt": 164.95
+  },
+  {
+   "handle": "mens-jeans-skinny-fit-cargo-pockets-denim",
+   "title": "Men's Jeans | Skinny Fit Cargo Pockets Denim",
+   "from": 74.95,
+   "price": 79.95,
+   "compareAt": 159.95
+  },
+  {
+   "handle": "mens-jeans-skinny-fit-ripped-denim",
+   "title": "Men's Jeans | Skinny Fit Ripped Denim",
+   "from": 69.95,
+   "price": 79.95,
+   "compareAt": 164.95
+  },
+  {
+   "handle": "mens-jeans-slim-fit-tapered-leg-denim",
+   "title": "Men's Jeans | Slim Fit Tapered Leg Denim",
+   "from": 64.95,
+   "price": 79.95,
+   "compareAt": 164.95
+  },
+  {
+   "handle": "mens-sandals-strappy-open-toe-buckle-closure",
+   "title": "Men's Sandals | Strappy Open Toe Buckle Closure",
+   "from": 64.95,
+   "price": 74.95,
+   "compareAt": 154.95
+  },
+  {
+   "handle": "mens-slide-buckle-closure-ventilated-leather",
+   "title": "Men's Slide | Buckle Closure Ventilated Leather",
+   "from": 79.95,
+   "price": 84.95,
+   "compareAt": 159.95
+  },
+  {
+   "handle": "mens-slide-round-toe-pivoting-heel-strap-slip-on",
+   "title": "Men's Slide | Round Toe Pivoting Heel Strap Slip-On",
+   "from": 64.95,
+   "price": 84.95,
+   "compareAt": 174.95
+  },
+  {
+   "handle": "mens-t-shirt-crew-neck-short-sleeve-knit",
+   "title": "Men's T Shirt | Crew Neck Short Sleeve Knit",
+   "from": 59.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "mens-t-shirt-mock-neck-ribbed-knit-short-sleeve",
+   "title": "Men's T Shirt | Mock Neck Ribbed Knit Short Sleeve",
+   "from": 54.95,
+   "price": 64.95,
+   "compareAt": 134.95
+  },
+  {
+   "handle": "mens-t-shirt-short-sleeve-henley-button-placket-knit",
+   "title": "Men's T Shirt | Short Sleeve Henley Button Placket Knit",
+   "from": 54.95,
+   "price": 64.95,
+   "compareAt": 134.95
+  },
+  {
+   "handle": "womens-ballet-flats-elastic-crossover-strap-rounded-toe",
+   "title": "Women's Ballet Flats | Elastic Crossover Strap Rounded Toe",
+   "from": 64.95,
+   "price": 99.95,
+   "compareAt": 204.95
+  },
+  {
+   "handle": "womens-ballet-flats-leather-round-toe-mary-jane-strap",
+   "title": "Women's Ballet Flats | Leather Round Toe Mary Jane Strap",
+   "from": 84.95,
+   "price": 104.95,
+   "compareAt": 194.95
+  },
+  {
+   "handle": "womens-ballet-flats-mary-jane-buckle-strap-leather",
+   "title": "Women's Ballet Flats | Mary Jane Buckle Strap Leather",
+   "from": 69.95,
+   "price": 104.95,
+   "compareAt": 214.95
+  },
+  {
+   "handle": "womens-ballet-flats-open-toe-dual-strap-slingback-mesh",
+   "title": "Women's Ballet Flats | Open Toe Dual Strap Slingback Mesh",
+   "from": 74.95,
+   "price": 104.95,
+   "compareAt": 214.95
+  },
+  {
+   "handle": "womens-ballet-flats-round-toe-adjustable-strap-slip-on",
+   "title": "Women's Ballet Flats | Round Toe Adjustable Strap Slip On",
+   "from": 84.95,
+   "price": 104.95,
+   "compareAt": 194.95
+  },
+  {
+   "handle": "womens-blouse-cowl-neckline-short-sleeve-draped",
+   "title": "Women's Blouse | Cowl Neckline Short Sleeve Draped",
+   "from": 54.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-blouse-lace-crew-neck-long-sleeve-embroidered",
+   "title": "Women's Blouse | Lace Crew Neck Long Sleeve Embroidered",
+   "from": 54.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-cargo-pants-wide-leg-relaxed-fit-drawstring-waist",
+   "title": "Women's Cargo Pants | Wide-Leg Relaxed Fit Drawstring Waist",
+   "from": 59.95,
+   "price": 79.95,
+   "compareAt": 164.95
+  },
+  {
+   "handle": "womens-christmas-dress-maxi-length-square-neck-velvet-embossed",
+   "title": "Women's Christmas Dress | Maxi Length Square Neck Velvet Embossed",
+   "from": 64.95,
+   "price": 74.95,
+   "compareAt": 154.95
+  },
+  {
+   "handle": "womens-cocktail-dress-maxi-one-shoulder-sleeveless",
+   "title": "Women's Cocktail Dress | Maxi One Shoulder Sleeveless",
+   "from": 69.95,
+   "price": 74.95,
+   "compareAt": 149.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-off-shoulder-fitted-bodice",
+   "title": "Women's Cocktail Dress | Midi Off-Shoulder Fitted Bodice",
+   "from": 64.95,
+   "price": 74.95,
+   "compareAt": 154.95
+  },
+  {
+   "handle": "womens-cocktail-dress-mini-square-neck-sleeveless-embellished",
+   "title": "Women's Cocktail Dress | Mini Square Neck Sleeveless Embellished",
+   "from": 64.95,
+   "price": 74.95,
+   "compareAt": 154.95
+  },
+  {
+   "handle": "womens-denim-shorts-distressed-button-fly-rolled-cuff",
+   "title": "Women's Denim Shorts | Distressed Button Fly Rolled Cuff",
+   "from": 54.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-formal-dress-maxi-halter-neck-satin-mermaid",
+   "title": "Women's Formal Dress | Maxi Halter Neck Satin Mermaid",
+   "from": 64.95,
+   "price": 74.95,
+   "compareAt": 154.95
+  },
+  {
+   "handle": "womens-going-out-top-v-neck-sleeveless-sequin-tank",
+   "title": "Women's Going Out Top | V Neck Sleeveless Sequin Tank",
+   "from": 39.95,
+   "price": 54.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-mules-openwork-slip-on-flat-sole",
+   "title": "Women's Mules | Openwork Slip-On Flat Sole",
+   "from": 84.95,
+   "price": 89.95,
+   "compareAt": 164.95
+  },
+  {
+   "handle": "womens-sandals-open-toe-ankle-strap-platform",
+   "title": "Women's Sandals | Open Toe Ankle Strap Platform",
+   "from": 64.95,
+   "price": 84.95,
+   "compareAt": 174.95
+  },
+  {
+   "handle": "mens-sandals-open-toe-leather-adjustable-straps",
+   "title": "Women's Sandals | Open Toe Leather Adjustable Straps",
+   "from": 79.95,
+   "price": 84.95,
+   "compareAt": 169.95
+  },
+  {
+   "handle": "womens-sandals-open-toe-t-strap-hook-and-loop",
+   "title": "Women's Sandals | Open Toe T Strap Hook and Loop",
+   "from": 79.95,
+   "price": 84.95,
+   "compareAt": 159.95
+  },
+  {
+   "handle": "womens-sandals-open-toe-t-strap-wedge-zipper",
+   "title": "Women's Sandals | Open Toe T-Strap Wedge Zipper",
+   "from": 74.95,
+   "price": 84.95,
+   "compareAt": 174.95
+  },
+  {
+   "handle": "womens-sandals-platform-multi-strap-open-toe-buckle",
+   "title": "Women's Sandals | Platform Multi-Strap Open Toe Buckle",
+   "from": 64.95,
+   "price": 84.95,
+   "compareAt": 174.95
+  },
+  {
+   "handle": "womens-top-crew-neck-knit-short-sleeve-ribbed",
+   "title": "Women's Top | Crew Neck Knit Short Sleeve Ribbed",
+   "from": 49.95,
+   "price": 59.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-top-square-neck-long-sleeve-knit",
+   "title": "Women's Top | Square Neck Long Sleeve Knit",
+   "from": 49.95,
+   "price": 59.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-midi-gathered-neckline-long-sleeve-pleated",
+   "title": "Women's Wedding Guest Dress | Midi Gathered Neckline Long Sleeve Pleated",
+   "from": 69.95,
+   "price": 89.95,
+   "compareAt": 184.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-midi-length-round-neckline-long-sleeves",
+   "title": "Women's Wedding Guest Dress | Midi Length Round Neckline Long Sleeves",
+   "from": 79.95,
+   "price": 89.95,
+   "compareAt": 154.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-midi-length-v-neck-lace-trim",
+   "title": "Women's Wedding Guest Dress | Midi Length V-Neck Lace Trim",
+   "from": 79.95,
+   "price": 89.95,
+   "compareAt": 164.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-midi-length-v-neck-three-quarter-sleeves-flared",
+   "title": "Women's Wedding Guest Dress | Midi Length V-Neck Three-Quarter Sleeves Flared",
+   "from": 64.95,
+   "price": 89.95,
+   "compareAt": 184.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-v-neck-midi-pleated-wrap",
+   "title": "Women's Wedding Guest Dress | V-Neck Midi Pleated Wrap",
+   "from": 64.95,
+   "price": 89.95,
+   "compareAt": 184.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-v-neck-mini-sequin-long-sleeve",
+   "title": "Women's Wedding Guest Dress | V-Neck Mini Sequin Long Sleeve",
+   "from": 64.95,
+   "price": 89.95,
+   "compareAt": 184.95
+  }
+ ]
+}
