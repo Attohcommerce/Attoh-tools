@@ -410,7 +410,7 @@ export default function DoctorPanel({ store, since }) {
     }
     if (!window.confirm(`${items.length} producten krijgen een nieuwe prijs (${pricePlan.note || pricePlan.store}). Starten?`)) return;
     const prices = {};
-    for (const it of items) prices[String(it.id)] = { price: it.price, compareAt: it.compareAt, from: it.from };
+    for (const it of items) prices[String(it.id)] = { price: it.price, compareAt: it.compareAt, from: it.from, discount: it.discount };
     runFix("price-plan", { id: "set-prices", label: `Prijsplan ${pricePlan.store || ""} ${pricePlan.date || ""}`.trim() }, items.map((it) => it.id), { prices });
   }
 
@@ -1498,7 +1498,7 @@ export default function DoctorPanel({ store, since }) {
           </div>
           {pricePlan && (
             <div className="hint">
-              {pricePlan.store} · {pricePlan.date} · {pricePlan.note} — voorbeeld: {pricePlan.items.slice(0, 3).map((it) => `"${String(it.title).split("|")[0].trim()}" $${it.from} → $${it.price}`).join(" · ")}
+              {pricePlan.store} · {pricePlan.date} · {pricePlan.note} — voorbeeld: {pricePlan.items.slice(0, 3).map((it) => (it.discount ? `"${String(it.title).split("|")[0].trim()}" ${Math.round(it.discount * 100)}% korting` : `"${String(it.title).split("|")[0].trim()}" $${it.from} → $${it.price}`)).join(" · ")}
             </div>
           )}
         </div>
