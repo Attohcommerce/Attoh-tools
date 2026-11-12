@@ -1,0 +1,2787 @@
+{
+ "store": "Soul Society Boutique",
+ "domain": "soulsocietyboutique.com",
+ "date": "2026-11-12",
+ "note": "v2 · 397 nog niet verkochte producten goedkoper (BE-ROAS doel 1,85, nooit boven prijs vóór 12-11, ondergrens BE 2,1) · verkochte producten blijven · gem. $61.22 → $53.79",
+ "items": [
+  {
+   "handle": "mens-jacket-sherpa-lined-button-closure-relaxed-fit",
+   "title": "Men's Jacket | Sherpa Lined Button Closure Relaxed Fit",
+   "from": 94.95,
+   "price": 79.95,
+   "compareAt": 134.95
+  },
+  {
+   "handle": "womens-puffer-jacket-quilted-zip-closure-long-sleeve",
+   "title": "Women's Puffer Jacket | Quilted Zip Closure Long Sleeve",
+   "from": 94.95,
+   "price": 79.95,
+   "compareAt": 159.95
+  },
+  {
+   "handle": "mens-work-boots-pointed-toe-side-zip-leather",
+   "title": "Men's Work Boots | Pointed Toe Side-Zip Leather",
+   "from": 84.95,
+   "price": 74.95,
+   "compareAt": 139.95
+  },
+  {
+   "handle": "womens-cowboy-boots-embossed-shaft-studded-harness-slip-on",
+   "title": "Women's Cowboy Boots | Embossed Shaft Studded Harness Slip-On",
+   "from": 84.95,
+   "price": 74.95,
+   "compareAt": 149.95
+  },
+  {
+   "handle": "cowboy-boots-for-men-full-grain-leather-mid-calf-pull-tab",
+   "title": "Cowboy Boots For Men | Full-Grain Leather Mid-Calf Pull-Tab",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-cowboy-boots-harness-strap-leather-cushioned-sole",
+   "title": "Men's Cowboy Boots | Harness Strap Leather Cushioned Sole",
+   "from": 79.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "mens-cowboy-boots-lace-up-leather-side-zip-rugged",
+   "title": "Men's Cowboy Boots | Lace-Up Leather Side-Zip Rugged",
+   "from": 79.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "mens-cowboy-boots-zip-closure-leather-ankle",
+   "title": "Men's Cowboy Boots | Zip Closure Leather Ankle",
+   "from": 79.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-jacket-collared-button-closure-long-sleeve",
+   "title": "Men's Jacket | Collared Button Closure Long Sleeve",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  },
+  {
+   "handle": "mens-work-boots-cap-toe-lace-up-leather-ankle",
+   "title": "Men's Work Boots | Cap-Toe Lace-Up Leather Ankle",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-work-boots-crocodile-embossed-pointed-toe-slip-on",
+   "title": "Men's Work Boots | Crocodile Embossed Pointed Toe Slip-On",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-knit-set-cropped-sweater-wide-leg-pants-button-shirt",
+   "title": "Women's Knit Set | Cropped Sweater Wide Leg Pants Button Shirt",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-matching-work-out-set-ribbed-knit-high-neck-long-sleeve",
+   "title": "Women's Matching Work Out Set | Ribbed Knit High Neck Long Sleeve",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  },
+  {
+   "handle": "womens-two-piece-set-tailored-lapel-button-closure-straight-leg",
+   "title": "Women's Two Piece Set | Tailored Lapel Button Closure Straight Leg",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-boots-chelsea-slip-on-leather-rubber-sole",
+   "title": "Men's Boots | Chelsea Slip-On Leather Rubber Sole",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "mens-boots-crocodile-leather-buckle-zip-closure",
+   "title": "Men's Boots | Crocodile Leather Buckle Zip Closure",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "mens-boots-wingtip-brogue-lace-up-leather",
+   "title": "Men's Boots | Wingtip Brogue Lace-Up Leather",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-leather-jacket-collared-cinched-waist-belted-cuffs",
+   "title": "Women's Leather Jacket | Collared Cinched Waist Belted Cuffs",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-chelsea-boots-slip-on-elastic-panels-leather",
+   "title": "Men's Chelsea Boots | Slip-On Elastic Panels Leather",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "mens-jacket-collar-bomber-zip-closure-ribbed-cuffs",
+   "title": "Men's Jacket | Collar Bomber Zip Closure Ribbed Cuffs",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "mens-jacket-collared-zip-closure-cotton-blend",
+   "title": "Men's Jacket | Collared Zip Closure Cotton Blend",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "mens-jacket-tailored-notch-lapel-single-breasted",
+   "title": "Men's Jacket | Tailored Notch Lapel Single Breasted",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "mens-jacket-zip-closure-fleece-stand-collar-pockets",
+   "title": "Men's Jacket | Zip Closure Fleece Stand Collar Pockets",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-leather-jacket-oversized-bomber-zip-closure",
+   "title": "Men's Leather Jacket | Oversized Bomber Zip Closure",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-leather-jacket-zip-closure-stand-collar-long-sleeves",
+   "title": "Men's Leather Jacket | Zip Closure Stand Collar Long Sleeves",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "mens-puffer-jacket-hooded-quilted-zip-pockets",
+   "title": "Men's Puffer Jacket | Hooded Quilted Zip Pockets",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-suede-jacket-bomber-style-zip-closure-tailored-fit",
+   "title": "Men's Suede Jacket | Bomber Style Zip Closure Tailored Fit",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "mens-trench-coat-long-cut-button-closure-notch-collar",
+   "title": "Men's Trench Coat | Long Cut Button Closure Notch Collar",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-ballet-flats-pointed-toe-checkered-strap-mesh",
+   "title": "Women's Ballet Flats | Pointed Toe Checkered Strap Mesh",
+   "from": 69.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-ballet-flats-pointed-toe-mesh-slip-on-flat",
+   "title": "Women's Ballet Flats | Pointed Toe Mesh Slip-On Flat",
+   "from": 69.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-ballet-flats-slingback-suede-comfort-flat",
+   "title": "Women's Ballet Flats | Slingback Suede Comfort Flat",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-ballet-flats-woven-open-weave-rounded-toe-slip-on",
+   "title": "Women's Ballet Flats | Woven Open-Weave Rounded Toe Slip-On",
+   "from": 69.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-ballet-flats-woven-upper-pointed-toe-slingback-strap",
+   "title": "Women's Ballet Flats | Woven Upper Pointed Toe Slingback Strap",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-block-heel-boots-lace-up-buckle-strap-lug-sole",
+   "title": "Women's Block Heel Boots | Lace-Up Buckle Strap Lug Sole",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-block-heel-boots-rounded-toe-suede-side-zip",
+   "title": "Women's Block Heel Boots | Rounded Toe Suede Side Zip",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-boots-knee-high-leather-buckle-lug-sole",
+   "title": "Women's Boots | Knee-High Leather Buckle Lug Sole",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-boots-leather-fold-over-cuff-zip-closure-crepe-sole",
+   "title": "Women's Boots | Leather Fold-Over Cuff Zip Closure Crepe Sole",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-boots-leather-zipper-closure-block-heel",
+   "title": "Women's Boots | Leather Zipper Closure Block Heel",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-boots-mid-calf-faux-fur-cuff-braided-trim-pom-pom",
+   "title": "Women's Boots | Mid-Calf Faux Fur Cuff Braided Trim Pom-Pom",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-boots-open-toe-wedge-peep-buckle",
+   "title": "Women's Boots | Open Toe Wedge Peep Buckle",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-boots-pointed-toe-western-suede-block-heel",
+   "title": "Women's Boots | Pointed Toe Western Suede Block Heel",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-chelsea-boots-suede-knee-high-fold-over-buckle",
+   "title": "Women's Chelsea Boots | Suede Knee High Fold Over Buckle",
+   "from": 69.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-coat-hooded-longline-puffer-quilted",
+   "title": "Women's Coat | Hooded Longline Puffer Quilted",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-length-sweetheart-neckline-lace",
+   "title": "Women's Cocktail Dress | Midi Length Sweetheart Neckline Lace",
+   "from": 69.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cocktail-dress-mini-fringe-v-neck-spaghetti-strap",
+   "title": "Women's Cocktail Dress | Mini Fringe V Neck Spaghetti Strap",
+   "from": 69.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cowboy-boots-ankle-height-suede-western-stitching",
+   "title": "Women's Cowboy Boots | Ankle Height Suede Western Stitching",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-cowboy-boots-embroidered-shaft-western-pull-on-leather",
+   "title": "Women's Cowboy Boots | Embroidered Shaft Western Pull-On Leather",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-cowboy-boots-square-toe-embroidered-western-leather",
+   "title": "Women's Cowboy Boots | Square Toe Embroidered Western Leather",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-denim-collar-jacket-longline-oversized-snap-button-frayed-hem",
+   "title": "Women's Denim Collar Jacket | Longline Oversized Snap Button Frayed Hem",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-faux-fur-coat-midi-wrap-belted-long-sleeves",
+   "title": "Women's Faux Fur Coat | Midi Wrap Belted Long Sleeves",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-fur-coat-hooded-parka-faux-fur-trim-button-front",
+   "title": "Women's Fur Coat | Hooded Parka Faux Fur Trim Button Front",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-fur-jacket-quilted-puffer-detachable-collar-ribbed-cuffs",
+   "title": "Women's Fur Jacket | Quilted Puffer Detachable Collar Ribbed Cuffs",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-knee-high-boots-round-toe-buckle-strap-zipper",
+   "title": "Women's Knee High Boots | Round Toe Buckle Strap Zipper",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-leather-bomber-jacket-oversized-zip-up-collar-elasticated",
+   "title": "Women's Leather Bomber Jacket | Oversized Zip-Up Collar Elasticated",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-leather-boots-pointed-toe-knee-high-shaft",
+   "title": "Women's Leather Boots | Pointed Toe Knee-High Shaft",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-long-sleeve-dress-midi-length-round-neck-a-line-pockets",
+   "title": "Women's Long Sleeve Dress | Midi Length Round Neck A-Line Pockets",
+   "from": 69.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-puffer-jacket-cropped-oversized-quilted-hooded",
+   "title": "Women's Puffer Jacket | Cropped Oversized Quilted Hooded",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-puffer-jacket-diamond-quilted-collar-pockets",
+   "title": "Women's Puffer Jacket | Diamond Quilted Collar Pockets",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-puffer-jacket-lightweight-quilted-button-closure",
+   "title": "Women's Puffer Jacket | Lightweight Quilted Button Closure",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-puffer-jacket-stand-collar-zip-front-lightweight",
+   "title": "Women's Puffer Jacket | Stand Collar Zip Front Lightweight",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-quilted-coat-reversible-mid-length-puffer-closure",
+   "title": "Women's Quilted Coat | Reversible Mid-Length Puffer Closure",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-sequin-dress-square-neckline-mini-fit-and-flare-bow",
+   "title": "Women's Sequin Dress | Square Neckline Mini Fit-And-Flare Bow",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-shearling-jacket-suede-button-front-long-sleeves",
+   "title": "Women's Shearling Jacket | Suede Button Front Long Sleeves",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-snow-boots-lace-up-faux-fur-mid-calf",
+   "title": "Women's Snow Boots | Lace-Up Faux Fur Mid-Calf",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-snow-boots-midi-height-faux-fur-collar-quilted",
+   "title": "Women's Snow Boots | Midi Height Faux Fur Collar Quilted",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-suede-trench-coat-double-breasted-button-closure-long-sleeves",
+   "title": "Women's Suede Trench Coat | Double-Breasted Button Closure Long Sleeves",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-trench-coat-double-breasted-notched-lapel-wool",
+   "title": "Women's Trench Coat | Double Breasted Notched Lapel Wool",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-trench-coat-double-breasted-long-sleeves-belted",
+   "title": "Women's Trench Coat | Double-Breasted Long Sleeves Belted",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-trench-coat-double-breasted-notched-lapel-belted",
+   "title": "Women's Trench Coat | Double-Breasted Notched Lapel Belted",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-trench-coat-leopard-print-lapel-belted-long-sleeve",
+   "title": "Women's Trench Coat | Leopard Print Lapel Belted Long Sleeve",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-trench-coat-notch-lapel-adjustable-waist-wool",
+   "title": "Women's Trench Coat | Notch Lapel Adjustable Waist Wool",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-trench-coat-notched-lapel-double-breasted-belted",
+   "title": "Women's Trench Coat | Notched Lapel Double-Breasted Belted",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-trench-coat-oversized-collar-hood-drawstring-waist",
+   "title": "Women's Trench Coat | Oversized Collar Hood Drawstring Waist",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-trench-coat-pointed-collar-button-front-pockets",
+   "title": "Women's Trench Coat | Pointed Collar Button Front Pockets",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-trench-jacket-double-breasted-cropped-collared",
+   "title": "Women's Trench Jacket | Double Breasted Cropped Collared",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "handle": "womens-waterproof-boots-ankle-height-knit-collar-zip-closure",
+   "title": "Women's Waterproof Boots | Ankle Height Knit Collar Zip Closure",
+   "from": 69.95,
+   "price": 54.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-waterproof-boots-ankle-height-leather-cushioned-sole",
+   "title": "Women's Waterproof Boots | Ankle Height Leather Cushioned Sole",
+   "from": 69.95,
+   "price": 54.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-waterproof-boots-ankle-zip-closure-leather-sole",
+   "title": "Women's Waterproof Boots | Ankle Zip Closure Leather Sole",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-waterproof-boots-chelsea-slip-on-lug-sole-knit",
+   "title": "Women's Waterproof Boots | Chelsea Slip-On Lug Sole Knit",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-wedding-guest-gown-maxi-v-neck-sleeveless-floral",
+   "title": "Women's Wedding Guest Gown | Maxi V-Neck Sleeveless Floral",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-winter-boots-suede-round-toe-flat-sole",
+   "title": "Women's Winter Boots | Suede Round Toe Flat Sole",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-winter-coat-hooded-quilted-puffer-long",
+   "title": "Women's Winter Coat | Hooded Quilted Puffer Long",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "mens-winter-snow-boots-faux-fur-lined-lace-up-rubber-sole",
+   "title": "Women's Winter Snow Boots | Faux Fur Lined Lace Up Rubber Sole",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "handle": "womens-wool-coat-double-breasted-relaxed-fit-maxi-length",
+   "title": "Women's Wool Coat | Double-Breasted Relaxed Fit Maxi Length",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "brogue-oxford-shoe-for-women-pointed-toe-block-heel-leather",
+   "title": "Brogue Oxford Shoe For Women | Pointed Toe Block Heel Leather",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "loafer-shoe-for-men-moccasin-toe-leather-zip-closure",
+   "title": "Loafer Shoe For Men | Moccasin Toe Leather Zip Closure",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "loafer-shoe-for-men-suede-tassel-brogue-leather",
+   "title": "Loafer Shoe For Men | Suede Tassel Brogue Leather",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-crewneck-color-block-knit-relaxed-fit",
+   "title": "Men's Crewneck | Color-Block Knit Relaxed Fit",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-crewneck-color-block-knit-round-neck-relaxed-fit",
+   "title": "Men's Crewneck | Color-Block Knit Round Neck Relaxed Fit",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "mens-crewneck-ribbed-knit-relaxed-fit-layered",
+   "title": "Men's Crewneck | Ribbed Knit Relaxed Fit Layered",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-full-zip-hooded-jacket-hood-zip-pockets-drawstring",
+   "title": "Men's Full-Zip Hooded Jacket | Hood Zip Pockets Drawstring",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-hooded-jacket-full-zip-hood-pockets-fleece-lined",
+   "title": "Men's Hooded Jacket | Full-Zip Hood Pockets Fleece Lined",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "mens-jacket-stand-collar-cotton-blend-zip-utility",
+   "title": "Men's Jacket | Stand Collar Cotton-Blend Zip Utility",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-loafer-shoe-leather-slip-on-cushioned-sole",
+   "title": "Men's Loafer Shoe | Leather Slip-On Cushioned Sole",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-loafer-shoe-woven-tassel-slip-on-flat",
+   "title": "Men's Loafer Shoe | Woven Tassel Slip-On Flat",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-quarter-zipper-knit-collar-ribbed-cuffs-regular-fit",
+   "title": "Men's Quarter Zipper | Knit Collar Ribbed Cuffs Regular Fit",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-quarter-zipper-knit-geometric-print-pullover-sweater",
+   "title": "Men's Quarter Zipper | Knit Geometric Print Pullover Sweater",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "mens-quarter-zipper-patterned-knit-relaxed-fit-long-sleeve",
+   "title": "Men's Quarter Zipper | Patterned Knit Relaxed Fit Long Sleeve",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "mens-quarter-zipper-standing-collar-half-zip-pullover-knit",
+   "title": "Men's Quarter Zipper | Standing Collar Half-Zip Pullover Knit",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-quarter-zipper-textured-knit-relaxed-fit",
+   "title": "Men's Quarter Zipper | Textured Knit Relaxed Fit",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-quilted-jacket-diamond-stitching-zip-closure-ribbed-cuffs",
+   "title": "Men's Quilted Jacket | Diamond Stitching Zip Closure Ribbed Cuffs",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "mens-work-boots-cap-toe-brogue-lace-up-leather",
+   "title": "Men's Work Boots | Cap Toe Brogue Lace Up Leather",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-barrel-jeans-high-stretch-slim-flare-buttoned-ankle",
+   "title": "Women's Barrel Jeans | High-Stretch Slim Flare Buttoned Ankle",
+   "from": 64.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-boho-jacket-velvet-patchwork-open-front-long-sleeves",
+   "title": "Women's Boho Jacket | Velvet Patchwork Open Front Long Sleeves",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-brogue-oxford-shoe-perforated-two-tone-lace-up",
+   "title": "Women's Brogue Oxford Shoe | Perforated Two-Tone Lace-Up",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-brogue-oxford-shoe-round-toe-buckle-strap-leather",
+   "title": "Women's Brogue Oxford Shoe | Round Toe Buckle Strap Leather",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-brogue-oxford-shoe-t-strap-buckle-closure-leather-flat",
+   "title": "Women's Brogue Oxford Shoe | T-Strap Buckle Closure Leather Flat",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-chelsea-boots-geometric-chunky-platform-lug-sole",
+   "title": "Women's Chelsea Boots | Geometric Chunky Platform Lug Sole",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-chelsea-boots-pointed-toe-block-heel-pull-on",
+   "title": "Women's Chelsea Boots | Pointed Toe Block Heel Pull On",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-chelsea-boots-rounded-toe-elastic-slip-on-rubber-sole",
+   "title": "Women's Chelsea Boots | Rounded Toe Elastic Slip-On Rubber Sole",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-christmas-dress-sweetheart-neckline-sequin-maxi-slit",
+   "title": "Women's Christmas Dress | Sweetheart Neckline Sequin Maxi Slit",
+   "from": 64.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-coat-hooded-zip-closure-adjustable-waist",
+   "title": "Women's Coat | Hooded Zip Closure Adjustable Waist",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-coat-reversible-padded-long-hood",
+   "title": "Women's Coat | Reversible Padded Long Hood",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-cocktail-dress-scoop-neckline-sleeveless-mini-ruched",
+   "title": "Women's Cocktail Dress | Scoop Neckline Sleeveless Mini Ruched",
+   "from": 64.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cowboy-boots-pointed-toe-chunky-heel-leopard-print",
+   "title": "Women's Cowboy Boots | Pointed Toe Chunky Heel Leopard Print",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-formal-dress-halter-neck-maxi-satin-sleeveless",
+   "title": "Women's Formal Dress | Halter Neck Maxi Satin Sleeveless",
+   "from": 64.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-formal-dress-maxi-length-collared-wrap-front",
+   "title": "Women's Formal Dress | Maxi Length Collared Wrap Front",
+   "from": 64.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-formal-dress-strapless-corset-maxi-draped",
+   "title": "Women's Formal Dress | Strapless Corset Maxi Draped",
+   "from": 64.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-fur-coat-double-breasted-lapel-long-faux-fur",
+   "title": "Women's Fur Coat | Double-Breasted Lapel Long Faux-Fur",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-fur-coat-leopard-print-collarless-open-front-long",
+   "title": "Women's Fur Coat | Leopard Print Collarless Open Front Long",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-fur-vest-lapel-collar-double-breasted-lace-detail",
+   "title": "Women's Fur Vest | Lapel Collar Double Breasted Lace Detail",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-halter-maxi-dress-gathered-neckline-empire-waist-floral-print",
+   "title": "Women's Halter Maxi Dress | Gathered Neckline Empire Waist Floral Print",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-holiday-dress-maxi-corset-sweetheart-sleeveless",
+   "title": "Women's Holiday Dress | Maxi Corset Sweetheart Sleeveless",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-jacket-textured-knit-full-zip-relaxed-fit",
+   "title": "Women's Jacket | Textured Knit Full Zip Relaxed Fit",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-long-sleeve-dress-maxi-v-neck-pleated-print",
+   "title": "Women's Long Sleeve Dress | Maxi V-Neck Pleated Print",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-matching-workout-set-hooded-neck-long-sleeve-knit",
+   "title": "Women's Matching Workout Set | Hooded Neck Long Sleeve Knit",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-mules-clear-upper-stiletto-heel-slip-on",
+   "title": "Women's Mules | Clear Upper Stiletto Heel Slip On",
+   "from": 64.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-mules-faux-fur-lined-suede-upper-slip-on",
+   "title": "Women's Mules | Faux Fur Lined Suede Upper Slip On",
+   "from": 64.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-mules-lug-sole-penny-strap-slip-on",
+   "title": "Women's Mules | Lug Sole Penny Strap Slip-On",
+   "from": 64.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-mules-perforated-suede-tassel-slip-on-comfort-sole",
+   "title": "Women's Mules | Perforated Suede Tassel Slip-On Comfort Sole",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-mules-platform-block-heel-open-toe-knit",
+   "title": "Women's Mules | Platform Block Heel Open Toe Knit",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-mules-pointed-toe-slingback-suede-tassel",
+   "title": "Women's Mules | Pointed Toe Slingback Suede Tassel",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-mules-rounded-toe-rope-strap-suede",
+   "title": "Women's Mules | Rounded Toe Rope Strap Suede",
+   "from": 64.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-mules-square-toe-woven-leather-low-heel",
+   "title": "Women's Mules | Square Toe Woven Leather Low Heel",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-mules-suede-bow-slip-on-rounded-toe",
+   "title": "Women's Mules | Suede Bow Slip-On Rounded Toe",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-overcoat-collar-button-closure-pockets",
+   "title": "Women's Overcoat | Collar Button Closure Pockets",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-peacoat-mid-length-button-front-fleece-patchwork",
+   "title": "Women's Peacoat | Mid-Length Button Front Fleece Patchwork",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-quilted-jacket-floral-print-stand-collar-snap-closure",
+   "title": "Women's Quilted Jacket | Floral Print Stand Collar Snap Closure",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-sequin-dress-midi-wrap-v-neckline-long-sleeve",
+   "title": "Women's Sequin Dress | Midi Wrap V-Neckline Long Sleeve",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-sequin-dress-mini-length-v-neck-sleeveless-fringe",
+   "title": "Women's Sequin Dress | Mini Length V-Neck Sleeveless Fringe",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-sequin-dress-v-neck-sleeveless-mini-fringe",
+   "title": "Women's Sequin Dress | V-Neck Sleeveless Mini Fringe",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-snow-boots-fur-trimmed-ankle-closure-cushioned-sole",
+   "title": "Women's Snow Boots | Fur-Trimmed Ankle Closure Cushioned Sole",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-snow-boots-quilted-faux-fur-collar-zip-closure-textured-sole",
+   "title": "Women's Snow Boots | Quilted Faux Fur Collar Zip Closure Textured Sole",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-striped-maxi-dress-midi-length-v-neck-wrap-short-sleeves",
+   "title": "Women's Striped Maxi Dress | Midi Length V-Neck Wrap Short Sleeves",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-trench-jacket-stand-collar-double-breasted-belt",
+   "title": "Women's Trench Jacket | Stand Collar Double Breasted Belt",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 119.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-maxi-keyhole-neckline-short-sleeve-chiffon",
+   "title": "Women's Wedding Guest Dress | Maxi Keyhole Neckline Short Sleeve Chiffon",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-maxi-pleated-sleeveless-ruched-waist",
+   "title": "Women's Wedding Guest Dress | Maxi Pleated Sleeveless Ruched Waist",
+   "from": 64.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-maxi-v-neck-short-sleeve-wrap",
+   "title": "Women's Wedding Guest Dress | Maxi V-Neck Short Sleeve Wrap",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-midi-asymmetric-sleeveless-chiffon",
+   "title": "Women's Wedding Guest Dress | Midi Asymmetric Sleeveless Chiffon",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-midi-v-neckline-floral-print-a-line",
+   "title": "Women's Wedding Guest Dress | Midi V Neckline Floral Print A-Line",
+   "from": 64.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-wedding-guest-dress-midi-v-neck-puffed-sleeve-knit",
+   "title": "Women's Wedding Guest Dress | Midi V-Neck Puffed Sleeve Knit",
+   "from": 64.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-winter-snow-boots-mid-calf-quilted-waterproof-side-zip",
+   "title": "Women's Winter Snow Boots | Mid-Calf Quilted Waterproof Side Zip",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-winter-snow-boots-sherpa-lined-lace-up-platform-sole",
+   "title": "Women's Winter Snow Boots | Sherpa Lined Lace Up Platform Sole",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-work-boots-mesh-ankle-block-heel-side-zip",
+   "title": "Women's Work Boots | Mesh Ankle Block Heel Side Zip",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "womens-work-boots-vintage-button-detail-round-toe-kitten-heel",
+   "title": "Women's Work Boots | Vintage Button Detail Round Toe Kitten Heel",
+   "from": 64.95,
+   "price": 59.95,
+   "compareAt": 114.95
+  },
+  {
+   "handle": "leopard-slingback-heels-for-women-peep-toe-block-heel-slingback",
+   "title": "Leopard Slingback Heels For Women | Peep Toe Block Heel Slingback",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-cardigan-stand-collar-knit-button-front",
+   "title": "Men's Cardigan | Stand Collar Knit Button Front",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-cargo-pants-multi-pocket-tapered-leg-jogger",
+   "title": "Men's Cargo Pants | Multi-Pocket Tapered Leg Jogger",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-cargo-pants-multiple-pockets-relaxed-fit-stretch",
+   "title": "Men's Cargo Pants | Multiple Pockets Relaxed Fit Stretch",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "mens-cargo-pants-relaxed-fit-utility-cotton-multiple-pockets",
+   "title": "Men's Cargo Pants | Relaxed Fit Utility Cotton Multiple Pockets",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-cargo-pants-slim-fit-elastic-waist-pockets",
+   "title": "Men's Cargo Pants | Slim Fit Elastic Waist Pockets",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "mens-cargo-pants-tapered-fit-stretch-utility-pockets",
+   "title": "Men's Cargo Pants | Tapered Fit Stretch Utility Pockets",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "mens-cargo-pants-tapered-jogger-cuffed-ankle-pockets",
+   "title": "Men's Cargo Pants | Tapered Jogger Cuffed Ankle Pockets",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-hoodie-knit-hood-drawstring-relaxed-fit",
+   "title": "Men's Hoodie | Knit Hood Drawstring Relaxed Fit",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "mens-hoodie-pullover-kangaroo-pocket-relaxed-fit",
+   "title": "Men's Hoodie | Pullover Kangaroo Pocket Relaxed Fit",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "mens-hoodie-relaxed-hooded-cashmere-full-zip",
+   "title": "Men's Hoodie | Relaxed Hooded Cashmere Full Zip",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "mens-jackets-leather-slim-fit-biker-stand-collar-zip",
+   "title": "Men's Jackets Leather | Slim Fit Biker Stand Collar Zip",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-jeans-patchwork-design-drawstring-waist-wide-leg",
+   "title": "Men's Jeans | Patchwork Design Drawstring Waist Wide Leg",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "mens-khaki-pants-cargo-pockets-relaxed-fit-durable",
+   "title": "Men's Khaki Pants | Cargo Pockets Relaxed Fit Durable",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "mens-khaki-pants-relaxed-fit-rollable-cuffs-cotton-blend",
+   "title": "Men's Khaki Pants | Relaxed Fit Rollable Cuffs Cotton Blend",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-khaki-pants-straight-leg-relaxed-fit-mid-rise",
+   "title": "Men's Khaki Pants | Straight Leg Relaxed Fit Mid-Rise",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "mens-loafer-shoe-leather-slip-on-cushioned-comfort",
+   "title": "Men's Loafer Shoe | Leather Slip-On Cushioned Comfort",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "mens-loafer-shoe-penny-strap-round-toe-slip-on",
+   "title": "Men's Loafer Shoe | Penny Strap Round Toe Slip On",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-loafer-shoe-slip-on-metal-buckle-leather",
+   "title": "Men's Loafer Shoe | Slip-On Metal Buckle Leather",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "mens-loafer-shoe-suede-penny-strap-slip-on-rubber-sole",
+   "title": "Men's Loafer Shoe | Suede Penny Strap Slip-On Rubber Sole",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-loafer-shoe-suede-slip-on-casual",
+   "title": "Men's Loafer Shoe | Suede Slip-On Casual",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-loafer-shoe-suede-upper-slip-on-casual-comfort",
+   "title": "Men's Loafer Shoe | Suede Upper Slip-On Casual Comfort",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "mens-loafer-shoe-woven-texture-tassel-slip-on",
+   "title": "Men's Loafer Shoe | Woven Texture Tassel Slip-On",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "mens-pants-slim-fit-stretch-chino",
+   "title": "Men's Pants | Slim Fit Stretch Chino",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "mens-pants-straight-leg-drawstring-linen-cotton",
+   "title": "Men's Pants | Straight Leg Drawstring Linen Cotton",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-slip-on-loafers-leather-perforated-flat-slip-on",
+   "title": "Men's Slip On Loafers | Leather Perforated Flat Slip-On",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "mens-sweatshirt-hooded-zip-up-fleece-lined-abstract-print",
+   "title": "Men's Sweatshirt | Hooded Zip-Up Fleece-Lined Abstract Print",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-tactical-cargo-pants-multiple-pockets-relaxed-fit-utility",
+   "title": "Men's Tactical Cargo Pants | Multiple Pockets Relaxed Fit Utility",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-wide-leg-jeans-distressed-denim-low-rise-relaxed-fit",
+   "title": "Men's Wide Leg Jeans | Distressed Denim Low-Rise Relaxed Fit",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "mens-work-boots-lace-up-lug-sole-padded-collar",
+   "title": "Men's Work Boots | Lace-Up Lug Sole Padded Collar",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-baggy-jeans-high-rise-relaxed-fit-denim",
+   "title": "Women's Baggy Jeans | High Rise Relaxed Fit Denim",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-baggy-jeans-high-waist-ripped-denim-relaxed-fit",
+   "title": "Women's Baggy Jeans | High Waist Ripped Denim Relaxed Fit",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-baggy-jeans-high-waist-wide-leg-denim-stretch",
+   "title": "Women's Baggy Jeans | High Waist Wide Leg Denim Stretch",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-baggy-jeans-high-rise-wide-leg-denim-five-pocket",
+   "title": "Women's Baggy Jeans | High-Rise Wide-Leg Denim Five-Pocket",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-baggy-jeans-high-waist-wide-leg-denim-relaxed-fit",
+   "title": "Women's Baggy Jeans | High-Waist Wide-Leg Denim Relaxed Fit",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-baggy-jeans-relaxed-fit-button-fly-rolled-hem",
+   "title": "Women's Baggy Jeans | Relaxed Fit Button Fly Rolled Hem",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-baggy-jeans-wide-leg-high-waist-denim",
+   "title": "Women's Baggy Jeans | Wide Leg High Waist Denim",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "womens-baggy-jeans-wide-leg-raw-hem-high-waist",
+   "title": "Women's Baggy Jeans | Wide Leg Raw Hem High Waist",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "womens-barrel-jeans-mid-rise-wide-leg-stretch-denim",
+   "title": "Women's Barrel Jeans | Mid-Rise Wide Leg Stretch Denim",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-brogue-oxford-shoe-lug-sole-slip-on-suede-loafer",
+   "title": "Women's Brogue Oxford Shoe | Lug Sole Slip-On Suede Loafer",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-cardigan-hooded-artistic-print-knit",
+   "title": "Women's Cardigan | Hooded Artistic Print Knit",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cardigan-ribbed-knit-full-zip-relaxed-fit",
+   "title": "Women's Cardigan | Ribbed Knit Full Zip Relaxed Fit",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-cardigan-tie-front-half-sleeve-sheer-chiffon",
+   "title": "Women's Cardigan | Tie Front Half Sleeve Sheer Chiffon",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-cashmere-sweater-turtleneck-long-sleeve-knit",
+   "title": "Women's Cashmere Sweater | Turtleneck Long Sleeve Knit",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-cashmere-sweater-v-neck-relaxed-fit-knit-1",
+   "title": "Women's Cashmere Sweater | V-Neck Relaxed Fit Knit",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cashmere-sweater-v-neck-relaxed-fit-knit",
+   "title": "Women's Cashmere Sweater | V-Neck Relaxed Fit Knit",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-casual-dress-midi-length-round-neck-floral-print",
+   "title": "Women's Casual Dress | Midi Length Round Neck Floral Print",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-christmas-dress-midi-length-ornate-print-long-sleeve",
+   "title": "Women's Christmas Dress | Midi Length Ornate Print Long Sleeve",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "womens-christmas-dress-midi-length-rounded-neckline-sleeveless",
+   "title": "Women's Christmas Dress | Midi Length Rounded Neckline Sleeveless",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-christmas-dress-midi-v-neck-sleeveless-print",
+   "title": "Women's Christmas Dress | Midi V-Neck Sleeveless Print",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-christmas-dress-square-neck-long-puff-sleeves-velvet-tiered",
+   "title": "Women's Christmas Dress | Square Neck Long Puff Sleeves Velvet Tiered",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "womens-christmas-sweatshirt-crew-neck-long-sleeves-gradient-print",
+   "title": "Women's Christmas Sweatshirt | Crew Neck Long Sleeves Gradient Print",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-christmas-sweatshirt-hooded-pullover-drawstring-soft-knit",
+   "title": "Women's Christmas Sweatshirt | Hooded Pullover Drawstring Soft Knit",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-christmas-sweatshirt-relaxed-fit-hood-graphic-print",
+   "title": "Women's Christmas Sweatshirt | Relaxed Fit Hood Graphic Print",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-christmas-sweatshirt-textured-knit-hood-drawstring-pockets",
+   "title": "Women's Christmas Sweatshirt | Textured Knit Hood Drawstring Pockets",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-cocktail-dress-high-neck-baroque-print-asymmetric-hem",
+   "title": "Women's Cocktail Dress | High Neck Baroque Print Asymmetric Hem",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-crossover-v-neck-half-sleeve",
+   "title": "Women's Cocktail Dress | Midi Crossover V-Neck Half Sleeve",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-length-draped-neckline-sleeveless-pleated",
+   "title": "Women's Cocktail Dress | Midi Length Draped Neckline Sleeveless Pleated",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-length-v-neck-short-sleeve-printed",
+   "title": "Women's Cocktail Dress | Midi Length V-Neck Short Sleeve Printed",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-v-neck-three-quarter-sleeve-a-line",
+   "title": "Women's Cocktail Dress | Midi V-Neck Three-Quarter Sleeve A-Line",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "womens-collared-cardigan-long-sleeve-button-front-knit-1",
+   "title": "Women's Collared Cardigan | Long Sleeve Button Front Knit",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-collared-cardigan-long-sleeve-button-front-knit",
+   "title": "Women's Collared Cardigan | Long Sleeve Button Front Knit",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-faux-fur-jacket-cropped-open-front-pockets",
+   "title": "Women's Faux Fur Jacket | Cropped Open Front Pockets",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-flats-woven-slip-on-flat-sole-cushioned",
+   "title": "Women's Flats | Woven Slip-On Flat Sole Cushioned",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-floral-maxi-dress-off-shoulder-neckline-ruched-waist-pleated",
+   "title": "Women's Floral Maxi Dress | Off-Shoulder Neckline Ruched Waist Pleated",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-high-heels-peep-toe-slip-on-suede-cutout",
+   "title": "Women's High Heels | Peep Toe Slip-On Suede Cutout",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-jeans-capri-length-slim-fit-denim-stretch",
+   "title": "Women's Jeans | Capri Length Slim Fit Denim Stretch",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-jeans-high-waist-straight-leg-cropped-denim",
+   "title": "Women's Jeans | High Waist Straight Leg Cropped Denim",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-jeans-straight-leg-cropped-denim-faded-wash",
+   "title": "Women's Jeans | Straight Leg Cropped Denim Faded Wash",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-jeans-wide-leg-denim-fit-seam-details",
+   "title": "Women's Jeans | Wide Leg Denim Fit Seam Details",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-long-sleeve-dress-midi-length-denim-button-front",
+   "title": "Women's Long Sleeve Dress | Midi Length Denim Button Front",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-long-sleeve-dress-midi-length-v-neck-striped",
+   "title": "Women's Long Sleeve Dress | Midi Length V Neck Striped",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-long-sleeve-dress-midi-length-v-neckline-velvet-wrap",
+   "title": "Women's Long Sleeve Dress | Midi Length V Neckline Velvet Wrap",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-long-sleeve-dress-midi-length-v-neck-wrap-tie-a-line",
+   "title": "Women's Long Sleeve Dress | Midi Length V-Neck Wrap Tie A-Line",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-long-sleeve-dress-midi-v-neck-button-front-linen",
+   "title": "Women's Long Sleeve Dress | Midi V-Neck Button-Front Linen",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-long-sleeve-dress-midi-v-neck-linen-relaxed-fit",
+   "title": "Women's Long Sleeve Dress | Midi V-Neck Linen Relaxed Fit",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-long-sleeve-dress-midi-wrap-collar-button-closure",
+   "title": "Women's Long Sleeve Dress | Midi Wrap Collar Button Closure",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-long-sleeve-dress-v-neck-checkered-button-closure-knee-length",
+   "title": "Women's Long Sleeve Dress | V-Neck Checkered Button Closure Knee Length",
+   "from": 59.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-long-sleeveless-dress-square-neck-midi-floral-cotton-linen",
+   "title": "Women's Long Sleeveless Dress | Square Neck Midi Floral Cotton Linen",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-mary-jane-flats-woven-upper-buckle-strap-low-heel",
+   "title": "Women's Mary Jane Flats | Woven Upper Buckle Strap Low Heel",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-mary-jane-buckle-strap-leather-platform",
+   "title": "Women's Mary Jane | Buckle Strap Leather Platform",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-mock-neck-sweatshirt-color-block-knit-relaxed-fit",
+   "title": "Women's Mock Neck Sweatshirt | Color Block Knit Relaxed Fit",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-mock-neck-sweatshirt-colorblock-knit-drop-shoulder",
+   "title": "Women's Mock Neck Sweatshirt | Colorblock Knit Drop Shoulder",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-orthopedic-loafers-round-toe-slip-on-metal-accent-cushioned",
+   "title": "Women's Orthopedic Loafers | Round Toe Slip On Metal Accent Cushioned",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-oversize-hoodie-drawstring-shell-print-kangaroo-pocket",
+   "title": "Women's Oversize Hoodie | Drawstring Shell Print Kangaroo Pocket",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-oversize-hoodie-half-zip-knit-relaxed-fit",
+   "title": "Women's Oversize Hoodie | Half Zip Knit Relaxed Fit",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-oversize-hoodie-waffle-knit-paw-print-drawstring-hood",
+   "title": "Women's Oversize Hoodie | Waffle Knit Paw Print Drawstring Hood",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-oversized-hoodie-crew-neck-cable-knit-relaxed-fit",
+   "title": "Women's Oversized Hoodie | Crew Neck Cable Knit Relaxed Fit",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-oversized-hoodie-crew-neck-long-sleeve-knit-print",
+   "title": "Women's Oversized Hoodie | Crew Neck Long Sleeve Knit Print",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-oversized-hoodie-drawstring-hood-long-sleeve-kangaroo-pocket",
+   "title": "Women's Oversized Hoodie | Drawstring Hood Long Sleeve Kangaroo Pocket",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-oversized-hoodie-drawstring-hooded-knit-thumbhole-pockets",
+   "title": "Women's Oversized Hoodie | Drawstring Hooded Knit Thumbhole Pockets",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-oversized-hoodie-quarter-zip-lapel-collared-knit",
+   "title": "Women's Oversized Hoodie | Quarter-Zip Lapel Collared Knit",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-oversized-hoodie-skull-print-relaxed-fit-drawstring-hood",
+   "title": "Women's Oversized Hoodie | Skull Print Relaxed Fit Drawstring Hood",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-oversized-hoodie-waffle-knit-drawstring-hood-relaxed-fit",
+   "title": "Women's Oversized Hoodie | Waffle Knit Drawstring Hood Relaxed Fit",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-oversized-hoodie-waffle-knit-hood-drawstring-pockets",
+   "title": "Women's Oversized Hoodie | Waffle Knit Hood Drawstring Pockets",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-palazzo-pants-wide-leg-celestial-print-flowing",
+   "title": "Women's Palazzo Pants | Wide Leg Celestial Print Flowing",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-pointed-knit-flats-pointed-toe-slip-on-knit",
+   "title": "Women's Pointed Knit Flats | Pointed Toe Slip-On Knit",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-sequin-dress-v-neck-sheer-mesh-sleeves-midi",
+   "title": "Women's Sequin Dress | V-Neck Sheer Mesh Sleeves Midi",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-shirt-dress-midi-collared-button-front-roll-tab-sleeve",
+   "title": "Women's Shirt Dress | Midi Collared Button Front Roll Tab Sleeve",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-shoe-lace-closure-quick-dry-mesh-barefoot",
+   "title": "Women's Shoe | Lace Closure Quick-Dry Mesh Barefoot",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-shoe-mesh-knit-lace-up-lightweight-cushioned",
+   "title": "Women's Shoe | Mesh Knit Lace-Up Lightweight Cushioned",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-shoe-mesh-upper-lace-up-breathable-lightweight",
+   "title": "Women's Shoe | Mesh Upper Lace-Up Breathable Lightweight",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-shoe-pointed-toe-flat-knot-detail",
+   "title": "Women's Shoe | Pointed Toe Flat Knot Detail",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-slip-on-loafers-pointed-toe-low-heel-stitched-seam",
+   "title": "Women's Slip On Loafers | Pointed Toe Low Heel Stitched Seam",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-sneakers-lace-up-closure-cushioned-sole-leather-upper",
+   "title": "Women's Sneakers | Lace-Up Closure Cushioned Sole Leather Upper",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-sneakers-mesh-upper-adjustable-strap-cushioned-sole",
+   "title": "Women's Sneakers | Mesh Upper Adjustable Strap Cushioned Sole",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-sneakers-patterned-high-top-lace-up-canvas",
+   "title": "Women's Sneakers | Patterned High-Top Lace-Up Canvas",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-snow-boots-quilted-faux-fur-lined-side-zip",
+   "title": "Women's Snow Boots | Quilted Faux Fur Lined Side Zip",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-stiletto-heels-pointed-toe-slip-on-loafer-pump",
+   "title": "Women's Stiletto Heels | Pointed Toe Slip-On Loafer Pump",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-sweater-dress-cold-shoulder-turtleneck-knit",
+   "title": "Women's Sweater Dress | Cold-Shoulder Turtleneck Knit",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-sweater-dress-midi-cable-knit-crew-neck-long-sleeve",
+   "title": "Women's Sweater Dress | Midi Cable-Knit Crew Neck Long Sleeve",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "womens-sweater-dress-turtleneck-cable-knit-long-sleeve",
+   "title": "Women's Sweater Dress | Turtleneck Cable Knit Long Sleeve",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-sweater-dress-turtleneck-cable-knit-relaxed",
+   "title": "Women's Sweater Dress | Turtleneck Cable Knit Relaxed",
+   "from": 59.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "handle": "womens-sweatshirt-dress-polo-collar-quarter-zip-long-sleeves-striped-cuffs",
+   "title": "Women's Sweatshirt Dress | Polo Collar Quarter-Zip Long Sleeves Striped Cuffs",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-trench-jacket-double-breasted-cropped-collar-tie-belt",
+   "title": "Women's Trench Jacket | Double Breasted Cropped Collar Tie Belt",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-wedding-dress-guest-dress-maxi-floral-print-v-neck-long-sleeve",
+   "title": "Women's Wedding Dress Guest Dress | Maxi Floral Print V-Neck Long Sleeve",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 109.95
+  },
+  {
+   "handle": "womens-wedding-dress-guest-dress-midi-pleated-v-neck-sleeveless-cutout",
+   "title": "Women's Wedding Dress Guest Dress | Midi Pleated V Neck Sleeveless Cutout",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-wedding-guest-gown-maxi-v-neckline-puff-sleeve-floral",
+   "title": "Women's Wedding Guest Gown | Maxi V-Neckline Puff Sleeve Floral",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-wide-leg-jeans-high-waist-straight-leg-denim",
+   "title": "Women's Wide Leg Jeans | High Waist Straight Leg Denim",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-wide-toe-box-shoe-mesh-lace-up-sneaker-breathable",
+   "title": "Women's Wide Toe Box Shoe | Mesh Lace-Up Sneaker Breathable",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-woven-flats-pointed-toe-slingback-slip-on",
+   "title": "Women's Woven Flats | Pointed Toe Slingback Slip On",
+   "from": 59.95,
+   "price": 54.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "leather-shoe-for-men-lace-up-low-top-rubber-sole",
+   "title": "Leather Shoe For Men | Lace Up Low Top Rubber Sole",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-cargo-pants-relaxed-fit-drawstring-waist-cargo-pockets",
+   "title": "Men's Cargo Pants | Relaxed Fit Drawstring Waist Cargo Pockets",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "mens-christmas-sweater-hooded-knit-reindeer-snowflake-print",
+   "title": "Men's Christmas Sweater | Hooded Knit Reindeer Snowflake Print",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "mens-hoodie-graphic-color-block-zip-up-relaxed-fit",
+   "title": "Men's Hoodie | Graphic Color Block Zip-Up Relaxed Fit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-hoodie-polo-collar-half-button-colorblock-knit",
+   "title": "Men's Hoodie | Polo Collar Half-Button Colorblock Knit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "mens-hoodie-quarter-zip-knit-hood-cargo-pockets",
+   "title": "Men's Hoodie | Quarter-Zip Knit Hood Cargo Pockets",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-hoodie-relaxed-fit-corduroy-drawstring-hood",
+   "title": "Men's Hoodie | Relaxed Fit Corduroy Drawstring Hood",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "mens-hoodie-relaxed-fit-kangaroo-pocket-drawstring-hood",
+   "title": "Men's Hoodie | Relaxed Fit Kangaroo Pocket Drawstring Hood",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-hoodie-v-neck-knit-relaxed-fit",
+   "title": "Men's Hoodie | V-Neck Knit Relaxed Fit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "mens-loafer-shoe-crocodile-embossed-slip-on-leather",
+   "title": "Men's Loafer Shoe | Crocodile Embossed Slip-On Leather",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-loafer-shoe-leather-slip-on-casual",
+   "title": "Men's Loafer Shoe | Leather Slip-On Casual",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "mens-quarter-zip-sweater-mock-neck-knit-color-block-long-sleeve",
+   "title": "Men's Quarter Zip Sweater | Mock Neck Knit Color Block Long Sleeve",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "mens-quarter-zip-sweater-mock-neck-long-sleeve-knit",
+   "title": "Men's Quarter Zip Sweater | Mock Neck Long Sleeve Knit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-sweater-crew-neck-long-sleeve-knit-plaid",
+   "title": "Men's Sweater | Crew Neck Long Sleeve Knit Plaid",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-sweater-half-zip-knit-collar-long-sleeve",
+   "title": "Men's Sweater | Half Zip Knit Collar Long Sleeve",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "mens-sweater-knit-crew-neck-long-sleeve-textured",
+   "title": "Men's Sweater | Knit Crew Neck Long Sleeve Textured",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "mens-zip-hoodie-contrast-panel-colorblock-relaxed-fit",
+   "title": "Men's Zip Hoodie | Contrast Panel Colorblock Relaxed Fit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-hoodie-colorblock-crewneck-relaxed-fit",
+   "title": "Men’s Hoodie | Colorblock Crewneck Relaxed Fit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-barrel-jeans-mid-rise-cropped-denim-heavyweight",
+   "title": "Women's Barrel Jeans | Mid-Rise Cropped Denim Heavyweight",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cargo-pants-capri-length-drawcord-cargo-pockets",
+   "title": "Women's Cargo Pants | Capri Length Drawcord Cargo Pockets",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "mens-cargo-pants-relaxed-fit-drawstring-elastic-cuffs",
+   "title": "Women's Cargo Pants | Relaxed Fit Drawstring Elastic Cuffs",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-cargo-pants-wide-leg-drawstring-elastic-waist-cotton",
+   "title": "Women's Cargo Pants | Wide Leg Drawstring Elastic Waist Cotton",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 104.95
+  },
+  {
+   "handle": "womens-cashmere-sweater-crew-neck-cable-knit-ribbed-cuffs",
+   "title": "Women's Cashmere Sweater | Crew Neck Cable Knit Ribbed Cuffs",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-christmas-dress-maxi-plaid-velvet-button-front-long-sleeve",
+   "title": "Women's Christmas Dress | Maxi Plaid Velvet Button Front Long Sleeve",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-christmas-sweater-crew-neck-knit-nordic-print",
+   "title": "Women's Christmas Sweater | Crew Neck Knit Nordic Print",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-christmas-sweater-crew-neck-long-sleeve-knit",
+   "title": "Women's Christmas Sweater | Crew Neck Long Sleeve Knit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-satin-draped-brooch-closure",
+   "title": "Women's Cocktail Dress | Midi Satin Draped Brooch Closure",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-v-neck-three-quarter-sleeve-wrap",
+   "title": "Women's Cocktail Dress | Midi V-Neck Three-Quarter Sleeve Wrap",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cocktail-dress-mini-sleeveless-a-line-crew-neck",
+   "title": "Women's Cocktail Dress | Mini Sleeveless A-Line Crew Neck",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "womens-fair-isle-sweater-crew-neck-long-sleeve-knit-1",
+   "title": "Women's Fair Isle Sweater | Crew Neck Long Sleeve Knit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-fair-isle-sweater-crew-neck-long-sleeve-knit",
+   "title": "Women's Fair Isle Sweater | Crew Neck Long Sleeve Knit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-fair-isle-sweater-turtleneck-long-sleeve-knit",
+   "title": "Women's Fair Isle Sweater | Turtleneck Long Sleeve Knit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-high-heels-pointed-toe-slingback-suede",
+   "title": "Women's High Heels | Pointed Toe Slingback Suede",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-hoodie-half-button-collar-knit-geometric",
+   "title": "Women's Hoodie | Half Button Collar Knit Geometric",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-hoodie-rainbow-stripe-half-zip-collared-knit",
+   "title": "Women's Hoodie | Rainbow Stripe Half Zip Collared Knit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-knit-sweater-zip-neck-cable-knit-long-sleeve",
+   "title": "Women's Knit Sweater | Zip Neck Cable Knit Long Sleeve",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-long-sleeveless-dress-u-neck-maxi-linen-button-front",
+   "title": "Women's Long Sleeveless Dress | U-Neck Maxi Linen Button Front",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-matching-set-tailored-blazer-notch-collar-single-button",
+   "title": "Women's Matching Set | Tailored Blazer Notch Collar Single Button",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-matching-workout-set-short-sleeve-relaxed-fit-drawstring",
+   "title": "Women's Matching Workout Set | Short Sleeve Relaxed Fit Drawstring",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-maxi-skirt-elastic-waist-pull-on-textured",
+   "title": "Women's Maxi Skirt | Elastic Waist Pull-On Textured",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-maxi-skirt-high-waist-wrap-front-asymmetric-hem",
+   "title": "Women's Maxi Skirt | High-Waist Wrap Front Asymmetric Hem",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 84.95
+  },
+  {
+   "handle": "womens-maxi-skirt-square-neck-short-sleeve-cropped-top",
+   "title": "Women's Maxi Skirt | Square Neck Short Sleeve Cropped Top",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-maxi-skirt-tiered-damask-print-a-line-elastic-waist",
+   "title": "Women's Maxi Skirt | Tiered Damask Print A-Line Elastic Waist",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-mini-skirt-sequin-high-waist-fitted-mini-length",
+   "title": "Women's Mini Skirt | Sequin High Waist Fitted Mini Length",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-oversize-hoodie-buffalo-check-fleece-half-zip-hood",
+   "title": "Women's Oversize Hoodie | Buffalo Check Fleece Half Zip Hood",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-oversized-hoodie-crew-neck-witch-print-long-sleeve",
+   "title": "Women's Oversized Hoodie | Crew Neck Witch Print Long Sleeve",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-oversized-hoodie-half-zip-knit-long-sleeve",
+   "title": "Women's Oversized Hoodie | Half-Zip Knit Long Sleeve",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-pj-pants-button-up-shirt-relaxed-fit-plaid-long-sleeve",
+   "title": "Women's PJ Pants | Button-Up Shirt Relaxed Fit Plaid Long Sleeve",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-pj-pants-ribbed-knit-wide-leg-adjustable-waist",
+   "title": "Women's PJ Pants | Ribbed Knit Wide-Leg Adjustable Waist",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-palazzo-pants-elastic-waist-wide-leg-relaxed-fit",
+   "title": "Women's Palazzo Pants | Elastic Waist Wide Leg Relaxed Fit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-palazzo-pants-wide-leg-front-pleats-back-pockets",
+   "title": "Women's Palazzo Pants | Wide Leg Front Pleats Back Pockets",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-pants-cropped-length-elastic-waist-botanical-print",
+   "title": "Women's Pants | Cropped Length Elastic Waist Botanical Print",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-pants-elastic-waist-relaxed-fit-lightweight",
+   "title": "Women's Pants | Elastic Waist Relaxed Fit Lightweight",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-pants-high-waist-wide-leg-circle-applique",
+   "title": "Women's Pants | High Waist Wide Leg Circle Applique",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-pants-vertical-stripe-drawstring-cropped",
+   "title": "Women's Pants | Vertical Stripe Drawstring Cropped",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-pj-pants-wide-leg-elastic-waist-ribbed-knit",
+   "title": "Women's Pj Pants | Wide Leg Elastic Waist Ribbed Knit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-quarter-zip-sweater-stand-collar-textured-knit-long-sleeve",
+   "title": "Women's Quarter Zip Sweater | Stand Collar Textured Knit Long Sleeve",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-sweater-dress-mini-length-crew-neck-knit-puffed-sleeves",
+   "title": "Women's Sweater Dress | Mini Length Crew Neck Knit Puffed Sleeves",
+   "from": 54.95,
+   "price": 44.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-sweatshirt-balloon-sleeve-linen-blend-gathered-hem",
+   "title": "Women's Sweatshirt | Balloon Sleeve Linen Blend Gathered Hem",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-sweatshirt-hooded-button-front-long-sleeve",
+   "title": "Women's Sweatshirt | Hooded Button Front Long Sleeve",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 99.95
+  },
+  {
+   "handle": "womens-tracksuit-set-stand-collar-full-zip-wide-leg-contrast-stripe",
+   "title": "Women's Tracksuit Set | Stand Collar Full Zip Wide Leg Contrast Stripe",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-turtleneck-sweater-cable-knit-turtleneck-long-sleeve-knit",
+   "title": "Women's Turtleneck Sweater | Cable Knit Turtleneck Long Sleeve Knit",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-wedding-dress-guest-dress-midi-length-v-neck-flutter-sleeve",
+   "title": "Women's Wedding Dress Guest Dress | Midi Length V-Neck Flutter Sleeve",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-pj-pants-wide-leg-knit-drawstring",
+   "title": "Women's pj pants | Wide Leg Knit Drawstring",
+   "from": 54.95,
+   "price": 49.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-crewneck-graphic-print-short-sleeve-crew-neck",
+   "title": "Men's Crewneck | Graphic Print Short Sleeve Crew Neck",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "mens-linen-pants-drawstring-waist-relaxed-straight-leg",
+   "title": "Men's Linen Pants | Drawstring Waist Relaxed Straight Leg",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-linen-shirt-collared-long-sleeve-button-closure-1",
+   "title": "Men's Linen Shirt | Collared Long Sleeve Button Closure",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-linen-shirt-collared-short-sleeve-button-chest-pocket",
+   "title": "Men's Linen Shirt | Collared Short Sleeve Button Chest Pocket",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-linen-shirt-grandad-collar-long-sleeve-relaxed-fit",
+   "title": "Men's Linen Shirt | Grandad Collar Long Sleeve Relaxed Fit",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-loafer-shoe-leather-round-toe-slip-on-rubber-sole",
+   "title": "Men's Loafer Shoe | Leather Round Toe Slip On Rubber Sole",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-loafer-shoe-leather-upper-slip-on-horsebit-closure",
+   "title": "Men's Loafer Shoe | Leather Upper Slip-On Horsebit Closure",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-shirt-collared-button-front-casual",
+   "title": "Men's Shirt | Collared Button Front Casual",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "mens-shirt-short-sleeve-polo-collar-knit",
+   "title": "Men's Shirt | Short Sleeve Polo Collar Knit",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "mens-shirt-short-sleeve-polo-collar-zip-closure-diamond-print",
+   "title": "Men's Shirt | Short Sleeve Polo Collar Zip Closure Diamond Print",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "mens-slip-on-loafers-suede-round-toe-flat-sole",
+   "title": "Men's Slip On Loafers | Suede Round Toe Flat Sole",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-sweater-vest-cable-knit-crew-neck-relaxed-fit",
+   "title": "Men's Sweater Vest | Cable Knit Crew Neck Relaxed Fit",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-sweatpant-relaxed-fit-elastic-waistband-side-pockets",
+   "title": "Men's Sweatpant | Relaxed Fit Elastic Waistband Side Pockets",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-sweatpant-relaxed-fit-fleece-drawstring-jogger",
+   "title": "Men's Sweatpant | Relaxed Fit Fleece Drawstring Jogger",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "mens-western-shirt-embroidered-relaxed-fit-button-front",
+   "title": "Men's Western Shirt | Embroidered Relaxed Fit Button Front",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-barrel-jeans-high-waist-denim-cropped-leg",
+   "title": "Women's Barrel Jeans | High Waist Denim Cropped Leg",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-barrel-jeans-high-waist-relaxed-fit-denim",
+   "title": "Women's Barrel Jeans | High Waist Relaxed Fit Denim",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-blouse-draped-cowl-neckline-long-sleeve-satin",
+   "title": "Women's Blouse | Draped Cowl Neckline Long Sleeve Satin",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-bootcut-jeans-high-waist-flare-denim-elongating",
+   "title": "Women's Bootcut Jeans | High Waist Flare Denim Elongating",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-bootcut-jeans-high-waist-flared-denim-sculpted-fit",
+   "title": "Women's Bootcut Jeans | High Waist Flared Denim Sculpted Fit",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-checked-blouse-argyle-print-knit-collar-button",
+   "title": "Women's Checked Blouse | Argyle Print Knit Collar Button",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-christmas-dress-maxi-sweetheart-neckline-ruched",
+   "title": "Women's Christmas Dress | Maxi Sweetheart Neckline Ruched",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-christmas-dress-midi-corset-bustier-sweetheart",
+   "title": "Women's Christmas Dress | Midi Corset Bustier Sweetheart",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-christmas-dress-midi-length-v-neck-half-sleeve",
+   "title": "Women's Christmas Dress | Midi Length V-Neck Half Sleeve",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-christmas-dress-midi-sequin-sleeves-button-closure-velvet",
+   "title": "Women's Christmas Dress | Midi Sequin Sleeves Button Closure Velvet",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-christmas-sweater-santa-print-knit-crew-neck-balloon-sleeve",
+   "title": "Women's Christmas Sweater | Santa Print Knit Crew Neck Balloon Sleeve",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-christmas-sweatshirt-crew-neck-long-sleeve-knit-print",
+   "title": "Women's Christmas Sweatshirt | Crew Neck Long Sleeve Knit Print",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-clogs-perforated-suede-slip-on-rounded-toe",
+   "title": "Women's Clogs | Perforated Suede Slip-On Rounded Toe",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-clogs-perforated-wedge-sole-slip-on-adjustable-strap",
+   "title": "Women's Clogs | Perforated Wedge Sole Slip-On Adjustable Strap",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-length-off-shoulder-tiered-polyester",
+   "title": "Women's Cocktail Dress | Midi Length Off-Shoulder Tiered Polyester",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-length-round-neck-cap-sleeve-ruched",
+   "title": "Women's Cocktail Dress | Midi Length Round Neck Cap Sleeve Ruched",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-length-v-neck-wrap-sleeveless",
+   "title": "Women's Cocktail Dress | Midi Length V-Neck Wrap Sleeveless",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-length-wrap-neckline-half-sleeve",
+   "title": "Women's Cocktail Dress | Midi Length Wrap Neckline Half Sleeve",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-length-wrap-neckline-three-quarter-sleeve-1",
+   "title": "Women's Cocktail Dress | Midi Length Wrap Neckline Three Quarter Sleeve",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-cocktail-dress-one-shoulder-midi-ruched-bodycon",
+   "title": "Women's Cocktail Dress | One-Shoulder Midi Ruched Bodycon",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 94.95
+  },
+  {
+   "handle": "womens-cocktail-dress-v-neck-sleeveless-sequin-fringe",
+   "title": "Women's Cocktail Dress | V-Neck Sleeveless Sequin Fringe",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-flannel-shirt-collared-button-up-long-sleeve-curved-hem",
+   "title": "Women's Flannel Shirt | Collared Button-Up Long Sleeve Curved Hem",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-flannel-shirt-oversized-fit-button-up-long-sleeve",
+   "title": "Women's Flannel Shirt | Oversized Fit Button Up Long Sleeve",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-flannel-shirt-point-collar-long-sleeve-linen-button-down",
+   "title": "Women's Flannel Shirt | Point Collar Long Sleeve Linen Button Down",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-flannel-shirt-relaxed-fit-button-up-long-sleeve-plaid",
+   "title": "Women's Flannel Shirt | Relaxed Fit Button Up Long Sleeve Plaid",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-flats-square-toe-jeweled-buckle-knit",
+   "title": "Women's Flats | Square Toe Jeweled Buckle Knit",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-henley-shirt-short-sleeve-button-neckline-textured",
+   "title": "Women's Henley Shirt | Short Sleeve Button Neckline Textured",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-hoodie-turtleneck-drawstring-sleeveless-piping",
+   "title": "Women's Hoodie | Turtleneck Drawstring Sleeveless Piping",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-jeans-high-waist-leopard-print-stretch",
+   "title": "Women's Jeans | High Waist Leopard Print Stretch",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-leather-pants-wide-leg-straight-panelled",
+   "title": "Women's Leather Pants | Wide Leg Straight Panelled",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-long-sleeveless-dress-midi-length-crew-neck-embellished",
+   "title": "Women's Long Sleeveless Dress | Midi Length Crew Neck Embellished",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-midi-skirt-sweetheart-neckline-satin-full-skirt",
+   "title": "Women's Midi Skirt | Sweetheart Neckline Satin Full Skirt",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-oversize-hoodie-drawstring-hood-long-sleeves-knit",
+   "title": "Women's Oversize Hoodie | Drawstring Hood Long Sleeves Knit",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-oversize-hoodie-graphic-print-hood-long-sleeve",
+   "title": "Women's Oversize Hoodie | Graphic Print Hood Long Sleeve",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-palazzo-pants-wide-leg-relaxed-fit-woven-casual",
+   "title": "Women's Palazzo Pants | Wide Leg Relaxed Fit Woven Casual",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-plaid-skirt-maxi-length-long-sleeve-checked-cotton",
+   "title": "Women's Plaid Skirt | Maxi Length Long Sleeve Checked Cotton",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-sequin-dress-midi-length-v-neck-chiffon-cape",
+   "title": "Women's Sequin Dress | Midi Length V Neck Chiffon Cape",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-snow-boots-quilted-waterproof-mid-calf-tassel-pull",
+   "title": "Women's Snow Boots | Quilted Waterproof Mid Calf Tassel Pull",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-sweatshirt-hooded-button-front-pockets-long-sleeves",
+   "title": "Women's Sweatshirt | Hooded Button-Front Pockets Long Sleeves",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-turtleneck-ribbed-knit-long-sleeve-fitted",
+   "title": "Women's Turtleneck | Ribbed Knit Long Sleeve Fitted",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 79.95
+  },
+  {
+   "handle": "womens-wedding-guest-gown-midi-v-neck-short-sleeve-wrap-chiffon",
+   "title": "Women's Wedding Guest Gown | Midi V-Neck Short Sleeve Wrap Chiffon",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  },
+  {
+   "handle": "womens-wide-leg-jumpsuit-crew-neck-short-sleeve-tie-waist",
+   "title": "Women's Wide Leg Jumpsuit | Crew Neck Short Sleeve Tie Waist",
+   "from": 49.95,
+   "price": 44.95,
+   "compareAt": 89.95
+  }
+ ]
+}
