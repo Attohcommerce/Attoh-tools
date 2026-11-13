@@ -410,7 +410,7 @@ export default function DoctorPanel({ store, since }) {
     }
     if (!window.confirm(`${items.length} producten krijgen een nieuwe prijs (${pricePlan.note || pricePlan.store}). Starten?`)) return;
     const prices = {};
-    for (const it of items) prices[String(it.id)] = { price: it.price, compareAt: it.compareAt, from: it.from, discount: it.discount };
+    for (const it of items) prices[String(it.id)] = { price: it.price, compareAt: it.compareAt, from: it.from, discount: it.discount, raiseOnly: it.raiseOnly };
     runFix("price-plan", { id: "set-prices", label: `Prijsplan ${pricePlan.store || ""} ${pricePlan.date || ""}`.trim() }, items.map((it) => it.id), { prices });
   }
 
