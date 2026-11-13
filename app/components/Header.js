@@ -22,6 +22,7 @@ const NAV = [
   { href: "/bills", label: "Bills" },
   { href: "/pythago", label: "Pythago" },
   { href: "/pokemon", label: "Pokémon" },
+  { href: "/claude", label: "Claude" },
 ];
 
 export default function Header({ icon, title, subtitle }) {
