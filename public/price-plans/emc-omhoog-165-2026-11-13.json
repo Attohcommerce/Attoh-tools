@@ -1,8 +1,8 @@
 {
  "store": "Everman Clothing",
  "domain": "evermanclothing.com",
- "date": "2026-11-13 min A$69.95",
- "note": "omhoog · 508 producten naar minimaal A$69,95 (BE-ROAS 1,65/1,70 als dat hoger is) · alleen omhoog · 16 bestsellers (3+ verkocht) blijven · korting op doorstreepprijs blijft gelijk",
+ "date": "2026-11-13 BE 1,65",
+ "note": "omhoog · 508 producten naar BE-ROAS 1,65, minimaal A$69,95, max +60% · alleen omhoog · bestsellers (3+ verkocht) blijven · korting op doorstreepprijs blijft gelijk",
  "items": [
   {
    "handle": "mens-denim-shorts-knee-length-relaxed-fit-denim",
@@ -240,7 +240,7 @@
    "handle": "mens-3-piece-suit-checked-pattern-notched-lapels-double-button",
    "title": "Men's 3 Piece Suit | Checked Pattern Notched Lapels Double Button",
    "from": 0,
-   "price": 219.95,
+   "price": 234.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -248,7 +248,7 @@
    "handle": "mens-3-piece-suit-tailored-blazer-waistcoat-trousers",
    "title": "Men's 3 Piece Suit | Tailored Blazer Waistcoat Trousers",
    "from": 0,
-   "price": 219.95,
+   "price": 234.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -256,7 +256,7 @@
    "handle": "mens-formal-suit-notch-lapel-three-piece-tailored-fit",
    "title": "Men's Formal Suit | Notch Lapel Three-Piece Tailored Fit",
    "from": 0,
-   "price": 219.95,
+   "price": 234.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -264,7 +264,7 @@
    "handle": "mens-3-piece-suit-single-breasted-two-button-tailored",
    "title": "Men's 3 Piece Suit | Single-Breasted Two-Button Tailored",
    "from": 0,
-   "price": 214.95,
+   "price": 229.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -272,7 +272,7 @@
    "handle": "mens-suit-slim-fit-single-breasted-button-closure",
    "title": "Men's Suit | Slim Fit Single Breasted Button Closure",
    "from": 0,
-   "price": 209.95,
+   "price": 219.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -280,7 +280,7 @@
    "handle": "mens-suit-two-button-single-breasted-three-piece-tailored",
    "title": "Men's Suit | Two-Button Single Breasted Three-Piece Tailored",
    "from": 0,
-   "price": 209.95,
+   "price": 219.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -288,7 +288,7 @@
    "handle": "mens-suit-tailored-jacket-button-closure-trousers",
    "title": "Men's Suit | Tailored Jacket Button Closure Trousers",
    "from": 0,
-   "price": 199.95,
+   "price": 209.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -296,7 +296,7 @@
    "handle": "mens-suit-notch-lapel-two-button-slim-fit",
    "title": "Men's Suit | Notch Lapel Two Button Slim Fit",
    "from": 0,
-   "price": 194.95,
+   "price": 204.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -304,7 +304,7 @@
    "handle": "mens-suit-two-piece-linen-button-front-tailored",
    "title": "Men's Suit | Two-Piece Linen Button-Front Tailored",
    "from": 0,
-   "price": 184.95,
+   "price": 199.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -312,7 +312,7 @@
    "handle": "mens-blazer-double-breasted-notch-collar-pinstripe",
    "title": "Men's Blazer | Double-Breasted Notch Collar Pinstripe",
    "from": 0,
-   "price": 174.95,
+   "price": 184.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -320,7 +320,7 @@
    "handle": "mens-blazer-single-button-notch-lapel-floral-embroidered",
    "title": "Men's Blazer | Single Button Notch Lapel Floral Embroidered",
    "from": 0,
-   "price": 174.95,
+   "price": 184.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -328,7 +328,7 @@
    "handle": "mens-linen-suit-relaxed-blazer-drawstring-trousers-notch-lapel",
    "title": "Men's Linen Suit | Relaxed Blazer Drawstring Trousers Notch Lapel",
    "from": 0,
-   "price": 174.95,
+   "price": 184.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -336,7 +336,7 @@
    "handle": "mens-3-piece-suit-herringbone-tailored-button-closure-structured",
    "title": "Men's 3 Piece Suit | Herringbone Tailored Button Closure Structured",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -344,7 +344,7 @@
    "handle": "mens-3-piece-suit-pinstripe-slim-fit-button-closure-vest",
    "title": "Men's 3 Piece Suit | Pinstripe Slim Fit Button Closure Vest",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -352,7 +352,7 @@
    "handle": "mens-3-piece-suit-shawl-collar-tailored-fit-button-closure",
    "title": "Men's 3 Piece Suit | Shawl Collar Tailored Fit Button Closure",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -360,7 +360,7 @@
    "handle": "mens-3-piece-suit-single-button-structured-blazer",
    "title": "Men's 3 Piece Suit | Single Button Structured Blazer",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -368,7 +368,7 @@
    "handle": "mens-3-piece-suit-tailored-fit-button-closure-vest",
    "title": "Men's 3 Piece Suit | Tailored Fit Button Closure Vest",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -376,7 +376,7 @@
    "handle": "mens-3-piece-suit-tailored-fit-notch-lapel-jacket-vest",
    "title": "Men's 3 Piece Suit | Tailored Fit Notch Lapel Jacket Vest",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -384,7 +384,7 @@
    "handle": "mens-3-piece-suit-tailored-slim-fit-button-closure",
    "title": "Men's 3 Piece Suit | Tailored Slim Fit Button Closure",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -392,7 +392,7 @@
    "handle": "mens-3-piece-suit-tailored-slim-fit-single-breasted-linen",
    "title": "Men's 3 Piece Suit | Tailored Slim Fit Single Breasted Linen",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -400,7 +400,7 @@
    "handle": "mens-suit-single-breasted-notch-lapel-tailored",
    "title": "Men's Suit | Single Breasted Notch Lapel Tailored",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -408,7 +408,7 @@
    "handle": "mens-suit-slim-fit-two-piece-tailored-professional",
    "title": "Men's Suit | Slim Fit Two-Piece Tailored Professional",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -416,7 +416,7 @@
    "handle": "mens-suit-tailored-fit-single-button-closure-trousers",
    "title": "Men's Suit | Tailored Fit Single Button Closure Trousers",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -424,7 +424,7 @@
    "handle": "mens-three-piece-suit-notch-lapel-slim-fit-vest-trousers",
    "title": "Men's Three Piece Suit | Notch Lapel Slim Fit Vest Trousers",
    "from": 0,
-   "price": 169.95,
+   "price": 179.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -432,7 +432,7 @@
    "handle": "mens-blazer-high-collar-button-closure-tailored",
    "title": "Men's Blazer | High Collar Button Closure Tailored",
    "from": 0,
-   "price": 164.95,
+   "price": 174.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -440,7 +440,7 @@
    "handle": "mens-blazer-linen-blend-lightweight-tailored",
    "title": "Men's Blazer | Linen Blend Lightweight Tailored",
    "from": 0,
-   "price": 159.95,
+   "price": 164.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -448,7 +448,7 @@
    "handle": "mens-blazer-single-button-tailored-contrast-pockets",
    "title": "Men's Blazer | Single Button Tailored Contrast Pockets",
    "from": 0,
-   "price": 154.95,
+   "price": 159.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -456,7 +456,7 @@
    "handle": "mens-linen-set-long-sleeve-button-down-straight-leg",
    "title": "Men's Linen Set | Long-Sleeve Button-Down Straight-Leg",
    "from": 0,
-   "price": 154.95,
+   "price": 159.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -464,7 +464,7 @@
    "handle": "mens-linen-set-short-sleeve-button-front-relaxed-fit",
    "title": "Men's Linen Set | Short Sleeve Button Front Relaxed Fit",
    "from": 0,
-   "price": 139.95,
+   "price": 149.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -472,7 +472,7 @@
    "handle": "mens-linen-set-short-sleeve-collar-button-closure",
    "title": "Men's Linen Set | Short Sleeve Collar Button Closure",
    "from": 0,
-   "price": 139.95,
+   "price": 149.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -480,7 +480,7 @@
    "handle": "cowboy-boots-for-men-square-toe-embroidered-leather-western",
    "title": "Cowboy Boots For Men | Square Toe Embroidered Leather Western",
    "from": 0,
-   "price": 134.95,
+   "price": 144.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -488,7 +488,7 @@
    "handle": "mens-linen-set-polo-shirt-short-sleeve-button-closure-drawstring-shorts",
    "title": "Men's Linen Set | Polo Shirt Short Sleeve Button Closure Drawstring Shorts",
    "from": 0,
-   "price": 134.95,
+   "price": 144.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -496,7 +496,7 @@
    "handle": "mens-suit-slim-fit-single-breasted-three-piece-notch-lapel",
    "title": "Men's Suit | Slim Fit Single-Breasted Three-Piece Notch Lapel",
    "from": 0,
-   "price": 134.95,
+   "price": 144.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -504,7 +504,7 @@
    "handle": "mens-suit-slim-fit-three-piece-single-breasted-notch-lapel",
    "title": "Men's Suit | Slim Fit Three-Piece Single-Breasted Notch Lapel",
    "from": 0,
-   "price": 134.95,
+   "price": 144.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -512,7 +512,7 @@
    "handle": "mens-suit-slim-fit-notch-lapel-two-piece",
    "title": "Men's Suit | Slim-Fit Notch Lapel Two-Piece",
    "from": 0,
-   "price": 134.95,
+   "price": 144.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -520,7 +520,7 @@
    "handle": "mens-suit-zip-up-jacket-tapered-joggers-knit",
    "title": "Men's Suit | Zip-Up Jacket Tapered Joggers Knit",
    "from": 0,
-   "price": 134.95,
+   "price": 144.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -528,7 +528,7 @@
    "handle": "mens-waterproof-jacket-hooded-insulated-shell-multiple-pockets",
    "title": "Men's Waterproof Jacket | Hooded Insulated Shell Multiple Pockets",
    "from": 0,
-   "price": 134.95,
+   "price": 139.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -536,7 +536,7 @@
    "handle": "mens-waterproof-jacket-hooded-long-rain-coat-relaxed-fit",
    "title": "Men's Waterproof Jacket | Hooded Long Rain Coat Relaxed Fit",
    "from": 0,
-   "price": 134.95,
+   "price": 139.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -544,7 +544,7 @@
    "handle": "mens-waterproof-jacket-hooded-windbreaker-nylon-zip-pockets",
    "title": "Men's Waterproof Jacket | Hooded Windbreaker Nylon Zip Pockets",
    "from": 0,
-   "price": 134.95,
+   "price": 139.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -552,7 +552,7 @@
    "handle": "mens-waterproof-jacket-hooded-zip-closure-canvas",
    "title": "Men's Waterproof Jacket | Hooded Zip Closure Canvas",
    "from": 0,
-   "price": 134.95,
+   "price": 139.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -560,7 +560,7 @@
    "handle": "womens-cowboy-boots-pointed-toe-embroidered-leather-western",
    "title": "Women's Cowboy Boots | Pointed Toe Embroidered Leather Western",
    "from": 0,
-   "price": 124.95,
+   "price": 129.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -568,7 +568,7 @@
    "handle": "chelsea-boots-for-men-leather-round-toe-pull-tab-slip-on",
    "title": "Chelsea Boots For Men | Leather Round Toe Pull Tab Slip On",
    "from": 0,
-   "price": 119.95,
+   "price": 124.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -576,7 +576,7 @@
    "handle": "cowboy-boots-for-men-square-toe-embroidered-shaft-block-heel",
    "title": "Cowboy Boots For Men | Square Toe Embroidered Shaft Block Heel",
    "from": 0,
-   "price": 119.95,
+   "price": 124.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -584,7 +584,7 @@
    "handle": "mens-bomber-jacket-leather-zip-closure-ribbed-cuff",
    "title": "Men's Bomber Jacket | Leather Zip Closure Ribbed Cuff",
    "from": 0,
-   "price": 119.95,
+   "price": 124.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -592,7 +592,7 @@
    "handle": "mens-dress-boots-leather-pull-on-ankle-stacked-heel",
    "title": "Men's Dress Boots | Leather Pull-On Ankle Stacked Heel",
    "from": 0,
-   "price": 119.95,
+   "price": 124.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -600,7 +600,7 @@
    "handle": "mens-shoes-dress-pointed-toe-monk-strap-buckle-closure-leather",
    "title": "Men's Shoes Dress | Pointed Toe Monk Strap Buckle Closure Leather",
    "from": 0,
-   "price": 119.95,
+   "price": 124.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -608,7 +608,7 @@
    "handle": "mens-sneakers-suede-lace-up-cushioned-gum-sole",
    "title": "Men's Sneakers | Suede Lace-Up Cushioned Gum Sole",
    "from": 0,
-   "price": 119.95,
+   "price": 124.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -616,7 +616,7 @@
    "handle": "mens-waterproof-jacket-hood-zip-pockets-long-sleeve",
    "title": "Men's Waterproof Jacket | Hood Zip Pockets Long Sleeve",
    "from": 0,
-   "price": 134.95,
+   "price": 139.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -624,7 +624,7 @@
    "handle": "shoes-dress-for-men-leather-slip-resistant-oxford-cushioned",
    "title": "Shoes Dress For Men | Leather Slip-Resistant Oxford Cushioned",
    "from": 0,
-   "price": 119.95,
+   "price": 124.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -632,7 +632,7 @@
    "handle": "womens-cowboy-boots-mid-calf-leather-round-toe-lug-sole",
    "title": "Women's Cowboy Boots | Mid-Calf Leather Round Toe Lug Sole",
    "from": 0,
-   "price": 119.95,
+   "price": 124.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -640,7 +640,7 @@
    "handle": "mens-cowboy-boots-pointed-toe-western-stitching",
    "title": "Men's Cowboy Boots | Pointed Toe Western Stitching",
    "from": 0,
-   "price": 114.95,
+   "price": 119.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -648,7 +648,7 @@
    "handle": "mens-cowboy-boots-western-stitching-leather-square-toe",
    "title": "Men's Cowboy Boots | Western Stitching Leather Square Toe",
    "from": 0,
-   "price": 114.95,
+   "price": 119.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -656,7 +656,7 @@
    "handle": "mens-loafers-slip-on-leather-cushioned-sole",
    "title": "Men's Loafers | Slip On Leather Cushioned Sole",
    "from": 0,
-   "price": 109.95,
+   "price": 119.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -664,7 +664,7 @@
    "handle": "mens-loafers-slip-on-perforated-cushioned-moccasin-sole",
    "title": "Men's Loafers | Slip On Perforated Cushioned Moccasin Sole",
    "from": 0,
-   "price": 109.95,
+   "price": 119.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -672,7 +672,7 @@
    "handle": "mens-running-shoe-knit-upper-lace-closure-cushioned-sole",
    "title": "Men's Running Shoe | Knit Upper Lace Closure Cushioned Sole",
    "from": 0,
-   "price": 109.95,
+   "price": 119.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -680,7 +680,7 @@
    "handle": "mens-sneakers-leather-upper-lace-closure-rubber-sole",
    "title": "Men's Sneakers | Leather Upper Lace Closure Rubber Sole",
    "from": 0,
-   "price": 109.95,
+   "price": 119.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -688,7 +688,7 @@
    "handle": "mens-dress-chelsea-boots-leather-upper-elastic-panels-structured-sole",
    "title": "Men's Dress Chelsea Boots | Leather Upper Elastic Panels Structured Sole",
    "from": 0,
-   "price": 104.95,
+   "price": 109.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -696,7 +696,7 @@
    "handle": "mens-jacket-hood-relaxed-fit-softshell-pockets",
    "title": "Men's Jacket | Hood Relaxed Fit Softshell Pockets",
    "from": 0,
-   "price": 104.95,
+   "price": 109.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -704,7 +704,7 @@
    "handle": "mens-jacket-hood-waterproof-long-sleeves-pockets",
    "title": "Men's Jacket | Hood Waterproof Long Sleeves Pockets",
    "from": 0,
-   "price": 104.95,
+   "price": 109.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -712,7 +712,7 @@
    "handle": "mens-rain-jacket-hooded-waterproof-knee-length-relaxed-fit",
    "title": "Men's Rain Jacket | Hooded Waterproof Knee Length Relaxed Fit",
    "from": 0,
-   "price": 104.95,
+   "price": 109.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -720,7 +720,7 @@
    "handle": "mens-waterproof-jacket-hooded-full-zip-lightweight",
    "title": "Men's Waterproof Jacket | Hooded Full Zip Lightweight",
    "from": 0,
-   "price": 134.95,
+   "price": 139.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -728,7 +728,7 @@
    "handle": "mens-waterproof-jacket-hooded-windproof-canvas-zip",
    "title": "Men's Waterproof Jacket | Hooded Windproof Canvas Zip",
    "from": 0,
-   "price": 134.95,
+   "price": 139.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -736,7 +736,7 @@
    "handle": "black-loafer-for-men-lace-up-leather-rounded-toe",
    "title": "Black Loafer For Men | Lace-Up Leather Rounded Toe",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -744,7 +744,7 @@
    "handle": "black-slip-on-loafers-for-men-round-toe-leather-moccasin",
    "title": "Black Slip On Loafers For Men | Round Toe Leather Moccasin",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -752,7 +752,7 @@
    "handle": "boat-shoe-for-men-lace-up-moc-toe-rubber-sole",
    "title": "Boat Shoe For Men | Lace-Up Moc Toe Rubber Sole",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -760,7 +760,7 @@
    "handle": "brown-slip-on-shoe-for-men-croc-embossed-leather-loafer-closure",
    "title": "Brown Slip On Shoe For Men | Croc Embossed Leather Loafer Closure",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -768,7 +768,7 @@
    "handle": "brown-slip-on-shoe-for-men-rounded-toe-leather-tassel-loafer",
    "title": "Brown Slip On Shoe For Men | Rounded Toe Leather Tassel Loafer",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -776,7 +776,7 @@
    "handle": "mens-black-hoodie-textured-knit-drawstring-hood-long-sleeve",
    "title": "Men's Black Hoodie | Textured Knit Drawstring Hood Long Sleeve",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -784,7 +784,7 @@
    "handle": "mens-black-loafer-slip-on-leather-moc-toe",
    "title": "Men's Black Loafer | Slip-On Leather Moc Toe",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -792,7 +792,7 @@
    "handle": "mens-black-slip-on-loafers-metal-buckle-closure-leather",
    "title": "Men's Black Slip On Loafers | Metal Buckle Closure Leather",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -800,7 +800,7 @@
    "handle": "mens-brown-slip-on-shoe-leather-round-toe-slip-on-loafer",
    "title": "Men's Brown Slip On Shoe | Leather Round Toe Slip-On Loafer",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -808,7 +808,7 @@
    "handle": "mens-casual-penny-loafers-perforated-leather-slip-on-moccasin",
    "title": "Men's Casual Penny Loafers | Perforated Leather Slip-On Moccasin",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -816,7 +816,7 @@
    "handle": "mens-casual-penny-loafers-slip-on-suede-moccasin-comfort",
    "title": "Men's Casual Penny Loafers | Slip-On Suede Moccasin Comfort",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -824,7 +824,7 @@
    "handle": "womens-combat-boots-cap-toe-lace-up-side-zip-leather",
    "title": "Men's Combat Boots | Cap Toe Lace Up Side Zip Leather",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -832,7 +832,7 @@
    "handle": "mens-hiking-pants-pleated-buckled-closure-relaxed-fit",
    "title": "Men's Hiking Pants | Pleated Buckled Closure Relaxed Fit",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -840,7 +840,7 @@
    "handle": "mens-leather-shoe-round-toe-lace-up-oxford",
    "title": "Men's Leather Shoe | Round Toe Lace-Up Oxford",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -848,7 +848,7 @@
    "handle": "mens-loafers-ethnic-print-slip-on-round-toe-fabric",
    "title": "Men's Loafers | Ethnic Print Slip-On Round Toe Fabric",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -856,7 +856,7 @@
    "handle": "mens-long-sleeve-henley-hooded-cotton-linen-henley-shirt",
    "title": "Men's Long Sleeve Henley | Hooded Cotton Linen Henley Shirt",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -864,7 +864,7 @@
    "handle": "mens-monk-strap-shoe-buckle-closure-reptile-emboss-leather",
    "title": "Men's Monk Strap Shoe | Buckle Closure Reptile Emboss Leather",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -872,7 +872,7 @@
    "handle": "mens-monk-strap-shoe-double-buckle-suede-rubber-sole",
    "title": "Men's Monk Strap Shoe | Double Buckle Suede Rubber Sole",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -880,7 +880,7 @@
    "handle": "mens-penny-loafers-with-penny-suede-slip-on-loafer-flat-heel",
    "title": "Men's Penny Loafers With Penny | Suede Slip On Loafer Flat Heel",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -888,7 +888,7 @@
    "handle": "mens-rain-jacket-hooded-zip-pockets-relaxed-fit",
    "title": "Men's Rain Jacket | Hooded Zip Pockets Relaxed Fit",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -896,7 +896,7 @@
    "handle": "mens-shoes-dress-suede-lace-up-oxford-casual",
    "title": "Men's Shoes Dress | Suede Lace-Up Oxford Casual",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -904,7 +904,7 @@
    "handle": "mens-shoes-dress-suede-wingtip-lace-up-oxford-sole",
    "title": "Men's Shoes Dress | Suede Wingtip Lace-Up Oxford Sole",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -912,7 +912,7 @@
    "handle": "mens-shoes-loafer-slip-on-suede-casual-driving",
    "title": "Men's Shoes Loafer | Slip On Suede Casual Driving",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -920,7 +920,7 @@
    "handle": "mens-sneakers-mesh-lace-up-breathable-flexible-sole",
    "title": "Men's Sneakers | Mesh Lace-Up Breathable Flexible Sole",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -928,7 +928,7 @@
    "handle": "mens-sweatshirt-crew-neck-long-sleeve-halloween-print",
    "title": "Men's Sweatshirt | Crew Neck Long Sleeve Halloween Print",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -936,7 +936,7 @@
    "handle": "womens-sweatshirt-crew-neck-long-sleeve-skeleton-print",
    "title": "Men's Sweatshirt | Crew Neck Long Sleeve Skeleton Print",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -944,7 +944,7 @@
    "handle": "mens-sweatshirt-quarter-zip-knit-relaxed-fit-pockets",
    "title": "Men's Sweatshirt | Quarter-Zip Knit Relaxed Fit Pockets",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -952,7 +952,7 @@
    "handle": "mens-sweatshirt-quarter-zip-standing-collar-ribbed-knit",
    "title": "Men's Sweatshirt | Quarter-Zip Standing Collar Ribbed Knit",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -960,7 +960,7 @@
    "handle": "mens-sweatshirt-quarter-zip-textured-knit-pullover",
    "title": "Men's Sweatshirt | Quarter-Zip Textured Knit Pullover",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -968,7 +968,7 @@
    "handle": "penny-loafers-with-penny-for-men-rounded-toe-slip-on-suede",
    "title": "Penny Loafers With Penny For Men | Rounded Toe Slip On Suede",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -992,7 +992,7 @@
    "handle": "mens-slide-double-buckle-adjustable-sandal",
    "title": "Men's Slide | Double Buckle Adjustable Sandal",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1000,7 +1000,7 @@
    "handle": "mens-slide-open-toe-cross-strap-leather-flat",
    "title": "Men's Slide | Open Toe Cross-Strap Leather Flat",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1008,7 +1008,7 @@
    "handle": "mens-slide-open-toe-leather-buckle-strap",
    "title": "Men's Slide | Open Toe Leather Buckle Strap",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1016,7 +1016,7 @@
    "handle": "mens-slide-open-toe-leather-flat-sole",
    "title": "Men's Slide | Open Toe Leather Flat Sole",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1024,7 +1024,7 @@
    "handle": "mens-slide-open-toe-velcro-closure-orthopedic-comfort",
    "title": "Men's Slide | Open Toe Velcro Closure Orthopedic Comfort",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1032,7 +1032,7 @@
    "handle": "mens-slide-perforated-leather-adjustable-strap-cushioned",
    "title": "Men's Slide | Perforated Leather Adjustable Strap Cushioned",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1040,7 +1040,7 @@
    "handle": "mens-slide-suede-crossover-strap-open-toe",
    "title": "Men's Slide | Suede Crossover Strap Open Toe",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1048,7 +1048,7 @@
    "handle": "black-shoes-for-men-lace-up-mesh-knit-non-slip",
    "title": "Black Shoes For Men | Lace-Up Mesh Knit Non-Slip",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1056,7 +1056,7 @@
    "handle": "mens-cable-knit-sweatshirt-quarter-zip-collar-ribbed-hem-knit",
    "title": "Men's Cable Knit Sweatshirt | Quarter-Zip Collar Ribbed Hem Knit",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1064,7 +1064,7 @@
    "handle": "mens-camo-cargo-shorts-knee-length-cargo-pockets-belt-loops",
    "title": "Men's Camo Cargo Shorts | Knee Length Cargo Pockets Belt Loops",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1072,7 +1072,7 @@
    "handle": "mens-camo-cargo-shorts-loose-fit-cargo-pockets-drawstring",
    "title": "Men's Camo Cargo Shorts | Loose Fit Cargo Pockets Drawstring",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1080,7 +1080,7 @@
    "handle": "mens-camo-cargo-shorts-relaxed-fit-multiple-pockets-drawstring",
    "title": "Men's Camo Cargo Shorts | Relaxed Fit Multiple Pockets Drawstring",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1088,7 +1088,7 @@
    "handle": "mens-camo-pants-cargo-pockets-jogging-cuff-denim",
    "title": "Men's Camo Pants | Cargo Pockets Jogging Cuff Denim",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1096,7 +1096,7 @@
    "handle": "mens-casual-shoe-lace-up-canvas-rounded-toe",
    "title": "Men's Casual Shoe | Lace-Up Canvas Rounded Toe",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1104,7 +1104,7 @@
    "handle": "mens-chino-pants-tapered-leg-stretch-waistband-casual",
    "title": "Men's Chino Pants | Tapered Leg Stretch Waistband Casual",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1112,7 +1112,7 @@
    "handle": "mens-denim-shorts-cargo-pockets-button-closure-regular-fit",
    "title": "Men's Denim Shorts | Cargo Pockets Button Closure Regular Fit",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1120,7 +1120,7 @@
    "handle": "mens-denim-shorts-cargo-pockets-knee-length-stretch-denim",
    "title": "Men's Denim Shorts | Cargo Pockets Knee Length Stretch Denim",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1128,7 +1128,7 @@
    "handle": "mens-denim-shorts-cargo-pockets-relaxed-fit-knee-length-denim",
    "title": "Men's Denim Shorts | Cargo Pockets Relaxed Fit Knee-Length Denim",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1136,7 +1136,7 @@
    "handle": "mens-denim-shorts-cargo-pockets-relaxed-fit-zip-closure",
    "title": "Men's Denim Shorts | Cargo Pockets Relaxed Fit Zip Closure",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1144,7 +1144,7 @@
    "handle": "mens-denim-shorts-drawstring-waist-relaxed-fit-knee-length",
    "title": "Men's Denim Shorts | Drawstring Waist Relaxed Fit Knee Length",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1152,7 +1152,7 @@
    "handle": "mens-denim-shorts-mid-length-relaxed-fit-denim",
    "title": "Men's Denim Shorts | Mid-Length Relaxed Fit Denim",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1160,7 +1160,7 @@
    "handle": "mens-denim-shorts-relaxed-fit-rolled-hem-five-pocket",
    "title": "Men's Denim Shorts | Relaxed Fit Rolled Hem Five-Pocket",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1168,7 +1168,7 @@
    "handle": "mens-denim-shorts-skinny-fit-distressed-rolled-hem",
    "title": "Men's Denim Shorts | Skinny Fit Distressed Rolled Hem",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1176,7 +1176,7 @@
    "handle": "mens-denim-shorts-zip-closure-regular-fit-five-pocket",
    "title": "Men's Denim Shorts | Zip Closure Regular Fit Five Pocket",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1184,7 +1184,7 @@
    "handle": "mens-dress-pants-slim-fit-tapered-wool-blend",
    "title": "Men's Dress Pants | Slim Fit Tapered Wool Blend",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1192,7 +1192,7 @@
    "handle": "mens-dress-pants-waffle-knit-pleated-tapered",
    "title": "Men's Dress Pants | Waffle Knit Pleated Tapered",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1200,7 +1200,7 @@
    "handle": "mens-high-waisted-pants-pleated-straight-fit-gurkha",
    "title": "Men's High Waisted Pants | Pleated Straight Fit Gurkha",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1208,7 +1208,7 @@
    "handle": "mens-high-waisted-pants-relaxed-fit-linen-lightweight",
    "title": "Men's High Waisted Pants | Relaxed Fit Linen Lightweight",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1216,7 +1216,7 @@
    "handle": "mens-hiking-pants-color-block-relaxed-fit-multiple-pockets",
    "title": "Men's Hiking Pants | Color Block Relaxed Fit Multiple Pockets",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1224,7 +1224,7 @@
    "handle": "mens-hoodie-fleece-hood-kangaroo-pocket-relaxed-fit",
    "title": "Men's Hoodie | Fleece Hood Kangaroo Pocket Relaxed Fit",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1232,7 +1232,7 @@
    "handle": "mens-hoodie-fleece-lined-zip-up-abstract-print-oversized",
    "title": "Men's Hoodie | Fleece-Lined Zip-Up Abstract Print Oversized",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1240,7 +1240,7 @@
    "handle": "mens-hoodie-half-zip-pullover-fleece-knit",
    "title": "Men's Hoodie | Half Zip Pullover Fleece Knit",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1248,7 +1248,7 @@
    "handle": "mens-hoodie-knit-hooded-long-sleeve-zip-closure",
    "title": "Men's Hoodie | Knit Hooded Long Sleeve Zip Closure",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1256,7 +1256,7 @@
    "handle": "mens-hoodie-pullover-hood-drawstring-kangaroo-pocket-knit",
    "title": "Men's Hoodie | Pullover Hood Drawstring Kangaroo Pocket Knit",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1264,7 +1264,7 @@
    "handle": "mens-hoodie-quarter-button-ribbed-knit-elbow-patch",
    "title": "Men's Hoodie | Quarter-Button Ribbed Knit Elbow Patch",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1272,7 +1272,7 @@
    "handle": "mens-hoodie-quarter-zip-hood-cargo-pockets-knit",
    "title": "Men's Hoodie | Quarter-Zip Hood Cargo Pockets Knit",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1280,7 +1280,7 @@
    "handle": "mens-hoodie-zip-closure-hood-knit-reversible",
    "title": "Men's Hoodie | Zip Closure Hood Knit Reversible",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1288,7 +1288,7 @@
    "handle": "mens-hoodie-zip-up-front-side-pockets-knit",
    "title": "Men's Hoodie | Zip-Up Front Side Pockets Knit",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1296,7 +1296,7 @@
    "handle": "mens-hoodie-zip-up-knit-drawstring-hood-multiple-pockets",
    "title": "Men's Hoodie | Zip-Up Knit Drawstring Hood Multiple Pockets",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1304,7 +1304,7 @@
    "handle": "mens-jacket-collared-zip-closure-leather-bomber",
    "title": "Men's Jacket | Collared Zip Closure Leather Bomber",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1312,7 +1312,7 @@
    "handle": "mens-leather-shoe-double-monk-strap-cap-toe-buckle-closure",
    "title": "Men's Leather Shoe | Double Monk Strap Cap-Toe Buckle Closure",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1320,7 +1320,7 @@
    "handle": "mens-pants-jogger-relaxed-fit-sherpa-lining-side-stripe",
    "title": "Men's Pants | Jogger Relaxed Fit Sherpa Lining Side Stripe",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1328,7 +1328,7 @@
    "handle": "mens-pants-striped-side-seam-relaxed-fit",
    "title": "Men's Pants | Striped Side Seam Relaxed Fit",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1336,7 +1336,7 @@
    "handle": "mens-no-sleeve-shirt-stand-collar-quilted-puffer",
    "title": "Men's Puffer Vest | Stand Collar Quilted",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1344,7 +1344,7 @@
    "handle": "mens-rain-jacket-hooded-windproof-full-zip",
    "title": "Men's Rain Jacket | Hooded Windproof Full Zip",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1352,7 +1352,7 @@
    "handle": "mens-relaxed-pants-wide-leg-elastic-waist-corduroy",
    "title": "Men's Relaxed Pants | Wide Leg Elastic Waist Corduroy",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1360,7 +1360,7 @@
    "handle": "mens-shoes-dress-buckle-strap-leather-ankle-boot",
    "title": "Men's Shoes Dress | Buckle Strap Leather Ankle Boot",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1368,7 +1368,7 @@
    "handle": "mens-slim-cargo-jeans-tapered-fit-stretch-denim-cargo-pockets",
    "title": "Men's Slim Cargo Jeans | Tapered Fit Stretch Denim Cargo Pockets",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1376,7 +1376,7 @@
    "handle": "mens-sneakers-lace-up-leather-cushioned-sole",
    "title": "Men's Sneakers | Lace Up Leather Cushioned Sole",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1384,7 +1384,7 @@
    "handle": "mens-sneakers-lace-up-knit-mesh-toe-guard-work",
    "title": "Men's Sneakers | Lace-Up Knit Mesh Toe Guard Work",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1392,7 +1392,7 @@
    "handle": "mens-sweater-vest-knit-zip-up-collar-closure",
    "title": "Men's Sweater Vest | Knit Zip-Up Collar Closure",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1400,7 +1400,7 @@
    "handle": "mens-sweater-vest-v-neck-argyle-knit-sleeveless",
    "title": "Men's Sweater Vest | V-Neck Argyle Knit Sleeveless",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1408,7 +1408,7 @@
    "handle": "mens-sweater-vest-v-neck-knit-textured-regular-fit",
    "title": "Men's Sweater Vest | V-Neck Knit Textured Regular Fit",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1416,7 +1416,7 @@
    "handle": "mens-sweatshirt-half-zip-high-neck-knit",
    "title": "Men's Sweatshirt | Half Zip High Neck Knit",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1424,7 +1424,7 @@
    "handle": "mens-sweatshirt-quarter-zip-collar-knit-textured",
    "title": "Men's Sweatshirt | Quarter-Zip Collar Knit Textured",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1432,7 +1432,7 @@
    "handle": "mens-sweatshirt-quilted-knit-zip-full-closure",
    "title": "Men's Sweatshirt | Quilted Knit Zip Full Closure",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1440,7 +1440,7 @@
    "handle": "mens-sweatshirt-raglan-sleeve-crew-neck-knit",
    "title": "Men's Sweatshirt | Raglan Sleeve Crew Neck Knit",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1448,7 +1448,7 @@
    "handle": "mens-wide-leg-dress-pants-high-waisted-relaxed-fit-belted",
    "title": "Men's Wide Leg Dress Pants | High Waisted Relaxed Fit Belted",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1456,7 +1456,7 @@
    "handle": "black-shoe-for-men-lace-up-leather-cushioned-sole",
    "title": "Black Shoe For Men | Lace-Up Leather Cushioned Sole",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1464,7 +1464,7 @@
    "handle": "mens-black-hoodie-zip-up-knit-hood-adjustable",
    "title": "Men's Black Hoodie | Zip Up Knit Hood Adjustable",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1472,7 +1472,7 @@
    "handle": "mens-boat-shoe-leather-slip-on-flexible-sole",
    "title": "Men's Boat Shoe | Leather Slip On Flexible Sole",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1480,7 +1480,7 @@
    "handle": "mens-camo-cargo-shorts-knee-length-cargo-pockets-relaxed-fit",
    "title": "Men's Camo Cargo Shorts | Knee Length Cargo Pockets Relaxed Fit",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1488,7 +1488,7 @@
    "handle": "mens-denim-shorts-above-knee-relaxed-fit-cargo-pockets",
    "title": "Men's Denim Shorts | Above-Knee Relaxed Fit Cargo Pockets",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1496,7 +1496,7 @@
    "handle": "mens-denim-shorts-regular-fit-five-pocket-denim",
    "title": "Men's Denim Shorts | Regular Fit Five Pocket Denim",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1504,7 +1504,7 @@
    "handle": "mens-denim-shorts-slim-fit-ripped-above-knee-1",
    "title": "Men's Denim Shorts | Slim Fit Ripped Above-Knee",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1512,7 +1512,7 @@
    "handle": "mens-jacket-sherpa-collar-button-denim",
    "title": "Men's Jacket | Sherpa Collar Button Denim",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1520,7 +1520,7 @@
    "handle": "mens-jeans-distressed-skinny-fit-stretch-denim",
    "title": "Men's Jeans | Distressed Skinny Fit Stretch Denim",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1528,7 +1528,7 @@
    "handle": "mens-jeans-patchwork-wide-leg-baggy-denim",
    "title": "Men's Jeans | Patchwork Wide Leg Baggy Denim",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1536,7 +1536,7 @@
    "handle": "mens-jeans-relaxed-fit-denim-straight-leg",
    "title": "Men's Jeans | Relaxed Fit Denim Straight Leg",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1544,7 +1544,7 @@
    "handle": "mens-jeans-skinny-fit-ripped-denim",
    "title": "Men's Jeans | Skinny Fit Ripped Denim",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1552,7 +1552,7 @@
    "handle": "mens-jeans-slim-fit-denim-stretch-tapered",
    "title": "Men's Jeans | Slim Fit Denim Stretch Tapered",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1560,7 +1560,7 @@
    "handle": "mens-jeans-slim-fit-denim-zip-fly-five-pocket",
    "title": "Men's Jeans | Slim Fit Denim Zip Fly Five Pocket",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1568,7 +1568,7 @@
    "handle": "mens-penny-loafers-with-penny-suede-slip-on-low-profile-moc-toe",
    "title": "Men's Penny Loafers With Penny | Suede Slip-On Low Profile Moc Toe",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1576,7 +1576,7 @@
    "handle": "mens-sandals-closed-toe-leather-hand-stitched-adjustable",
    "title": "Men's Sandals | Closed-Toe Leather Hand-Stitched Adjustable",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1584,7 +1584,7 @@
    "handle": "mens-sandals-leather-straps-studded-open-toe-durable-sole",
    "title": "Men's Sandals | Leather Straps Studded Open Toe Durable Sole",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1592,7 +1592,7 @@
    "handle": "mens-sandals-open-toe-adjustable-strap-leather",
    "title": "Men's Sandals | Open Toe Adjustable Strap Leather",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1600,7 +1600,7 @@
    "handle": "mens-sandals-open-toe-leather-adjustable-strap",
    "title": "Men's Sandals | Open Toe Leather Adjustable Strap",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1608,7 +1608,7 @@
    "handle": "mens-sandals-thong-strap-leather-woven-sole",
    "title": "Men's Sandals | Thong Strap Leather Woven Sole",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1616,7 +1616,7 @@
    "handle": "mens-slide-adjustable-straps-open-toe",
    "title": "Men's Slide | Adjustable Straps Open Toe",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1624,7 +1624,7 @@
    "handle": "mens-slide-closed-toe-leather-strappy-cushioned",
    "title": "Men's Slide | Closed Toe Leather Strappy Cushioned",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1632,7 +1632,7 @@
    "handle": "mens-slide-double-buckle-open-toe-cushioned",
    "title": "Men's Slide | Double Buckle Open Toe Cushioned",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1640,7 +1640,7 @@
    "handle": "mens-slide-open-toe-leather-adjustable-strap",
    "title": "Men's Slide | Open Toe Leather Adjustable Strap",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1648,7 +1648,7 @@
    "handle": "mens-slide-padded-footbed-slip-on-open-toe",
    "title": "Men's Slide | Padded Footbed Slip-On Open Toe",
    "from": 0,
-   "price": 94.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1664,7 +1664,7 @@
    "handle": "mens-board-shorts-relaxed-fit-drawstring-elastic-waist",
    "title": "Men's Board Shorts | Relaxed Fit Drawstring Elastic Waist",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1672,7 +1672,7 @@
    "handle": "mens-boat-shoe-lace-up-casual-leather-moccasin",
    "title": "Men's Boat Shoe | Lace-Up Casual Leather Moccasin",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1680,7 +1680,7 @@
    "handle": "mens-boat-shoe-lace-up-moc-rounded-toe-rubber-sole",
    "title": "Men's Boat Shoe | Lace-Up Moc Rounded Toe Rubber Sole",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1688,7 +1688,7 @@
    "handle": "mens-boat-shoe-round-toe-lace-up-rubber-sole",
    "title": "Men's Boat Shoe | Round Toe Lace Up Rubber Sole",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1720,7 +1720,7 @@
    "handle": "mens-dress-shirt-button-down-collar-long-sleeves-denim",
    "title": "Men's Dress Shirt | Button-Down Collar Long Sleeves Denim",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1728,7 +1728,7 @@
    "handle": "mens-dress-shirt-slim-fit-button-down-collar-stretch",
    "title": "Men's Dress Shirt | Slim Fit Button Down Collar Stretch",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1736,7 +1736,7 @@
    "handle": "mens-loafers-slip-on-canvas-round-toe-flexible-sole",
    "title": "Men's Loafers | Slip-On Canvas Round Toe Flexible Sole",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1744,7 +1744,7 @@
    "handle": "mens-no-sleeve-shirt-collared-button-front-chest-pockets",
    "title": "Men's No Sleeve Shirt | Collared Button-Front Chest Pockets",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1752,7 +1752,7 @@
    "handle": "mens-no-sleeve-shirt-collared-button-up-denim-relaxed-fit",
    "title": "Men's No Sleeve Shirt | Collared Button-Up Denim Relaxed Fit",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1760,7 +1760,7 @@
    "handle": "mens-no-sleeve-shirt-henley-neckline-button-relaxed-fit",
    "title": "Men's No Sleeve Shirt | Henley Neckline Button Relaxed Fit",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1768,7 +1768,7 @@
    "handle": "mens-no-sleeve-shirt-v-neck-relaxed-fit-breathable",
    "title": "Men's No Sleeve Shirt | V-Neck Relaxed Fit Breathable",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1776,7 +1776,7 @@
    "handle": "mens-rugby-shirt-relaxed-fit-collar-pocket-denim",
    "title": "Men's Rugby Shirt | Relaxed Fit Collar Pocket Denim",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1784,7 +1784,7 @@
    "handle": "mens-rugby-shirt-textured-knit-collar-button-closure",
    "title": "Men's Rugby Shirt | Textured Knit Collar Button Closure",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1792,7 +1792,7 @@
    "handle": "mens-shoes-dress-slip-on-loafer-crocodile-leather-cushioned",
    "title": "Men's Shoes Dress | Slip-On Loafer Crocodile Leather Cushioned",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1800,7 +1800,7 @@
    "handle": "mens-short-swim-trunk-drawstring-waist-relaxed-fit-pockets",
    "title": "Men's Short Swim Trunk | Drawstring Waist Relaxed Fit Pockets",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1808,7 +1808,7 @@
    "handle": "mens-slip-on-loafers-rounded-toe-suede-low-profile-sole",
    "title": "Men's Slip On Loafers | Rounded Toe Suede Low-Profile Sole",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1816,7 +1816,7 @@
    "handle": "mens-sneakers-lace-up-leather-cushioned-rubber-sole",
    "title": "Men's Sneakers | Lace-Up Leather Cushioned Rubber Sole",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1824,7 +1824,7 @@
    "handle": "mens-striped-shirt-herringbone-knit-short-sleeve-button-down",
    "title": "Men's Striped Shirt | Herringbone Knit Short Sleeve Button Down",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1832,7 +1832,7 @@
    "handle": "slip-on-loafers-for-men-round-toe-woven-leather-rubber-sole",
    "title": "Slip On Loafers For Men | Round Toe Woven Leather Rubber Sole",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1840,7 +1840,7 @@
    "handle": "womens-denim-shorts-layered-denim-jacket-relaxed-fit-soft-touch",
    "title": "Women's Denim Shorts | Layered Denim Jacket Relaxed Fit Soft-Touch",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2160,7 +2160,7 @@
    "handle": "mens-denim-shorts-slim-fit-ripped-above-knee",
    "title": "Men's Denim Shorts | Slim Fit Ripped Above Knee",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2168,7 +2168,7 @@
    "handle": "mens-denim-shorts-wide-leg-relaxed-fit-knee-length",
    "title": "Men's Denim Shorts | Wide Leg Relaxed Fit Knee Length",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2664,7 +2664,7 @@
    "handle": "casual-shoe-for-women-lace-up-mesh-knit-rounded-toe",
    "title": "Casual Shoe For Women | Lace-Up Mesh Knit Rounded Toe",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2728,7 +2728,7 @@
    "handle": "mens-beach-shorts-elastic-waist-drawstring-quick-dry",
    "title": "Men's Beach Shorts | Elastic Waist Drawstring Quick Dry",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2736,7 +2736,7 @@
    "handle": "mens-beach-shorts-tropical-print-drawstring-pocket",
    "title": "Men's Beach Shorts | Tropical Print Drawstring Pocket",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2744,7 +2744,7 @@
    "handle": "mens-board-shorts-elastic-waist-drawstring-closure-quick-dry",
    "title": "Men's Board Shorts | Elastic Waist Drawstring Closure Quick Dry",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2752,7 +2752,7 @@
    "handle": "mens-s-board-shorts-elastic-waist-drawstring-quick-dry",
    "title": "Men's Board Shorts | Elastic Waist Drawstring Quick-Dry",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2760,7 +2760,7 @@
    "handle": "mens-board-shorts-geometric-print-drawstring-swim",
    "title": "Men's Board Shorts | Geometric Print Drawstring Swim",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2768,7 +2768,7 @@
    "handle": "mens-board-shorts-patchwork-mid-waist-drawstring",
    "title": "Men's Board Shorts | Patchwork Mid-Waist Drawstring",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2776,7 +2776,7 @@
    "handle": "mens-board-shorts-quick-drying-elastic-waistband-zip-pockets",
    "title": "Men's Board Shorts | Quick-Drying Elastic Waistband Zip Pockets",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2784,7 +2784,7 @@
    "handle": "mens-board-shorts-relaxed-fit-drawstring-closure-side-pockets",
    "title": "Men's Board Shorts | Relaxed Fit Drawstring Closure Side Pockets",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2792,7 +2792,7 @@
    "handle": "mens-board-shorts-striped-drawstring-mid-thigh",
    "title": "Men's Board Shorts | Striped Drawstring Mid-Thigh",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2800,7 +2800,7 @@
    "handle": "mens-board-shorts-tropical-print-drawstring-quick-dry",
    "title": "Men's Board Shorts | Tropical Print Drawstring Quick Dry",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2808,7 +2808,7 @@
    "handle": "mens-camo-cargo-shorts-multi-pocket-relaxed-fit",
    "title": "Men's Camo Cargo Shorts | Multi Pocket Relaxed Fit",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2816,7 +2816,7 @@
    "handle": "mens-cargo-shorts-denim-cargo-pockets-belt",
    "title": "Men's Cargo Shorts | Denim Cargo Pockets Belt",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2824,7 +2824,7 @@
    "handle": "mens-cargo-shorts-knee-length-drawstring-cargo-pockets",
    "title": "Men's Cargo Shorts | Knee Length Drawstring Cargo Pockets",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2832,7 +2832,7 @@
    "handle": "mens-cargo-shorts-utility-multiple-pockets-button-closure",
    "title": "Men's Cargo Shorts | Utility Multiple Pockets Button Closure",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2840,7 +2840,7 @@
    "handle": "mens-chino-shorts-relaxed-fit-drawstring-closure-linen",
    "title": "Men's Chino Shorts | Relaxed Fit Drawstring Closure Linen",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2848,7 +2848,7 @@
    "handle": "mens-denim-shorts-wide-leg-relaxed-fit-contrast-stitch",
    "title": "Men's Denim Shorts | Wide Leg Relaxed Fit Contrast Stitch",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2856,7 +2856,7 @@
    "handle": "mens-high-waisted-pants-relaxed-fit-cargo-pockets-cotton",
    "title": "Men's High Waisted Pants | Relaxed Fit Cargo Pockets Cotton",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2864,7 +2864,7 @@
    "handle": "mens-linen-pants-drawstring-closure-relaxed-fit-full-length",
    "title": "Men's Linen Pants | Drawstring Closure Relaxed Fit Full Length",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2872,7 +2872,7 @@
    "handle": "mens-linen-pants-elastic-waistband-relaxed-fit-full-length",
    "title": "Men's Linen Pants | Elastic Waistband Relaxed Fit Full Length",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2880,7 +2880,7 @@
    "handle": "mens-linen-suit-relaxed-fit-drawstring-straight-leg",
    "title": "Men's Linen Pants | Relaxed Fit Drawstring Straight Leg",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2888,7 +2888,7 @@
    "handle": "mens-linen-suit-relaxed-fit-drawstring-waist-straight-leg",
    "title": "Men's Linen Pants | Relaxed Fit Drawstring Waist Straight Leg",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2896,7 +2896,7 @@
    "handle": "mens-linen-pants-relaxed-fit-elastic-waist-lightweight",
    "title": "Men's Linen Pants | Relaxed Fit Elastic Waist Lightweight",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2904,7 +2904,7 @@
    "handle": "mens-linen-pants-relaxed-fit-lightweight-breathable",
    "title": "Men's Linen Pants | Relaxed Fit Lightweight Breathable",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2912,7 +2912,7 @@
    "handle": "mens-linen-suit-relaxed-fit-straight-leg-drawstring-pockets",
    "title": "Men's Linen Pants | Relaxed Fit Straight Leg Drawstring Pockets",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2920,7 +2920,7 @@
    "handle": "mens-hiking-pants-straight-leg-elastic-waist-linen",
    "title": "Men's Linen Pants | Straight-Leg Elastic Waist",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2928,7 +2928,7 @@
    "handle": "mens-linen-shirt-short-sleeve-collar-button-closure",
    "title": "Men's Linen Shirt | Short Sleeve Collar Button Closure",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2936,7 +2936,7 @@
    "handle": "mens-linen-shorts-cargo-pockets-drawstring-relaxed-fit",
    "title": "Men's Linen Shorts | Cargo Pockets Drawstring Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2944,7 +2944,7 @@
    "handle": "mens-linen-shorts-relaxed-fit-cargo-pockets-drawstring",
    "title": "Men's Linen Shorts | Relaxed Fit Cargo Pockets Drawstring",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2952,7 +2952,7 @@
    "handle": "mens-linen-shorts-relaxed-fit-drawstring-rolled-hem",
    "title": "Men's Linen Shorts | Relaxed Fit Drawstring Rolled Hem",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2960,7 +2960,7 @@
    "handle": "mens-long-shorts-pleated-cuffed-cotton-breathable",
    "title": "Men's Long Shorts | Pleated Cuffed Cotton Breathable",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2968,7 +2968,7 @@
    "handle": "mens-pleated-shorts-turn-up-hem-structured-fit-cotton",
    "title": "Men's Pleated Shorts | Turn-Up Hem Structured Fit Cotton",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2976,7 +2976,7 @@
    "handle": "mens-rugby-shirt-collar-placket-short-sleeve-polo",
    "title": "Men's Rugby Shirt | Collar Placket Short Sleeve Polo",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2984,7 +2984,7 @@
    "handle": "mens-rugby-shirt-vertical-stripe-knit-quarter-zip-collar",
    "title": "Men's Rugby Shirt | Vertical Stripe Knit Quarter-Zip Collar",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -2992,7 +2992,7 @@
    "handle": "mens-short-swim-trunk-quick-dry-elastic-waist-drawstring-closure",
    "title": "Men's Short Swim Trunk | Quick Dry Elastic Waist Drawstring Closure",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3000,7 +3000,7 @@
    "handle": "mens-shorts-elastic-waist-drawcord-relaxed-fit",
    "title": "Men's Shorts | Elastic Waist Drawcord Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3008,7 +3008,7 @@
    "handle": "mens-sport-shorts-lightweight-relaxed-fit-perforated",
    "title": "Men's Sport Shorts | Lightweight Relaxed Fit Perforated",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3016,7 +3016,7 @@
    "handle": "mens-swim-shorts-linen-quick-dry-drawstring-mid-thigh",
    "title": "Men's Swim Shorts | Linen Quick-Dry Drawstring Mid-Thigh",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3024,7 +3024,7 @@
    "handle": "mens-swim-trunk-lightweight-quick-drying-drawstring-closure",
    "title": "Men's Swim Trunk | Lightweight Quick Drying Drawstring Closure",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3128,7 +3128,7 @@
    "handle": "mens-tailored-shorts-regular-fit-woven-chino-pockets",
    "title": "Men's Tailored Shorts | Regular Fit Woven Chino Pockets",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3136,7 +3136,7 @@
    "handle": "mens-work-shorts-cargo-relaxed-fit-knee-length",
    "title": "Men's Work Shorts | Cargo Relaxed Fit Knee Length",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3144,7 +3144,7 @@
    "handle": "mens-work-shorts-knee-length-plaid-drawstring-side-stripe",
    "title": "Men's Work Shorts | Knee-Length Plaid Drawstring Side Stripe",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3152,7 +3152,7 @@
    "handle": "mens-work-shorts-pleated-front-rolled-hem-linen-blend",
    "title": "Men's Work Shorts | Pleated Front Rolled Hem Linen Blend",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3160,7 +3160,7 @@
    "handle": "mens-worker-shirt-long-sleeve-button-down-collared-linen-blend",
    "title": "Men's Worker Shirt | Long Sleeve Button Down Collared Linen Blend",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3168,7 +3168,7 @@
    "handle": "mens-workwear-shorts-cargo-pockets-relaxed-fit-cotton",
    "title": "Men's Workwear Shorts | Cargo Pockets Relaxed Fit Cotton",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3176,7 +3176,7 @@
    "handle": "mens-workwear-shorts-geometric-print-cargo-pockets-mid-rise",
    "title": "Men's Workwear Shorts | Geometric Print Cargo Pockets Mid-Rise",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -3592,7 +3592,7 @@
    "handle": "mens-shirt-ribbed-knit-short-sleeve-crew-neck",
    "title": "Men's Shirt | Ribbed Knit Short Sleeve Crew Neck",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
