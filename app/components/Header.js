@@ -15,13 +15,13 @@ const NAV = [
   { href: "/scraper", label: "Product Scraper" },
   { href: "/competitor-finder", label: "Competitor finder" },
   { href: "/keywords", label: "Keywords" },
-  { href: "/niches", label: "Niche kiezen" },
+  { href: "/niches", label: "Niche kiezen", hidden: true },
   { href: "/qa", label: "Store Doctor" },
-  { href: "/size-guide", label: "Size Guide" },
-  { href: "/gmc-checklist", label: "GMC Checklist" },
+  { href: "/size-guide", label: "Size Guide", hidden: true },
+  { href: "/gmc-checklist", label: "GMC Checklist", hidden: true },
   { href: "/bills", label: "Bills" },
   { href: "/pythago", label: "Pythago" },
-  { href: "/pokemon", label: "Pokémon" },
+  { href: "/pokemon", label: "Pokémon", hidden: true },
   { href: "/claude", label: "Claude" },
 ];
 
@@ -77,7 +77,8 @@ export default function Header({ icon, title, subtitle }) {
     window.location.reload();
   }
 
-  const nav = NAV.filter((l) => l.href === "/" || orgDef.tools.includes(l.href));
+  // 13-11: verborgen items (hidden) blijven bereikbaar via de link, maar staan niet in het menu
+  const nav = NAV.filter((l) => !l.hidden && (l.href === "/" || orgDef.tools.includes(l.href)));
 
   return (
     <div className="topbar" data-org={org}>
