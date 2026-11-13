@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  getShopInfo,
   createProduct,
   setImageVariants,
   updateProduct,
@@ -204,7 +205,16 @@ export async function POST(req) {
   });
 
   // fx.usdRate = USD → store-valuta (voor de prijsband); store.currency = store-valuta
-  const storeCurrency = String((store && store.currency) || (fx && fx.storeCurrency) || "USD").toUpperCase();
+  /* 13-11: valuta onbekend → NIET meer stil "USD" aannemen (zo kregen AUD-stores
+     USD-getallen: cargo shorts voor A$44,95). Eerst echt bij Shopify navragen. */
+  let curGuess = (store && store.currency) || (fx && fx.storeCurrency) || "";
+  if (!curGuess) {
+    try {
+      const si = await getShopInfo(store);
+      if (si.ok && si.shop && si.shop.currency) curGuess = si.shop.currency;
+    } catch {}
+  }
+  const storeCurrency = String(curGuess || "USD").toUpperCase();
   const { band, type: priceType, bandRate, usdBand } = bandFor(s.keyword, storeCurrency, fx && fx.usdRate);
   let clampedCount = 0;
   const variants = tVariants.map((v) => {
