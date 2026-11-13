@@ -1,8 +1,8 @@
 {
  "store": "Shapes Wardrobe",
  "domain": "shapeswardrobe.com",
- "date": "2026-11-13 min A$69.95",
- "note": "omhoog · 414 producten naar minimaal A$69.95 (BE-ROAS 1,65/1,70 als dat hoger is) · alleen omhoog · 9 bestsellers (3+ verkocht) blijven · korting op doorstreepprijs blijft gelijk",
+ "date": "2026-11-13 BE 1,65",
+ "note": "omhoog · 414 producten naar BE-ROAS 1,65, minimaal A$69.95, max +60% · alleen omhoog · 9 bestsellers (3+ verkocht) blijven · korting op doorstreepprijs blijft gelijk",
  "items": [
   {
    "handle": "cowboy-shoe-for-men-leather-western-almond-toe-stacked-heel",
@@ -160,7 +160,7 @@
    "handle": "womens-ballet-flats-leather-round-toe-mary-jane-strap",
    "title": "Women's Ballet Flats | Leather Round Toe Mary Jane Strap",
    "from": 0,
-   "price": 104.95,
+   "price": 109.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -168,7 +168,7 @@
    "handle": "womens-ballet-flats-mary-jane-buckle-strap-leather",
    "title": "Women's Ballet Flats | Mary Jane Buckle Strap Leather",
    "from": 0,
-   "price": 104.95,
+   "price": 109.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -176,7 +176,7 @@
    "handle": "womens-ballet-flats-open-toe-dual-strap-slingback-mesh",
    "title": "Women's Ballet Flats | Open Toe Dual Strap Slingback Mesh",
    "from": 0,
-   "price": 104.95,
+   "price": 109.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -184,7 +184,7 @@
    "handle": "womens-ballet-flats-round-toe-adjustable-strap-slip-on",
    "title": "Women's Ballet Flats | Round Toe Adjustable Strap Slip On",
    "from": 0,
-   "price": 104.95,
+   "price": 109.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -192,7 +192,7 @@
    "handle": "womens-ballet-flats-elastic-crossover-strap-rounded-toe",
    "title": "Women's Ballet Flats | Elastic Crossover Strap Rounded Toe",
    "from": 0,
-   "price": 104.95,
+   "price": 109.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -208,7 +208,7 @@
    "handle": "womens-halterneck-dress-maxi-asymmetrical-ruffle-pleated",
    "title": "Women's Halterneck Dress | Maxi Asymmetrical Ruffle Pleated",
    "from": 0,
-   "price": 99.95,
+   "price": 104.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -232,7 +232,7 @@
    "handle": "womens-jumpsuit-square-neckline-adjustable-straps-wide-leg",
    "title": "Women's Jumpsuit | Square Neckline Adjustable Straps Wide Leg",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -256,7 +256,7 @@
    "handle": "womens-two-piece-set-zip-long-sleeve-crop-top-wide-leg-relaxed",
    "title": "Women's Two Piece Set | Zip Long Sleeve Crop Top Wide Leg Relaxed",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -272,7 +272,7 @@
    "handle": "womens-jeans-relaxed-fit-straight-leg-lightning-print-denim",
    "title": "Men's Jeans | Relaxed Fit Straight Leg Lightning Print Denim",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -280,7 +280,7 @@
    "handle": "mens-jeans-skinny-fit-ripped-denim-1",
    "title": "Men's Jeans | Skinny Fit Ripped Denim",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -288,7 +288,7 @@
    "handle": "sports-shoe-for-men-lace-up-suede-ankle-high-barefoot",
    "title": "Sports Shoe for Women | Lace-Up Suede Ankle High Barefoot",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -296,7 +296,7 @@
    "handle": "womens-baggy-jeans-high-waist-wide-leg-denim-non-stretch",
    "title": "Women's Baggy Jeans | High Waist Wide Leg Denim Non-Stretch",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -304,7 +304,7 @@
    "handle": "womens-jumpsuit-asymmetric-neckline-wide-leg-long-sleeves",
    "title": "Women's Jumpsuit | Asymmetric Neckline Wide Leg Long Sleeves",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -312,7 +312,7 @@
    "handle": "womens-jumpsuit-batwing-sleeves-belted-waist-cropped",
    "title": "Women's Jumpsuit | Batwing Sleeves Belted Waist Cropped",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -320,7 +320,7 @@
    "handle": "womens-jumpsuit-lapel-collar-sleeveless-wide-leg-cargo",
    "title": "Women's Jumpsuit | Lapel Collar Sleeveless Wide Leg Cargo",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -328,7 +328,7 @@
    "handle": "womens-jumpsuit-one-shoulder-wide-leg-draped",
    "title": "Women's Jumpsuit | One-Shoulder Wide-Leg Draped",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -336,7 +336,7 @@
    "handle": "womens-jumpsuit-sleeveless-spaghetti-strap-wide-leg",
    "title": "Women's Jumpsuit | Sleeveless Spaghetti Strap Wide Leg",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -344,7 +344,7 @@
    "handle": "womens-jumpsuit-wrap-front-v-neck-short-sleeve",
    "title": "Women's Jumpsuit | Wrap Front V-Neck Short Sleeve",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -352,7 +352,7 @@
    "handle": "womens-kitten-heels-pointed-toe-bow-vamp-patent",
    "title": "Women's Kitten Heels | Pointed Toe Bow Vamp Patent",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -360,7 +360,7 @@
    "handle": "womens-linen-dress-midi-length-round-neckline-sleeveless",
    "title": "Women's Linen Dress | Midi Length Round Neckline Sleeveless",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -392,7 +392,7 @@
    "handle": "womens-midi-skirt-v-neck-ruffle-cropped-top-set",
    "title": "Women's Midi Skirt | V-Neck Ruffle Cropped Top Set",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -400,7 +400,7 @@
    "handle": "womens-mules-openwork-slip-on-flat-sole",
    "title": "Women's Mules | Openwork Slip-On Flat Sole",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -408,7 +408,7 @@
    "handle": "womens-shirt-dress-collar-neckline-button-fastening-midi",
    "title": "Women's Shirt Dress | Collar Neckline Button Fastening Midi",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -416,7 +416,7 @@
    "handle": "womens-sneakers-platform-lace-up-chunky-sole",
    "title": "Women's Sneakers | Platform Lace-Up Chunky Sole",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -424,7 +424,7 @@
    "handle": "womens-two-piece-set-halter-neck-sleeveless-capri-polka-dot",
    "title": "Women's Two Piece Set | Halter Neck Sleeveless Capri Polka Dot",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -432,7 +432,7 @@
    "handle": "womens-two-piece-set-knit-crewneck-long-sleeve-relaxed-fit",
    "title": "Women's Two Piece Set | Knit Crewneck Long Sleeve Relaxed Fit",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -440,7 +440,7 @@
    "handle": "womens-wedding-guest-dress-midi-gathered-neckline-long-sleeve-pleated",
    "title": "Women's Wedding Guest Dress | Midi Gathered Neckline Long Sleeve Pleated",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -448,7 +448,7 @@
    "handle": "womens-wedding-guest-dress-midi-length-round-neckline-long-sleeves",
    "title": "Women's Wedding Guest Dress | Midi Length Round Neckline Long Sleeves",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -456,7 +456,7 @@
    "handle": "womens-wedding-guest-dress-midi-length-v-neck-lace-trim",
    "title": "Women's Wedding Guest Dress | Midi Length V-Neck Lace Trim",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -464,7 +464,7 @@
    "handle": "womens-wedding-guest-dress-midi-length-v-neck-three-quarter-sleeves-flared",
    "title": "Women's Wedding Guest Dress | Midi Length V-Neck Three-Quarter Sleeves Flared",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -472,7 +472,7 @@
    "handle": "womens-wedding-guest-dress-v-neck-midi-pleated-wrap",
    "title": "Women's Wedding Guest Dress | V-Neck Midi Pleated Wrap",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -480,7 +480,7 @@
    "handle": "womens-wedding-guest-dress-v-neck-mini-sequin-long-sleeve",
    "title": "Women's Wedding Guest Dress | V-Neck Mini Sequin Long Sleeve",
    "from": 0,
-   "price": 94.95,
+   "price": 99.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -504,7 +504,7 @@
    "handle": "mens-dress-pants-high-waist-pleated-cuffed-hem",
    "title": "Men's Dress Pants | High-Waist Pleated Cuffed Hem",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -512,7 +512,7 @@
    "handle": "mens-jeans-lightning-print-relaxed-fit-straight-leg-denim",
    "title": "Men's Jeans | Lightning Print Relaxed Fit Straight Leg Denim",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -528,7 +528,7 @@
    "handle": "mens-loafers-suede-slip-on-rounded-toe-rubber-sole",
    "title": "Men's Loafers | Suede Slip-On Rounded Toe Rubber Sole",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -536,7 +536,7 @@
    "handle": "mens-slide-buckle-closure-ventilated-leather",
    "title": "Men's Slide | Buckle Closure Ventilated Leather",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -544,7 +544,7 @@
    "handle": "mens-slide-round-toe-pivoting-heel-strap-slip-on",
    "title": "Men's Slide | Round Toe Pivoting Heel Strap Slip-On",
    "from": 0,
-   "price": 89.95,
+   "price": 94.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -552,7 +552,7 @@
    "handle": "mens-sports-shoe-barefoot-water-aqua-lace-toggle",
    "title": "Men's Sports Shoe | Barefoot Water Aqua Lace Toggle",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -560,7 +560,7 @@
    "handle": "unisex-sports-shoe-slip-on-knit-upper-textured-sole",
    "title": "Unisex Sports Shoe | Slip-On Knit Upper Textured Sole",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -568,7 +568,7 @@
    "handle": "womens-co-ord-set-crew-neck-sleeveless-drawstring",
    "title": "Women's Co Ord Set | Crew Neck Sleeveless Drawstring",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -576,7 +576,7 @@
    "handle": "womens-floral-dress-midi-length-round-neckline-short-sleeve",
    "title": "Women's Floral Dress | Midi Length Round Neckline Short Sleeve",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -608,7 +608,7 @@
    "handle": "womens-jeans-high-waist-pleated-balloon-leg",
    "title": "Women's Jeans | High Waist Pleated Balloon Leg",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -616,7 +616,7 @@
    "handle": "womens-jumpsuit-square-neck-zipper-front-wide-leg",
    "title": "Women's Jumpsuit | Square Neck Zipper Front Wide Leg",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -624,7 +624,7 @@
    "handle": "womens-kitten-heels-pointed-toe-ankle-strap-floral-embellished",
    "title": "Women's Kitten Heels | Pointed Toe Ankle Strap Floral Embellished",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -632,7 +632,7 @@
    "handle": "womens-linen-pants-tiered-waist-bow-closure-ankle-length",
    "title": "Women's Linen Pants | Tiered Waist Bow Closure Ankle Length",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -640,7 +640,7 @@
    "handle": "mens-loafers-canvas-slip-on-lace-cushioned-sole",
    "title": "Women's Loafers | Canvas Slip On Lace Cushioned Sole",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -672,7 +672,7 @@
    "handle": "womens-sandals-open-toe-ankle-strap-platform",
    "title": "Women's Sandals | Open Toe Ankle Strap Platform",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -680,7 +680,7 @@
    "handle": "mens-sandals-open-toe-leather-adjustable-straps",
    "title": "Women's Sandals | Open Toe Leather Adjustable Straps",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -688,7 +688,7 @@
    "handle": "womens-sandals-open-toe-t-strap-hook-and-loop",
    "title": "Women's Sandals | Open Toe T Strap Hook and Loop",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -696,7 +696,7 @@
    "handle": "womens-sandals-open-toe-t-strap-wedge-zipper",
    "title": "Women's Sandals | Open Toe T-Strap Wedge Zipper",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -704,7 +704,7 @@
    "handle": "womens-sandals-platform-multi-strap-open-toe-buckle",
    "title": "Women's Sandals | Platform Multi-Strap Open Toe Buckle",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -712,7 +712,7 @@
    "handle": "womens-shoe-mesh-slip-on-rounded-toe-cushioned-sole",
    "title": "Women's Shoe | Mesh Slip-On Rounded Toe Cushioned Sole",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -720,7 +720,7 @@
    "handle": "womens-tote-bag-waterproof-nylon-multi-pocket-trolley-strap",
    "title": "Women's Tote Bag | Waterproof Nylon Multi-Pocket Trolley Strap",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -728,7 +728,7 @@
    "handle": "womens-two-piece-set-zip-front-blouson-short-sleeve-printed-polyester",
    "title": "Women's Two Piece Set | Zip Front Blouson Short Sleeve Printed Polyester",
    "from": 0,
-   "price": 84.95,
+   "price": 89.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -736,7 +736,7 @@
    "handle": "canvas-shoe-for-men-lace-up-low-top-rounded-toe",
    "title": "Canvas Shoe For Men | Lace-Up Low-Top Rounded Toe",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -744,7 +744,7 @@
    "handle": "derby-shoe-for-men-lace-up-leather-oxford-sole",
    "title": "Derby Shoe For Men | Lace-Up Leather Oxford Sole",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -752,7 +752,7 @@
    "handle": "lightweight-shoe-for-men-lace-closure-mesh-upper-cushioned-sole",
    "title": "Lightweight Shoe For Men | Lace Closure Mesh Upper Cushioned Sole",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -792,7 +792,7 @@
    "handle": "mens-chino-straight-leg-tailored-fit-cotton",
    "title": "Men's Chino | Straight Leg Tailored Fit Cotton",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -800,7 +800,7 @@
    "handle": "mens-hiking-pants-stretch-breathable-cargo-pockets",
    "title": "Men's Hiking Pants | Stretch Breathable Cargo Pockets",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -808,7 +808,7 @@
    "handle": "mens-jeans-skinny-fit-cargo-pockets-denim",
    "title": "Men's Jeans | Skinny Fit Cargo Pockets Denim",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -816,7 +816,7 @@
    "handle": "mens-jeans-skinny-fit-ripped-denim",
    "title": "Men's Jeans | Skinny Fit Ripped Denim",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -824,7 +824,7 @@
    "handle": "mens-jeans-slim-fit-tapered-leg-denim",
    "title": "Men's Jeans | Slim Fit Tapered Leg Denim",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -832,7 +832,7 @@
    "handle": "mens-leather-sandals-closed-toe-anti-slip-sole-stitched",
    "title": "Men's Leather Sandals | Closed Toe Anti-Slip Sole Stitched",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -856,7 +856,7 @@
    "handle": "mens-loafers-slip-on-leather-closed-toe-textured-sole",
    "title": "Men's Loafers | Slip-On Leather Closed Toe Textured Sole",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -864,7 +864,7 @@
    "handle": "mens-sandals-open-toe-adjustable-straps-cushioned",
    "title": "Men's Sandals | Open Toe Adjustable Straps Cushioned",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -872,7 +872,7 @@
    "handle": "mens-two-piece-set-short-sleeve-button-closure-ribbed",
    "title": "Men's Two Piece Set | Short Sleeve Button Closure Ribbed",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -880,7 +880,7 @@
    "handle": "mens-workwear-shorts-cargo-pockets-elastic-waist-zip-closure",
    "title": "Men's Workwear Shorts | Cargo Pockets Elastic Waist Zip Closure",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -888,7 +888,7 @@
    "handle": "sandals-for-men-closed-toe-mesh-slip-on-cushioned-sole",
    "title": "Sandals For Men | Closed Toe Mesh Slip-On Cushioned Sole",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -896,7 +896,7 @@
    "handle": "womens-bandeau-bikini-set-metallic-detail-tied-back-high-waist",
    "title": "Women's Bandeau Bikini Set | Metallic Detail Tied Back High Waist",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -904,7 +904,7 @@
    "handle": "womens-bermuda-shorts-high-waisted-straight-leg-denim-knee-length",
    "title": "Women's Bermuda Shorts | High Waisted Straight Leg Denim Knee Length",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -912,7 +912,7 @@
    "handle": "womens-black-sandals-open-toe-block-heel-stretch-strap",
    "title": "Women's Black Sandals | Open Toe Block Heel Stretch Strap",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -920,7 +920,7 @@
    "handle": "womens-black-sandals-open-toe-pearl-embellished-flat-slip-on",
    "title": "Women's Black Sandals | Open Toe Pearl Embellished Flat Slip On",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -936,7 +936,7 @@
    "handle": "mens-cargo-pants-relaxed-fit-drawstring-corduroy",
    "title": "Women's Cargo Pants | Relaxed Fit Drawstring Corduroy",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -944,7 +944,7 @@
    "handle": "womens-cargo-pants-wide-leg-relaxed-fit-drawstring-waist",
    "title": "Women's Cargo Pants | Wide-Leg Relaxed Fit Drawstring Waist",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -952,7 +952,7 @@
    "handle": "womens-cocktail-dress-maxi-v-neck-cold-shoulder",
    "title": "Women's Cocktail Dress | Maxi V-Neck Cold Shoulder",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -960,7 +960,7 @@
    "handle": "womens-cocktail-dress-midi-one-shoulder-long-sleeve",
    "title": "Women's Cocktail Dress | Midi One Shoulder Long Sleeve",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -976,7 +976,7 @@
    "handle": "womens-dress-midi-length-layered-front-short-sleeve",
    "title": "Women's Dress | Midi Length Layered Front Short Sleeve",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -984,7 +984,7 @@
    "handle": "mens-hiking-pants-padded-waterproof-bilateral-zippers",
    "title": "Women's Hiking Pants | Padded Waterproof Bilateral Zippers",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -992,7 +992,7 @@
    "handle": "womens-jeans-high-waist-flared-leg-button-front-denim",
    "title": "Women's Jeans | High-Waist Flared Leg Button-Front Denim",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1000,7 +1000,7 @@
    "handle": "womens-linen-pants-high-waist-wide-leg-striped",
    "title": "Women's Linen Pants | High Waist Wide Leg Striped",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1008,7 +1008,7 @@
    "handle": "womens-linen-pants-tapered-leg-high-rise-elastic-waistband",
    "title": "Women's Linen Pants | Tapered Leg High-Rise Elastic Waistband",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1024,7 +1024,7 @@
    "handle": "womens-midi-dress-round-neck-sleeveless-gathered-denim",
    "title": "Women's Midi Dress | Round Neck Sleeveless Gathered Denim",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1032,7 +1032,7 @@
    "handle": "womens-midi-dress-short-sleeve-v-neck-relaxed-pockets",
    "title": "Women's Midi Dress | Short Sleeve V-Neck Relaxed Pockets",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1048,7 +1048,7 @@
    "handle": "womens-shoe-rounded-toe-elastic-strap-wedge",
    "title": "Women's Shoe | Rounded Toe Elastic Strap Wedge",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1056,7 +1056,7 @@
    "handle": "womens-slide-flat-sandal-adjustable-strap-embellished",
    "title": "Women's Slide | Flat Sandal Adjustable Strap Embellished",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1064,7 +1064,7 @@
    "handle": "womens-slide-mesh-upper-cushioned-sole-slip-on",
    "title": "Women's Slide | Mesh Upper Cushioned Sole Slip-On",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1072,7 +1072,7 @@
    "handle": "womens-slide-strappy-gladiator-wedge-open-toe",
    "title": "Women's Slide | Strappy Gladiator Wedge Open Toe",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1080,7 +1080,7 @@
    "handle": "womens-summer-dress-v-neck-midi-floral-cocoon",
    "title": "Women's Summer Dress | V-Neck Midi Floral Cocoon",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1088,7 +1088,7 @@
    "handle": "womens-tote-bag-woven-straw-dual-handles-tassel",
    "title": "Women's Tote Bag | Woven Straw Dual Handles Tassel",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1096,7 +1096,7 @@
    "handle": "womens-white-dress-midi-batwing-sleeve-tie-waist",
    "title": "Women's White Dress | Midi Batwing Sleeve Tie Waist",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1104,7 +1104,7 @@
    "handle": "womens-white-dress-mini-sleeveless-v-neck-broderie",
    "title": "Women's White Dress | Mini Sleeveless V-Neck Broderie",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1112,7 +1112,7 @@
    "handle": "athletic-running-shoe-for-men-mesh-upper-lace-closure-lightweight-sole",
    "title": "Athletic Running Shoe For Men | Mesh Upper Lace Closure Lightweight Sole",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1120,7 +1120,7 @@
    "handle": "mens-button-up-shirt-collared-linen-short-sleeve-relaxed-fit",
    "title": "Men's Button Up Shirt | Collared Linen Short Sleeve Relaxed Fit",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1128,7 +1128,7 @@
    "handle": "mens-button-up-shirt-lapel-collar-long-sleeve-linen",
    "title": "Men's Button Up Shirt | Lapel Collar Long Sleeve Linen",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1136,7 +1136,7 @@
    "handle": "mens-camo-shorts-cargo-pockets-zipper-fly-knee-length",
    "title": "Men's Camo Shorts | Cargo Pockets Zipper Fly Knee Length",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1144,7 +1144,7 @@
    "handle": "mens-crossbody-bag-padded-laptop-compartment-messenger-bag",
    "title": "Men's Crossbody Bag | Padded Laptop Compartment Messenger Bag",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1152,7 +1152,7 @@
    "handle": "mens-leather-sandals-cross-strap-open-toe-slip-on-flat",
    "title": "Men's Leather Sandals | Cross-Strap Open Toe Slip-On Flat",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1160,7 +1160,7 @@
    "handle": "mens-leather-sandals-open-toe-cross-strap-flat-sole",
    "title": "Men's Leather Sandals | Open Toe Cross Strap Flat Sole",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1168,7 +1168,7 @@
    "handle": "mens-linen-blend-shirt-short-sleeves-button-front-collar",
    "title": "Men's Linen Blend Shirt | Short Sleeves Button Front Collar",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1176,7 +1176,7 @@
    "handle": "mens-loafers-slip-on-suede-almond-toe-flat-sole",
    "title": "Men's Loafers | Slip On Suede Almond Toe Flat Sole",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1184,7 +1184,7 @@
    "handle": "mens-sandals-strappy-open-toe-buckle-closure",
    "title": "Men's Sandals | Strappy Open Toe Buckle Closure",
    "from": 0,
-   "price": 79.95,
+   "price": 84.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1192,7 +1192,7 @@
    "handle": "mens-track-pants-elastic-waist-drawstring-relaxed-fit",
    "title": "Men's Track Pants | Elastic Waist Drawstring Relaxed Fit",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1200,7 +1200,7 @@
    "handle": "mens-two-piece-set-short-sleeve-button-down-relaxed-fit",
    "title": "Men's Two Piece Set | Short Sleeve Button Down Relaxed Fit",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1208,7 +1208,7 @@
    "handle": "shoe-for-women-lace-up-rounded-toe-flexible-sole",
    "title": "Shoe For Women | Lace Up Rounded Toe Flexible Sole",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1216,7 +1216,7 @@
    "handle": "water-shoe-for-men-adjustable-hook-loop-breathable-mesh-minimalist",
    "title": "Water Shoe For Men | Adjustable Hook Loop Breathable Mesh Minimalist",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1232,7 +1232,7 @@
    "handle": "womens-cocktail-dress-maxi-one-shoulder-sleeveless",
    "title": "Women's Cocktail Dress | Maxi One Shoulder Sleeveless",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1240,7 +1240,7 @@
    "handle": "womens-cocktail-dress-midi-off-shoulder-fitted-bodice",
    "title": "Women's Cocktail Dress | Midi Off-Shoulder Fitted Bodice",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1248,7 +1248,7 @@
    "handle": "womens-cocktail-dress-mini-square-neck-sleeveless-embellished",
    "title": "Women's Cocktail Dress | Mini Square Neck Sleeveless Embellished",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1264,7 +1264,7 @@
    "handle": "womens-kitten-heels-open-toe-square-knotted-mule",
    "title": "Women's Kitten Heels | Open Toe Square Knotted Mule",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1272,7 +1272,7 @@
    "handle": "womens-kitten-heels-pointed-toe-slip-on-leather",
    "title": "Women's Kitten Heels | Pointed Toe Slip-On Leather",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1280,7 +1280,7 @@
    "handle": "womens-midi-skirt-high-waist-button-zip-denim",
    "title": "Women's Midi Skirt | High Waist Button Zip Denim",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1288,7 +1288,7 @@
    "handle": "womens-platform-sandals-open-toe-cork-wedge-cushioned",
    "title": "Women's Platform Sandals | Open Toe Cork Wedge Cushioned",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1296,7 +1296,7 @@
    "handle": "womens-platform-sandals-open-toe-elastic-strap-wedge",
    "title": "Women's Platform Sandals | Open Toe Elastic Strap Wedge",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1304,7 +1304,7 @@
    "handle": "womens-platform-sandals-open-toe-mesh-velcro-slingback",
    "title": "Women's Platform Sandals | Open Toe Mesh Velcro Slingback",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1312,7 +1312,7 @@
    "handle": "womens-slide-t-strap-arch-support-leather-cushioned",
    "title": "Women's Slide | T-Strap Arch Support Leather Cushioned",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1320,7 +1320,7 @@
    "handle": "womens-sneakers-low-top-lace-up-retro-stripe",
    "title": "Women's Sneakers | Low-Top Lace-Up Retro Stripe",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1328,7 +1328,7 @@
    "handle": "womens-summer-dress-v-neck-flutter-sleeve-maxi-pleated",
    "title": "Women's Summer Dress | V-Neck Flutter Sleeve Maxi Pleated",
    "from": 0,
-   "price": 74.95,
+   "price": 79.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1336,7 +1336,7 @@
    "handle": "mens-board-shorts-compass-print-quick-dry-mesh-lined",
    "title": "Men's Board Shorts | Compass Print Quick Dry Mesh Lined",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1344,7 +1344,7 @@
    "handle": "mens-board-shorts-elastic-waist-drawstring-quick-dry",
    "title": "Men's Board Shorts | Elastic Waist Drawstring Quick Dry",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1352,7 +1352,7 @@
    "handle": "mens-board-shorts-linen-mid-thigh-drawstring-quick-dry",
    "title": "Men's Board Shorts | Linen Mid-Thigh Drawstring Quick-Dry",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1368,7 +1368,7 @@
    "handle": "mens-button-up-shirt-collared-long-sleeve-chest-pockets",
    "title": "Men's Button Up Shirt | Collared Long Sleeve Chest Pockets",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1376,7 +1376,7 @@
    "handle": "mens-button-up-shirt-collared-three-quarter-sleeve-breathable",
    "title": "Men's Button Up Shirt | Collared Three-Quarter Sleeve Breathable",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1384,7 +1384,7 @@
    "handle": "mens-cargo-shorts-denim-cargo-pockets-belted",
    "title": "Men's Cargo Shorts | Denim Cargo Pockets Belted",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1392,7 +1392,7 @@
    "handle": "mens-cargo-shorts-relaxed-fit-cargo-pockets-utility",
    "title": "Men's Cargo Shorts | Relaxed Fit Cargo Pockets Utility",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1400,7 +1400,7 @@
    "handle": "mens-cargo-shorts-tailored-silhouette-utility-pockets-stretch",
    "title": "Men's Cargo Shorts | Tailored Silhouette Utility Pockets Stretch",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1408,7 +1408,7 @@
    "handle": "mens-hawaiian-shirt-short-sleeve-newspaper-print-collar",
    "title": "Men's Hawaiian Shirt | Short Sleeve Newspaper Print Collar",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1416,7 +1416,7 @@
    "handle": "mens-henley-short-sleeve-denim-button-placket",
    "title": "Men's Henley | Short Sleeve Denim Button Placket",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1424,7 +1424,7 @@
    "handle": "mens-linen-shirt-mandarin-collar-button-front-relaxed-fit-1",
    "title": "Men's Linen Shirt | Mandarin Collar Button Front Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1432,7 +1432,7 @@
    "handle": "mens-linen-shirt-short-sleeve-collared-button-closure",
    "title": "Men's Linen Shirt | Short Sleeve Collared Button Closure",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1440,7 +1440,7 @@
    "handle": "mens-linen-shirt-v-neck-short-sleeve-relaxed-fit",
    "title": "Men's Linen Shirt | V-Neck Short Sleeve Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1448,7 +1448,7 @@
    "handle": "mens-linen-shorts-drawstring-relaxed-fit-deep-pockets",
    "title": "Men's Linen Shorts | Drawstring Relaxed Fit Deep Pockets",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1456,7 +1456,7 @@
    "handle": "mens-linen-shorts-drawstring-waist-relaxed-fit-knee-length",
    "title": "Men's Linen Shorts | Drawstring Waist Relaxed Fit Knee Length",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1464,7 +1464,7 @@
    "handle": "mens-linen-shorts-drawstring-waist-relaxed-fit-side-pockets",
    "title": "Men's Linen Shorts | Drawstring Waist Relaxed Fit Side Pockets",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1472,7 +1472,7 @@
    "handle": "mens-linen-work-shirt-henley-neckline-button-placket-relaxed-fit",
    "title": "Men's Linen Work Shirt | Henley Neckline Button Placket Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1480,7 +1480,7 @@
    "handle": "mens-long-sleeve-shirt-collared-button-closure-relaxed-fit",
    "title": "Men's Long Sleeve Shirt | Collared Button Closure Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1488,7 +1488,7 @@
    "handle": "mens-long-sleeve-shirt-pointed-collar-button-front-linen-blend",
    "title": "Men's Long Sleeve Shirt | Pointed Collar Button Front Linen Blend",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1496,7 +1496,7 @@
    "handle": "mens-long-sleeve-polo-shirt-contrast-collar-button-closure",
    "title": "Men's Long-Sleeve Polo Shirt | Contrast Collar Button Closure",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1504,7 +1504,7 @@
    "handle": "mens-polo-shirt-colorblock-design-short-sleeve-zip-closure",
    "title": "Men's Polo Shirt | Colorblock Design Short Sleeve Zip Closure",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1512,7 +1512,7 @@
    "handle": "mens-polo-shirt-lapel-collar-short-sleeve-palm-print",
    "title": "Men's Polo Shirt | Lapel Collar Short Sleeve Palm Print",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1520,7 +1520,7 @@
    "handle": "mens-polo-shirt-short-sleeve-collared-knit",
    "title": "Men's Polo Shirt | Short-Sleeve Collared Knit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1528,7 +1528,7 @@
    "handle": "mens-polo-shirt-striped-collared-short-sleeve",
    "title": "Men's Polo Shirt | Striped Collared Short Sleeve",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1536,7 +1536,7 @@
    "handle": "mens-short-swim-trunk-striped-drawstring-relaxed-fit",
    "title": "Men's Short Swim Trunk | Striped Drawstring Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1544,7 +1544,7 @@
    "handle": "mens-shorts-drawstring-relaxed-fit-linen",
    "title": "Men's Shorts | Drawstring Relaxed Fit Linen",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1552,7 +1552,7 @@
    "handle": "mens-shorts-elastic-waist-drawcord-relaxed-fit",
    "title": "Men's Shorts | Elastic Waist Drawcord Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1560,7 +1560,7 @@
    "handle": "mens-shorts-palm-print-elastic-drawstring-relaxed-fit",
    "title": "Men's Shorts | Palm Print Elastic Drawstring Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1568,7 +1568,7 @@
    "handle": "mens-slip-on-loafers-perforated-wingtip-penny-strap-leather",
    "title": "Men's Slip On Loafers | Perforated Wingtip Penny Strap Leather",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1576,7 +1576,7 @@
    "handle": "mens-swimwear-drawcord-waist-inner-liner-pocket",
    "title": "Men's Swimwear | Drawcord Waist Inner Liner Pocket",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1584,7 +1584,7 @@
    "handle": "mens-tailored-shorts-drawstring-waist-corduroy-relaxed-fit",
    "title": "Men's Tailored Shorts | Drawstring Waist Corduroy Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1592,7 +1592,7 @@
    "handle": "mens-tailored-shorts-relaxed-fit-drawstring-pockets",
    "title": "Men's Tailored Shorts | Relaxed Fit Drawstring Pockets",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1600,7 +1600,7 @@
    "handle": "mens-tailored-shorts-relaxed-fit-linen-drawstring-rolled-hem",
    "title": "Men's Tailored Shorts | Relaxed Fit Linen Drawstring Rolled Hem",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1608,7 +1608,7 @@
    "handle": "mens-white-shirt-short-sleeve-button-up-relaxed-fit",
    "title": "Men's White Shirt | Short Sleeve Button-Up Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1616,7 +1616,7 @@
    "handle": "mens-white-shirt-short-sleeve-linen-collar-pocket",
    "title": "Men's White Shirt | Short Sleeve Linen Collar Pocket",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1624,7 +1624,7 @@
    "handle": "mens-work-shirt-button-down-collar-long-sleeve-cotton",
    "title": "Men's Work Shirt | Button Down Collar Long Sleeve Cotton",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1632,7 +1632,7 @@
    "handle": "mens-work-shirt-polo-collar-short-sleeve-ribbed-knit",
    "title": "Men's Work Shirt | Polo Collar Short Sleeve Ribbed Knit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1640,7 +1640,7 @@
    "handle": "mens-work-shorts-cargo-pockets-relaxed-fit-cotton",
    "title": "Men's Work Shorts | Cargo Pockets Relaxed Fit Cotton",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1648,7 +1648,7 @@
    "handle": "mens-work-shorts-straight-leg-pleated-button-closure",
    "title": "Men's Work Shorts | Straight-Leg Pleated Button Closure",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1656,7 +1656,7 @@
    "handle": "mens-work-shorts-striped-drawstring-casual-fit",
    "title": "Men's Work Shorts | Striped Drawstring Casual Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1688,7 +1688,7 @@
    "handle": "womens-corduroy-shirt-ribbed-button-front-relaxed-fit",
    "title": "Women's Corduroy Shirt | Ribbed Button Front Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1696,7 +1696,7 @@
    "handle": "mens-crossbody-bag-quilted-pattern-zip-closure-adjustable-strap",
    "title": "Women's Crossbody Bag | Quilted Pattern Zip Closure Adjustable Strap",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1720,7 +1720,7 @@
    "handle": "womens-kitten-heels-open-toe-strappy-ankle-strap",
    "title": "Women's Kitten Heels | Open Toe Strappy Ankle Strap",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1728,7 +1728,7 @@
    "handle": "womens-linen-pants-relaxed-straight-leg-elastic-waist-rolled-hem",
    "title": "Women's Linen Pants | Relaxed Straight Leg Elastic Waist Rolled Hem",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1784,7 +1784,7 @@
    "handle": "womens-midi-dress-boat-neck-pearl-embellished-sleeves",
    "title": "Women's Midi Dress | Boat Neck Pearl Embellished Sleeves",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1792,7 +1792,7 @@
    "handle": "womens-mini-shorts-elastic-waist-raw-hem-denim",
    "title": "Women's Mini Shorts | Elastic Waist Raw Hem Denim",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1800,7 +1800,7 @@
    "handle": "womens-mini-shorts-halter-neckline-sleeveless-mini-flare",
    "title": "Women's Mini Shorts | Halter Neckline Sleeveless Mini Flare",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1808,7 +1808,7 @@
    "handle": "womens-neck-blouse-ruffled-v-neck-long-sleeve-lightweight",
    "title": "Women's Neck Blouse | Ruffled V-Neck Long Sleeve Lightweight",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1816,7 +1816,7 @@
    "handle": "womens-shorts-cropped-drawstring-linen-relaxed-fit",
    "title": "Women's Shorts | Cropped Drawstring Linen Relaxed Fit",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1824,7 +1824,7 @@
    "handle": "womens-shoulder-bag-crescent-shape-corduroy-adjustable-strap",
    "title": "Women's Shoulder Bag | Crescent Shape Corduroy Adjustable Strap",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1832,7 +1832,7 @@
    "handle": "womens-tankini-halter-neckline-tie-closure-asymmetric-hem",
    "title": "Women's Tankini | Halter Neckline Tie Closure Asymmetric Hem",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1840,7 +1840,7 @@
    "handle": "womens-tankini-v-neck-sleeveless-striped-ruched",
    "title": "Women's Tankini | V-Neck Sleeveless Striped Ruched",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1848,7 +1848,7 @@
    "handle": "womens-tote-bag-shoulder-strap-leather-hobo-slouch",
    "title": "Women's Tote Bag | Shoulder Strap Leather Hobo Slouch",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },
@@ -1856,7 +1856,7 @@
    "handle": "womens-two-piece-set-tailored-blazer-tapered-joggers-long-sleeve",
    "title": "Women's Two Piece Set | Tailored Blazer Tapered Joggers Long Sleeve",
    "from": 0,
-   "price": 69.95,
+   "price": 74.95,
    "compareAt": null,
    "raiseOnly": true
   },

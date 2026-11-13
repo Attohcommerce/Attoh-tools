@@ -1,0 +1,3512 @@
+{
+ "store": "Lady Glam Boutique",
+ "domain": "ladyglamboutique.com",
+ "date": "2026-11-13 BE 1,65",
+ "note": "omhoog · 438 producten naar BE-ROAS 1,65, minimaal $44.95, max +60% · alleen omhoog · 3 bestsellers (3+ verkocht) blijven · korting op doorstreepprijs blijft gelijk",
+ "items": [
+  {
+   "handle": "womens-mules-pointed-toe-sculpted-wedge-heel-metallic",
+   "title": "Women's Mules | Pointed Toe Sculpted Wedge Heel Metallic",
+   "from": 0,
+   "price": 124.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-peacoat-double-breasted-fur-collar-belted",
+   "title": "Women's Peacoat | Double-Breasted Fur Collar Belted",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cozy-slippers-cat-face-embroidered-fuzzy-closure",
+   "title": "Women's Cozy Slippers | Cat Face Embroidered Fuzzy Closure",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-slouch-boots-knee-high-block-heel-suede",
+   "title": "Women's Slouch Boots | Knee-High Block Heel Suede",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-set-notched-lapel-blazer-long-sleeve-button-closure-wide-leg",
+   "title": "Women's Matching Set | Notched Lapel Blazer Long Sleeve Button Closure Wide Leg",
+   "from": 0,
+   "price": 114.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-overall-denim-sleeveless-distressed-casual",
+   "title": "Women's Overall | Denim Sleeveless Distressed Casual",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-dress-mini-length-square-neckline-corset-bodice-draped",
+   "title": "Women's Cocktail Dress | Mini Length Square Neckline Corset Bodice Draped",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-pencil-skirt-midi-length-zip-closure-high-waist-tailored",
+   "title": "Women's Pencil Skirt | Midi Length Zip Closure High Waist Tailored",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cozy-slippers-ribbed-knit-fleece-lined-slip-on",
+   "title": "Women's Cozy Slippers | Ribbed Knit Fleece Lined Slip On",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-maxi-skirt-midi-length-pleated-elastic-waist-knit",
+   "title": "Women's Maxi Skirt | Midi Length Pleated Elastic Waist Knit",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-faux-fur-coat-velvet-double-breasted-long-lapel",
+   "title": "Women's Faux Fur Coat | Velvet Double-Breasted Long Lapel",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-coat-long-faux-fur-collar-zip-closure",
+   "title": "Women's Leather Coat | Long Faux Fur Collar Zip Closure",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-coat-notch-lapel-button-front-plaid-wool",
+   "title": "Women's Long Coat | Notch Lapel Button Front Plaid Wool",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-overcoat-midi-length-double-button-hood",
+   "title": "Women's Overcoat | Midi Length Double Button Hood",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-puffer-coat-hooded-quilted-longline-zipper",
+   "title": "Women's Puffer Coat | Hooded Quilted Longline Zipper",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-puffer-coat-maxi-length-hooded-quilted-semi-fitted",
+   "title": "Women's Puffer Coat | Maxi Length Hooded Quilted Semi-Fitted",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-quilted-coat-hooded-mid-thigh-two-way-zip",
+   "title": "Women's Quilted Coat | Hooded Mid-Thigh Two-Way Zip",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-quilted-coat-oversized-fur-collar-zip-front-padded",
+   "title": "Women's Quilted Coat | Oversized Fur Collar Zip Front Padded",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-shearling-coat-belted-waist-zip-closure-long",
+   "title": "Women's Shearling Coat | Belted Waist Zip Closure Long",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-coat-oversized-hood-quilted-zip-front",
+   "title": "Women's Winter Coat | Oversized Hood Quilted Zip Front",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-coat-sherpa-lined-hooded-water-resistant",
+   "title": "Women's Winter Coat | Sherpa Lined Hooded Water Resistant",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wool-coat-peter-pan-collar-button-closure-pockets",
+   "title": "Women's Wool Coat | Peter Pan Collar Button Closure Pockets",
+   "from": 0,
+   "price": 129.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-overcoat-notched-lapel-double-breasted-button-closure-midi",
+   "title": "Women's Overcoat | Notched Lapel Double-Breasted Button Closure Midi",
+   "from": 0,
+   "price": 119.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wool-coat-double-breasted-notched-lapel-a-line-midi",
+   "title": "Women's Wool Coat | Double Breasted Notched Lapel A-Line Midi",
+   "from": 0,
+   "price": 119.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-denim-jacket-collar-lapel-button-front-relaxed-fit",
+   "title": "Women's Denim Jacket | Collar Lapel Button Front Relaxed Fit",
+   "from": 0,
+   "price": 114.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-denim-jacket-pointed-collar-contrast-trim-button-closure",
+   "title": "Women's Denim Jacket | Pointed Collar Contrast Trim Button Closure",
+   "from": 0,
+   "price": 114.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-winter-coat-quilted-hood-zip-pockets",
+   "title": "Women's Long Winter Coat | Quilted Hood Zip Pockets",
+   "from": 0,
+   "price": 114.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-moto-jacket-slim-fit-zip-front-collared",
+   "title": "Women's Moto Jacket | Slim Fit Zip Front Collared",
+   "from": 0,
+   "price": 114.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-puffer-jacket-diamond-quilted-relaxed-fit-button-closure",
+   "title": "Women's Puffer Jacket | Diamond-Quilted Relaxed Fit Button Closure",
+   "from": 0,
+   "price": 114.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-puffer-jacket-maxi-hooded-belted-quilted",
+   "title": "Women's Puffer Jacket | Maxi Hooded Belted Quilted",
+   "from": 0,
+   "price": 114.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-puffer-jacket-quilted-hooded-belted-zip-front",
+   "title": "Women's Puffer Jacket | Quilted Hooded Belted Zip Front",
+   "from": 0,
+   "price": 114.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-snow-jacket-hooded-puffer-button-closure",
+   "title": "Women's Snow Jacket | Hooded Puffer Button Closure",
+   "from": 0,
+   "price": 114.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-faux-fur-coat-cropped-silhouette-long-sleeves-oversized",
+   "title": "Women's Faux Fur Coat | Cropped Silhouette Long Sleeves Oversized",
+   "from": 0,
+   "price": 109.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-faux-fur-coat-striped-hooded-oversized-sherpa",
+   "title": "Women's Faux Fur Coat | Striped Hooded Oversized Sherpa",
+   "from": 0,
+   "price": 109.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-faux-fur-jacket-quilted-bomber-hooded-zip-closure",
+   "title": "Women's Faux Fur Jacket | Quilted Bomber Hooded Zip Closure",
+   "from": 0,
+   "price": 109.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-coat-midi-length-double-breasted-collar",
+   "title": "Women's Leather Coat | Midi Length Double Breasted Collar",
+   "from": 0,
+   "price": 109.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-suede-jacket-sherpa-lined-short-collared-button-closure",
+   "title": "Women's Suede Jacket | Sherpa Lined Short Collared Button Closure",
+   "from": 0,
+   "price": 109.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-trench-coat-double-breasted-wide-lapels-tailored",
+   "title": "Women's Trench Coat | Double-Breasted Wide Lapels Tailored",
+   "from": 0,
+   "price": 109.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "chelsea-boots-for-women-elastic-side-suede-upper-mesh-lined",
+   "title": "Chelsea Boots For Women | Elastic Side Suede Upper Mesh Lined",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "duck-boots-for-men-mid-cut-lugged-sole-ankle-strap",
+   "title": "Duck Boots For Men | Mid-Cut Lugged Sole Ankle Strap",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-ankle-boots-chunky-sole-buckle-strap-leather",
+   "title": "Women's Ankle Boots | Chunky Sole Buckle Strap Leather",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-ankle-boots-lace-up-lug-sole-patent-leather",
+   "title": "Women's Ankle Boots | Lace-Up Lug Sole Patent Leather",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-blazer-notch-lapel-single-button-velvet",
+   "title": "Women's Blazer | Notch Lapel Single Button Velvet",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-blazer-single-button-notched-lapel-leather",
+   "title": "Women's Blazer | Single Button Notched Lapel Leather",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cowgirl-boots-round-toe-stacked-heel-leather",
+   "title": "Women's Cowgirl Boots | Round Toe Stacked Heel Leather",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-duck-boots-mid-calf-lace-up-faux-fur-cuff",
+   "title": "Women's Duck Boots | Mid Calf Lace Up Faux Fur Cuff",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-faux-fur-coat-fur-collar-belted-longline-wool",
+   "title": "Women's Faux Fur Coat | Fur Collar Belted Longline Wool",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fur-boots-ankle-height-side-zip-faux-leather",
+   "title": "Women's Fur Boots | Ankle Height Side Zip Faux Leather",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fur-boots-lace-up-rounded-toe-flat-heel-leather",
+   "title": "Women's Fur Boots | Lace-Up Rounded Toe Flat Heel Leather",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fur-boots-suede-ankle-lug-sole-side-zipper",
+   "title": "Women's Fur Boots | Suede Ankle Lug Sole Side Zipper",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-gogo-boots-round-toe-flat-heel-side-zip-gathered-shaft",
+   "title": "Women's Gogo Boots | Round Toe Flat Heel Side Zip Gathered Shaft",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-heeled-boots-strappy-buckle-closure-leather-block-heel",
+   "title": "Women's Heeled Boots | Strappy Buckle Closure Leather Block Heel",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-coat-double-breasted-notched-lapel-wool-relaxed-fit",
+   "title": "Women's Long Coat | Double-Breasted Notched Lapel Wool Relaxed Fit",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-winter-coat-lapel-collar-button-front-midi-length",
+   "title": "Women's Long Winter Coat | Lapel Collar Button Front Midi Length",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-overcoat-hooded-waterproof-zip-closure",
+   "title": "Women's Overcoat | Hooded Waterproof Zip Closure",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-parka-hooded-faux-fur-insulated-quilted",
+   "title": "Women's Parka | Hooded Faux Fur Insulated Quilted",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-rain-boots-knee-high-buckle-block-heel",
+   "title": "Women's Rain Boots | Knee-High Buckle Block Heel",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-rain-boots-knee-high-waterproof-rubber-non-slip-sole",
+   "title": "Women's Rain Boots | Knee-High Waterproof Rubber Non-Slip Sole",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-slouch-boots-knee-high-suede-buckle-strap",
+   "title": "Women's Slouch Boots | Knee-High Suede Buckle Strap",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-snow-boots-quilted-waterproof-ankle-side-zip",
+   "title": "Women's Snow Boots | Quilted Waterproof Ankle Side Zip",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-square-toe-boots-suede-block-heel-square-toe",
+   "title": "Women's Square Toe Boots | Suede Block Heel Square Toe",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-thigh-high-boots-pointed-toe-block-heel-zip-closure",
+   "title": "Women's Thigh High Boots | Pointed Toe Block Heel Zip Closure",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-thigh-high-boots-pointed-toe-slouchy-suede-block-heel",
+   "title": "Women's Thigh High Boots | Pointed Toe Slouchy Suede Block Heel",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-trench-coat-classic-collar-button-front-long-sleeve",
+   "title": "Women's Trench Coat | Classic Collar Button Front Long Sleeve",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-trench-coat-double-breasted-belted-notch-collar",
+   "title": "Women's Trench Coat | Double Breasted Belted Notch Collar",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-trench-coat-double-breasted-belt-buckle-cuffs",
+   "title": "Women's Trench Coat | Double-Breasted Belt Buckle Cuffs",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-trench-coat-double-layer-hood-button-closure",
+   "title": "Women's Trench Coat | Double-Layer Hood Button Closure",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-trench-coat-lightweight-waterproof-stand-collar",
+   "title": "Women's Trench Coat | Lightweight Waterproof Stand Collar",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-walking-boots-knee-high-leather-buckle-strap",
+   "title": "Women's Walking Boots | Knee-High Leather Buckle Strap",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-western-boots-suede-ankle-pull-tab-low-heel",
+   "title": "Women's Western Boots | Suede Ankle Pull Tab Low Heel",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wide-calf-boots-fringe-ankle-studded-buckle-suede",
+   "title": "Women's Wide Calf Boots | Fringe Ankle Studded Buckle Suede",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wide-calf-boots-fringe-suede-block-heel-zipper",
+   "title": "Women's Wide Calf Boots | Fringe Suede Block Heel Zipper",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-coat-shawl-collar-open-front-bell-sleeve",
+   "title": "Women's Winter Coat | Shawl Collar Open Front Bell Sleeve",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wool-blazer-notched-lapel-single-button-tweed",
+   "title": "Women's Wool Blazer | Notched Lapel Single Button Tweed",
+   "from": 0,
+   "price": 104.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "mens-chelsea-boots-brogue-wingtip-leather-slip-on",
+   "title": "Men's Chelsea Boots | Brogue Wingtip Leather Slip On",
+   "from": 0,
+   "price": 94.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-knee-high-boots-ribbed-knit-shaft-leather-toe-block-heel",
+   "title": "Women's Knee High Boots | Ribbed Knit Shaft Leather Toe Block Heel",
+   "from": 0,
+   "price": 94.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-jacket-asymmetrical-zip-lapel-collar-tailored",
+   "title": "Women's Leather Jacket | Asymmetrical Zip Lapel Collar Tailored",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-jacket-cropped-silhouette-stand-collar-faux-leather",
+   "title": "Women's Leather Jacket | Cropped Silhouette Stand Collar Faux Leather",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-jacket-quilted-bomber-zip-closure",
+   "title": "Women's Leather Jacket | Quilted Bomber Zip Closure",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-jacket-stand-collar-zip-closure-long-sleeve",
+   "title": "Women's Leather Jacket | Stand Collar Zip Closure Long Sleeve",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-set-double-breasted-blazer-notched-lapel-metal-buttons",
+   "title": "Women's Matching Set | Double-Breasted Blazer Notched Lapel Metal Buttons",
+   "from": 0,
+   "price": 94.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-set-satin-cami-shorts-robe-lace",
+   "title": "Women's Matching Set | Satin Cami Shorts Robe Lace",
+   "from": 0,
+   "price": 94.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-set-v-neck-midi-tie-waist",
+   "title": "Women's Matching Set | V-Neck Midi Tie Waist",
+   "from": 0,
+   "price": 94.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-platform-boots-round-toe-chunky-heel-slip-on-stretch",
+   "title": "Women's Platform Boots | Round Toe Chunky Heel Slip-On Stretch",
+   "from": 0,
+   "price": 94.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-puffer-jacket-hooded-quilted-lightweight-zip",
+   "title": "Women's Puffer Jacket | Hooded Quilted Lightweight Zip",
+   "from": 0,
+   "price": 94.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-snow-boots-lace-up-platform-leather-winter-boots",
+   "title": "Women's Snow Boots | Lace-Up Platform Leather Winter Boots",
+   "from": 0,
+   "price": 94.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-snow-boots-quilted-lace-up-knit-cuff",
+   "title": "Women's Snow Boots | Quilted Lace-Up Knit Cuff",
+   "from": 0,
+   "price": 94.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-boots-faux-fur-ankle-zip-buckle-closure-non-slip-sole",
+   "title": "Women's Winter Boots | Faux Fur Ankle Zip Buckle Closure Non-Slip Sole",
+   "from": 0,
+   "price": 94.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "mens-leather-jacket-ribbed-collar-zip-closure",
+   "title": "Men's Leather Jacket | Ribbed Collar Zip Closure",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-birthday-dress-mini-cowl-neck-chain-strap-sequin",
+   "title": "Women's Birthday Dress | Mini Cowl Neck Chain Strap Sequin",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-blazer-two-button-notch-lapel-peplum-hem",
+   "title": "Women's Blazer | Two-Button Notch Lapel Peplum Hem",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bodycon-dress-one-shoulder-maxi-draped-satin",
+   "title": "Women's Bodycon Dress | One Shoulder Maxi Draped Satin",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bodycon-dress-v-neckline-maxi-sheer-sleeves-floral-print",
+   "title": "Women's Bodycon Dress | V-Neckline Maxi Sheer Sleeves Floral Print",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bridesmaid-dress-maxi-strapless-ruched-side-slit",
+   "title": "Women's Bridesmaid Dress | Maxi Strapless Ruched Side Slit",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bridesmaid-dress-midi-length-sweetheart-neckline-pleated-tulle",
+   "title": "Women's Bridesmaid Dress | Midi Length Sweetheart Neckline Pleated Tulle",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-christmas-party-dress-one-shoulder-maxi-satin-high-slit",
+   "title": "Women's Christmas Party Dress | One-Shoulder Maxi Satin High Slit",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-empire-waist-dress-midi-sleeveless-lace-cutout",
+   "title": "Women's Empire Waist Dress | Midi Sleeveless Lace Cutout",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-evening-gown-strapless-maxi-draped-split",
+   "title": "Women's Evening Gown | Strapless Maxi Draped Split",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-faux-fur-jacket-voluminous-collar-short-length-hook-closure",
+   "title": "Women's Faux Fur Jacket | Voluminous Collar Short Length Hook Closure",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fleece-jacket-hooded-zip-up-sherpa-lining-curved-hem",
+   "title": "Women's Fleece Jacket | Hooded Zip-Up Sherpa Lining Curved Hem",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fleece-jacket-mock-neck-full-zip-long-sleeve",
+   "title": "Women's Fleece Jacket | Mock Neck Full Zip Long Sleeve",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-lace-dress-one-shoulder-maxi-abstract-print",
+   "title": "Women's Lace Dress | One Shoulder Maxi Abstract Print",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-boots-knee-high-buckle-strap-lug-sole",
+   "title": "Women's Leather Boots | Knee-High Buckle Strap Lug Sole",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-jacket-herringbone-tweed-button-closure-tailored",
+   "title": "Women's Leather Jacket | Herringbone Tweed Button Closure Tailored",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-jacket-relaxed-bomber-zip-front-ribbed",
+   "title": "Women's Leather Jacket | Relaxed Bomber Zip-Front Ribbed",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-sleeve-maxi-dress-collared-button-front-pleated",
+   "title": "Women's Long Sleeve Maxi Dress | Collared Button Front Pleated",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-sleeve-wedding-guest-dress-midi-lace-high-neck-puff-sleeve",
+   "title": "Women's Long Sleeve Wedding Guest Dress | Midi Lace High Neck Puff Sleeve",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mini-dress-double-breasted-notch-lapel-long-sleeve",
+   "title": "Women's Mini Dress Blazer | Double-Breasted Notch Lapel Long Sleeve",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-puffer-jacket-quilted-striped-zip-closure-hood",
+   "title": "Women's Puffer Jacket | Quilted Striped Zip Closure Hood",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sherpa-jacket-collared-button-front-pockets",
+   "title": "Women's Sherpa Jacket | Collared Button Front Pockets",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sherpa-jacket-high-collar-zip-fleece-pockets",
+   "title": "Women's Sherpa Jacket | High Collar Zip Fleece Pockets",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sleeveless-blazer-notch-collar-single-button-pockets",
+   "title": "Women's Sleeveless Blazer | Notch Collar Single Button Pockets",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-snow-boots-fur-lined-lace-up-ankle-suede",
+   "title": "Women's Snow Boots | Fur-Lined Lace-Up Ankle Suede",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-snow-boots-leather-mid-calf-lug-sole-pull-on",
+   "title": "Women's Snow Boots | Leather Mid-Calf Lug Sole Pull-On",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-snow-boots-round-toe-leather-fleece-lined",
+   "title": "Women's Snow Boots | Round Toe Leather Fleece Lined",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-suede-jacket-cropped-asymmetric-zip-lapel",
+   "title": "Women's Suede Jacket | Cropped Asymmetric Zip Lapel",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-two-piece-set-cold-shoulder-square-neckline-layered",
+   "title": "Women's Two Piece Set | Cold Shoulder Square Neckline Layered",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-dress-maxi-collar-v-neck-star-pattern-knit",
+   "title": "Women's Winter Dress | Maxi Collar V-Neck Star Pattern Knit",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-jacket-cropped-sequin-open-front-three-quarter-sleeve",
+   "title": "Women's Winter Jacket | Cropped Sequin Open Front Three Quarter Sleeve",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-jacket-denim-collar-knit-blend-button-closure",
+   "title": "Women's Winter Jacket | Denim Collar Knit Blend Button Closure",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wrap-dress-midi-length-v-neck-three-button-linen",
+   "title": "Women's Wrap Dress | Midi Length V Neck Three Button Linen",
+   "from": 0,
+   "price": 89.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-ankle-boots-suede-western-pointed-toe-block-heel",
+   "title": "Women's Ankle Boots | Suede Western Pointed Toe Block Heel",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-ballet-flats-croc-embossed-slip-on-loafer-rounded-toe",
+   "title": "Women's Ballet Flats | Croc Embossed Slip On Loafer Rounded Toe",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-ballet-flats-rounded-toe-elastic-strap-wedge",
+   "title": "Women's Ballet Flats | Rounded Toe Elastic Strap Wedge",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-blazer-notched-lapel-single-button-long-sleeve",
+   "title": "Women's Blazer | Notched Lapel Single Button Long Sleeve",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bootcut-jeans-leopard-print-barrel-leg-relaxed-cropped",
+   "title": "Women's Bootcut Jeans | Leopard Print Barrel Leg Relaxed Cropped",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-chelsea-boots-ankle-height-lug-sole-pull-on",
+   "title": "Women's Chelsea Boots | Ankle Height Lug Sole Pull On",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-chelsea-boots-waterproof-lug-sole-elastic-side-mid-calf",
+   "title": "Women's Chelsea Boots | Waterproof Lug Sole Elastic Side Mid-Calf",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-chelsea-boots-waterproof-slip-on-ankle-rubber-sole",
+   "title": "Women's Chelsea Boots | Waterproof Slip-On Ankle Rubber Sole",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-denim-overall-cold-shoulder-button-front-wide-leg",
+   "title": "Women's Denim Overall | Cold Shoulder Button Front Wide Leg",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-high-heels-round-toe-t-strap-platform-patent",
+   "title": "Women's High Heels | Round Toe T Strap Platform Patent",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-holiday-dress-midi-length-round-neck-wide-sleeves-floral",
+   "title": "Women's Holiday Dress | Midi Length Round Neck Wide Sleeves Floral",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-holiday-party-dress-maxi-square-neck-ruched",
+   "title": "Women's Holiday Party Dress | Maxi Square Neck Ruched",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-kitten-heels-pointed-toe-kitten-heel-leather-upper",
+   "title": "Women's Kitten Heels | Pointed Toe Kitten Heel Leather Upper",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-kitten-heels-pointed-toe-slip-on-flared-heel",
+   "title": "Women's Kitten Heels | Pointed Toe Slip-On Flared Heel",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-kitten-heels-rounded-square-toe-block-heel-slip-on",
+   "title": "Women's Kitten Heels | Rounded Square Toe Block Heel Slip-On",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-knee-high-boots-leather-buckle-strap-lug-sole-tall-shaft",
+   "title": "Women's Knee High Boots | Leather Buckle Strap Lug Sole Tall Shaft",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-knee-length-cocktail-dress-sleeveless-crew-neck-bow-detail",
+   "title": "Women's Knee Length Cocktail Dress | Sleeveless Crew Neck Bow Detail",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-sleeve-mini-dress-pleated-knit-crew-neck-bell-sleeve",
+   "title": "Women's Long Sleeve Mini Dress | Pleated Knit Crew Neck Bell Sleeve",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-low-rise-jeans-slim-flare-denim-zipper-pockets",
+   "title": "Women's Low Rise Jeans | Slim Flare Denim Zipper Pockets",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-lounge-set-crew-neck-long-sleeve-knit-tapered",
+   "title": "Women's Matching Lounge Set | Crew Neck Long Sleeve Knit Tapered",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-set-single-button-blazer-straight-leg-trousers",
+   "title": "Women's Matching Set | Single Button Blazer Straight Leg Trousers",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-overall-wide-leg-denim-frayed-distressed-straps",
+   "title": "Women's Overall | Wide-Leg Denim Frayed Distressed Straps",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-peacoat-notched-lapel-double-breasted-midi",
+   "title": "Women's Peacoat | Notched Lapel Double-Breasted Midi",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-platform-slippers-clog-closed-toe-studded",
+   "title": "Women's Platform Slippers | Clog Closed Toe Studded",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-rhinestone-jeans-high-waist-wide-leg-straight-denim",
+   "title": "Women's Rhinestone Jeans | High Waist Wide Leg Straight Denim",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-rhinestone-jeans-high-waist-wide-leg-denim-straight",
+   "title": "Women's Rhinestone Jeans | High-Waist Wide-Leg Denim Straight",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-stiletto-heels-pointed-toe-metallic-satin",
+   "title": "Women's Stiletto Heels | Pointed Toe Metallic Satin",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatsuit-half-zip-stand-collar-relaxed-fit-knit",
+   "title": "Women's Sweatsuit | Half Zip Stand Collar Relaxed Fit Knit",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatsuit-hooded-relaxed-fit-jogger",
+   "title": "Women's Sweatsuit | Hooded Relaxed Fit Jogger",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-turtleneck-ribbed-knit-long-sleeve-v-neck",
+   "title": "Women's Turtleneck | Ribbed Knit Long Sleeve V-Neck",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wide-leg-sweatpant-barrel-silhouette-drawstring-rope-closure",
+   "title": "Women's Wide Leg Sweatpant | Barrel Silhouette Drawstring Rope Closure",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-boots-ankle-leather-zip-closure-cushioned-sole",
+   "title": "Women's Winter Boots | Ankle Leather Zip Closure Cushioned Sole",
+   "from": 0,
+   "price": 84.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-chelsea-boots-suede-western-heel-pull-on-tabs",
+   "title": "Women's Chelsea Boots | Suede Western Heel Pull-On Tabs",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-ankle-bootie-knit-upper-lug-sole-knee-high",
+   "title": "Women's Ankle Bootie | Knit Upper Lug Sole Knee High",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-ankle-bootie-round-toe-fleece-lined-zip-closure",
+   "title": "Women's Ankle Bootie | Round Toe Fleece Lined Zip Closure",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-ball-gown-maxi-beaded-bodice-sweetheart-tulle",
+   "title": "Women's Ball Gown | Maxi Beaded Bodice Sweetheart Tulle",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-blazer-oversized-fit-long-sleeve-notch-lapel-pockets",
+   "title": "Women's Blazer | Oversized Fit Long Sleeve Notch Lapel Pockets",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-blazer-single-button-tailored-closure",
+   "title": "Women's Blazer | Single Button Tailored Closure",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bodycon-mini-dress-scoop-neck-sleeveless-mini-ruched",
+   "title": "Women's Bodycon Mini Dress | Scoop Neck Sleeveless Mini Ruched",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bridesmaid-dress-maxi-square-neckline-sleeveless-draped",
+   "title": "Women's Bridesmaid Dress | Maxi Square Neckline Sleeveless Draped",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-camo-pants-cargo-pockets-wide-leg-regular-fit",
+   "title": "Women's Camo Pants | Cargo Pockets Wide Leg Regular Fit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-camo-pants-relaxed-fit-cargo-wide-leg-denim",
+   "title": "Women's Camo Pants | Relaxed Fit Cargo Wide Leg Denim",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cashmere-cardigan-collared-button-closure-ribbed-cuffs",
+   "title": "Women's Cashmere Cardigan | Collared Button Closure Ribbed Cuffs",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cashmere-sweatshirt-hooded-long-sleeve-knit",
+   "title": "Women's Cashmere Sweatshirt | Hooded Long Sleeve Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-chelsea-boots-square-toe-block-heel-ribbed-knit",
+   "title": "Women's Chelsea Boots | Square Toe Block Heel Ribbed Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-christmas-dress-maxi-turtleneck-long-sleeve-velvet",
+   "title": "Women's Christmas Dress | Maxi Turtleneck Long Sleeve Velvet",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-christmas-dress-maxi-wrap-neckline-lace-shoulder-side-slit",
+   "title": "Women's Christmas Dress | Maxi Wrap Neckline Lace Shoulder Side Slit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-christmas-dress-midi-lace-high-neck-long-sleeve",
+   "title": "Women's Christmas Dress | Midi Lace High Neck Long Sleeve",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-christmas-sweater-crew-neck-long-sleeve-knit",
+   "title": "Women's Christmas Sweater | Crew Neck Long Sleeve Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-christmas-sweatshirt-crew-neck-long-sleeve-patchwork",
+   "title": "Women's Christmas Sweatshirt | Crew Neck Long Sleeve Patchwork",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-length-round-neckline-wide-sleeves-belted",
+   "title": "Women's Cocktail Dress | Midi Length Round Neckline Wide Sleeves Belted",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cowgirl-boots-embroidered-western-leather-block-heel",
+   "title": "Women's Cowgirl Boots | Embroidered Western Leather Block Heel",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cute-hoodie-hooded-full-zip-long-sleeve-knit",
+   "title": "Women's Cute Hoodie | Hooded Full Zip Long Sleeve Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cute-hoodie-oversized-pullover-drawstring-hood-kangaroo-pocket",
+   "title": "Women's Cute Hoodie | Oversized Pullover Drawstring Hood Kangaroo Pocket",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fair-isle-sweater-crew-neck-long-sleeve-knit-2",
+   "title": "Women's Fair Isle Sweater | Crew Neck Long Sleeve Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-flare-pants-lace-side-panels-high-waist-wide-leg",
+   "title": "Women's Flare Pants | Lace Side Panels High Waist Wide Leg",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-formal-dress-midi-length-v-neck-puffed-sleeve-floral",
+   "title": "Women's Formal Dress | Midi Length V-Neck Puffed Sleeve Floral",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-formal-dress-sweetheart-neckline-maxi-tiered-ruffle",
+   "title": "Women's Formal Dress | Sweetheart Neckline Maxi Tiered Ruffle",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fur-boots-rounded-toe-block-heel-side-zip",
+   "title": "Women's Fur Boots | Rounded Toe Block Heel Side Zip",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-heeled-boots-lace-up-closure-leather-lugged-sole",
+   "title": "Women's Heeled Boots | Lace-Up Closure Leather Lugged Sole",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-high-waisted-jeans-cropped-wide-leg-denim-elastic-waist",
+   "title": "Women's High Waisted Jeans | Cropped Wide-Leg Denim Elastic Waist",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-holiday-dress-maxi-asymmetrical-corset-ruched",
+   "title": "Women's Holiday Dress | Maxi Asymmetrical Corset Ruched",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-holiday-dress-maxi-draped-cape-neckline-floor-length",
+   "title": "Women's Holiday Dress | Maxi Draped Cape Neckline Floor Length",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-kitten-heels-pointed-toe-metallic-satin-mary-jane",
+   "title": "Women's Kitten Heels | Pointed Toe Metallic Satin Mary Jane",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-lace-dress-v-neck-sleeveless-open-back-maxi",
+   "title": "Women's Lace Dress | V-Neck Sleeveless Open Back Maxi",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-boots-rounded-toe-block-heel-slouch",
+   "title": "Women's Leather Boots | Rounded Toe Block Heel Slouch",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leather-pants-flare-leg-high-waist-cargo-studs",
+   "title": "Women's Leather Pants | Flare Leg High Waist Cargo Studs",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leopard-print-dress-midi-length-sleeveless-side-slit",
+   "title": "Women's Leopard Print Dress | Midi Length Sleeveless Side Slit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-cardigan-open-front-relaxed-fit-knit",
+   "title": "Women's Long Cardigan | Open Front Relaxed Fit Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-sleeve-dress-collared-button-front-midi",
+   "title": "Women's Long Sleeve Dress | Collared Button Front Midi",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-sleeve-dress-collared-polo-neckline-striped-trim-midi",
+   "title": "Women's Long Sleeve Dress | Collared Polo Neckline Striped Trim Midi",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-sleeve-dress-high-neckline-midi-draped",
+   "title": "Women's Long Sleeve Dress | High Neckline Midi Draped",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-sleeve-dress-high-neckline-pleated-midi-tie-waist",
+   "title": "Women's Long Sleeve Dress | High Neckline Pleated Midi Tie Waist",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-sleeve-mini-dress-sequin-mesh-v-neck-bell-sleeve",
+   "title": "Women's Long Sleeve Mini Dress | Sequin Mesh V-Neck Bell Sleeve",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-sleeve-wedding-guest-dress-midi-v-neck-pleated-tie-waist",
+   "title": "Women's Long Sleeve Wedding Guest Dress | Midi V-Neck Pleated Tie Waist",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-set-collar-button-linen-relaxed-drawstring",
+   "title": "Women's Matching Set | Collar Button Linen Relaxed Drawstring",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-set-flutter-sleeve-layered-top-wide-leg-pants",
+   "title": "Women's Matching Set | Flutter Sleeve Layered Top Wide Leg Pants",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-set-tailored-blazer-trousers-structured-lapel",
+   "title": "Women's Matching Set | Tailored Blazer Trousers Structured Lapel",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-maxi-dress-v-neckline-batwing-sleeves-tie-waist",
+   "title": "Women's Maxi Dress | V Neckline Batwing Sleeves Tie Waist",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mini-dress-v-neckline-sleeveless-fringe",
+   "title": "Women's Mini Dress | V Neckline Sleeveless Fringe",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mock-neck-sweatshirt-quarter-zip-long-sleeve-relaxed-fit",
+   "title": "Women's Mock Neck Sweatshirt | Quarter-Zip Long Sleeve Relaxed Fit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mock-neck-sweatshirt-turtleneck-long-sleeve-textured-knit",
+   "title": "Women's Mock Neck Sweatshirt | Turtleneck Long Sleeve Textured Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-block-heel-cushioned-sole-t-strap",
+   "title": "Women's Mules | Block Heel Cushioned Sole T-Strap",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-loafer-toe-slip-on-leather-flat",
+   "title": "Women's Mules | Loafer Toe Slip-On Leather Flat",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-penny-slot-leather-slip-on-loafer",
+   "title": "Women's Mules | Penny Slot Leather Slip-On Loafer",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-penny-strap-leather-loafer-flat",
+   "title": "Women's Mules | Penny Strap Leather Loafer Flat",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-perforated-mesh-slip-on-flat",
+   "title": "Women's Mules | Perforated Mesh Slip-On Flat",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-perforated-suede-tassel-slip-on-cushioned-sole",
+   "title": "Women's Mules | Perforated Suede Tassel Slip-On Cushioned Sole",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-pointed-toe-croc-embossed-block-heel",
+   "title": "Women's Mules | Pointed Toe Croc-Embossed Block Heel",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-pointed-toe-loafer-flat",
+   "title": "Women's Mules | Pointed Toe Loafer Flat",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-slip-on-loafer-soft-faux-leather-flat",
+   "title": "Women's Mules | Slip On Loafer Soft Faux Leather Flat",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-slip-on-mesh-breathable-air-cushion",
+   "title": "Women's Mules | Slip-On Mesh Breathable Air Cushion",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-slip-on-suede-rope-tie-casual",
+   "title": "Women's Mules | Slip-On Suede Rope Tie Casual",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mules-square-toe-woven-slip-on-low-heel",
+   "title": "Women's Mules | Square Toe Woven Slip On Low Heel",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-nye-party-dress-mini-wrap-neckline-ruched-bodycon",
+   "title": "Women's NYE Party Dress | Mini Wrap Neckline Ruched Bodycon",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-off-the-shoulder-sweater-ribbed-knit-relaxed-fit-long-sleeve",
+   "title": "Women's Off The Shoulder Sweater | Ribbed Knit Relaxed Fit Long Sleeve",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-cable-knit-crew-neck-long-sleeve",
+   "title": "Women's Oversized Hoodie | Cable Knit Crew Neck Long Sleeve",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-crew-neck-graphic-print-relaxed-fit",
+   "title": "Women's Oversized Hoodie | Crew Neck Graphic Print Relaxed Fit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-graphic-print-hood-drawstring-relaxed",
+   "title": "Women's Oversized Hoodie | Graphic Print Hood Drawstring Relaxed",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-hood-drawstring-kangaroo-pocket-halloween-print",
+   "title": "Women's Oversized Hoodie | Hood Drawstring Kangaroo Pocket Halloween Print",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-patchwork-knit-colorblock-zip-hood",
+   "title": "Women's Oversized Hoodie | Patchwork Knit Colorblock Zip Hood",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-quarter-zip-lapel-long-sleeve-knit",
+   "title": "Women's Oversized Hoodie | Quarter-Zip Lapel Long Sleeve Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-textured-waffle-knit-drawstring-hood-relaxed-fit",
+   "title": "Women's Oversized Hoodie | Textured Waffle Knit Drawstring Hood Relaxed Fit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-two-tone-drawstring-knit",
+   "title": "Women's Oversized Hoodie | Two-Tone Drawstring Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-waffle-knit-drawstring-hood-ribbed-cuffs",
+   "title": "Women's Oversized Hoodie | Waffle Knit Drawstring Hood Ribbed Cuffs",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-waffle-knit-hood-drawstring-pockets",
+   "title": "Women's Oversized Hoodie | Waffle Knit Hood Drawstring Pockets",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-palazzo-pants-high-rise-wide-leg-pleated-front",
+   "title": "Women's Palazzo Pants | High Rise Wide Leg Pleated Front",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-palazzo-pants-high-waist-pull-on-wide-leg-side-pockets",
+   "title": "Women's Palazzo Pants | High Waist Pull-On Wide Leg Side Pockets",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-palazzo-pants-wide-leg-high-waist-belt",
+   "title": "Women's Palazzo Pants | Wide Leg High Waist Belt",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-platform-boots-knit-collar-slip-on-block-heel-leather",
+   "title": "Women's Platform Boots | Knit Collar Slip-On Block Heel Leather",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-platform-heels-open-toe-block-heel-slip-on",
+   "title": "Women's Platform Heels | Open Toe Block Heel Slip On",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-pullover-sweater-collared-long-sleeve-button-knit",
+   "title": "Women's Pullover Sweater | Collared Long Sleeve Button Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sequin-blazer-long-sleeve-button-closure-tailored",
+   "title": "Women's Sequin Blazer | Long Sleeve Button Closure Tailored",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-shift-dress-maxi-gingham-smocked-square-neckline",
+   "title": "Women's Shift Dress | Maxi Gingham Smocked Square Neckline",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-short-sleeve-sweater-crew-neck-dachshund-motif-ribbed-knit",
+   "title": "Women's Short Sleeve Sweater | Crew Neck Dachshund Motif Ribbed Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-slip-dress-v-neck-sleeveless-maxi-satin",
+   "title": "Women's Slip Dress | V-Neck Sleeveless Maxi Satin",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-snow-boots-leather-lace-up-crepe-sole-waterproof",
+   "title": "Women's Snow Boots | Leather Lace-Up Crepe Sole Waterproof",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-snow-boots-waterproof-padded-drawstring-closure",
+   "title": "Women's Snow Boots | Waterproof Padded Drawstring Closure",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweater-dress-high-neck-button-collar-midi-knit",
+   "title": "Women's Sweater Dress | High Neck Button Collar Midi Knit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweater-dress-midi-length-long-sleeve-knit-henley",
+   "title": "Women's Sweater Dress | Midi Length Long Sleeve Knit Henley",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweater-dress-v-neck-long-sleeves-chunky-knit-midi",
+   "title": "Women's Sweater Dress | V-Neck Long Sleeves Chunky Knit Midi",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatshirt-cowl-neck-long-sleeve-midi-knit",
+   "title": "Women's Sweatshirt | Cowl Neck Long Sleeve Midi Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatshirt-patchwork-hood-long-sleeve-quilted",
+   "title": "Women's Sweatshirt | Patchwork Hood Long Sleeve Quilted",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatshirt-polka-dot-print-ribbon-neckline-dropped-sleeves-knit",
+   "title": "Women's Sweatshirt | Polka Dot Print Ribbon Neckline Dropped Sleeves Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatshirt-polo-collar-half-button-knit",
+   "title": "Women's Sweatshirt | Polo Collar Half Button Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatshirt-relaxed-fit-half-zip-hoodie-canvas",
+   "title": "Women's Sweatshirt | Relaxed Fit Half Zip Hoodie Canvas",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-v-neck-sweater-long-sleeve-v-neck-knit",
+   "title": "Women's V Neck Sweater | Long Sleeve V-Neck Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-velvet-dress-wrap-neckline-long-sleeve-midi",
+   "title": "Women's Velvet Dress | Wrap Neckline Long Sleeve Midi",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-walking-sneakers-knit-mesh-lace-up-cushioned-sole",
+   "title": "Women's Walking Sneakers | Knit Mesh Lace-Up Cushioned Sole",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wedding-guest-dress-midi-maxi-wrap-floral-print",
+   "title": "Women's Wedding Guest Dress | Midi Maxi Wrap Floral Print",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wedding-guest-dress-midi-v-neck-relaxed-fit-short-sleeve",
+   "title": "Women's Wedding Guest Dress | Midi V-Neck Relaxed Fit Short Sleeve",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wedding-guest-dress-v-neck-half-sleeve-midi-knot-front",
+   "title": "Women's Wedding Guest Dress | V-Neck Half Sleeve Midi Knot Front",
+   "from": 0,
+   "price": 74.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-western-boots-pointed-toe-embroidered-leather-cuban-heel",
+   "title": "Women's Western Boots | Pointed Toe Embroidered Leather Cuban Heel",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wide-leg-jeans-high-rise-straight-denim-long",
+   "title": "Women's Wide Leg Jeans | High Rise Straight Denim Long",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wide-leg-pants-pleated-high-waist-relaxed-fit",
+   "title": "Women's Wide Leg Pants | Pleated High Waist Relaxed Fit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-boots-ankle-ruched-leather-zip",
+   "title": "Women's Winter Boots | Ankle Ruched Leather Zip",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-boots-fleece-lined-lace-up-wedge-heel",
+   "title": "Women's Winter Boots | Fleece-Lined Lace-Up Wedge Heel",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-boots-suede-slip-on-block-heel-chelsea",
+   "title": "Women's Winter Boots | Suede Slip-On Block Heel Chelsea",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wrap-sweater-crew-neck-button-front-knit",
+   "title": "Women's Wrap Sweater | Crew Neck Button Front Knit",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wrap-sweater-hooded-oversized-knit-long-cardigan",
+   "title": "Women's Wrap Sweater | Hooded Oversized Knit Long Cardigan",
+   "from": 0,
+   "price": 79.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "mens-baggy-jeans-cargo-pockets-relaxed-fit-denim",
+   "title": "Men's Baggy Jeans | Cargo Pockets Relaxed Fit Denim",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "mens-baggy-jeans-relaxed-fit-straight-leg-denim",
+   "title": "Men's Baggy Jeans | Relaxed Fit Straight Leg Denim",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-baggy-jeans-high-waist-elastic-pleated-denim",
+   "title": "Women's Baggy Jeans | High Waist Elastic Pleated Denim",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-baggy-jeans-high-rise-waist-button-fly-denim",
+   "title": "Women's Baggy Jeans | High-Rise Waist Button Fly Denim",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-baggy-jeans-mid-rise-straight-leg-ripped-denim-raw-hem",
+   "title": "Women's Baggy Jeans | Mid Rise Straight Leg Ripped Denim Raw Hem",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-barrel-jeans-high-waist-relaxed-fit-knee-seam",
+   "title": "Women's Barrel Jeans | High Waist Relaxed Fit Knee Seam",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bell-bottom-jeans-high-waist-flare-leg-denim",
+   "title": "Women's Bell Bottom Jeans | High Waist Flare Leg Denim",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bootcut-jeans-high-rise-waist-button-fly-denim",
+   "title": "Women's Bootcut Jeans | High-Rise Waist Button Fly Denim",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bridesmaid-dress-midi-round-neck-sleeveless-textured",
+   "title": "Women's Bridesmaid Dress | Midi Round Neck Sleeveless Textured",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-christmas-sweater-reindeer-knit-crew-neck-puffed-sleeve",
+   "title": "Women's Christmas Sweater | Reindeer Knit Crew Neck Puffed Sleeve",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-wedding-guest-dress-midi-sweetheart-neckline-spaghetti-strap",
+   "title": "Women's Cocktail Wedding Guest Dress | Midi Sweetheart Neckline Spaghetti Strap",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cropped-cardigan-v-neck-button-front-balloon-sleeve",
+   "title": "Women's Cropped Cardigan | V-Neck Button Front Balloon Sleeve",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-denim-skirt-maxi-length-high-waist-lace-hem",
+   "title": "Women's Denim Skirt | Maxi Length High Waist Lace Hem",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-empire-waist-dress-maxi-v-neck-flutter-sleeve-paisley",
+   "title": "Women's Empire Waist Dress | Maxi V-Neck Flutter Sleeve Paisley",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fair-isle-sweater-crew-neck-long-sleeve-knit",
+   "title": "Women's Fair Isle Sweater | Crew Neck Long Sleeve Knit",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-formal-dress-maxi-sleeveless-square-neckline-slit",
+   "title": "Women's Formal Dress | Maxi Sleeveless Square Neckline Slit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-holiday-party-dress-midi-off-shoulder-ruched-print",
+   "title": "Women's Holiday Party Dress | Midi Off-Shoulder Ruched Print",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-knit-sweater-collared-button-up-relaxed-fit",
+   "title": "Women's Knit Sweater | Collared Button-Up Relaxed Fit",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-leopard-print-dress-maxi-sweetheart-spaghetti-strap",
+   "title": "Women's Leopard Print Dress | Maxi Sweetheart Spaghetti Strap",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mary-jane-flats-round-toe-button-strap-leather",
+   "title": "Women's Mary Jane Flats | Round Toe Button Strap Leather",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mary-jane-heels-rounded-toe-buckle-strap-block-heel",
+   "title": "Women's Mary Jane Heels | Rounded Toe Buckle Strap Block Heel",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-lounge-set-wide-leg-button-up-relaxed-fit",
+   "title": "Women's Matching Lounge Set | Wide Leg Button-Up Relaxed Fit",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-matching-set-wrap-front-v-neck-short-sleeve-cropped",
+   "title": "Women's Matching Set | Wrap Front V-Neck Short Sleeve Cropped",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-midi-dress-midi-length-half-sleeve-gathered-waist-linen",
+   "title": "Women's Midi Dress | Midi Length Half-Sleeve Gathered Waist Linen",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mini-dress-v-neck-midi-linen-print-embroidered",
+   "title": "Women's Mini Dress | V-Neck Midi Linen Print Embroidered",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mini-skirt-sequin-embellishment-elastic-waist-mini-length",
+   "title": "Women's Mini Skirt | Sequin Embellishment Elastic Waist Mini Length",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mock-neck-sweater-turtleneck-oversized-knit-long-sleeves",
+   "title": "Women's Mock Neck Sweater | Turtleneck Oversized Knit Long Sleeves",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mother-of-the-groom-dress-midi-length-cowl-neck-puff-sleeve-satin",
+   "title": "Women's Mother Of The Groom Dress | Midi Length Cowl Neck Puff Sleeve Satin",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mother-of-the-groom-dress-one-shoulder-maxi-satin-draped",
+   "title": "Women's Mother Of The Groom Dress | One Shoulder Maxi Satin Draped",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-off-the-shoulder-sweater-ribbed-knit-long-sleeve-cold-shoulder",
+   "title": "Women's Off The Shoulder Sweater | Ribbed Knit Long Sleeve Cold Shoulder",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-crew-neck-long-sleeve-graphic-print",
+   "title": "Women's Oversized Hoodie | Crew Neck Long Sleeve Graphic Print",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-half-zip-relaxed-fit-knit",
+   "title": "Women's Oversized Hoodie | Half-Zip Relaxed Fit Knit",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-hooded-relaxed-fit-knit",
+   "title": "Women's Oversized Hoodie | Hooded Relaxed Fit Knit",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-pencil-skirt-maxi-length-leather-waist-belt-closure",
+   "title": "Women's Pencil Skirt | Maxi Length Leather Waist Belt Closure",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-plaid-dress-collared-long-sleeve-belted",
+   "title": "Women's Plaid Dress | Collared Long Sleeve Belted",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-plaid-skirt-maxi-flared-high-waist-concealed-zip",
+   "title": "Women's Plaid Skirt | Maxi Flared High Waist Concealed Zip",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-plaid-skirt-maxi-length-a-line-silhouette-tiered-hem",
+   "title": "Women's Plaid Skirt | Maxi Length A-Line Silhouette Tiered Hem",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-platform-heels-open-toe-block-heel-buckle-closure",
+   "title": "Women's Platform Heels | Open Toe Block Heel Buckle Closure",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweater-dress-midi-cable-knit-pleated-hem",
+   "title": "Women's Sweater Dress | Midi Cable Knit Pleated Hem",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatshirt-henley-neckline-long-sleeve-knit",
+   "title": "Women's Sweatshirt | Henley Neckline Long Sleeve Knit",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-turtleneck-long-sleeve-knit-relaxed-fit",
+   "title": "Women's Turtleneck | Long Sleeve Knit Relaxed Fit",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-turtleneck-oversized-chunky-knit-relaxed-fit",
+   "title": "Women's Turtleneck | Oversized Chunky Knit Relaxed Fit",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-turtleneck-oversized-knit-dropped-shoulder-ribbed",
+   "title": "Women's Turtleneck | Oversized Knit Dropped Shoulder Ribbed",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-walking-sneakers-wide-toe-box-lace-up-lightweight-breathable",
+   "title": "Women's Walking Sneakers | Wide Toe Box Lace-Up Lightweight Breathable",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wedge-sneakers-metallic-lace-zip-round-toe",
+   "title": "Women's Wedge Sneakers | Metallic Lace Zip Round Toe",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-wedding-guest-dress-midi-lace-three-quarter-sleeve",
+   "title": "Women's Winter Wedding Guest Dress | Midi Lace Three-Quarter Sleeve",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-wedding-guest-dress-midi-wrap-v-neck-elbow-sleeve-pockets",
+   "title": "Women's Winter Wedding Guest Dress | Midi Wrap V-Neck Elbow Sleeve Pockets",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wool-sweater-turtleneck-oversized-knit-relaxed-fit",
+   "title": "Women's Wool Sweater | Turtleneck Oversized Knit Relaxed Fit",
+   "from": 0,
+   "price": 69.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "clogs-for-women-suede-slip-on-adjustable-buckle",
+   "title": "Clogs For Women | Suede Slip-On Adjustable Buckle",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "house-slippers-for-women-fleece-lined-slip-on-durable-sole",
+   "title": "House Slippers For Women | Fleece Lined Slip On Durable Sole",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-a-line-cocktail-dress-midi-length-sleeveless-bow-back",
+   "title": "Women's A-Line Cocktail Dress | Midi Length Sleeveless Bow Back",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-babydoll-dress-v-neck-mini-tiered-short-sleeve",
+   "title": "Women's Babydoll Dress | V-Neck Mini Tiered Short Sleeve",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-babydoll-dress-v-neck-short-sleeve-tiered-midi",
+   "title": "Women's Babydoll Dress | V-Neck Short Sleeve Tiered Midi",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-baggy-jeans-high-waisted-wide-leg-denim-stretch",
+   "title": "Women's Baggy Jeans | High-Waisted Wide-Leg Denim Stretch",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bandage-dress-mini-scoop-neck-sleeveless-body-con",
+   "title": "Women's Bandage Dress | Mini Scoop Neck Sleeveless Body-Con",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bandage-dress-scoop-neck-sleeveless-mini-body-con",
+   "title": "Women's Bandage Dress | Scoop Neck Sleeveless Mini Body-Con",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bootcut-jeans-high-rise-waist-button-closure-denim",
+   "title": "Women's Bootcut Jeans | High Rise Waist Button Closure Denim",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bow-sweater-half-collar-knit-long-sleeve-crew",
+   "title": "Women's Bow Sweater | Half Collar Knit Long Sleeve Crew",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bridesmaid-dress-maxi-floral-wrap-three-quarter-sleeve",
+   "title": "Women's Bridesmaid Dress | Maxi Floral Wrap Three-Quarter Sleeve",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bridesmaid-dress-maxi-sweetheart-satin-open-back",
+   "title": "Women's Bridesmaid Dress | Maxi Sweetheart Satin Open Back",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cardigan-collar-button-front-knit-relaxed",
+   "title": "Women's Cardigan | Collar Button Front Knit Relaxed",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cardigan-collar-button-ribbed-knit-long-sleeve",
+   "title": "Women's Cardigan | Collar Button Ribbed Knit Long Sleeve",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cardigan-collared-neck-button-front-long-sleeve-knit",
+   "title": "Women's Cardigan | Collared Neck Button Front Long Sleeve Knit",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cardigan-oversized-lantern-sleeves-scalloped-hem-button-closure",
+   "title": "Women's Cardigan | Oversized Lantern Sleeves Scalloped Hem Button Closure",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cardigan-plaid-button-front-knit",
+   "title": "Women's Cardigan | Plaid Button Front Knit",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cardigan-pointed-collar-button-front-ribbed-knit",
+   "title": "Women's Cardigan | Pointed Collar Button Front Ribbed Knit",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cashmere-sweater-crew-neck-long-sleeve-knit",
+   "title": "Women's Cashmere Sweater | Crew Neck Long Sleeve Knit",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cashmere-sweater-crew-neckline-long-sleeve-knit",
+   "title": "Women's Cashmere Sweater | Crew Neckline Long Sleeve Knit",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cashmere-sweater-turtleneck-herringbone-knit-colorblock",
+   "title": "Women's Cashmere Sweater | Turtleneck Herringbone Knit Colorblock",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cashmere-sweater-v-neck-relaxed-fit-knit-1",
+   "title": "Women's Cashmere Sweater | V-Neck Relaxed Fit Knit",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cashmere-sweater-v-neck-relaxed-fit-knit",
+   "title": "Women's Cashmere Sweater | V-Neck Relaxed Fit Knit",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cashmere-sweatshirt-hooded-ribbed-knit-long-sleeve",
+   "title": "Women's Cashmere Sweatshirt | Hooded Ribbed Knit Long Sleeve",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-christmas-dress-midi-sweetheart-velvet-long-sleeve",
+   "title": "Women's Christmas Dress | Midi Sweetheart Velvet Long-Sleeve",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-christmas-sweater-crew-neck-long-sleeve-knit-ornament",
+   "title": "Women's Christmas Sweater | Crew Neck Long Sleeve Knit Ornament",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-clogs-slip-on-moc-toe-buckle-cork-sole",
+   "title": "Women's Clogs | Slip-On Moc-Toe Buckle Cork Sole",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-v-neck-chiffon-wrap",
+   "title": "Women's Cocktail Dress | Midi V-Neck Chiffon Wrap",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-v-neck-sleeveless-back-zip",
+   "title": "Women's Cocktail Dress | Midi V-Neck Sleeveless Back Zip",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-wedding-guest-dress-midi-sequin-v-neck-short-sleeve",
+   "title": "Women's Cocktail Wedding Guest Dress | Midi Sequin V-Neck Short Sleeve",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-culotte-wide-leg-cropped-drawstring-knit",
+   "title": "Women's Culotte | Wide Leg Cropped Drawstring Knit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fair-isle-sweater-crew-neck-long-sleeve-knit-1",
+   "title": "Women's Fair Isle Sweater | Crew Neck Long Sleeve Knit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-flare-jeans-high-waist-slim-botanical-print",
+   "title": "Women's Flare Jeans | High Waist Slim Botanical Print",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-flare-pants-leopard-print-high-waist-flared",
+   "title": "Women's Flare Pants | Leopard Print High Waist Flared",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-formal-dress-maxi-cowl-neckline-slit-ruched",
+   "title": "Women's Formal Dress | Maxi Cowl Neckline Slit Ruched",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-formal-dress-maxi-wrap-floral-print-sleeveless",
+   "title": "Women's Formal Dress | Maxi Wrap Floral Print Sleeveless",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-high-heels-thong-strap-block-heel-leather",
+   "title": "Women's High Heels | Thong Strap Block Heel Leather",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-house-slippers-fleece-lined-cushioned-slip-on",
+   "title": "Women's House Slippers | Fleece Lined Cushioned Slip On",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-house-slippers-slip-on-fleece-lined-platform-sole",
+   "title": "Women's House Slippers | Slip-On Fleece Lined Platform Sole",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-kitten-heel-pumps-pointed-toe-slingback-croc-effect",
+   "title": "Women's Kitten Heel Pumps | Pointed Toe Slingback Croc-Effect",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-knee-length-cocktail-dress-v-neck-ruffle-sleeve-midi-fitted",
+   "title": "Women's Knee Length Cocktail Dress | V-Neck Ruffle Sleeve Midi Fitted",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-knit-sweater-round-neck-button-up-long-sleeve",
+   "title": "Women's Knit Sweater | Round Neck Button-Up Long Sleeve",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-cardigan-knit-pom-details-long-sleeve-open-front",
+   "title": "Women's Long Cardigan | Knit Pom Details Long Sleeve Open Front",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-long-sleeve-maxi-dress-v-neck-floral-midi-boho",
+   "title": "Women's Long Sleeve Maxi Dress | V-Neck Floral Midi Boho",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-maxi-dress-midi-pleated-satin-wide-sleeve",
+   "title": "Women's Maxi Dress | Midi Pleated Satin Wide Sleeve",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mock-neck-sweater-turtleneck-long-sleeves-knit",
+   "title": "Women's Mock Neck Sweater | Turtleneck Long Sleeves Knit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mom-jeans-paperbag-waist-denim-tapered-ankle",
+   "title": "Women's Mom Jeans | Paperbag Waist Denim Tapered Ankle",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-nye-party-dress-one-shoulder-midi-open-back-asymmetrical",
+   "title": "Women's NYE Party Dress | One-Shoulder Midi Open-Back Asymmetrical",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-hoodie-crew-neck-long-sleeve-relaxed-fit",
+   "title": "Women's Oversized Hoodie | Crew Neck Long Sleeve Relaxed Fit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-sweater-crew-neck-cable-knit-relaxed-fit",
+   "title": "Women's Oversized Sweater | Crew Neck Cable Knit Relaxed Fit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-oversized-sweater-crewneck-ribbed-knit-relaxed-fit",
+   "title": "Women's Oversized Sweater | Crewneck Ribbed Knit Relaxed Fit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cargo-pants-straight-cropped-lightweight-linen",
+   "title": "Women's Pants | Straight Cropped Lightweight Linen",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-party-dress-high-neck-sleeveless-midi",
+   "title": "Women's Party Dress | High Neck Sleeveless Midi",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-plaid-skirt-midi-length-square-neckline-sleeveless",
+   "title": "Women's Plaid Skirt | Midi Length Square Neckline Sleeveless",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-puffer-vest-sleeveless-hooded-long-quilted",
+   "title": "Women's Puffer Vest | Sleeveless Hooded Long Quilted",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sequin-dress-mini-bodycon-spaghetti-strap",
+   "title": "Women's Sequin Dress | Mini Bodycon Spaghetti Strap",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sequin-dress-v-neck-sleeveless-mini",
+   "title": "Women's Sequin Dress | V-Neck Sleeveless Mini",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sequin-dress-v-neck-spaghetti-strap-mini-floral-embellished",
+   "title": "Women's Sequin Dress | V-Neck Spaghetti Strap Mini Floral Embellished",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-silk-cocktail-dress-midi-length-v-neck-wrap-tie-closure",
+   "title": "Women's Silk Cocktail Dress | Midi Length V-Neck Wrap Tie Closure",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-slip-dress-v-neck-spaghetti-straps-floral-print-mini",
+   "title": "Women's Slip Dress | V-Neck Spaghetti Straps Floral Print Mini",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-slip-on-loafers-pointed-toe-knit-knotted-strap-flat-sole",
+   "title": "Women's Slip On Loafers | Pointed Toe Knit Knotted Strap Flat Sole",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-slip-on-loafers-rounded-toe-suede-flat-sole",
+   "title": "Women's Slip On Loafers | Rounded Toe Suede Flat Sole",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweater-dress-midi-length-crew-neck-long-sleeves-knit",
+   "title": "Women's Sweater Dress | Midi Length Crew Neck Long Sleeves Knit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweater-dress-sleeveless-leopard-print-midi-knit",
+   "title": "Women's Sweater Dress | Sleeveless Leopard Print Midi Knit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweater-dress-turtleneck-long-sleeve-oversized-knit",
+   "title": "Women's Sweater Dress | Turtleneck Long Sleeve Oversized Knit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatshirt-half-button-polo-collar-knit",
+   "title": "Women's Sweatshirt | Half Button Polo Collar Knit",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-velvet-dress-midi-relaxed-crew-neck-long-sleeve",
+   "title": "Women's Velvet Dress | Midi Relaxed Crew Neck Long Sleeve",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-walking-sneakers-lace-up-round-toe-platform-sole",
+   "title": "Women's Walking Sneakers | Lace-Up Round Toe Platform Sole",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wedge-sneakers-lace-up-platform-mixed-material",
+   "title": "Women's Wedge Sneakers | Lace Up Platform Mixed Material",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wedge-sneakers-metallic-lace-up-side-zip-platform",
+   "title": "Women's Wedge Sneakers | Metallic Lace-Up Side Zip Platform",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-winter-wedding-guest-dress-midi-round-neckline-half-sleeve",
+   "title": "Women's Winter Wedding Guest Dress | Midi Round Neckline Half Sleeve",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wool-sweater-oversized-knit-crew-neck-drop-shoulder",
+   "title": "Women's Wool Sweater | Oversized Knit Crew Neck Drop Shoulder",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-babydoll-top-v-neck-puff-sleeve-pleated-print",
+   "title": "Women's Babydoll Top | V-Neck Puff Sleeve Pleated Print",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-baggy-jeans-low-rise-straight-leg-distressed-denim",
+   "title": "Women's Baggy Jeans | Low-Rise Straight-Leg Distressed Denim",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-barrel-jeans-high-waist-cropped-raw-hem-wide-leg-denim",
+   "title": "Women's Barrel Jeans | High Waist Cropped Raw Hem Wide Leg Denim",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-barrel-jeans-leopard-print-mid-rise-cropped-denim",
+   "title": "Women's Barrel Jeans | Leopard Print Mid Rise Cropped Denim",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-bow-sweater-v-neck-three-quarter-sleeve-knit",
+   "title": "Women's Bow Sweater | V-Neck Three-Quarter Sleeve Knit",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cardigan-cable-knit-button-oversized",
+   "title": "Women's Cardigan | Cable Knit Button Oversized",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cashmere-sweater-collared-button-closure-knit",
+   "title": "Women's Cashmere Sweater | Collared Button Closure Knit",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-christmas-sweatshirt-crew-neck-long-sleeve-snowman-print",
+   "title": "Women's Christmas Sweatshirt | Crew Neck Long Sleeve Snowman Print",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-clogs-perforated-upper-slip-on-cushioned-sole",
+   "title": "Women's Clogs | Perforated Upper Slip-On Cushioned Sole",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-dress-maxi-boat-neck-short-sleeve-striped",
+   "title": "Women's Cocktail Dress | Maxi Boat Neck Short Sleeve Striped",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-off-shoulder-ruffle-polyester",
+   "title": "Women's Cocktail Dress | Midi Off-Shoulder Ruffle Polyester",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-dress-midi-v-neck-wrap-sleeveless",
+   "title": "Women's Cocktail Dress | Midi V-Neck Wrap Sleeveless",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-dress-off-shoulder-mini-flared-fitted",
+   "title": "Women's Cocktail Dress | Off-Shoulder Mini Flared Fitted",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-dress-v-neck-midi-wrap-tie-closure",
+   "title": "Women's Cocktail Dress | V-Neck Midi Wrap Tie Closure",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cocktail-dress-v-neck-wrap-floral-midi-asymmetric",
+   "title": "Women's Cocktail Dress | V-Neck Wrap Floral Midi Asymmetric",
+   "from": 0,
+   "price": 64.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-corset-top-square-neck-sleeveless-fitted",
+   "title": "Women's Corset Top | Square Neck Sleeveless Fitted",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-crochet-sweater-v-neck-openwork-sleeve-knit",
+   "title": "Women's Crochet Sweater | V-Neck Openwork Sleeve Knit",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-crop-top-puffed-sleeve-v-neck-knit-relaxed-fit",
+   "title": "Women's Crop Top | Puffed Sleeve V-Neck Knit Relaxed Fit",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cropped-cardigan-v-neck-houndstooth-knit-button-front",
+   "title": "Women's Cropped Cardigan | V Neck Houndstooth Knit Button Front",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cropped-sweater-raglan-sleeve-open-front-ribbed-knit",
+   "title": "Women's Cropped Sweater | Raglan Sleeve Open Front Ribbed Knit",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cropped-sweater-ribbed-knit-raglan-sleeves-open-front",
+   "title": "Women's Cropped Sweater | Ribbed Knit Raglan Sleeves Open Front",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-denim-dress-midi-length-collar-mesh-sleeves-patch-pockets",
+   "title": "Women's Denim Dress | Midi Length Collar Mesh Sleeves Patch Pockets",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-denim-mini-skirt-high-waist-structured-midi-length",
+   "title": "Women's Denim Mini Skirt | High Waist Structured Midi Length",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-flare-leggings-leopard-print-flared-leg-stretchy-knit",
+   "title": "Women's Flare Leggings | Leopard Print Flared Leg Stretchy Knit",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fleece-lined-leggings-high-waist-brushed-knit",
+   "title": "Women's Fleece Lined Leggings | High Waist Brushed Knit",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-lace-bodysuit-sleeveless-scoop-neck-open-crotch-mesh",
+   "title": "Women's Lace Bodysuit | Sleeveless Scoop Neck Open Crotch Mesh",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-maxi-dress-halter-neckline-cascading-ruffles-high-low-hem",
+   "title": "Women's Maxi Dress | Halter Neckline Cascading Ruffles High-Low Hem",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-maxi-skirt-round-neckline-tiered-layers-flutter-sleeves",
+   "title": "Women's Maxi Skirt | Round Neckline Tiered Layers Flutter Sleeves",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mini-skirt-high-waist-floral-print-a-line",
+   "title": "Women's Mini Skirt | High Waist Floral Print A-Line",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-moccasin-slippers-tassel-suede-slip-on-cushioned",
+   "title": "Women's Moccasin Slippers | Tassel Suede Slip-On Cushioned",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-platform-slippers-mule-open-back-suede-borg-lining",
+   "title": "Women's Platform Slippers | Mule Open Back Suede Borg Lining",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sequin-top-wrap-dress-midi-slit-camisole-drape",
+   "title": "Women's Sequin Top Wrap Dress | Midi Slit Camisole Drape",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sequin-top-v-neck-long-sleeve-regular-fit",
+   "title": "Women's Sequin Top | V Neck Long Sleeve Regular Fit",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-slipper-shoe-open-toe-arch-support-cushioned-knit",
+   "title": "Women's Slipper Shoe | Open Toe Arch Support Cushioned Knit",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatshirt-collared-half-button-knit-detailed",
+   "title": "Women's Sweatshirt | Collared Half Button Knit Detailed",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-sweatshirt-cowl-neck-drawstring-knit-long-sleeve",
+   "title": "Women's Sweatshirt | Cowl Neck Drawstring Knit Long Sleeve",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wide-leg-sweatpant-drawstring-elastic-waist-straight-leg-full-length",
+   "title": "Women's Wide Leg Sweatpant | Drawstring Elastic Waist Straight Leg Full Length",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wide-leg-sweatpant-high-rise-drawstring-brushed-fleece",
+   "title": "Women's Wide Leg Sweatpant | High Rise Drawstring Brushed Fleece",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-wool-sweater-turtleneck-long-sleeve-knit-relaxed-fit",
+   "title": "Women's Wool Sweater | Turtleneck Long Sleeve Knit Relaxed Fit",
+   "from": 0,
+   "price": 59.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cardigan-hooded-button-knit-relaxed-fit",
+   "title": "Women's Cardigan | Hooded Button Knit Relaxed Fit",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cashmere-sweater-patchwork-turtleneck-knit",
+   "title": "Women's Cashmere Sweater | Patchwork Turtleneck Knit",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fleece-lined-leggings-high-waist-elastic-cuffs-sherpa",
+   "title": "Women's Fleece Lined Leggings | High Waist Elastic Cuffs Sherpa",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-maxi-dress-one-shoulder-pleated-maxi-flowing",
+   "title": "Women's Maxi Dress | One-Shoulder Pleated Maxi Flowing",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-maxi-dress-square-neckline-ruffled-sleeves-floral-print-side-slit",
+   "title": "Women's Maxi Dress | Square Neckline Ruffled Sleeves Floral Print Side Slit",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-maxi-dress-v-neck-short-sleeve-ikat-print",
+   "title": "Women's Maxi Dress | V Neck Short Sleeve Ikat Print",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mini-dress-high-neck-lace-cutout-short-sleeve",
+   "title": "Women's Mini Dress | High Neck Lace Cutout Short Sleeve",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mini-dress-v-neck-short-sleeve-button-front-tiered",
+   "title": "Women's Mini Dress | V-Neck Short Sleeve Button Front Tiered",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-mini-skirt-mini-length-flounce-tiered-smocked",
+   "title": "Women's Mini Skirt | Mini Length Flounce Tiered Smocked",
+   "from": 0,
+   "price": 54.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cardigan-hooded-button-front-knit-print",
+   "title": "Women's Cardigan | Hooded Button Front Knit Print",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-cozy-slippers-open-toe-mesh-lightweight-cushioned",
+   "title": "Women's Cozy Slippers | Open Toe Mesh Lightweight Cushioned",
+   "from": 0,
+   "price": 49.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-tube-top-strapless-feather-cropped-sleeveless",
+   "title": "Women's Tube Top | Strapless Feather Cropped Sleeveless",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "mens-crop-top-crew-neck-sleeveless-knit",
+   "title": "Men's Crop Top | Crew Neck Sleeveless Knit",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-camisole-v-neck-sleeveless-ribbed-knit",
+   "title": "Women's Camisole | V-Neck Sleeveless Ribbed Knit",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-flare-leggings-high-waist-flared-leg-smooth-knit",
+   "title": "Women's Flare Leggings | High Waist Flared Leg Smooth Knit",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-fleece-lined-leggings-high-waist-stretchy-full-length-thermal",
+   "title": "Women's Fleece Lined Leggings | High Waist Stretchy Full Length Thermal",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-going-out-top-deep-v-neck-long-sleeve-lace",
+   "title": "Women's Going Out Top | Deep V Neck Long Sleeve Lace",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  },
+  {
+   "handle": "womens-corset-top-square-neck-long-sleeve-fitted",
+   "title": "Women's Corset Top | Square Neck Long Sleeve Fitted",
+   "from": 0,
+   "price": 44.95,
+   "compareAt": null,
+   "raiseOnly": true
+  }
+ ]
+}
