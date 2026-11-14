@@ -803,7 +803,7 @@ export default function KeywordsPage() {
       importSheet: stForm.importSheet,
       memSheet: stForm.memSheet,
     });
-    if (!quiet) gLog({ ok: true, text: `Store-geheugen ${r.entry.name || r.entry.domain} opgeslagen (${r.entry.market} · ${r.entry.genders}${r.entry.tpkSheetId ? " · TPK-sheet gekoppeld" : " · geen TPK-sheet"}${r.entry.importSheetId ? " · import-lijst gekoppeld" : " · geen import-lijst"}${r.entry.memSheetId ? " · eigen geheugen-sheet" : " · vaste geheugen-sheet"}).`, href: r.entry.aanvulUrl });
+    if (!quiet) gLog({ ok: true, text: `Store-geheugen ${r.entry.name || r.entry.domain} opgeslagen (${r.entry.market} · ${r.entry.genders}${r.entry.tpkSheetId ? " · TPK-sheet gekoppeld" : " · geen TPK-sheet"}${r.entry.importSheetId ? " · import-lijst gekoppeld" : " · geen import-lijst"}${r.entry.memSheetId ? " · eigen geheugen-sheet" : " · vaste geheugen-sheet"}${r.entry.aanvulSheetId ? "" : " · nog geen aanvul-sheet"}).`, href: r.entry.aanvulUrl || r.entry.memUrl || undefined });
     return r.entry;
   }
 
@@ -2026,7 +2026,7 @@ export default function KeywordsPage() {
                         <button className="btn gh-btn" onClick={stSnapshot} disabled={!!stBusy || !stForm.aanvul.trim() || !stForm.market}>
                           {stBusy === "snap" ? "Shopify uitlezen…" : "⟳ Store-geheugen bijwerken"}
                         </button>
-                        <button className="btn-ghost gh-btn" onClick={stSaveClick} disabled={!!stBusy || !stForm.aanvul.trim()}>
+                        <button className="btn-ghost gh-btn" onClick={stSaveClick} disabled={!!stBusy || !stForm.market}>
                           {stBusy === "save" ? "Opslaan…" : "Alleen opslaan"}
                         </button>
                         <span className="muted small">schrijft ORG VROUW · ORG MAN · STORE COLLECTIES · INFO in dezelfde sheet — jouw eigen tabbladen blijven onaangeroerd</span>
