@@ -1,0 +1,1783 @@
+{
+ "kind": "change-plan",
+ "version": 1,
+ "name": "lgb-2026-11-16-archiveren",
+ "store": "Lady Glam Boutique",
+ "domain": "ladyglamboutique.com",
+ "date": "2026-11-16",
+ "note": "Catalogus naar ±300: 439 → 298 actief. 141 producten archiveren (niet verwijderen). Regel: actief, ≥ 14 dagen live (gepubliceerd t/m 02-11), nooit verkocht (alleen US-orders tellen (AU/NZ genegeerd)), geen Google-conversie, ≥ £0,25 spend in 30 dagen, in een producttype zonder verkopen of met maar 1 verkoper. Verkochte producten, nieuwe producten en producten zonder spend blijven staan. Data: Pythago 30 d (17-10 t/m 15-11) + Shopify-orders t/m 16-11. Terug te zetten met Draai terug.",
+ "groups": [
+  {
+   "id": "jurken",
+   "label": "Jurken — 42 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£172,83, 120 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "jassen-en-blazers",
+   "label": "Jassen & blazers — 26 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£125,71, 54 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "laarzen",
+   "label": "Laarzen — 19 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£63,56, 60 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "truien-en-vesten",
+   "label": "Truien & vesten — 17 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£91,30, 48 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "broeken-en-leggings",
+   "label": "Broeken & leggings — 9 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£69,92, 29 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "hakken-en-flats",
+   "label": "Hakken & flats — 7 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£37,83, 52 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "jeans",
+   "label": "Jeans — 5 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£18,79, 9 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "hoodies-en-sweatshirts",
+   "label": "Hoodies & sweatshirts — 4 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£17,80, 16 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "sneakers",
+   "label": "Sneakers — 3 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£10,19, 6 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "tops",
+   "label": "Tops — 3 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£36,08, 19 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "rokken",
+   "label": "Rokken — 2 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£12,35, 8 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "sets",
+   "label": "Sets — 2 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£16,24, 4 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "slippers",
+   "label": "Slippers — 2 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£2,75, 3 kliks), in een soort die niet loopt.",
+   "default": true
+  }
+ ],
+ "items": [
+  {
+   "id": 9715507953921,
+   "title": "Women's Camo Pants | Relaxed Fit Cargo Wide Leg Denim",
+   "group": "broeken-en-leggings",
+   "why": "soort \"Women's Camo Pants\" nooit verkocht · £20,79 spend · 9 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715493110017,
+   "title": "Women's Flare Leggings | Leopard Print Flared Leg Stretchy Knit",
+   "group": "broeken-en-leggings",
+   "why": "soort \"Women's Flare Leggings\" nooit verkocht · £11,38 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715490423041,
+   "title": "Women's Overall | Wide-Leg Denim Frayed Distressed Straps",
+   "group": "broeken-en-leggings",
+   "why": "soort \"Women's Overalls\" heeft maar 1 verkoper (die blijft) · dit product £9,31 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715502350593,
+   "title": "Women's Wide Leg Pants | Pleated High Waist Relaxed Fit",
+   "group": "broeken-en-leggings",
+   "why": "soort \"Women's Wide Leg Pants\" nooit verkocht · £8,57 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715509985537,
+   "title": "Women's Flare Pants | Leopard Print High Waist Flared",
+   "group": "broeken-en-leggings",
+   "why": "soort \"Women's Flare Pants\" nooit verkocht · £7,84 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715497763073,
+   "title": "Women's Leather Pants | Flare Leg High Waist Cargo Studs",
+   "group": "broeken-en-leggings",
+   "why": "soort \"Women's Leather Pants\" nooit verkocht · £4,89 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715484066049,
+   "title": "Women's Palazzo Pants | High Waist Pull-On Wide Leg Side Pockets",
+   "group": "broeken-en-leggings",
+   "why": "soort \"Women's Palazzo Pants\" nooit verkocht · £3,97 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715509362945,
+   "title": "Women's Flare Pants | Lace Side Panels High Waist Wide Leg",
+   "group": "broeken-en-leggings",
+   "why": "soort \"Women's Flare Pants\" nooit verkocht · £1,63 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715484426497,
+   "title": "Women's Wide Leg Sweatpant | High Rise Drawstring Brushed Fleece",
+   "group": "broeken-en-leggings",
+   "why": "soort \"Women > Clothing > Bottoms > Sweatpants\" nooit verkocht · £1,54 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715507101953,
+   "title": "Women's Mary Jane Heels | Rounded Toe Buckle Strap Block Heel",
+   "group": "hakken-en-flats",
+   "why": "soort \"Women's Mary Jane Heels\" nooit verkocht · £12,13 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715474792705,
+   "title": "Women's Clogs | Suede Slip-On Adjustable Buckle",
+   "group": "hakken-en-flats",
+   "why": "soort \"Women's Clogs\" heeft maar 1 verkoper (die blijft) · dit product £7,82 spend · 31 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715493601537,
+   "title": "Women's Slip On Loafers | Rounded Toe Suede Flat Sole",
+   "group": "hakken-en-flats",
+   "why": "soort \"Women's Slip On Loafers\" nooit verkocht · £6,57 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715505430785,
+   "title": "Women's Platform Heels | Open Toe Block Heel Slip On",
+   "group": "hakken-en-flats",
+   "why": "soort \"Women's Platform Heels\" nooit verkocht · £3,89 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715475874049,
+   "title": "Women's Kitten Heels | Rounded Square Toe Block Heel Slip-On",
+   "group": "hakken-en-flats",
+   "why": "soort \"Women's Kitten Heels\" nooit verkocht · £3,73 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715476103425,
+   "title": "Women's Kitten Heels | Pointed Toe Metallic Satin Mary Jane",
+   "group": "hakken-en-flats",
+   "why": "soort \"Women's Kitten Heels\" nooit verkocht · £2,51 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715500318977,
+   "title": "Women's High Heels | Round Toe T Strap Platform Patent",
+   "group": "hakken-en-flats",
+   "why": "soort \"Women's High Heels\" nooit verkocht · £1,18 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715502547201,
+   "title": "Women's Cute Hoodie | Hooded Full Zip Long Sleeve Knit",
+   "group": "hoodies-en-sweatshirts",
+   "why": "soort \"Women's Cute Hoodie\" nooit verkocht · £7,52 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715503661313,
+   "title": "Women's Christmas Sweatshirt | Crew Neck Long Sleeve Snowman Print",
+   "group": "hoodies-en-sweatshirts",
+   "why": "soort \"Women's Christmas Sweatshirt\" nooit verkocht · £5,83 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715474235649,
+   "title": "Women's Sweatshirt | Henley Neckline Long Sleeve Knit",
+   "group": "hoodies-en-sweatshirts",
+   "why": "soort \"Women's Sweatshirt\" nooit verkocht · £2,63 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715501596929,
+   "title": "Women's Mock Neck Sweatshirt | Quarter-Zip Long Sleeve Relaxed Fit",
+   "group": "hoodies-en-sweatshirts",
+   "why": "soort \"Women's Mock Neck Sweatshirt\" nooit verkocht · £1,82 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715468468481,
+   "title": "Women's Blazer | Notch Lapel Single Button Velvet",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Blazer\" nooit verkocht · £17,99 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715491995905,
+   "title": "Women's Winter Jacket | Cropped Sequin Open Front Three Quarter Sleeve",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Winter Jacket\" nooit verkocht · £13,17 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715468665089,
+   "title": "Women's Sleeveless Blazer | Notch Collar Single Button Pockets",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Sleeveless Blazer\" nooit verkocht · £10,16 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715473842433,
+   "title": "Women's Leather Jacket | Stand Collar Zip Closure Long Sleeve",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Leather Jacket\" nooit verkocht · £8,34 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715473547521,
+   "title": "Women's Leather Jacket | Relaxed Bomber Zip-Front Ribbed",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Leather Jacket\" nooit verkocht · £8,29 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715481837825,
+   "title": "Women's Winter Coat | Shawl Collar Open Front Bell Sleeve",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Winter Coat\" nooit verkocht · £8,13 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715468599553,
+   "title": "Women's Blazer | Two-Button Notch Lapel Peplum Hem",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Blazer\" nooit verkocht · £6,69 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715472728321,
+   "title": "Women's Trench Coat | Double Breasted Belted Notch Collar",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Trench Coat\" nooit verkocht · £6,35 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715497795841,
+   "title": "Women's Quilted Coat | Hooded Mid-Thigh Two-Way Zip",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Quilted Coat\" nooit verkocht · £5,90 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715475251457,
+   "title": "Women's Puffer Jacket | Hooded Quilted Lightweight Zip",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Puffer Jacket\" nooit verkocht · £5,89 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715505594625,
+   "title": "Women's Sherpa Jacket | Collared Button Front Pockets",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Sherpa Jacket\" nooit verkocht · £5,88 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715475415297,
+   "title": "Women's Puffer Jacket | Maxi Hooded Belted Quilted",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Puffer Jacket\" nooit verkocht · £4,50 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715475218689,
+   "title": "Women's Puffer Jacket | Quilted Hooded Belted Zip Front",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Puffer Jacket\" nooit verkocht · £3,95 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715497337089,
+   "title": "Women's Long Winter Coat | Quilted Hood Zip Pockets",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Long Winter Coat\" nooit verkocht · £3,08 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715502153985,
+   "title": "Women's Fleece Jacket | Mock Neck Full Zip Long Sleeve",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Fleece Jacket\" nooit verkocht · £3,04 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715472990465,
+   "title": "Women's Leather Jacket | Asymmetrical Zip Lapel Collar Tailored",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Leather Jacket\" nooit verkocht · £2,31 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715492618497,
+   "title": "Women's Faux Fur Jacket | Quilted Bomber Hooded Zip Closure",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Faux Fur Jacket\" nooit verkocht · £2,23 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715494027521,
+   "title": "Women's Suede Jacket | Cropped Asymmetric Zip Lapel",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Suede Jacket\" nooit verkocht · £2,21 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715481248001,
+   "title": "Women's Overcoat | Midi Length Double Button Hood",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Overcoat\" nooit verkocht · £1,76 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715481903361,
+   "title": "Women's Overcoat | Hooded Waterproof Zip Closure",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Overcoat\" nooit verkocht · £1,54 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715495403777,
+   "title": "Women's Long Coat | Double-Breasted Notched Lapel Wool Relaxed Fit",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Long Coat\" nooit verkocht · £1,41 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715498057985,
+   "title": "Women's Peacoat | Notched Lapel Double-Breasted Midi",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Coat\" nooit verkocht · £0,78 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715498287361,
+   "title": "Women's Puffer Coat | Maxi Length Hooded Quilted Semi-Fitted",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Puffer Coat\" nooit verkocht · £0,76 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715492454657,
+   "title": "Women's Wool Coat | Peter Pan Collar Button Closure Pockets",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Wool Coat\" heeft maar 1 verkoper (die blijft) · dit product £0,61 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715497959681,
+   "title": "Women's Puffer Coat | Hooded Quilted Longline Zipper",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Puffer Coat\" nooit verkocht · £0,37 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715493798145,
+   "title": "Women's Suede Jacket | Sherpa Lined Short Collared Button Closure",
+   "group": "jassen-en-blazers",
+   "why": "soort \"Women's Suede Jacket\" nooit verkocht · £0,37 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715497140481,
+   "title": "Women's Mom Jeans | Paperbag Waist Denim Tapered Ankle",
+   "group": "jeans",
+   "why": "soort \"Women's Mom Jeans\" nooit verkocht · £7,24 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715506413825,
+   "title": "Women's Rhinestone Jeans | High Waist Wide Leg Straight Denim",
+   "group": "jeans",
+   "why": "soort \"Women's Rhinestone Jeans\" nooit verkocht · £3,19 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715501498625,
+   "title": "Women's Barrel Jeans | Leopard Print Mid Rise Cropped Denim",
+   "group": "jeans",
+   "why": "soort \"Women's Barrel Jeans\" nooit verkocht · £3,02 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715498385665,
+   "title": "Women's Baggy Jeans | Mid Rise Straight Leg Ripped Denim Raw Hem",
+   "group": "jeans",
+   "why": "soort \"Women's Baggy Jeans\" heeft maar 1 verkoper (die blijft) · dit product £2,87 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715503857921,
+   "title": "Women's Flare Jeans | High Waist Slim Botanical Print",
+   "group": "jeans",
+   "why": "soort \"Women's Flare Jeans\" nooit verkocht · £2,47 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715507200257,
+   "title": "Women's Bandage Dress | Scoop Neck Sleeveless Mini Body-Con",
+   "group": "jurken",
+   "why": "soort \"Women's Bandage Dress\" nooit verkocht · £21,50 spend · 15 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715476857089,
+   "title": "Women's Christmas Dress | Maxi Turtleneck Long Sleeve Velvet",
+   "group": "jurken",
+   "why": "soort \"Women's Christmas Dress\" nooit verkocht · £11,46 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715479380225,
+   "title": "Women's Long Sleeve Dress | High Neckline Pleated Midi Tie Waist",
+   "group": "jurken",
+   "why": "soort \"Women's Long Sleeve Dress\" nooit verkocht · £9,64 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715511853313,
+   "title": "Women's Long Sleeve Wedding Guest Dress | Midi Lace High Neck Puff Sleeve",
+   "group": "jurken",
+   "why": "soort \"Women's Long Sleeve Wedding Guest Dress\" nooit verkocht · £7,24 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715493863681,
+   "title": "Women's Winter Dress | Maxi Collar V-Neck Star Pattern Knit",
+   "group": "jurken",
+   "why": "soort \"Women's Winter Dress\" nooit verkocht · £6,70 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715476922625,
+   "title": "Women's Christmas Dress | Midi Lace High Neck Long Sleeve",
+   "group": "jurken",
+   "why": "soort \"Women's Christmas Dress\" nooit verkocht · £6,64 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715477545217,
+   "title": "Women's Bridesmaid Dress | Maxi Square Neckline Sleeveless Draped",
+   "group": "jurken",
+   "why": "soort \"Women's Bridesmaid Dress\" nooit verkocht · £6,47 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715482886401,
+   "title": "Women's Holiday Dress | Midi Length Round Neck Wide Sleeves Floral",
+   "group": "jurken",
+   "why": "soort \"Women's Holiday Dress\" nooit verkocht · £6,08 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715486753025,
+   "title": "Women's Winter Wedding Guest Dress | Midi Round Neckline Half Sleeve",
+   "group": "jurken",
+   "why": "soort \"Women's Winter Wedding Guest Dress\" nooit verkocht · £5,94 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715482657025,
+   "title": "Women's Holiday Dress | Maxi Draped Cape Neckline Floor Length",
+   "group": "jurken",
+   "why": "soort \"Women's Holiday Dress\" nooit verkocht · £5,82 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715508871425,
+   "title": "Women's Babydoll Dress | V-Neck Mini Tiered Short Sleeve",
+   "group": "jurken",
+   "why": "soort \"Women's Babydoll Dress\" nooit verkocht · £5,51 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715503431937,
+   "title": "Women's Denim Dress | Midi Length Collar Mesh Sleeves Patch Pockets",
+   "group": "jurken",
+   "why": "soort \"Women's Denim Dress\" nooit verkocht · £5,42 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715486654721,
+   "title": "Women's Holiday Party Dress | Midi Off-Shoulder Ruched Print",
+   "group": "jurken",
+   "why": "soort \"Women's Holiday Party Dress\" heeft maar 1 verkoper (die blijft) · dit product £5,24 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715478855937,
+   "title": "Women's Maxi Dress | Midi Pleated Satin Wide Sleeve",
+   "group": "jurken",
+   "why": "soort \"Women's Maxi Dress\" nooit verkocht · £4,73 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715507560705,
+   "title": "Women's Plaid Dress | Collared Long Sleeve Belted",
+   "group": "jurken",
+   "why": "soort \"Women's Plaid Dress\" nooit verkocht · £4,64 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715510182145,
+   "title": "Women's Lace Dress | One Shoulder Maxi Abstract Print",
+   "group": "jurken",
+   "why": "soort \"Women's Lace Dress\" nooit verkocht · £4,62 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715510673665,
+   "title": "Women's Leopard Print Dress | Midi Length Sleeveless Side Slit",
+   "group": "jurken",
+   "why": "soort \"Women's Leopard Print Dress\" nooit verkocht · £4,48 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715487310081,
+   "title": "Women's Winter Wedding Guest Dress | Midi Wrap V-Neck Elbow Sleeve Pockets",
+   "group": "jurken",
+   "why": "soort \"Women's Winter Wedding Guest Dress\" nooit verkocht · £4,25 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715476726017,
+   "title": "Women's Christmas Dress | Maxi Wrap Neckline Lace Shoulder Side Slit",
+   "group": "jurken",
+   "why": "soort \"Women's Christmas Dress\" nooit verkocht · £4,11 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715506807041,
+   "title": "Women's Bandage Dress | Mini Scoop Neck Sleeveless Body-Con",
+   "group": "jurken",
+   "why": "soort \"Women's Bandage Dress\" nooit verkocht · £4,00 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715511722241,
+   "title": "Women's Long Sleeve Wedding Guest Dress | Midi V-Neck Pleated Tie Waist",
+   "group": "jurken",
+   "why": "soort \"Women's Long Sleeve Wedding Guest Dress\" nooit verkocht · £3,68 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715482788097,
+   "title": "Women's Holiday Dress | Maxi Asymmetrical Corset Ruched",
+   "group": "jurken",
+   "why": "soort \"Women's Holiday Dress\" nooit verkocht · £3,42 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715478528257,
+   "title": "Women's Maxi Dress | V Neckline Batwing Sleeves Tie Waist",
+   "group": "jurken",
+   "why": "soort \"Women's Maxi Dress\" nooit verkocht · £2,92 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715504906497,
+   "title": "Women's NYE Party Dress | One-Shoulder Midi Open-Back Asymmetrical",
+   "group": "jurken",
+   "why": "soort \"Women's NYE Party Dress\" nooit verkocht · £2,88 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715479838977,
+   "title": "Women's Mini Dress | High Neck Lace Cutout Short Sleeve",
+   "group": "jurken",
+   "why": "soort \"Women's Mini Dress\" heeft maar 1 verkoper (die blijft) · dit product £2,81 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715506610433,
+   "title": "Women's Velvet Dress | Midi Relaxed Crew Neck Long Sleeve",
+   "group": "jurken",
+   "why": "soort \"Women's Velvet Dress\" nooit verkocht · £2,67 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715477414145,
+   "title": "Women's Bridesmaid Dress | Maxi Sweetheart Satin Open Back",
+   "group": "jurken",
+   "why": "soort \"Women's Bridesmaid Dress\" nooit verkocht · £2,63 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715484557569,
+   "title": "Women's Sequin Dress | V-Neck Spaghetti Strap Mini Floral Embellished",
+   "group": "jurken",
+   "why": "soort \"Women's Sequin Dress\" nooit verkocht · £2,52 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715470762241,
+   "title": "Women's Cocktail Dress | Midi Length Round Neckline Wide Sleeves Belted",
+   "group": "jurken",
+   "why": "soort \"Women's Cocktail Dress\" heeft maar 1 verkoper (die blijft) · dit product £2,41 spend · 9 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715507036417,
+   "title": "Women's Velvet Dress | Wrap Neckline Long Sleeve Midi",
+   "group": "jurken",
+   "why": "soort \"Women's Velvet Dress\" nooit verkocht · £1,84 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715479511297,
+   "title": "Women's Long Sleeve Dress | Collared Button Front Midi",
+   "group": "jurken",
+   "why": "soort \"Women's Long Sleeve Dress\" nooit verkocht · £1,58 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715485802753,
+   "title": "Women's Holiday Party Dress | Maxi Square Neck Ruched",
+   "group": "jurken",
+   "why": "soort \"Women's Holiday Party Dress\" heeft maar 1 verkoper (die blijft) · dit product £1,36 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715507429633,
+   "title": "Women's Ball Gown | Maxi Beaded Bodice Sweetheart Tulle",
+   "group": "jurken",
+   "why": "soort \"Women's Ball Gown\" nooit verkocht · £1,35 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715499729153,
+   "title": "Women's Maxi Dress | Round Neckline Tiered Layers Flutter Sleeves",
+   "group": "jurken",
+   "why": "soort \"Women's Maxi Dress\" nooit verkocht · £1,26 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715507790081,
+   "title": "Women's Evening Gown | Strapless Maxi Draped Split",
+   "group": "jurken",
+   "why": "soort \"Women's Evening Gown\" heeft maar 1 verkoper (die blijft) · dit product £1,23 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715470893313,
+   "title": "Women's Cocktail Dress | Midi V-Neck Sleeveless Back Zip",
+   "group": "jurken",
+   "why": "soort \"Women's Cocktail Dress\" heeft maar 1 verkoper (die blijft) · dit product £1,00 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715479740673,
+   "title": "Women's Mini Dress | V Neckline Sleeveless Fringe",
+   "group": "jurken",
+   "why": "soort \"Women's Mini Dress\" heeft maar 1 verkoper (die blijft) · dit product £0,82 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715508576513,
+   "title": "Women's Wedding Guest Dress | V-Neck Half Sleeve Midi Knot Front",
+   "group": "jurken",
+   "why": "soort \"Women's Wedding Guest Dress\" nooit verkocht · £0,65 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715508674817,
+   "title": "Women's Babydoll Dress | V-Neck Short Sleeve Tiered Midi",
+   "group": "jurken",
+   "why": "soort \"Women's Babydoll Dress\" nooit verkocht · £0,38 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715512115457,
+   "title": "Women's Cocktail Wedding Guest Dress | Midi Sweetheart Neckline Spaghetti Strap",
+   "group": "jurken",
+   "why": "soort \"Women's Cocktail Wedding Guest Dress\" nooit verkocht · £0,32 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715496452353,
+   "title": "Women's Knee Length Cocktail Dress | V-Neck Ruffle Sleeve Midi Fitted",
+   "group": "jurken",
+   "why": "soort \"Women's Knee Length Cocktail Dress\" nooit verkocht · £0,31 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715503726849,
+   "title": "Women's Sequin Top Wrap Dress | Midi Slit Camisole Drape",
+   "group": "jurken",
+   "why": "soort \"Women's Sequin Top Wrap Dress\" nooit verkocht · £0,30 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715503005953,
+   "title": "Women's Platform Boots | Round Toe Chunky Heel Slip-On Stretch",
+   "group": "laarzen",
+   "why": "soort \"Women's Platform Boots\" nooit verkocht · £7,12 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715496386817,
+   "title": "Women's Thigh High Boots | Pointed Toe Slouchy Suede Block Heel",
+   "group": "laarzen",
+   "why": "soort \"Women's Thigh High Boots\" nooit verkocht · £6,98 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715504972033,
+   "title": "Women's Duck Boots | Mid-Cut Lugged Sole Ankle Strap",
+   "group": "laarzen",
+   "why": "soort \"Women's Duck Boots\" nooit verkocht · £6,77 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715482591489,
+   "title": "Women's Ankle Boots | Lace-Up Lug Sole Patent Leather",
+   "group": "laarzen",
+   "why": "soort \"Women's Ankle Boots\" nooit verkocht · £5,52 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715490980097,
+   "title": "Women's Leather Boots | Rounded Toe Block Heel Slouch",
+   "group": "laarzen",
+   "why": "soort \"Women's Leather Boots\" nooit verkocht · £4,83 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715492159745,
+   "title": "Women's Western Boots | Suede Ankle Pull Tab Low Heel",
+   "group": "laarzen",
+   "why": "soort \"Women's Western Boots\" nooit verkocht · £4,11 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715503333633,
+   "title": "Women's Rain Boots | Knee-High Waterproof Rubber Non-Slip Sole",
+   "group": "laarzen",
+   "why": "soort \"Women's Rain Boots\" nooit verkocht · £3,92 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715504218369,
+   "title": "Women's Heeled Boots | Strappy Buckle Closure Leather Block Heel",
+   "group": "laarzen",
+   "why": "soort \"Women's Heeled Boots\" nooit verkocht · £3,90 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715471909121,
+   "title": "Women's Chelsea Boots | Brogue Wingtip Leather Slip On",
+   "group": "laarzen",
+   "why": "soort \"Women's Chelsea Boots\" nooit verkocht · £3,16 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715476070657,
+   "title": "Women's Winter Boots | Ankle Ruched Leather Zip",
+   "group": "laarzen",
+   "why": "soort \"Women's Winter Boots\" nooit verkocht · £2,91 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715483574529,
+   "title": "Women's Bootcut Jeans | High Rise Waist Button Closure Denim",
+   "group": "laarzen",
+   "why": "soort \"Women's Bootcut Jeans\" nooit verkocht · £2,41 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715482362113,
+   "title": "Women's Ankle Boots | Suede Western Pointed Toe Block Heel",
+   "group": "laarzen",
+   "why": "soort \"Women's Ankle Boots\" nooit verkocht · £2,26 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715480658177,
+   "title": "Women's Knee High Boots | Leather Buckle Strap Lug Sole Tall Shaft",
+   "group": "laarzen",
+   "why": "soort \"Women's Knee High Boots\" nooit verkocht · £1,65 spend · 9 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715498418433,
+   "title": "Women's Ankle Bootie | Round Toe Fleece Lined Zip Closure",
+   "group": "laarzen",
+   "why": "soort \"Women's Ankle Bootie\" nooit verkocht · £1,65 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715482525953,
+   "title": "Women's Ankle Boots | Chunky Sole Buckle Strap Leather",
+   "group": "laarzen",
+   "why": "soort \"Women's Ankle Boots\" nooit verkocht · £1,57 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715480494337,
+   "title": "Women's Fur Boots | Rounded Toe Block Heel Side Zip",
+   "group": "laarzen",
+   "why": "soort \"Women's Fur Boots\" nooit verkocht · £1,33 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715495960833,
+   "title": "Women's Thigh High Boots | Pointed Toe Block Heel Zip Closure",
+   "group": "laarzen",
+   "why": "soort \"Women's Thigh High Boots\" nooit verkocht · £1,22 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715490849025,
+   "title": "Women's Leather Boots | Knee-High Buckle Strap Lug Sole",
+   "group": "laarzen",
+   "why": "soort \"Women's Leather Boots\" nooit verkocht · £1,13 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715472007425,
+   "title": "Women's Snow Boots | Round Toe Leather Fleece Lined",
+   "group": "laarzen",
+   "why": "soort \"Women's Snow Boots\" nooit verkocht · £1,12 spend · 9 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715500876033,
+   "title": "Women's Pencil Skirt | Maxi Length Leather Waist Belt Closure",
+   "group": "rokken",
+   "why": "soort \"Women's Pencil Skirt\" heeft maar 1 verkoper (die blijft) · dit product £10,64 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715506741505,
+   "title": "Women's Denim Skirt | Maxi Length High Waist Lace Hem",
+   "group": "rokken",
+   "why": "soort \"Women's Denim Skirt\" nooit verkocht · £1,71 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715509788929,
+   "title": "Women's Sweatsuit | Hooded Relaxed Fit Jogger",
+   "group": "sets",
+   "why": "soort \"Women's Sweatsuit\" nooit verkocht · £12,89 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715510345985,
+   "title": "Women's Sweatsuit | Half Zip Stand Collar Relaxed Fit Knit",
+   "group": "sets",
+   "why": "soort \"Women's Sweatshirt And Joggers Set\" nooit verkocht · £3,35 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715487703297,
+   "title": "Women's House Slippers | Fleece Lined Cushioned Slip On",
+   "group": "slippers",
+   "why": "soort \"Women's House Slippers\" nooit verkocht · £1,99 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715487539457,
+   "title": "Women's House Slippers | Slip-On Fleece Lined Platform Sole",
+   "group": "slippers",
+   "why": "soort \"Women's House Slippers\" nooit verkocht · £0,76 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715488162049,
+   "title": "Women's Wedge Sneakers | Lace Up Platform Mixed Material",
+   "group": "sneakers",
+   "why": "soort \"Women's Wedge Sneakers\" nooit verkocht · £6,45 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715488391425,
+   "title": "Women's Wedge Sneakers | Metallic Lace-Up Side Zip Platform",
+   "group": "sneakers",
+   "why": "soort \"Women's Wedge Sneakers\" nooit verkocht · £2,14 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715488293121,
+   "title": "Women's Wedge Sneakers | Metallic Lace Zip Round Toe",
+   "group": "sneakers",
+   "why": "soort \"Women's Wedge Sneakers\" nooit verkocht · £1,60 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715503825153,
+   "title": "Women's Sequin Top | V Neck Long Sleeve Regular Fit",
+   "group": "tops",
+   "why": "soort \"Women's Sequin Top\" nooit verkocht · £21,86 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715495174401,
+   "title": "Women's Corset Top | Square Neck Sleeveless Fitted",
+   "group": "tops",
+   "why": "soort \"Women's Corset Top\" nooit verkocht · £10,13 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715493339393,
+   "title": "Women's Going Out Top | Deep V Neck Long Sleeve Lace",
+   "group": "tops",
+   "why": "soort \"Women's Going Out Top\" nooit verkocht · £4,09 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715494879489,
+   "title": "Women's Oversized Sweater | Crew Neck Cable Knit Relaxed Fit",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Oversized Sweater\" nooit verkocht · £15,26 spend · 13 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715486556417,
+   "title": "Women's Turtleneck | Long Sleeve Knit Relaxed Fit",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Sweater\" nooit verkocht · £13,49 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715469943041,
+   "title": "Women's Cardigan | Oversized Lantern Sleeves Scalloped Hem Button Closure",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Cardigan\" nooit verkocht · £12,59 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715474563329,
+   "title": "Women's Cashmere Sweater | Crew Neck Long Sleeve Knit",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Cashmere Sweater\" heeft maar 1 verkoper (die blijft) · dit product £8,39 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715469254913,
+   "title": "Women's Cardigan | Plaid Button Front Knit",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Cardigan\" nooit verkocht · £5,94 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715511427329,
+   "title": "Women's Wrap Sweater | Hooded Oversized Knit Long Cardigan",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Wrap Sweater\" nooit verkocht · £5,67 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715499827457,
+   "title": "Women's Christmas Sweater | Reindeer Knit Crew Neck Puffed Sleeve",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Christmas Sweater\" nooit verkocht · £5,08 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715469582593,
+   "title": "Women's Cardigan | Hooded Button Front Knit Print",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Cardigan\" nooit verkocht · £4,41 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715469713665,
+   "title": "Women's Cardigan | Collar Button Front Knit Relaxed",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Cardigan\" nooit verkocht · £3,37 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715509428481,
+   "title": "Women's Off The Shoulder Sweater | Ribbed Knit Long Sleeve Cold Shoulder",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Off The Shoulder Sweater\" nooit verkocht · £3,34 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715493961985,
+   "title": "Women's Oversized Sweater | Crewneck Ribbed Knit Relaxed Fit",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Oversized Sweater\" nooit verkocht · £3,15 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715494682881,
+   "title": "Women's Knit Sweater | Round Neck Button-Up Long Sleeve",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Knit Sweater\" nooit verkocht · £2,85 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715486458113,
+   "title": "Women's Turtleneck | Oversized Knit Dropped Shoulder Ribbed",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Sweater\" nooit verkocht · £2,44 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715485704449,
+   "title": "Women's Wool Sweater | Turtleneck Long Sleeve Knit Relaxed Fit",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Wool Sweater\" nooit verkocht · £2,07 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715485638913,
+   "title": "Women's Wool Sweater | Turtleneck Oversized Knit Relaxed Fit",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Wool Sweater\" nooit verkocht · £1,94 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715474727169,
+   "title": "Women's Cashmere Sweater | Turtleneck Herringbone Knit Colorblock",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Cashmere Sweater\" heeft maar 1 verkoper (die blijft) · dit product £1,00 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 9715508838657,
+   "title": "Women's Mock Neck Sweater | Turtleneck Long Sleeves Knit",
+   "group": "truien-en-vesten",
+   "why": "soort \"Women's Mock Neck Sweater\" nooit verkocht · £0,31 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  }
+ ]
+}

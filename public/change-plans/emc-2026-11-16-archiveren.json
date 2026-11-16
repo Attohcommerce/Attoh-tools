@@ -1,0 +1,2239 @@
+{
+ "kind": "change-plan",
+ "version": 1,
+ "name": "emc-2026-11-16-archiveren",
+ "store": "Everman Clothing",
+ "domain": "evermanclothing.com",
+ "date": "2026-11-16",
+ "note": "Catalogus naar ±350: 528 → 349 actief. 179 producten archiveren (niet verwijderen). Regel: actief, ≥ 14 dagen live (gepubliceerd t/m 02-11), nooit verkocht (alle orders (AU+NZ)), geen Google-conversie, ≥ £0,25 spend in 30 dagen, in een producttype zonder verkopen of met maar 1 verkoper. Verkochte producten, nieuwe producten en producten zonder spend blijven staan. Data: Pythago 30 d (17-10 t/m 15-11) + Shopify-orders t/m 16-11. Terug te zetten met Draai terug.",
+ "groups": [
+  {
+   "id": "overhemden",
+   "label": "Overhemden — 34 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£128,37, 163 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "broeken",
+   "label": "Broeken — 32 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£125,98, 267 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "loafers-en-nette-schoenen",
+   "label": "Loafers & nette schoenen — 31 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£129,45, 311 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "shorts",
+   "label": "Shorts — 24 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£185,92, 255 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "zwem-en-boardshorts",
+   "label": "Zwem- & boardshorts — 13 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£64,45, 99 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "hoodies-en-truien",
+   "label": "Hoodies & truien — 8 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£42,46, 55 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "jeans",
+   "label": "Jeans — 7 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£56,02, 83 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "boots",
+   "label": "Boots — 7 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£46,36, 84 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "jassen",
+   "label": "Jassen — 7 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£29,34, 77 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "t-shirts-polo-s-en-singlets",
+   "label": "T-shirts, polo's & singlets — 7 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£51,84, 27 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "sneakers",
+   "label": "Sneakers — 6 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£40,68, 148 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "linnen-sets",
+   "label": "Linnen sets — 2 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£6,64, 8 kliks), in een soort die niet loopt.",
+   "default": true
+  },
+  {
+   "id": "sandalen-en-slides",
+   "label": "Sandalen & slides — 1 archiveren",
+   "desc": "Nooit verkocht, ≥ 14 dagen live, wel spend in 30 dagen (£3,58, 3 kliks), in een soort die niet loopt.",
+   "default": true
+  }
+ ],
+ "items": [
+  {
+   "id": 16080717480317,
+   "title": "Men's Chelsea Boots | Leather Round Toe Pull Tab Slip On",
+   "group": "boots",
+   "why": "soort \"Men's Chelsea Boots\" nooit verkocht · £13,42 spend · 28 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080712991101,
+   "title": "Men's Cowboy Boots | Pointed Toe Western Stitching",
+   "group": "boots",
+   "why": "soort \"Men's Cowboy Boots\" heeft maar 1 verkoper (die blijft) · dit product £12,06 spend · 9 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023918346621,
+   "title": "Men's Ankle Boots | Buckle Strap Leather Dress Boot",
+   "group": "boots",
+   "why": "soort \"Men's Boots\" heeft maar 1 verkoper (die blijft) · dit product £8,96 spend · 26 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089820103037,
+   "title": "Men's Cowboy Boots | Square Toe Embroidered Shaft Block Heel",
+   "group": "boots",
+   "why": "soort \"Men's Cowboy Boots\" heeft maar 1 verkoper (die blijft) · dit product £5,53 spend · 11 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089819971965,
+   "title": "Men's Cowboy Boots | Western Stitching Leather Square Toe",
+   "group": "boots",
+   "why": "soort \"Men's Cowboy Boots\" heeft maar 1 verkoper (die blijft) · dit product £3,96 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080717971837,
+   "title": "Men's Dress Boots | Leather Pull-On Ankle Stacked Heel",
+   "group": "boots",
+   "why": "soort \"Men's Dress Boots\" nooit verkocht · £1,44 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080718791037,
+   "title": "Men's Dress Chelsea Boots | Leather Upper Elastic Panels Structured Sole",
+   "group": "boots",
+   "why": "soort \"Men's Dress Chelsea Boots\" nooit verkocht · £0,99 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089821544829,
+   "title": "Men's Baggy Cargo Pants | Relaxed Fit Straight Leg Multiple Pockets",
+   "group": "broeken",
+   "why": "soort \"Men's Baggy Cargo Pants\" nooit verkocht · £16,18 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089821643133,
+   "title": "Men's Baggy Pants | Relaxed Fit Drawstring Denim Jogger Hem",
+   "group": "broeken",
+   "why": "soort \"Men's Baggy Pants\" heeft maar 1 verkoper (die blijft) · dit product £14,62 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023923982717,
+   "title": "Men's Dress Pants | Tweed Relaxed Fit Straight Leg",
+   "group": "broeken",
+   "why": "soort \"Men's Dress Pants\" nooit verkocht · £12,69 spend · 34 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023910678909,
+   "title": "Men's Slim-Fit Jogger Pants | Tapered Leg Drawstring Closure Linen",
+   "group": "broeken",
+   "why": "soort \"Men's Slim-Fit Jogger Pants\" nooit verkocht · £10,92 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023932764541,
+   "title": "Men's Linen Slacks | Loose Fit Drawstring Full Length",
+   "group": "broeken",
+   "why": "soort \"Men's Linen Slacks\" heeft maar 1 verkoper (die blijft) · dit product £7,78 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924998525,
+   "title": "Men's Camo Pants | Tapered Leg Cargo Pockets Stretch",
+   "group": "broeken",
+   "why": "soort \"Men's Camo Pants\" nooit verkocht · £7,38 spend · 50 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023921656189,
+   "title": "Men's Chino Pants | Straight Leg Stretch Cotton Casual",
+   "group": "broeken",
+   "why": "soort \"Men's Chino Pants\" nooit verkocht · £6,30 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023921295741,
+   "title": "Men's Chino Pants | Slim Fit Linen Flat Front",
+   "group": "broeken",
+   "why": "soort \"Men's Chino Pants\" nooit verkocht · £5,37 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924670845,
+   "title": "Men's Camo Pants | Cargo Pockets Jogging Cuff Denim",
+   "group": "broeken",
+   "why": "soort \"Men's Camo Pants\" nooit verkocht · £4,92 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924146557,
+   "title": "Men's Dress Pants | Slim Fit Tapered Wool Blend",
+   "group": "broeken",
+   "why": "soort \"Men's Dress Pants\" nooit verkocht · £4,82 spend · 17 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023912120701,
+   "title": "Men's Chino | Tapered Drawstring Pleated Front",
+   "group": "broeken",
+   "why": "soort \"Chinos\" nooit verkocht · £4,32 spend · 18 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023912481149,
+   "title": "Men's Chino | Slim-Fit Mid-Rise Button Closure",
+   "group": "broeken",
+   "why": "soort \"Chinos\" nooit verkocht · £4,27 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023935943037,
+   "title": "Men's White Linen Slacks | Pleated Relaxed Fit Linen",
+   "group": "broeken",
+   "why": "soort \"Men's White Linen Slacks\" heeft maar 1 verkoper (die blijft) · dit product £3,83 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023911793021,
+   "title": "Men's Chino | Slim Fit Flat Front Stretch",
+   "group": "broeken",
+   "why": "soort \"Men's Chino Pants\" nooit verkocht · £2,91 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089821380989,
+   "title": "Men's Pleated Pants | Double Button Waist Straight Leg",
+   "group": "broeken",
+   "why": "soort \"Men's Pleated Pants\" nooit verkocht · £2,91 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080719085949,
+   "title": "Men's Pleated Pants | High Rise Single Pleat Tailored",
+   "group": "broeken",
+   "why": "soort \"Men's Pleated Pants\" nooit verkocht · £2,06 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023936237949,
+   "title": "Men's White Linen Slacks | Drawstring Waist Relaxed Straight Leg",
+   "group": "broeken",
+   "why": "soort \"Men's White Linen Slacks\" heeft maar 1 verkoper (die blijft) · dit product £2,03 spend · 12 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023937122685,
+   "title": "Men's High Waisted Pants | Pleated Straight Leg Tailored",
+   "group": "broeken",
+   "why": "soort \"Men's High Waisted Pants\" nooit verkocht · £1,52 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023910875517,
+   "title": "Men's Pants | Striped Side Seam Relaxed Fit",
+   "group": "broeken",
+   "why": "soort \"Men's Pants\" nooit verkocht · £1,48 spend · 13 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023911104893,
+   "title": "Men's Relaxed Pants | Wide Leg Elastic Waist Corduroy",
+   "group": "broeken",
+   "why": "soort \"Men's Relaxed Pants\" nooit verkocht · £1,45 spend · 11 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023923949949,
+   "title": "Men's Dress Pants | Tapered Leg Pleated Front Wool Blend",
+   "group": "broeken",
+   "why": "soort \"Men's Dress Pants\" nooit verkocht · £1,34 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023937188221,
+   "title": "Men's High Waisted Pants | Relaxed Fit Cargo Pockets Cotton",
+   "group": "broeken",
+   "why": "soort \"Men's High Waisted Pants\" nooit verkocht · £1,11 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080719970685,
+   "title": "Men's Camo Cargo Pants | Tapered Leg Elastic Cuff Stretch",
+   "group": "broeken",
+   "why": "soort \"Men's Camo Cargo Pants\" nooit verkocht · £0,95 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023921590653,
+   "title": "Men's Chino Pants | Straight Leg Loose Fit Zip Closure",
+   "group": "broeken",
+   "why": "soort \"Men's Chino Pants\" nooit verkocht · £0,77 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023910613373,
+   "title": "Men's Tapered Pants | Cargo Pockets Jogger Drawstring",
+   "group": "broeken",
+   "why": "soort \"Men's Tapered Pants\" nooit verkocht · £0,74 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924474237,
+   "title": "Men's Camo Pants | Cargo Pockets Relaxed Fit Jogger",
+   "group": "broeken",
+   "why": "soort \"Men's Camo Pants\" nooit verkocht · £0,64 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023932666237,
+   "title": "Men's Linen Slacks | Relaxed Fit Elastic Waist Ankle Length",
+   "group": "broeken",
+   "why": "soort \"Men's Linen Slacks\" heeft maar 1 verkoper (die blijft) · dit product £0,58 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924179325,
+   "title": "Men's Wide Leg Dress Pants | High Waisted Relaxed Fit Belted",
+   "group": "broeken",
+   "why": "soort \"Men's Wide Leg Dress Pants\" nooit verkocht · £0,56 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023912382845,
+   "title": "Men's Chino | Regular Fit Straight Leg Zip Fly Button Closure",
+   "group": "broeken",
+   "why": "soort \"Chinos\" nooit verkocht · £0,50 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023911956861,
+   "title": "Men's Chino | Slim Fit Plaid Tapered Closure",
+   "group": "broeken",
+   "why": "soort \"Chinos\" nooit verkocht · £0,39 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023932567933,
+   "title": "Men's Linen Slacks | Drawstring Waist Relaxed Fit Linen",
+   "group": "broeken",
+   "why": "soort \"Men's Linen Slacks\" heeft maar 1 verkoper (die blijft) · dit product £0,37 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924113789,
+   "title": "Men's Dress Pants | Waffle Knit Pleated Tapered",
+   "group": "broeken",
+   "why": "soort \"Men's Dress Pants\" nooit verkocht · £0,27 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023907336573,
+   "title": "Men's Hoodie | Half Zip Pullover Fleece Knit",
+   "group": "hoodies-en-truien",
+   "why": "soort \"Men's Hoodie\" heeft maar 1 verkoper (die blijft) · dit product £13,00 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023907500413,
+   "title": "Men's Hoodie | Zip-Up Front Side Pockets Knit",
+   "group": "hoodies-en-truien",
+   "why": "soort \"Men's Hoodie\" heeft maar 1 verkoper (die blijft) · dit product £11,32 spend · 25 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023931355517,
+   "title": "Men's Sweater Vest | Cable Knit V-Neck Ribbed Armholes",
+   "group": "hoodies-en-truien",
+   "why": "soort \"Men's Sweater Vest\" nooit verkocht · £5,02 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023932174717,
+   "title": "Men's Sweater Vest | V-Neck Cable Knit Sleeveless",
+   "group": "hoodies-en-truien",
+   "why": "soort \"Men's Sweater Vest\" nooit verkocht · £4,55 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023907139965,
+   "title": "Men's Hoodie | Zip Closure Hood Knit Reversible",
+   "group": "hoodies-en-truien",
+   "why": "soort \"Men's Hoodie\" heeft maar 1 verkoper (die blijft) · dit product £2,33 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023907271037,
+   "title": "Men's Hoodie | Quarter-Button Ribbed Knit Elbow Patch",
+   "group": "hoodies-en-truien",
+   "why": "soort \"Men's Hoodie\" heeft maar 1 verkoper (die blijft) · dit product £2,27 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023907172733,
+   "title": "Men's Hoodie | Quarter-Zip Hood Cargo Pockets Knit",
+   "group": "hoodies-en-truien",
+   "why": "soort \"Men's Hoodie\" heeft maar 1 verkoper (die blijft) · dit product £2,04 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023907074429,
+   "title": "Men's Hoodie | Pullover Hood Drawstring Kangaroo Pocket Knit",
+   "group": "hoodies-en-truien",
+   "why": "soort \"Men's Hoodie\" heeft maar 1 verkoper (die blijft) · dit product £1,93 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023909761405,
+   "title": "Men's Jacket | Sherpa Collar Button Denim",
+   "group": "jassen",
+   "why": "soort \"Men's Jacket\" nooit verkocht · £8,86 spend · 9 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023909532029,
+   "title": "Men's Jacket | Hood Waterproof Long Sleeves Pockets",
+   "group": "jassen",
+   "why": "soort \"Men's Jacket\" nooit verkocht · £7,77 spend · 27 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023927587197,
+   "title": "Men's Rain Jacket | Hooded Waterproof Knee Length Relaxed Fit",
+   "group": "jassen",
+   "why": "soort \"Men's Rain Jacket\" heeft maar 1 verkoper (die blijft) · dit product £4,63 spend · 10 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023927751037,
+   "title": "Men's Rain Jacket | Hooded Zip Pockets Relaxed Fit",
+   "group": "jassen",
+   "why": "soort \"Men's Rain Jacket\" heeft maar 1 verkoper (die blijft) · dit product £2,93 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023909499261,
+   "title": "Men's Jacket | Collared Zip Closure Leather Bomber",
+   "group": "jassen",
+   "why": "soort \"Men's Jacket\" nooit verkocht · £2,53 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023909564797,
+   "title": "Men's Jacket | Hood Relaxed Fit Softshell Pockets",
+   "group": "jassen",
+   "why": "soort \"Men's Jacket\" nooit verkocht · £2,35 spend · 14 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023927882109,
+   "title": "Men's Rain Jacket | Hooded Windproof Full Zip",
+   "group": "jassen",
+   "why": "soort \"Men's Rain Jacket\" heeft maar 1 verkoper (die blijft) · dit product £0,27 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023917265277,
+   "title": "Men's Jeans | Distressed Skinny Fit Stretch Denim",
+   "group": "jeans",
+   "why": "soort \"Men's Jeans\" nooit verkocht · £15,96 spend · 11 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023917429117,
+   "title": "Men's Jeans | Patchwork Wide Leg Baggy Denim",
+   "group": "jeans",
+   "why": "soort \"Men's Jeans\" nooit verkocht · £9,64 spend · 47 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023917232509,
+   "title": "Men's Jeans | Skinny Fit Ripped Denim",
+   "group": "jeans",
+   "why": "soort \"Men's Jeans\" nooit verkocht · £9,57 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080718561661,
+   "title": "Men's Cargo Jeans | Relaxed Fit Denim Cargo Pockets",
+   "group": "jeans",
+   "why": "soort \"Men's Cargo Jeans\" nooit verkocht · £7,28 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023917396349,
+   "title": "Men's Jeans | Relaxed Fit Denim Straight Leg",
+   "group": "jeans",
+   "why": "soort \"Men's Jeans\" nooit verkocht · £7,26 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023917527421,
+   "title": "Men's Jeans | Slim Fit Denim Zip Fly Five Pocket",
+   "group": "jeans",
+   "why": "soort \"Men's Jeans\" nooit verkocht · £5,73 spend · 10 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023917494653,
+   "title": "Men's Jeans | Slim Fit Denim Stretch Tapered",
+   "group": "jeans",
+   "why": "soort \"Men's Jeans\" nooit verkocht · £0,58 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023915069821,
+   "title": "Men's Linen Set | Short Sleeve Button-Up Collared Beach",
+   "group": "linnen-sets",
+   "why": "soort \"Men's Linen Set\" nooit verkocht · £3,76 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023932699005,
+   "title": "Men's Linen Set | Short Sleeve Button Closure Relaxed",
+   "group": "linnen-sets",
+   "why": "soort \"Men's Linen Set\" nooit verkocht · £2,88 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089821512061,
+   "title": "Men's Dress Penny Loafers | Slip On Leather Saddle Strap",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Dress Penny Loafers\" nooit verkocht · £13,36 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023934959997,
+   "title": "Men's Casual Penny Loafers | Perforated Leather Slip-On Moccasin",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Casual Penny Loafers\" nooit verkocht · £11,75 spend · 27 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924343165,
+   "title": "Men's Boat Shoe | Lace-Up Moc Rounded Toe Rubber Sole",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Boat Shoes\" heeft maar 1 verkoper (die blijft) · dit product £9,70 spend · 12 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023925326205,
+   "title": "Men's Black Loafers | Slip On Suede Casual Comfortable",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Black Loafer\" heeft maar 1 verkoper (die blijft) · dit product £7,99 spend · 33 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089820365181,
+   "title": "Men's Slip On Loafers | Rounded Toe Suede Low-Profile Sole",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Slip On Loafers\" nooit verkocht · £7,64 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023925522813,
+   "title": "Men's Black Loafers | Slip-On Leather Comfort",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Black Loafer\" heeft maar 1 verkoper (die blijft) · dit product £7,02 spend · 34 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023913726333,
+   "title": "Men's Loafers | Suede Slip On Flat Sole",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £6,86 spend · 25 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023937286525,
+   "title": "Men's Brown Slip On Loafers | Croc Embossed Leather",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £6,34 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023914676605,
+   "title": "Men's Loafers | Slip-On Leather Round Toe Rubber Sole",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £6,14 spend · 12 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023933223293,
+   "title": "Men's Black Slip On Loafers | Metal Buckle Leather Moccasin",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Black Slip On Loafers\" nooit verkocht · £5,76 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023932928381,
+   "title": "Men's Penny Loafers With Penny | Suede Slip-On Low Profile Moc Toe",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Penny Loafers With Penny\" nooit verkocht · £5,38 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023915135357,
+   "title": "Men's Loafers | Suede Round Toe Slip-On Rubber Sole",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £5,07 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089821446525,
+   "title": "Men's Suede Loafers | Slip-On Flatform Suede Loafer",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Suede Loafers\" nooit verkocht · £4,66 spend · 27 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023932961149,
+   "title": "Men's Black Slip On Loafers | Round Toe Leather Moccasin",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Black Slip On Loafers\" nooit verkocht · £4,20 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023937483133,
+   "title": "Men's Brown Tassel Loafers | Rounded Toe Leather Slip On",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £3,31 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924441469,
+   "title": "Men's Boat Shoes | Lace-Up Moc Toe Rubber Sole",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Boat Shoes\" nooit verkocht · £2,86 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023915168125,
+   "title": "Men's Loafers | Slip On Suede Casual Driving",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £2,52 spend · 13 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023933157757,
+   "title": "Men's Black Slip On Loafers | Metal Buckle Closure Leather",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Black Slip On Loafers\" nooit verkocht · £2,33 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023932830077,
+   "title": "Men's Penny Loafers With Penny | Woven Leather Slip-On Flat",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Penny Loafers With Penny\" nooit verkocht · £2,14 spend · 10 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924310397,
+   "title": "Men's Boat Shoe | Leather Slip On Flexible Sole",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Boat Shoes\" heeft maar 1 verkoper (die blijft) · dit product £2,05 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924572541,
+   "title": "Men's Boat Shoe | Lace-Up Casual Leather Moccasin",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £1,99 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023934042493,
+   "title": "Men's Casual Penny Loafers | Suede Slip On Flat Heel",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Casual Penny Loafers\" nooit verkocht · £1,94 spend · 11 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023913660797,
+   "title": "Men's Loafers | Slip-On Faux Leather Stitched Cushioned Sole",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £1,70 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023913693565,
+   "title": "Men's Loafers | Round Toe Slip On Metal Buckle",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £1,34 spend · 11 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023915364733,
+   "title": "Men's Loafers | Tassel Slip-On Leather Flat",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £1,29 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023932895613,
+   "title": "Men's Penny Loafers With Penny | Suede Round Toe Slip On",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Penny Loafers With Penny\" nooit verkocht · £1,10 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023932993917,
+   "title": "Men's Penny Loafers With Penny | Suede Slip On Loafer Flat Heel",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Penny Loafers With Penny\" nooit verkocht · £0,69 spend · 12 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924048253,
+   "title": "Men's Boat Shoe | Round Toe Lace Up Rubber Sole",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Boat Shoes\" heeft maar 1 verkoper (die blijft) · dit product £0,67 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023937417597,
+   "title": "Men's Brown Slip On Shoe | Leather Round Toe Slip-On Loafer",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Loafers\" nooit verkocht · £0,61 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023933059453,
+   "title": "Men's Penny Loafers | Rounded Toe Slip On Suede",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Penny Loafers\" nooit verkocht · £0,53 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080715841917,
+   "title": "Men's Leather Shoe | Double Monk Strap Cap-Toe Buckle Closure",
+   "group": "loafers-en-nette-schoenen",
+   "why": "soort \"Men's Leather Shoe\" nooit verkocht · £0,51 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080715547005,
+   "title": "Men's Striped Shirt | Collared Long Sleeve Button-Up Relaxed Fit",
+   "group": "overhemden",
+   "why": "soort \"Men's Striped Shirt\" heeft maar 1 verkoper (die blijft) · dit product £14,69 spend · 12 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023915299197,
+   "title": "Men's White Shirt | Polo Knit Short Sleeve Collar",
+   "group": "overhemden",
+   "why": "soort \"Men's White Shirt\" nooit verkocht · £12,05 spend · 18 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023922508157,
+   "title": "Men's Sweatshirt | Quarter-Zip Knit Waffle Textured",
+   "group": "overhemden",
+   "why": "soort \"Men's Sweatshirt\" nooit verkocht · £9,69 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023915921789,
+   "title": "Men's White Shirt | Slim Fit Long Sleeve Button-Up Collar",
+   "group": "overhemden",
+   "why": "soort \"Men's White Shirt\" nooit verkocht · £8,93 spend · 11 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023918575997,
+   "title": "Men's Denim Shirt | Collared Button-Front Chest Pockets",
+   "group": "overhemden",
+   "why": "soort \"Men's Denim Shirt\" heeft maar 1 verkoper (die blijft) · dit product £8,60 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089820889469,
+   "title": "Men's Casual Shirt | Relaxed Fit Collar Button Front Linen",
+   "group": "overhemden",
+   "why": "soort \"Men's Casual Shirt\" nooit verkocht · £8,53 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023918608765,
+   "title": "Men's Denim Shirt | Slim Fit Button Closure Long Sleeves",
+   "group": "overhemden",
+   "why": "soort \"Men's Denim Shirt\" heeft maar 1 verkoper (die blijft) · dit product £8,09 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080715121021,
+   "title": "Men's Work Shirt | Slim Fit Long Sleeve Button Front Collar",
+   "group": "overhemden",
+   "why": "soort \"Men's Work Shirt\" nooit verkocht · £6,49 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080717349245,
+   "title": "Men's Cotton Shirt | Ribbed Knit Polo Three-Button Collar",
+   "group": "overhemden",
+   "why": "soort \"Men's Cotton Shirt\" nooit verkocht · £5,24 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023922442621,
+   "title": "Men's Sweatshirt | Polo Collar Drop Shoulder Garment Washed",
+   "group": "overhemden",
+   "why": "soort \"Men's Sweatshirt\" nooit verkocht · £4,83 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023915528573,
+   "title": "Men's White Shirt | Henley Collar Textured Knit Three Quarter Sleeve",
+   "group": "overhemden",
+   "why": "soort \"Men's White Shirt\" nooit verkocht · £4,49 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023915594109,
+   "title": "Men's White Shirt | Striped Long Sleeve Slim Fit Cotton",
+   "group": "overhemden",
+   "why": "soort \"Men's White Shirt\" nooit verkocht · £4,32 spend · 30 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023921131901,
+   "title": "Men's Black Shirt | Slim Fit Button Collar Long Sleeve",
+   "group": "overhemden",
+   "why": "soort \"Men's Black Shirt\" nooit verkocht · £2,73 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023916020093,
+   "title": "Men's Button Up Shirt | Long Sleeve Linen Collar Button Closure",
+   "group": "overhemden",
+   "why": "soort \"Men's Button Up Shirt\" nooit verkocht · £2,56 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023912546685,
+   "title": "Men's Linen Shirt | Short Sleeve Collar Button Closure",
+   "group": "overhemden",
+   "why": "soort \"Men's Linen Shirt\" heeft maar 1 verkoper (die blijft) · dit product £2,54 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089820234109,
+   "title": "Men's Check Shirt | Short Sleeve Polo Collar Houndstooth Knit",
+   "group": "overhemden",
+   "why": "soort \"Men's Check Shirt\" nooit verkocht · £2,43 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023907991933,
+   "title": "Men's Long Sleeve Shirt | Classic Collar Button Front Linen",
+   "group": "overhemden",
+   "why": "soort \"Men's Long Sleeve Shirt\" nooit verkocht · £2,41 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023922344317,
+   "title": "Men's Sweatshirt | Fleece Zip-Up Hooded Long Sleeve",
+   "group": "overhemden",
+   "why": "soort \"Men's Sweatshirt\" nooit verkocht · £2,32 spend · 6 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080718922109,
+   "title": "Men's Camo Shirt | Long Sleeve Button Collared Chest Pockets",
+   "group": "overhemden",
+   "why": "soort \"Men's Camo Shirt\" nooit verkocht · £2,26 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080715448701,
+   "title": "Men's Short Sleeve Shirt | Cotton Button Collar Tailored",
+   "group": "overhemden",
+   "why": "soort \"Men's Short Sleeve Shirt\" heeft maar 1 verkoper (die blijft) · dit product £1,88 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089820791165,
+   "title": "Men's Casual Dress Shirt | Button-Down Collar Long Sleeve Cotton",
+   "group": "overhemden",
+   "why": "soort \"Men's Casual Dress Shirt\" nooit verkocht · £1,86 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023920312701,
+   "title": "Men's Collared Shirt | Textured Knit Stand Collar Long Sleeves",
+   "group": "overhemden",
+   "why": "soort \"Men's Collared Shirt\" nooit verkocht · £1,69 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023912415613,
+   "title": "Men's Linen Shirt | Dropped Shoulder Long Sleeve Button Closure",
+   "group": "overhemden",
+   "why": "soort \"Men's Linen Shirt\" heeft maar 1 verkoper (die blijft) · dit product £1,56 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023908221309,
+   "title": "Men's Shirt | Ribbed Knit Short Sleeve Crew Neck",
+   "group": "overhemden",
+   "why": "soort \"Men's Shirt\" nooit verkocht · £1,54 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023921688957,
+   "title": "Men's Black Shirt | Polo Long Sleeve Slim Fit",
+   "group": "overhemden",
+   "why": "soort \"Men's Black Shirt\" nooit verkocht · £1,28 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023916118397,
+   "title": "Men's Button Up Shirt | Long Sleeve Striped Collar Button",
+   "group": "overhemden",
+   "why": "soort \"Men's Button Up Shirt\" nooit verkocht · £0,91 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023908024701,
+   "title": "Men's Long Sleeve Shirt | Crew Neck Knit Breathable",
+   "group": "overhemden",
+   "why": "soort \"Men's Long Sleeve Shirt\" nooit verkocht · £0,88 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023920411005,
+   "title": "Men's Collared Shirt | Gauze Knit Button Front Relaxed Fit",
+   "group": "overhemden",
+   "why": "soort \"Men's Collared Shirt\" nooit verkocht · £0,74 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023912317309,
+   "title": "Men's Linen Shirt | Mandarin Collar Button Front Relaxed Fit",
+   "group": "overhemden",
+   "why": "soort \"Men's Linen Shirt\" heeft maar 1 verkoper (die blijft) · dit product £0,60 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023912448381,
+   "title": "Men's Linen Shirt | Relaxed Fit Collared Long Sleeve",
+   "group": "overhemden",
+   "why": "soort \"Men's Linen Shirt\" heeft maar 1 verkoper (die blijft) · dit product £0,55 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023922639229,
+   "title": "Men's Sweatshirt | V-Neck Knit Elbow Patch Relaxed Fit",
+   "group": "overhemden",
+   "why": "soort \"Men's Sweatshirt\" nooit verkocht · £0,49 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023922278781,
+   "title": "Men's Hooded Sweatshirt | Full Zip Knit Relaxed Fit Pockets",
+   "group": "overhemden",
+   "why": "soort \"Men's Hooded Sweatshirt\" nooit verkocht · £0,42 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023922540925,
+   "title": "Men's Sweatshirt | Quilted Knit Zip Full Closure",
+   "group": "overhemden",
+   "why": "soort \"Men's Sweatshirt\" nooit verkocht · £0,40 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023918772605,
+   "title": "Men's Worker Shirt | Collared Button-Down Chest Pockets Regular Fit",
+   "group": "overhemden",
+   "why": "soort \"Men's Worker Shirt\" heeft maar 1 verkoper (die blijft) · dit product £0,37 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080717873533,
+   "title": "Men's Leather Clogs | Buckle Strap Cushioned Sole",
+   "group": "sandalen-en-slides",
+   "why": "soort \"Clogs\" nooit verkocht · £3,58 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16073592734077,
+   "title": "Men's Cargo Shorts | Regular Fit Utility Pockets Cotton Blend",
+   "group": "shorts",
+   "why": "soort \"Men's Cargo Shorts\" heeft maar 1 verkoper (die blijft) · dit product £34,48 spend · 26 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080716530045,
+   "title": "Men's Long Shorts | Relaxed Fit Cargo Denim Multi-Pocket",
+   "group": "shorts",
+   "why": "soort \"Men's Long Shorts\" nooit verkocht · £20,24 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924965757,
+   "title": "Men's Linen Shorts | Elastic Waist Drawstring Relaxed Fit",
+   "group": "shorts",
+   "why": "soort \"Men's Linen Shorts\" nooit verkocht · £19,42 spend · 12 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023908188541,
+   "title": "Men's Knee Length Shorts | Pull-On Linen Relaxed Fit",
+   "group": "shorts",
+   "why": "soort \"Men's Knee Length Shorts\" nooit verkocht · £18,15 spend · 12 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023926702461,
+   "title": "Men's Tailored Shorts | Zip Closure Mid-Thigh Lightweight",
+   "group": "shorts",
+   "why": "soort \"Men's Tailored Shorts\" nooit verkocht · £14,53 spend · 11 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023916839293,
+   "title": "Men's Work Shorts | Pleated Straight-Leg Tailored Closure",
+   "group": "shorts",
+   "why": "soort \"Men's Work Shorts\" heeft maar 1 verkoper (die blijft) · dit product £9,50 spend · 19 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023926866301,
+   "title": "Men's Tailored Shorts | Pleated Front Relaxed Fit Button Closure",
+   "group": "shorts",
+   "why": "soort \"Men's Tailored Shorts\" nooit verkocht · £9,44 spend · 12 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080713515389,
+   "title": "Men's Workwear Shorts | Cargo Pockets Relaxed Fit Cotton",
+   "group": "shorts",
+   "why": "soort \"Men's Workwear Shorts\" heeft maar 1 verkoper (die blijft) · dit product £8,31 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023933288829,
+   "title": "Men's Black Cargo Shorts | Ripstop Nylon Relaxed Fit Multiple Pockets",
+   "group": "shorts",
+   "why": "soort \"Men's Cargo Shorts\" heeft maar 1 verkoper (die blijft) · dit product £8,16 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023924867453,
+   "title": "Men's Linen Shorts | Relaxed Fit Drawstring Denim",
+   "group": "shorts",
+   "why": "soort \"Men's Linen Shorts\" nooit verkocht · £7,67 spend · 10 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023933354365,
+   "title": "Men's Black Cargo Shorts | Elastic Waist Drawstring Cargo Pockets",
+   "group": "shorts",
+   "why": "soort \"Men's Cargo Shorts\" heeft maar 1 verkoper (die blijft) · dit product £5,11 spend · 18 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023933452669,
+   "title": "Men's Cargo Shorts | Relaxed Fit Utility Pockets",
+   "group": "shorts",
+   "why": "soort \"Men's Cargo Shorts\" heeft maar 1 verkoper (die blijft) · dit product £4,88 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023908647293,
+   "title": "Men's Shorts | Printed Drawstring Mid-Thigh Swim",
+   "group": "shorts",
+   "why": "soort \"Men's Shorts\" heeft maar 1 verkoper (die blijft) · dit product £4,46 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023912350077,
+   "title": "Men's Corduroy Shorts | Elastic Waist Drawstring Chino",
+   "group": "shorts",
+   "why": "soort \"Men's Shorts\" heeft maar 1 verkoper (die blijft) · dit product £4,43 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023926014333,
+   "title": "Men's Sport Shorts | Adjustable Drawstring Quick-Dry Elastic Waistband",
+   "group": "shorts",
+   "why": "soort \"Men's Sport Shorts\" heeft maar 1 verkoper (die blijft) · dit product £3,66 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023925064061,
+   "title": "Men's Linen Shorts | Cargo Pockets Drawstring Relaxed Fit",
+   "group": "shorts",
+   "why": "soort \"Men's Linen Shorts\" nooit verkocht · £2,93 spend · 12 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023916970365,
+   "title": "Men's Work Shorts | Pleated Front Rolled Hem Linen Blend",
+   "group": "shorts",
+   "why": "soort \"Men's Work Shorts\" heeft maar 1 verkoper (die blijft) · dit product £2,85 spend · 50 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023925981565,
+   "title": "Men's Sport Shorts | Breathable Quick-Dry Athletic Fit",
+   "group": "shorts",
+   "why": "soort \"Men's Sport Shorts\" heeft maar 1 verkoper (die blijft) · dit product £2,37 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089820758397,
+   "title": "Men's Pleated Shorts | Turn-Up Hem Structured Fit Cotton",
+   "group": "shorts",
+   "why": "soort \"Men's Pleated Shorts\" nooit verkocht · £1,67 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023916511613,
+   "title": "Men's Work Shorts | Knee-Length Plaid Drawstring Side Stripe",
+   "group": "shorts",
+   "why": "soort \"Men's Work Shorts\" heeft maar 1 verkoper (die blijft) · dit product £1,22 spend · 16 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023937778045,
+   "title": "Men's Baggy Cargo Shorts | Relaxed Fit Multiple Pockets Cotton Blend",
+   "group": "shorts",
+   "why": "soort \"Men's Baggy Cargo Shorts\" nooit verkocht · £1,12 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089820856701,
+   "title": "Men's Long Shorts | Pleated Cuffed Cotton Breathable",
+   "group": "shorts",
+   "why": "soort \"Men's Long Shorts\" nooit verkocht · £0,57 spend · 7 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023916806525,
+   "title": "Men's Work Shorts | Relaxed Fit Cargo Knee Length",
+   "group": "shorts",
+   "why": "soort \"Men's Work Shorts\" heeft maar 1 verkoper (die blijft) · dit product £0,40 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023908352381,
+   "title": "Men's Shorts | Elastic Waist Drawcord Relaxed Fit",
+   "group": "shorts",
+   "why": "soort \"Men's Shorts\" heeft maar 1 verkoper (die blijft) · dit product £0,35 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023937646973,
+   "title": "Men's Sneakers High Top | Knit Mesh Lace Up Trail",
+   "group": "sneakers",
+   "why": "soort \"Men's Sneakers High Top\" nooit verkocht · £20,32 spend · 97 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023916347773,
+   "title": "Men's Sneakers | Canvas Upper Lace Closure Padded Collar",
+   "group": "sneakers",
+   "why": "soort \"Men's Sneakers\" nooit verkocht · £6,48 spend · 8 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023937679741,
+   "title": "Men's Sneakers High Top | Chunky Mesh Lace-Up Textured Sole",
+   "group": "sneakers",
+   "why": "soort \"Men's Sneakers High Top\" nooit verkocht · £6,45 spend · 13 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023937810813,
+   "title": "Men's Sneakers High Top | Lace-Up Closure Rubber Sole",
+   "group": "sneakers",
+   "why": "soort \"Men's Sneakers High Top\" nooit verkocht · £4,21 spend · 14 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023922737533,
+   "title": "Men's Casual Shoe | Lace-Up Lug Sole Mesh Upper",
+   "group": "sneakers",
+   "why": "soort \"Men's Sneakers\" nooit verkocht · £2,97 spend · 14 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023916446077,
+   "title": "Men's Sneakers | Lace-Up Knit Mesh Toe Guard Work",
+   "group": "sneakers",
+   "why": "soort \"Men's Sneakers\" nooit verkocht · £0,25 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16080713548157,
+   "title": "Men's Singlet Top | Ribbed Knit Sleeveless Crew Neck",
+   "group": "t-shirts-polo-s-en-singlets",
+   "why": "soort \"Men's Singlet Top\" nooit verkocht · £20,11 spend · 10 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089820823933,
+   "title": "Men's Linen Top | Long Sleeve Button Down Collar Casual",
+   "group": "t-shirts-polo-s-en-singlets",
+   "why": "soort \"Men's Linen Tank Top\" nooit verkocht · £15,60 spend · 4 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023933616509,
+   "title": "Men's Corporate Polo Shirt | Long Sleeve Collared Polo",
+   "group": "t-shirts-polo-s-en-singlets",
+   "why": "soort \"Men's Corporate Polo Shirt\" nooit verkocht · £7,16 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023917199741,
+   "title": "Men's Polo Top | Short-Sleeve Collar Knit Breathable",
+   "group": "t-shirts-polo-s-en-singlets",
+   "why": "soort \"Men's Polo Top\" heeft maar 1 verkoper (die blijft) · dit product £4,80 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023936008573,
+   "title": "Men's Knitted Polo Shirt | Short Sleeve Collar Knit",
+   "group": "t-shirts-polo-s-en-singlets",
+   "why": "soort \"Men's Knitted Polo Shirt\" nooit verkocht · £1,56 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023917134205,
+   "title": "Men's Polo Top | Short Sleeve Knit Button Closure V-Neck",
+   "group": "t-shirts-polo-s-en-singlets",
+   "why": "soort \"Men's Polo Top\" heeft maar 1 verkoper (die blijft) · dit product £1,47 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023933845885,
+   "title": "Men's Corporate Polo Shirt | Short Sleeve Collared Button Closure",
+   "group": "t-shirts-polo-s-en-singlets",
+   "why": "soort \"Men's Corporate Polo Shirt\" nooit verkocht · £1,14 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16073593127293,
+   "title": "Men's Board Shorts | Graffiti Print Quick Dry Adjustable",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £20,86 spend · 29 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16089820201341,
+   "title": "Men's Short Swim Trunk | Quick Dry Elastic Waist Drawstring Closure",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Short Swim Trunk\" heeft maar 1 verkoper (die blijft) · dit product £9,74 spend · 10 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023910220157,
+   "title": "Men's Board Shorts | Elastic Waist Drawstring Closure Quick Dry",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £6,84 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023909695869,
+   "title": "Men's Board Shorts | Striped Drawstring Mid-Thigh",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £6,05 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16073592897917,
+   "title": "Men's Board Shorts | Elastic Waist Drawstring Quick-Dry",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £4,93 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023910187389,
+   "title": "Men's Board Shorts | Tropical Print Drawstring Quick Dry",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £3,49 spend · 22 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023910056317,
+   "title": "Men's Board Shorts | Quick-Dry Nylon Drawstring Athletic Fit",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £3,47 spend · 5 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023909925245,
+   "title": "Men's Board Shorts | Flamingo Print Inner Liner Pocket",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £3,02 spend · 3 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023909728637,
+   "title": "Men's Board Shorts | Cargo Pockets Drawstring Relaxed Fit",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £2,21 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023910383997,
+   "title": "Men's Board Shorts | Patchwork Mid-Waist Drawstring",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £1,85 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16073592799613,
+   "title": "Men's Board Shorts | Quick Dry Mesh Lining Side Slits",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £1,12 spend · 13 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16073593160061,
+   "title": "Men's Swim Shorts | Linen Quick-Dry Drawstring Mid-Thigh",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Swim Shorts\" heeft maar 1 verkoper (die blijft) · dit product £0,60 spend · 1 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  },
+  {
+   "id": 16023909794173,
+   "title": "Men's Board Shorts | Geometric Print Drawstring Swim",
+   "group": "zwem-en-boardshorts",
+   "why": "soort \"Men's Board Shorts\" heeft maar 1 verkoper (die blijft) · dit product £0,27 spend · 2 kliks · 0 verkopen (30 d)",
+   "set": {
+    "status": "archived"
+   },
+   "from": {
+    "status": "active"
+   }
+  }
+ ]
+}

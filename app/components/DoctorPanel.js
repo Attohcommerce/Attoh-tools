@@ -20,7 +20,7 @@ import { orgLS } from "@/lib/org-client";
 import { useOrgDef } from "./OrgProvider";
 import { isShapesWardrobe, SW_TYPE_SHEET } from "@/lib/sw-product-types";
 import { mergePlanItems, groupCounts, planMatchesStore, storeOpsOf, storeOpCounts, storeOpLabel } from "@/lib/change-plan";
-import { AI_EST, CUR_MARKET, aiEstimate, scanStore, runFixLoop, runAiLoop, fixAllStore, titleSex } from "@/lib/doctor-engine";
+import { AI_EST, CUR_MARKET, aiEstimate, postJSON, scanStore, runFixLoop, runAiLoop, fixAllStore, titleSex } from "@/lib/doctor-engine";
 import RunDashboard, { useRun, ScoreRing } from "./RunDashboard";
 import CollectionFill from "./CollectionFill";
 import FitNotes from "./FitNotes";
@@ -125,6 +125,7 @@ export default function DoctorPanel({ store, since }) {
   }, []);
 
   const [market, setMarket] = useState("");
+  const [live, setLive] = useState(null); // 16-11: valuta + markt live uit Shopify
   const [bareSystem, setBareSystem] = useState("");
   const [showGuide, setShowGuide] = useState(false);
 
@@ -180,6 +181,25 @@ export default function DoctorPanel({ store, since }) {
       b = orgLS.getItem(LS_BARESYS + store.domain) || "";
     } catch {}
     setBareSystem(b);
+    /* 16-11: valuta en markt live uit Shopify + het store-profiel halen. De
+       opgeslagen store-gegevens houden de valuta van het moment van koppelen
+       (PTL bleef op EUR/USA staan terwijl de store al op GBP/UK stond). Een zelf
+       gekozen markt blijft altijd voorgaan. */
+    setLive(null);
+    let off = false;
+    postJSON("/api/doctor-stores", { stores: [{ domain: store.domain, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret, name: store.name }] }, { tries: 2 })
+      .then((res) => {
+        const s = res && res.ok && res.data && res.data.stores && res.data.stores[0];
+        if (off || !s || !s.ok) return;
+        const cur = String(s.currency || "").toUpperCase();
+        const mk = (s.profile && s.profile.market) || CUR_MARKET[cur] || "";
+        setLive({ currency: cur, market: mk });
+        if (!v && mk) setMarket(mk);
+      })
+      .catch(() => {});
+    return () => {
+      off = true;
+    };
   }, [store && store.domain]);
 
   function pickMarket(m) {
@@ -949,7 +969,7 @@ export default function DoctorPanel({ store, since }) {
           <div className="sd-hero__title">{store.name || store.domain}</div>
           <div className="sd-hero__meta">
             <span className="sd-pill sd-pill--gold">{market || "geen markt"}</span>
-            {store.currency ? <span className="sd-pill">{store.currency}</span> : null}
+            {(live && live.currency) || store.currency ? <span className="sd-pill">{(live && live.currency) || store.currency}</span> : null}
             <span className="sd-pill">{scopeLabel}</span>
             <span className={`sd-pill${String(backupSheet || "").trim() ? " sd-pill--ok" : " sd-pill--warn"}`}>
               {String(backupSheet || "").trim() ? "backup aan" : "zonder backup"}

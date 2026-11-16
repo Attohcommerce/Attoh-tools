@@ -1,6 +1,22 @@
 {
  "plans": [
   {
+   "name": "lgb-2026-11-16-archiveren",
+   "store": "Lady Glam Boutique",
+   "domain": "ladyglamboutique.com",
+   "date": "2026-11-16",
+   "items": 141,
+   "products": 141
+  },
+  {
+   "name": "emc-2026-11-16-archiveren",
+   "store": "Everman Clothing",
+   "domain": "evermanclothing.com",
+   "date": "2026-11-16",
+   "items": 179,
+   "products": 179
+  },
+  {
    "name": "emc-2026-11-09",
    "store": "Everman Clothing",
    "domain": "evermanclothing.com",
