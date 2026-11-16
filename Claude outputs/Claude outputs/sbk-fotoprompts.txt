@@ -1,0 +1,742 @@
+STYLED BY KAREN · CAMPAGNEPROMPTS · UK · EARLY BLACK FRIDAY · 15-11-2026
+
+Model: GPT Image 2.6 in Higgsfield, quality high (hero xhigh). Banners 4K, de rest 2K. Tegels en mobiel 3:4, kaarten 3:2.
+Volgorde: 01, 05 en 09 eerst. Dan 02 met 01 als referentie, 10 met 09, en 06–08 + 11–14 met 05 (alleen voor de studio).
+Bestandsnamen in Shopify Files: SBK_01_HERO_PC t/m SBK_14 (staan al in de store).
+
+━━━━━━━━━━━━━━━━━━━━
+01 · Homepage > Hero > Image (16:9, 4K xhigh)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 01 — HOMEPAGE HERO (DESKTOP)
+FORMAT: EXACTLY ONE 16:9 LANDSCAPE PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: MAIN HOMEPAGE HERO BANNER, WITH A HEADLINE AND A BUTTON ON THE LEFT
+LOCATION: NOTTING HILL, LONDON
+SEASON: LATE NOVEMBER 2026, EARLY WINTER IN THE UK
+
+Create one exceptionally believable, premium lifestyle fashion photograph for a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial shoot by an experienced British editorial photographer: polished and beautiful, but completely natural and human. This is a real photograph, not a fantasy, not a movie poster and not an advertising collage.
+
+CREATIVE DIRECTION
+Two old friends on an early-winter afternoon walk in London, arm in arm. The image communicates premium everyday womenswear, quiet confidence, effortless winter layering, friendship and realism. Fresh, elegant and inviting, with a subtle and believable winter atmosphere.
+
+LOCATION
+A quiet residential street in Notting Hill, London, in late November: a row of Victorian terraced houses painted in soft, slightly faded pastel colours (pale pink, powder blue, sage and cream) with white stucco trim, black iron railings and front steps, and bare ornamental cherry trees along the pavement with a few last golden leaves. The pavement is damp with scattered yellow leaves. No cars nearby, no other people, no Christmas decorations, no postcard look.
+
+THE LIGHT
+One light source: the low winter sun at about 2 PM, coming from camera-left and slightly behind the two women, softened by thin high cloud. It gives a gentle warm-white edge light on their hair and coat shoulders, while their faces are lit by soft, even open daylight from the bright sky. The houses on the left side of the street lie in soft shade. Neutral white balance around 5600K: the pastels stay soft and true, the skin natural. Luminous and premium, but never orange, never contrasty, never dramatic.
+
+CAMERA
+Full-frame mirrorless camera with a 55mm prime lens at f/5.6, ISO 200, 1/1000 s, handheld at upper-torso height, level horizon. Focus on the eyes of the woman on the left; both faces sharp; the street falls off naturally with distance but stays clearly real and readable. No fake portrait-mode cutout, no excessive background blur.
+
+THE TWO MODELS
+WOMAN LEFT — AGE 51
+A white British woman, about 51, with fair skin, light freckles, grey-green eyes, faint lines around her eyes and mouth, and shoulder-length ash-blonde hair with natural silver strands and soft waves moving in the breeze. Natural makeup, a medium build and realistic adult proportions. She turns her head toward her friend, laughing.
+Wardrobe: a long camel wool wrap coat with the tie belt loosely knotted at the waist; a cream cable-knit crew-neck jumper; dark indigo high-rise flared jeans; cognac leather heeled ankle boots under the flared hems.
+
+WOMAN RIGHT — AGE 46
+A Black British woman, about 46, with deep-brown skin, dark-brown eyes, faint smile lines and natural shoulder-length coily hair worn loose with real volume, small gold hoop earrings. Natural makeup, a medium build and realistic adult proportions. She is telling the story, smiling warmly, her arm linked through her friend's.
+Wardrobe: a long black double-breasted wool coat, open; a deep berry-red fine-knit roll-neck jumper; black wide-leg trousers; black leather ankle boots; a small black leather shoulder bag.
+
+The two must look clearly different from each other in face shape, complexion, hair and build.
+
+THE MOMENT
+A candid, unstaged in-between moment while walking arm in arm down the pavement toward the camera. Their strides are slightly different; shoulders, arms and heads are naturally asymmetrical. Real old friends enjoying the walk, not two models walking in formation. No exaggerated laughter, no stiff catalogue poses, nobody staring into the lens.
+
+COMPOSITION
+Exact 16:9 landscape. The two women occupy the centre-right 50–55% of the frame, framed from about mid-thigh up. Generous headroom: at least 12–15% of the image height of bare branches, facades and pale sky above the tallest head, so the top can be cropped without touching anyone's head. The left 40–45% stays visually calm and mid-toned for a headline and a button: the receding row of pastel houses in soft shade, railings and trees falling softly out of focus, with no busy detail. No important faces or clothing details in the far-left text area.
+
+COLOUR AND FINISH
+Palette: camel, cream, indigo, cognac, black, berry red, soft pastel pink, powder blue, sage, white stucco and golden leaves. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional location shoot, only lightly colour-graded: not CGI, not a 3D render, not an illustration, not a composite.
+Real adults with character, not flawless models: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, a touch of natural redness on noses, cheeks and ears from the cold air, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, catchlights that match the real light source; no glassy, doll-like or over-sharpened eyes.
+Hair behaves like real hair: individual strands, a few flyaways moving in the breeze, natural partings; no helmet hair, no synthetic shine.
+Clothes behave like real garments with photorealistic fibre fidelity: real weight and drape, natural creases at elbows, waist and knees, visible wool weave and knit stitches, slightly worn leather with real creases and scuffs.
+Hands are anatomically correct with five fingers, natural nails and knuckles, doing exactly what is described.
+Physics: feet firmly on the ground with real contact shadows, shadows that match the light direction, believable scale between people and surroundings.
+Background: ordinary real-world detail with small imperfections; nothing duplicated, melted or warped.
+Lens: true optical depth of field with natural focus fall-off, very slight natural vignetting, mild real-camera noise in the shadows, highlights that roll off gently.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model faces. No perfectly symmetrical faces, no bright-white veneer teeth, no identical smiles, nobody staring into the lens. No cinematic lighting, no dramatic colour grading, no HDR, no glow or bloom, no halos, no fake fog, no sun rays, no lens flare. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated or melted objects. No snowfall, no Christmas decorations. No text, no logos, no brand labels, no readable signs, no house numbers, no watermark.
+
+FINAL OUTPUT
+Exactly one beautiful, highly realistic 16:9 photograph of two women walking arm in arm along a pastel street in Notting Hill in early winter, with a calm left side for text.
+
+━━━━━━━━━━━━━━━━━━━━
+02 · Homepage > Hero > Mobile image (3:4, ref 01)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 02 — HOMEPAGE HERO (MOBILE)
+FORMAT: EXACTLY ONE VERTICAL 3:4 PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: MOBILE VERSION OF THE HOMEPAGE HERO, WITH TEXT AND A BUTTON IN THE LOWER THIRD
+REFERENCE: IMAGE 1 = PHOTOGRAPH 01 (ATTACHED)
+
+Image 1 is the desktop version of this photograph. Use it as the reference for the whole scene.
+Preserve exactly: the same two women with the same faces, ages, skin tones, hair and expressions; the same outfits with the same colours, fabrics and details; the same pastel street in Notting Hill; the same light direction, the same time of day and the same colour grade. Change only the framing and the camera position to make a vertical 3:4 photograph. Do not invent new people, do not change anyone's face, do not change the clothes.
+
+COMPOSITION
+The two women walk arm in arm toward the camera and are centred in the frame, filling the upper two thirds of the image from head to knees, with comfortable headroom of bare branches and pale sky above them. The lower third of the image is the damp pavement with a few golden leaves, calm and slightly darker, kept completely empty so the website can place its own copy there later. Do not add any text, lettering, buttons or graphics to the photograph. No faces or important details in the lower third.
+
+CAMERA
+Full-frame camera, 50mm prime at f/5.6, ISO 200, at chest height a few metres in front of them. Faces sharp; the background naturally soft but clearly real.
+
+COLOUR AND FINISH
+Identical to Image 1: neutral white balance around 5600K, natural skin tones, slightly desaturated premium editorial grade, soft matte blacks, gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional location shoot, only lightly colour-graded: not CGI, not a 3D render, not a composite.
+Real adults with character: authentic skin pores, fine lines around the eyes and mouth, slightly uneven skin tone, a touch of natural redness from the cold, real eyebrows and eyelashes, a few flyaway hairs, natural off-white teeth. Natural eye anatomy with catchlights that match the light. Clothes with photorealistic fibre fidelity, real weight, drape and creases. Hands anatomically correct with five fingers. Feet firmly on the ground with real contact shadows. True optical depth of field, very slight natural vignetting, mild real-camera noise.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look, no plastic or airbrushed skin, no beauty filter, no heavy retouching, no glamorization. No cinematic lighting, no dramatic grading, no HDR, no glow, no lens flare. No yellow, orange or sepia cast. No warped limbs, no odd hands, no duplicated objects. No text, no lettering, no headlines, no buttons, no graphic overlays, no logos, no readable signs, no watermark.
+
+FINAL OUTPUT
+Exactly one vertical 3:4 version of the hero photograph, with the same two women and a calm, empty lower third and no text in the image.
+
+━━━━━━━━━━━━━━━━━━━━
+03 · Homepage > Shop cards > 1 (3:2)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 03 — SHOP CARD · OCCASION WEAR
+FORMAT: EXACTLY ONE 3:2 LANDSCAPE PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: "THE PARTY EDIT" CARD ON THE HOMEPAGE, WITH A TITLE AND A BUTTON ON THE LEFT
+LOCATION: MARYLEBONE, LONDON
+SEASON: LATE NOVEMBER 2026, EARLY WINTER IN THE UK
+
+Create one exceptionally believable, premium lifestyle fashion photograph for a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial shoot by an experienced British editorial photographer: polished and beautiful, but completely natural and human. This is a real photograph, not a fantasy, not a movie poster and not an advertising collage.
+
+CREATIVE DIRECTION
+A confident woman leaving home for a winter party or a festive dinner, dressed beautifully but at ease. Elegant, warm, real and quietly self-assured.
+
+LOCATION
+The front of a classic Georgian townhouse in Marylebone, London, in late November: soft grey-brown London stock brick, tall sash windows with white frames, a glossy black front door with a semicircular fanlight and a brass knob, two clipped bay trees in plain stone pots beside the door, a black iron railing and three worn stone steps. A warm brass wall lantern beside the door is switched on. No cars, no other people, no readable signs, no house numbers, no Christmas decorations.
+
+THE LIGHT
+Main light: soft, bright overcast late-afternoon daylight at about 3:45 PM, with the sun as a brighter area behind thin cloud at camera-left, giving an even, flattering light on her face and a gentle sheen on the satin. The lantern adds only a small warm glow at the door; her face stays in neutral daylight. Neutral white balance around 5600K, no yellow cast on the skin. Calm and premium; never dark, never orange.
+
+CAMERA
+Full-frame mirrorless camera with an 85mm prime lens at f/2.8, ISO 400, 1/400 s, at chest height. Focus on her eyes; face and dress sharp; the street falls off naturally with distance but stays clearly real.
+
+THE MODEL — AGE 48
+A British-Indian woman, about 48, with warm medium-brown skin, dark-brown eyes with fine smile lines, and long dark-brown hair with soft natural waves falling over one shoulder, gold drop earrings. Natural evening makeup, a medium build and realistic adult proportions.
+
+WARDROBE
+A deep berry-red satin midi dress with long sleeves, a soft cowl neckline and a gently ruched waist; a long black wool coat worn draped over her shoulders; black suede pointed court shoes with a mid heel; a small gold metallic clutch in her hand.
+
+THE MOMENT
+She comes down the last stone step from the black front door, one hand holding the coat closed at the lapel and the other holding the clutch, and smiles just past the camera as if a friend has just called her name from the street. Natural, relaxed weight; not a catalogue pose.
+
+COMPOSITION
+3:2 landscape. She stands right of centre, framed from the head to just below the knees, with comfortable headroom. The left 45% of the frame stays calm and slightly darker (the shaded brick facade, the railings and the pavement falling softly out of focus) so white text and a button can sit there.
+
+COLOUR AND FINISH
+Palette: berry red, black, gold, grey-brown brick, white window frames and a small warm glow at the door. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional location shoot, only lightly colour-graded: not CGI, not a 3D render, not an illustration, not a composite.
+Real adults with character, not flawless models: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, a touch of natural redness on noses, cheeks and ears from the cold air, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, catchlights that match the real light source; no glassy, doll-like or over-sharpened eyes.
+Hair behaves like real hair: individual strands, a few flyaways moving in the breeze, natural partings; no helmet hair, no synthetic shine.
+Clothes behave like real garments with photorealistic fibre fidelity: real weight and drape, natural creases at elbows, waist and knees, visible wool weave and knit stitches, slightly worn leather with real creases and scuffs.
+Hands are anatomically correct with five fingers, natural nails and knuckles, doing exactly what is described.
+Physics: feet firmly on the ground with real contact shadows, shadows that match the light direction, believable scale between people and surroundings.
+Background: ordinary real-world detail with small imperfections; nothing duplicated, melted or warped.
+Lens: true optical depth of field with natural focus fall-off, very slight natural vignetting, mild real-camera noise in the shadows, highlights that roll off gently.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model faces. No perfectly symmetrical faces, no bright-white veneer teeth, no identical smiles, nobody staring into the lens. No cinematic lighting, no dramatic colour grading, no HDR, no glow or bloom, no halos, no fake fog, no sun rays, no lens flare. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated or melted objects. No snowfall, no Christmas decorations. No text, no logos, no brand labels, no readable signs, no house numbers, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic 3:2 photograph of a woman in a berry-red satin midi dress and a black coat on the steps of a Georgian townhouse in London, with a calm left side for text.
+
+━━━━━━━━━━━━━━━━━━━━
+04 · Homepage > Shop cards > 2 (3:2)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 04 — SHOP CARD · COATS & JACKETS
+FORMAT: EXACTLY ONE 3:2 LANDSCAPE PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: "WINTER COATS" CARD ON THE HOMEPAGE, WITH A TITLE AND A BUTTON ON THE LEFT
+LOCATION: YORK, ENGLAND
+SEASON: LATE NOVEMBER 2026, EARLY WINTER IN THE UK
+
+Create one exceptionally believable, premium lifestyle fashion photograph for a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial shoot by an experienced British editorial photographer: polished and beautiful, but completely natural and human. This is a real photograph, not a fantasy, not a movie poster and not an advertising collage.
+
+CREATIVE DIRECTION
+A woman in a beautiful winter coat on an old York street on a crisp afternoon. Effortless, elegant, real and quietly self-assured.
+
+LOCATION
+A quiet cobbled street in the old centre of York in late November: old dark-red brick and timber-framed houses with leaded windows and dark painted doors, worn flagstone pavements, and the pale Gothic towers of York Minster softly out of focus at the end of the street. The cobbles are damp with a few flattened leaves. No shopfronts, no other people, no readable signs, no Christmas decorations.
+
+THE LIGHT
+One light source: the low winter sun at about 2:30 PM, coming from camera-left and slightly behind her through thin cloud, giving a gentle warm-white edge light on her hair and the shoulders of her coat, while her face is lit by soft, even open light from the sky. Neutral white balance around 5600K: the ivory coat stays ivory, the brick a natural muted red, no yellow cast. Calm and premium; never dark, never orange, no lens flare.
+
+CAMERA
+Full-frame mirrorless camera with an 85mm prime lens at f/2.8, ISO 250, 1/640 s, at chest height. Focus on her eyes; face and coat sharp; the street and the Minster fall off naturally with distance but stay clearly real.
+
+THE MODEL — AGE 53
+A white British woman, about 53, with fair skin, light-blue eyes with fine lines, and a sleek chin-length silver-grey bob. Natural makeup, a slim-medium build and realistic adult proportions.
+
+WARDROBE
+A long ivory-oatmeal wool-blend coat with a wide shawl collar, softly flared sleeves and a tie belt, worn open; a chocolate-brown fine-knit roll-neck jumper; chocolate-brown wide-leg wool trousers; dark-brown leather ankle boots; a small burgundy leather shoulder bag.
+
+THE MOMENT
+She walks along the street toward the camera, one hand lightly holding the shawl collar of the coat together at her chest and the other holding the strap of her bag, and glances just past the camera with a calm, warm half-smile. Candid mid-step, the coat moving slightly with her stride.
+
+COMPOSITION
+3:2 landscape. She walks right of centre, framed from the head to just above the knees, with comfortable headroom. The left 45% of the frame stays calm and slightly darker (the shaded brick and timber houses and the cobbles falling softly out of focus) so white text and a button can sit there.
+
+COLOUR AND FINISH
+Palette: ivory oatmeal, chocolate brown, burgundy, muted brick red, dark timber, wet-stone grey and the pale stone of the Minster. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional location shoot, only lightly colour-graded: not CGI, not a 3D render, not an illustration, not a composite.
+Real adults with character, not flawless models: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, a touch of natural redness on noses, cheeks and ears from the cold air, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, catchlights that match the real light source; no glassy, doll-like or over-sharpened eyes.
+Hair behaves like real hair: individual strands, a few flyaways moving in the breeze, natural partings; no helmet hair, no synthetic shine.
+Clothes behave like real garments with photorealistic fibre fidelity: real weight and drape, natural creases at elbows, waist and knees, visible wool weave and knit stitches, slightly worn leather with real creases and scuffs.
+Hands are anatomically correct with five fingers, natural nails and knuckles, doing exactly what is described.
+Physics: feet firmly on the ground with real contact shadows, shadows that match the light direction, believable scale between people and surroundings.
+Background: ordinary real-world detail with small imperfections; nothing duplicated, melted or warped.
+Lens: true optical depth of field with natural focus fall-off, very slight natural vignetting, mild real-camera noise in the shadows, highlights that roll off gently.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model faces. No perfectly symmetrical faces, no bright-white veneer teeth, no identical smiles, nobody staring into the lens. No cinematic lighting, no dramatic colour grading, no HDR, no glow or bloom, no halos, no fake fog, no sun rays, no lens flare. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated or melted objects. No snowfall, no Christmas decorations. No text, no logos, no brand labels, no readable signs, no house numbers, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic 3:2 photograph of a woman in a long ivory shawl-collar coat walking along an old York street, with a calm left side for text.
+
+━━━━━━━━━━━━━━━━━━━━
+05 · Shop by category 1 (3:4, studio-referentie)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 05 — COATS & JACKETS (STUDIO TILE 1 OF 8)
+FORMAT: EXACTLY ONE VERTICAL 3:4 STUDIO PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: CATEGORY TILE "COATS & JACKETS" ON THE HOMEPAGE
+SERIES: ALL EIGHT CATEGORY PHOTOS OF THIS CAMPAIGN ARE SHOT IN THE SAME STUDIO
+
+Create one exceptionally believable, premium studio fashion photograph for the Coats & Jackets category of a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial studio shoot by an experienced British fashion photographer: polished and beautiful, but completely natural and human.
+
+THE STUDIO — IDENTICAL IN ALL EIGHT CATEGORY PHOTOS
+A real, professional daylight fashion studio. Behind the model hangs a large hand-painted canvas backdrop in a warm ivory-oat tone with a faint blush undertone, with a soft, mottled, painterly texture, faint brush marks and a few natural soft folds where it hangs; it is slightly darker toward the edges and corners. The canvas sweeps down and rolls onto a pale whitewashed oak herringbone parquet floor with fine grain, a few faint scuffs and a little dust. At the far left edge of the frame, part of a large white octagonal softbox on a black light stand is visible; at the far right edge, part of a tall white foam-board V-flat. Nothing else in the studio: no furniture, no plants, no clutter.
+
+THE LIGHT
+One large octagonal softbox at camera-left, high and slightly in front of the model, as the only key light: soft, wrapping, window-like light with a gentle gradient across the face and body, a soft natural shadow on the backdrop to the right, and a subtle fill from the white V-flat on the right so the shadow side keeps detail. Neutral white balance around 5500K, true-to-life colours, no warm or yellow cast. Luminous, clean and flattering; never flat, never harsh, no hard rim lights, no coloured gels.
+
+CAMERA
+Full-frame camera with an 85mm prime lens at f/5.6, ISO 100, 1/160 s, on a tripod at chest height. Focus on her eyes; the model and the coat tack-sharp; the backdrop slightly soft but with its painterly texture still visible.
+
+THE MODEL — AGE 47
+A white British woman, about 47, with fair skin, light freckles, green-grey eyes, faint lines around her eyes and mouth, and long dark-auburn hair worn loose with soft natural waves. Natural makeup, a medium build and realistic adult proportions.
+
+WARDROBE
+A long double-breasted belted trench coat in a deep chocolate-brown wool-blend gabardine with wide notch lapels, a storm flap and dark horn buttons, the belt tied at the waist; a black fine-knit roll-neck jumper; slim black trousers; black leather knee-high boots with a low block heel.
+
+POSE
+She stands relaxed in the centre of the frame, turned slightly to the left, one hand in the coat pocket and the other lightly touching the lapel, her weight on one leg. A calm, warm expression toward the camera. Natural and unforced, not a mannequin pose.
+
+COMPOSITION
+Vertical 3:4. Framed from head to mid-shin so the full length, cut and fall of the coat are the hero of the image, with comfortable headroom. The edge of the softbox on the left and of the V-flat on the right are just visible at the edges of the frame.
+
+COLOUR AND FINISH
+Palette: chocolate brown, black, warm ivory-oat and pale oak. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional studio shoot, only lightly colour-graded: not CGI, not a 3D render, not a composite, not a cutout pasted onto a background.
+A real adult with character, not a flawless model: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, one soft octagonal catchlight from the softbox on the left; no glassy or over-sharpened eyes.
+Hair behaves like real hair: individual strands and a few flyaways catching the light; no helmet hair, no synthetic shine.
+The coat has photorealistic fibre fidelity: the gabardine shows its fine diagonal twill and real weight, the lapels and storm flap lie naturally, the horn buttons and the belt buckle are accurate, there are small creases at the elbows and where the belt cinches the waist; the roll neck shows a fine knit; the boots show real leather grain.
+Hands are anatomically correct with five fingers, natural nails and knuckles.
+Physics: feet firmly on the herringbone floor with real contact shadows; the soft shadow falls on the canvas to the right; the canvas shows real texture and a few soft folds.
+Lens: true optical rendering, very slight natural vignetting, mild real-camera noise in the shadows.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model face. No perfectly symmetrical face, no bright-white veneer teeth, no stiff mannequin pose. No plain white or seamless paper background, no cutout look, no figure floating without a floor shadow. No dramatic or coloured lighting, no hard rim lights, no HDR, no glow. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated objects. No text, no logos, no brand labels, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic vertical 3:4 studio photograph of a woman in a long chocolate-brown belted trench coat in front of a painted ivory-oat canvas backdrop.
+
+━━━━━━━━━━━━━━━━━━━━
+06 · Shop by category 2 (ref 05)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 06 — DRESSES (STUDIO TILE 2 OF 8)
+FORMAT: EXACTLY ONE VERTICAL 3:4 STUDIO PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: CATEGORY TILE "DRESSES" ON THE HOMEPAGE
+SERIES: ALL EIGHT CATEGORY PHOTOS OF THIS CAMPAIGN ARE SHOT IN THE SAME STUDIO
+REFERENCE: IMAGE 1 = PHOTOGRAPH 05 (ATTACHED)
+
+Image 1 is a reference for the studio only: the canvas backdrop, the floor, the softbox and the V-flat, the light and the colour grade. Match those exactly. Do not copy the person, the pose or the clothing from Image 1; the model below is a completely different woman.
+
+Create one exceptionally believable, premium studio fashion photograph for the Dresses category of a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial studio shoot by an experienced British fashion photographer: polished and beautiful, but completely natural and human.
+
+THE STUDIO — IDENTICAL IN ALL EIGHT CATEGORY PHOTOS
+A real, professional daylight fashion studio. Behind the model hangs a large hand-painted canvas backdrop in a warm ivory-oat tone with a faint blush undertone, with a soft, mottled, painterly texture, faint brush marks and a few natural soft folds where it hangs; it is slightly darker toward the edges and corners. The canvas sweeps down and rolls onto a pale whitewashed oak herringbone parquet floor with fine grain, a few faint scuffs and a little dust. At the far left edge of the frame, part of a large white octagonal softbox on a black light stand is visible; at the far right edge, part of a tall white foam-board V-flat. Nothing else in the studio: no furniture, no plants, no clutter.
+
+THE LIGHT
+One large octagonal softbox at camera-left, high and slightly in front of the model, as the only key light: soft, wrapping, window-like light with a gentle gradient across the face and body, a soft natural shadow on the backdrop to the right, and a subtle fill from the white V-flat on the right so the shadow side keeps detail. Neutral white balance around 5500K, true-to-life colours, no warm or yellow cast. Luminous, clean and flattering; never flat, never harsh, no hard rim lights, no coloured gels.
+
+CAMERA
+Full-frame camera with a 70mm prime lens at f/5.6, ISO 100, 1/160 s, on a tripod at waist height. Focus on her eyes; face and dress tack-sharp from head to boots.
+
+THE MODEL — AGE 44
+A Black British woman, about 44, with warm deep-brown skin, dark-brown eyes, faint smile lines and a short natural tapered afro, small gold hoop earrings. Natural makeup, a medium build and realistic adult proportions.
+
+WARDROBE
+A black long-sleeve midi wrap dress in a soft matte jersey with a wrap V-neckline and a gently ruched waist tie; sheer black tights; black suede pointed heeled ankle boots.
+
+POSE
+She stands in the centre of the frame with her weight on one leg, one hand resting lightly at her waist and the other arm relaxed, with a confident, relaxed smile toward the camera. Natural and unforced.
+
+COMPOSITION
+Vertical 3:4. Framed full length from head to boots, with a little herringbone floor below the boots and comfortable headroom, so the whole dress and its drape are visible. The edge of the softbox on the left and of the V-flat on the right are just visible at the edges of the frame.
+
+COLOUR AND FINISH
+Palette: black, gold, warm ivory-oat and pale oak. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional studio shoot, only lightly colour-graded: not CGI, not a 3D render, not a composite, not a cutout pasted onto a background.
+A real adult with character, not a flawless model: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, one soft octagonal catchlight from the softbox on the left; no glassy or over-sharpened eyes.
+Hair behaves like real hair: individual strands and a few flyaways catching the light; no helmet hair, no synthetic shine.
+The dress has photorealistic fibre fidelity: the matte jersey drapes naturally over the hips and moves with her weight, with soft folds at the wrap and the waist tie and at the elbows; the tights have a subtle sheer sheen; the suede shows a real nap.
+Hands are anatomically correct with five fingers, natural nails and knuckles.
+Physics: boots firmly on the herringbone floor with real contact shadows; the soft shadow falls on the canvas to the right; the canvas shows real texture and a few soft folds.
+Lens: true optical rendering, very slight natural vignetting, mild real-camera noise in the shadows.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model face. No perfectly symmetrical face, no bright-white veneer teeth, no stiff mannequin pose. No plain white or seamless paper background, no cutout look, no figure floating without a floor shadow. No dramatic or coloured lighting, no hard rim lights, no HDR, no glow. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated objects. No text, no logos, no brand labels, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic vertical 3:4 studio photograph of a woman in a black long-sleeve wrap midi dress, in the same studio as Image 1.
+
+━━━━━━━━━━━━━━━━━━━━
+07 · Shop by category 3 (ref 05)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 07 — OCCASION WEAR (STUDIO TILE 3 OF 8)
+FORMAT: EXACTLY ONE VERTICAL 3:4 STUDIO PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: CATEGORY TILE "OCCASION WEAR" ON THE HOMEPAGE
+SERIES: ALL EIGHT CATEGORY PHOTOS OF THIS CAMPAIGN ARE SHOT IN THE SAME STUDIO
+REFERENCE: IMAGE 1 = PHOTOGRAPH 05 (ATTACHED)
+
+Image 1 is a reference for the studio only: the canvas backdrop, the floor, the softbox and the V-flat, the light and the colour grade. Match those exactly. Do not copy the person, the pose or the clothing from Image 1; the model below is a completely different woman.
+
+Create one exceptionally believable, premium studio fashion photograph for the Occasion Wear category of a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial studio shoot by an experienced British fashion photographer: polished and beautiful, but completely natural and human.
+
+THE STUDIO — IDENTICAL IN ALL EIGHT CATEGORY PHOTOS
+A real, professional daylight fashion studio. Behind the model hangs a large hand-painted canvas backdrop in a warm ivory-oat tone with a faint blush undertone, with a soft, mottled, painterly texture, faint brush marks and a few natural soft folds where it hangs; it is slightly darker toward the edges and corners. The canvas sweeps down and rolls onto a pale whitewashed oak herringbone parquet floor with fine grain, a few faint scuffs and a little dust. At the far left edge of the frame, part of a large white octagonal softbox on a black light stand is visible; at the far right edge, part of a tall white foam-board V-flat. Nothing else in the studio: no furniture, no plants, no clutter.
+
+THE LIGHT
+One large octagonal softbox at camera-left, high and slightly in front of the model, as the only key light: soft, wrapping, window-like light with a gentle gradient across the face and body, a soft natural shadow on the backdrop to the right, and a subtle fill from the white V-flat on the right so the shadow side keeps detail. Neutral white balance around 5500K, true-to-life colours, no warm or yellow cast. Luminous, clean and flattering; never flat, never harsh, no hard rim lights, no coloured gels.
+
+CAMERA
+Full-frame camera with a 70mm prime lens at f/5.6, ISO 100, 1/160 s, on a tripod at waist height. Focus on her eyes; face and dress tack-sharp from head to shoes.
+
+THE MODEL — AGE 55
+A white British woman, about 55, with fair skin, blue eyes with fine smile lines and silver-white hair in a soft, low chignon with a few loose strands, small pearl drop earrings. Natural, slightly polished makeup, a medium build and realistic adult proportions.
+
+WARDROBE
+A dusty-rose lace midi dress with a high round neck, three-quarter sleeves, a fitted bodice and a softly flared skirt with a scalloped hem, fully lined; nude-blush suede court shoes with a low heel; a small pale-gold clutch in one hand.
+
+POSE
+She stands in the centre of the frame, turned slightly to the right, one hand holding the clutch in front of her and the other relaxed, with a warm, proud smile toward the camera, as if ready for a winter wedding. Natural and unforced.
+
+COMPOSITION
+Vertical 3:4. Framed full length from head to shoes, with a little herringbone floor below the shoes and comfortable headroom, so the lace, the cut and the scalloped hem are clearly visible. The edge of the softbox on the left and of the V-flat on the right are just visible at the edges of the frame.
+
+COLOUR AND FINISH
+Palette: dusty rose, blush nude, pale gold, pearl, warm ivory-oat and pale oak. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional studio shoot, only lightly colour-graded: not CGI, not a 3D render, not a composite, not a cutout pasted onto a background.
+A real adult with character, not a flawless model: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, one soft octagonal catchlight from the softbox on the left; no glassy or over-sharpened eyes.
+Hair behaves like real hair: individual strands and a few flyaways catching the light; no helmet hair, no synthetic shine.
+The lace has photorealistic fibre fidelity: a real corded floral lace with depth and fine threads over a matching lining, a scalloped hem with real edges, natural folds at the waist and the elbows; the suede shoes show a real nap; the pearls show soft lustre.
+Hands are anatomically correct with five fingers, natural nails and knuckles.
+Physics: shoes firmly on the herringbone floor with real contact shadows; the soft shadow falls on the canvas to the right; the canvas shows real texture and a few soft folds.
+Lens: true optical rendering, very slight natural vignetting, mild real-camera noise in the shadows.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model face. No perfectly symmetrical face, no bright-white veneer teeth, no stiff mannequin pose. No plain white or seamless paper background, no cutout look, no figure floating without a floor shadow. No dramatic or coloured lighting, no hard rim lights, no HDR, no glow. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated objects. No text, no logos, no brand labels, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic vertical 3:4 studio photograph of a woman in a dusty-rose lace midi dress, in the same studio as Image 1.
+
+━━━━━━━━━━━━━━━━━━━━
+08 · Shop by category 4 (ref 05)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 08 — KNITWEAR (STUDIO TILE 4 OF 8)
+FORMAT: EXACTLY ONE VERTICAL 3:4 STUDIO PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: CATEGORY TILE "KNITWEAR" ON THE HOMEPAGE
+SERIES: ALL EIGHT CATEGORY PHOTOS OF THIS CAMPAIGN ARE SHOT IN THE SAME STUDIO
+REFERENCE: IMAGE 1 = PHOTOGRAPH 05 (ATTACHED)
+
+Image 1 is a reference for the studio only: the canvas backdrop, the floor, the softbox and the V-flat, the light and the colour grade. Match those exactly. Do not copy the person, the pose or the clothing from Image 1; the model below is a completely different woman.
+
+Create one exceptionally believable, premium studio fashion photograph for the Knitwear category of a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial studio shoot by an experienced British fashion photographer: polished and beautiful, but completely natural and human.
+
+THE STUDIO — IDENTICAL IN ALL EIGHT CATEGORY PHOTOS
+A real, professional daylight fashion studio. Behind the model hangs a large hand-painted canvas backdrop in a warm ivory-oat tone with a faint blush undertone, with a soft, mottled, painterly texture, faint brush marks and a few natural soft folds where it hangs; it is slightly darker toward the edges and corners. The canvas sweeps down and rolls onto a pale whitewashed oak herringbone parquet floor with fine grain, a few faint scuffs and a little dust. At the far left edge of the frame, part of a large white octagonal softbox on a black light stand is visible; at the far right edge, part of a tall white foam-board V-flat. Nothing else in the studio: no furniture, no plants, no clutter.
+
+THE LIGHT
+One large octagonal softbox at camera-left, high and slightly in front of the model, as the only key light: soft, wrapping, window-like light with a gentle gradient across the face and body, a soft natural shadow on the backdrop to the right, and a subtle fill from the white V-flat on the right so the shadow side keeps detail. The side light rakes gently across the knit so the cables show real depth. Neutral white balance around 5500K, true-to-life colours, no warm or yellow cast. Luminous, clean and flattering; never flat, never harsh, no hard rim lights, no coloured gels.
+
+CAMERA
+Full-frame camera with an 85mm prime lens at f/5.6, ISO 100, 1/160 s, on a tripod at chest height. Focus on her eyes; face and knit tack-sharp.
+
+THE MODEL — AGE 49
+An East Asian British woman, about 49, with light-medium warm skin, dark-brown eyes with faint smile lines, and shoulder-length straight black hair with a few silver strands, tucked behind one ear. Natural makeup, a slim-medium build and realistic adult proportions.
+
+WARDROBE
+A long chunky cable-knit cardigan in oatmeal wool with big horn buttons and patch pockets, worn open; a cream fine-ribbed knit vest top underneath; mid-blue straight-leg jeans.
+
+POSE
+She stands in the centre of the frame, both hands holding the front edges of the open cardigan loosely, with a soft, relaxed smile toward the camera. Natural and unforced.
+
+COMPOSITION
+Vertical 3:4. Framed from head to just above the knees so the cables, the buttons and the length of the cardigan are clearly visible and sharp, with comfortable headroom. The edge of the softbox on the left and of the V-flat on the right are just visible at the edges of the frame.
+
+COLOUR AND FINISH
+Palette: oatmeal, cream, mid-blue denim, warm ivory-oat and pale oak. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional studio shoot, only lightly colour-graded: not CGI, not a 3D render, not a composite, not a cutout pasted onto a background.
+A real adult with character, not a flawless model: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, one soft octagonal catchlight from the softbox on the left; no glassy or over-sharpened eyes.
+Hair behaves like real hair: individual strands and a few flyaways catching the light; no helmet hair, no synthetic shine.
+The knit has photorealistic fibre fidelity: every cable and stitch clearly defined, a soft halo of wool fuzz in the side light, a little pilling at the pockets, real horn buttons, natural folds at the elbows; the jeans show real twill.
+Hands are anatomically correct with five fingers, natural nails and knuckles.
+Physics: a natural stance with relaxed shoulders; the soft shadow falls on the canvas to the right; the canvas shows real texture and a few soft folds.
+Lens: true optical rendering, very slight natural vignetting, mild real-camera noise in the shadows.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model face. No perfectly symmetrical face, no bright-white veneer teeth, no stiff mannequin pose. No plain white or seamless paper background, no cutout look, no figure floating without a floor shadow. No dramatic or coloured lighting, no hard rim lights, no HDR, no glow. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated objects. No text, no logos, no brand labels, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic vertical 3:4 studio photograph of a woman in a long oatmeal cable-knit cardigan, in the same studio as Image 1.
+
+━━━━━━━━━━━━━━━━━━━━
+09 · Bundelbanner > Image (16:9, 4K)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 09 — BUNDLE BANNER (DESKTOP)
+FORMAT: EXACTLY ONE 16:9 LANDSCAPE PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: WIDE HOMEPAGE BANNER FOR THE "BUY 2, 3 OR 4+ AND SAVE" OFFER, WITH TEXT ON THE LEFT; THE SECTION CROPS THE IMAGE TO A VERY WIDE STRIP THROUGH THE MIDDLE
+LOCATION: THE COTSWOLDS, ENGLAND
+SEASON: LATE NOVEMBER 2026, EARLY WINTER IN THE UK
+
+Create one exceptionally believable, premium lifestyle fashion photograph for a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial shoot by an experienced British editorial photographer: polished and beautiful, but completely natural and human. This is a real photograph, not a fantasy, not a movie poster and not an advertising collage.
+
+CREATIVE DIRECTION
+Two friends in their late forties sitting together on a bench in a Cotswold village on a crisp winter afternoon. The banner promotes combining several pieces, so both women wear complete, layered winter outfits that clearly work well together. Warm, relaxed and genuinely affectionate. Simple and real.
+
+LOCATION
+A weathered wooden bench beside a low honey-coloured limestone wall in a Cotswold village in late November. Behind them, softly out of focus: a small arched stone bridge over a narrow, clear stream, honey-stone cottages with stone-tiled roofs and small-paned windows, and bare trees. A white hoar frost lingers on the grass in the shade; a few copper leaves lie on the path. No other people, no cars, no readable signs, no Christmas decorations.
+
+THE LIGHT
+One light source: the low winter sun at about 2 PM from camera-left, filtered through bare branches, giving warm, gentle light on their faces and a soft glow on the edges of their hair, with natural shadows on the stone. Neutral white balance around 5600K, no yellow cast on the skin; the frost stays white. Beautiful and luminous, never orange, never dramatic.
+
+CAMERA
+Full-frame mirrorless camera with a 50mm prime lens at f/4, ISO 200, 1/640 s, held level at about 1.4 metres height, about four metres from the bench. Focus on their faces; both sharp; the village falls off naturally with distance.
+
+THE TWO MODELS
+WOMAN LEFT — AGE 50
+A white British woman, about 50, with fair skin, light freckles, hazel eyes, faint lines around her eyes and shoulder-length curly copper-auburn hair. Natural makeup, a medium build and realistic adult proportions.
+Wardrobe: a long berry-burgundy wool coat, open; a cream ribbed roll-neck jumper; charcoal wide-leg wool trousers; black leather ankle boots; a soft grey cashmere scarf.
+
+WOMAN RIGHT — AGE 45
+A mixed-race British woman, about 45, with light-brown skin, brown eyes with smile lines and dark-brown curly hair pulled into a loose low bun with a few curls framing her face, small gold earrings. Natural makeup, a medium build and realistic adult proportions.
+Wardrobe: a long oatmeal belted wool coat, open; an ivory chunky knit jumper; mid-blue high-rise flared jeans; tan suede ankle boots; a scarf in a soft rose-and-grey check.
+
+THE MOMENT
+They sit close together on the bench, turned toward each other. The woman on the right leans in laughing, one hand on her friend's forearm; the woman on the left smiles back warmly, mid-sentence. Natural and affectionate; real friends, not posing for the camera.
+
+COMPOSITION
+Exact 16:9 landscape. The two women sit in the right half of the frame and are shown full length on the bench. Because they are seated and the camera is level at about 1.4 metres, their faces sit around the vertical middle of the image, about 40–55% from the top, with the cottages and bare trees above them and the bench and path below. This banner is cropped to a very wide strip through the middle, so both faces must stay inside that middle band. The left 45% of the image stays calm and slightly darker (the stream, the stone bridge and the shaded wall softly out of focus) so white text can sit there.
+
+COLOUR AND FINISH
+Palette: berry burgundy, oatmeal, cream, ivory, charcoal, mid-blue denim, rose-grey check, honey stone, frost white and soft copper. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional location shoot, only lightly colour-graded: not CGI, not a 3D render, not an illustration, not a composite.
+Real adults with character, not flawless models: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, a touch of natural redness on noses, cheeks and ears from the cold air, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, catchlights that match the real light source; no glassy, doll-like or over-sharpened eyes.
+Hair behaves like real hair: individual strands, a few flyaways moving in the breeze, natural partings; no helmet hair, no synthetic shine.
+Clothes behave like real garments with photorealistic fibre fidelity: real weight and drape, natural creases at elbows, waist and knees, visible wool weave and knit stitches, slightly worn leather with real creases and scuffs.
+Hands are anatomically correct with five fingers, natural nails and knuckles, doing exactly what is described.
+Physics: feet firmly on the ground with real contact shadows, shadows that match the light direction, believable scale between people and surroundings.
+Background: ordinary real-world detail with small imperfections; nothing duplicated, melted or warped.
+Lens: true optical depth of field with natural focus fall-off, very slight natural vignetting, mild real-camera noise in the shadows, highlights that roll off gently.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model faces. No perfectly symmetrical faces, no bright-white veneer teeth, no identical smiles, nobody staring into the lens. No cinematic lighting, no dramatic colour grading, no HDR, no glow or bloom, no halos, no fake fog, no sun rays, no lens flare. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated or melted objects. No snowfall, no Christmas decorations. No text, no logos, no brand labels, no readable signs, no house numbers, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic 16:9 photograph of two women in layered winter outfits sitting on a bench in a Cotswold village, with their faces in the middle band and a calm left side for text.
+
+━━━━━━━━━━━━━━━━━━━━
+10 · Bundelbanner > Mobile image (3:4, ref 09)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 10 — BUNDLE BANNER (MOBILE)
+FORMAT: EXACTLY ONE VERTICAL 3:4 PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: MOBILE VERSION OF THE BUNDLE BANNER, WITH TEXT AND A BUTTON IN THE LOWER THIRD
+REFERENCE: IMAGE 1 = PHOTOGRAPH 09 (ATTACHED)
+
+Image 1 is the desktop version of this photograph. Use it as the reference for the whole scene.
+Preserve exactly: the same two women with the same faces, ages, skin tones, hair and expressions; the same outfits with the same colours, fabrics and layers; the same bench, honey-stone wall, bridge and cottages; the same light and the same colour grade. Change only the framing and the camera position to make a vertical 3:4 photograph. Do not invent new people, do not change anyone's face, do not change the clothes.
+
+COMPOSITION
+The two women sit close together on the bench, centred in the upper two thirds of the frame, shown from head to boots, with the cottages and bare trees above them as headroom. The lower third of the image is the path with frost and a few copper leaves, calm and slightly darker, kept completely empty so the website can place its own copy there later. Do not add any text, lettering, buttons or graphics to the photograph. No faces or important details in the lower third.
+
+CAMERA
+Full-frame camera, 50mm prime at f/4, ISO 200, level at about 1.3 metres height, a few metres from the bench. Faces sharp; the background naturally soft but clearly real.
+
+COLOUR AND FINISH
+Identical to Image 1: neutral white balance around 5600K, natural skin tones, slightly desaturated premium editorial grade, soft matte blacks, gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional location shoot, only lightly colour-graded: not CGI, not a 3D render, not a composite.
+Real adults with character: authentic skin pores, fine lines around the eyes and mouth, slightly uneven skin tone, a touch of natural redness from the cold, real eyebrows and eyelashes, a few flyaway hairs, natural off-white teeth. Natural eye anatomy with catchlights that match the light. Clothes with photorealistic fibre fidelity, real weight, drape and creases. Hands anatomically correct with five fingers. Feet firmly on the ground with real contact shadows. True optical depth of field, very slight natural vignetting, mild real-camera noise.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look, no plastic or airbrushed skin, no beauty filter, no heavy retouching, no glamorization. No cinematic lighting, no dramatic grading, no HDR, no glow, no lens flare. No yellow, orange or sepia cast. No warped limbs, no odd hands, no duplicated objects. No text, no lettering, no headlines, no buttons, no graphic overlays, no logos, no readable signs, no watermark.
+
+FINAL OUTPUT
+Exactly one vertical 3:4 version of the bundle banner, with the same two women on the bench and a calm, empty lower third and no text in the image.
+
+━━━━━━━━━━━━━━━━━━━━
+11 · Complete the look 1 (ref 05)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 11 — TOPS & BLOUSES (STUDIO TILE 5 OF 8)
+FORMAT: EXACTLY ONE VERTICAL 3:4 STUDIO PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: CATEGORY TILE "TOPS & BLOUSES" ON THE HOMEPAGE
+SERIES: ALL EIGHT CATEGORY PHOTOS OF THIS CAMPAIGN ARE SHOT IN THE SAME STUDIO
+REFERENCE: IMAGE 1 = PHOTOGRAPH 05 (ATTACHED)
+
+Image 1 is a reference for the studio only: the canvas backdrop, the floor, the softbox and the V-flat, the light and the colour grade. Match those exactly. Do not copy the person, the pose or the clothing from Image 1; the model below is a completely different woman.
+
+Create one exceptionally believable, premium studio fashion photograph for the Tops & Blouses category of a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial studio shoot by an experienced British fashion photographer: polished and beautiful, but completely natural and human.
+
+THE STUDIO — IDENTICAL IN ALL EIGHT CATEGORY PHOTOS
+A real, professional daylight fashion studio. Behind the model hangs a large hand-painted canvas backdrop in a warm ivory-oat tone with a faint blush undertone, with a soft, mottled, painterly texture, faint brush marks and a few natural soft folds where it hangs; it is slightly darker toward the edges and corners. The canvas sweeps down and rolls onto a pale whitewashed oak herringbone parquet floor with fine grain, a few faint scuffs and a little dust. At the far left edge of the frame, part of a large white octagonal softbox on a black light stand is visible; at the far right edge, part of a tall white foam-board V-flat. Nothing else in the studio: no furniture, no plants, no clutter.
+
+THE LIGHT
+One large octagonal softbox at camera-left, high and slightly in front of the model, as the only key light: soft, wrapping, window-like light with a gentle gradient across the face and body, a soft natural shadow on the backdrop to the right, and a subtle fill from the white V-flat on the right so the shadow side keeps detail. Neutral white balance around 5500K, true-to-life colours, no warm or yellow cast. Luminous, clean and flattering; never flat, never harsh, no hard rim lights, no coloured gels.
+
+CAMERA
+Full-frame camera with an 85mm prime lens at f/5.6, ISO 100, 1/160 s, on a tripod at chest height. Focus on her eyes; face and blouse tack-sharp.
+
+THE MODEL — AGE 46
+A white British woman of Mediterranean descent, about 46, with olive-toned skin, dark-brown eyes with fine lines, and dark-brown hair in a sleek low ponytail, small gold knot earrings. Natural makeup, a medium build and realistic adult proportions.
+
+WARDROBE
+An ivory satin blouse with long sleeves, a soft cowl neckline and buttoned cuffs, tucked into high-waisted black wide-leg trousers with a fine black leather belt.
+
+POSE
+She stands in the centre of the frame, turned very slightly to the left, one hand resting in the trouser pocket and the other lightly touching the cowl at her collarbone, with a warm, self-assured smile toward the camera. Natural and unforced.
+
+COMPOSITION
+Vertical 3:4. Framed from head to hips so the satin, the cowl neckline and the sleeves are sharp and clear, with comfortable headroom. The edge of the softbox on the left and of the V-flat on the right are just visible at the edges of the frame.
+
+COLOUR AND FINISH
+Palette: ivory, black, gold, warm ivory-oat and pale oak. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional studio shoot, only lightly colour-graded: not CGI, not a 3D render, not a composite, not a cutout pasted onto a background.
+A real adult with character, not a flawless model: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, one soft octagonal catchlight from the softbox on the left; no glassy or over-sharpened eyes.
+Hair behaves like real hair: individual strands and a few flyaways catching the light; no helmet hair, no synthetic shine.
+The satin has photorealistic fibre fidelity: a soft liquid sheen with gentle highlights and real folds in the cowl, at the elbows and where it is tucked in, accurate covered buttons at the cuffs; the trousers show a fine crepe weave; the belt shows real leather.
+Hands are anatomically correct with five fingers, natural nails and knuckles.
+Physics: a natural stance with relaxed shoulders; the soft shadow falls on the canvas to the right; the canvas shows real texture and a few soft folds.
+Lens: true optical rendering, very slight natural vignetting, mild real-camera noise in the shadows.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model face. No perfectly symmetrical face, no bright-white veneer teeth, no stiff mannequin pose. No plain white or seamless paper background, no cutout look, no figure floating without a floor shadow. No dramatic or coloured lighting, no hard rim lights, no HDR, no glow. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated objects. No text, no logos, no brand labels, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic vertical 3:4 studio photograph of a woman in an ivory satin cowl-neck blouse and black trousers, in the same studio as Image 1.
+
+━━━━━━━━━━━━━━━━━━━━
+12 · Complete the look 2 (ref 05)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 12 — TROUSERS & JEANS (STUDIO TILE 6 OF 8)
+FORMAT: EXACTLY ONE VERTICAL 3:4 STUDIO PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: CATEGORY TILE "TROUSERS & JEANS" ON THE HOMEPAGE
+SERIES: ALL EIGHT CATEGORY PHOTOS OF THIS CAMPAIGN ARE SHOT IN THE SAME STUDIO
+REFERENCE: IMAGE 1 = PHOTOGRAPH 05 (ATTACHED)
+
+Image 1 is a reference for the studio only: the canvas backdrop, the floor, the softbox and the V-flat, the light and the colour grade. Match those exactly. Do not copy the person, the pose or the clothing from Image 1; the model below is a completely different woman.
+
+Create one exceptionally believable, premium studio fashion photograph for the Trousers & Jeans category of a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial studio shoot by an experienced British fashion photographer: polished and beautiful, but completely natural and human.
+
+THE STUDIO — IDENTICAL IN ALL EIGHT CATEGORY PHOTOS
+A real, professional daylight fashion studio. Behind the model hangs a large hand-painted canvas backdrop in a warm ivory-oat tone with a faint blush undertone, with a soft, mottled, painterly texture, faint brush marks and a few natural soft folds where it hangs; it is slightly darker toward the edges and corners. The canvas sweeps down and rolls onto a pale whitewashed oak herringbone parquet floor with fine grain, a few faint scuffs and a little dust. At the far left edge of the frame, part of a large white octagonal softbox on a black light stand is visible; at the far right edge, part of a tall white foam-board V-flat. Nothing else in the studio: no furniture, no plants, no clutter.
+
+THE LIGHT
+One large octagonal softbox at camera-left, high and slightly in front of the model, as the only key light: soft, wrapping, window-like light with a gentle gradient across the face and body, a soft natural shadow on the backdrop to the right, and a subtle fill from the white V-flat on the right so the shadow side keeps detail. The side light rakes gently across the denim so the twill shows real depth. Neutral white balance around 5500K, true-to-life colours, no warm or yellow cast. Luminous, clean and flattering; never flat, never harsh, no hard rim lights, no coloured gels.
+
+CAMERA
+Full-frame camera with a 70mm prime lens at f/5.6, ISO 100, 1/160 s, on a tripod at waist height. Focus on her eyes; face and jeans tack-sharp from head to boots.
+
+THE MODEL — AGE 52
+A British-Caribbean woman, about 52, with deep-brown skin, warm dark-brown eyes with smile lines and short natural grey-black curls. Natural makeup, a medium build and realistic adult proportions.
+
+WARDROBE
+High-rise flared jeans in a dark indigo stretch denim with a clean hem that covers the heels; a fitted cream ribbed roll-neck jumper tucked in; a tan leather belt; dark-brown leather block-heel ankle boots under the flares.
+
+POSE
+She stands in the centre of the frame with her weight on one leg, both thumbs loosely hooked in the front pockets of her jeans, with a warm, confident smile toward the camera. Natural and unforced.
+
+COMPOSITION
+Vertical 3:4. Framed full length from head to boots, with a little herringbone floor below the hems and comfortable headroom, so the high rise, the flare and the fall of the jeans are the hero of the image. The edge of the softbox on the left and of the V-flat on the right are just visible at the edges of the frame.
+
+COLOUR AND FINISH
+Palette: dark indigo, cream, tan, dark brown, warm ivory-oat and pale oak. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional studio shoot, only lightly colour-graded: not CGI, not a 3D render, not a composite, not a cutout pasted onto a background.
+A real adult with character, not a flawless model: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, one soft octagonal catchlight from the softbox on the left; no glassy or over-sharpened eyes.
+Hair behaves like real hair: individual strands and a few flyaways catching the light; no helmet hair, no synthetic shine.
+The jeans have photorealistic fibre fidelity: visible diagonal twill, a subtle natural fade on the thighs, real seams with contrast stitching, accurate rivets and a real button, natural folds at the knees and at the flared hem; the ribbed knit shows its ribs; the belt shows real leather grain.
+Hands are anatomically correct with five fingers, natural nails and knuckles.
+Physics: boots firmly on the herringbone floor with real contact shadows; the soft shadow falls on the canvas to the right; the canvas shows real texture and a few soft folds.
+Lens: true optical rendering, very slight natural vignetting, mild real-camera noise in the shadows.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model face. No perfectly symmetrical face, no bright-white veneer teeth, no stiff mannequin pose. No plain white or seamless paper background, no cutout look, no figure floating without a floor shadow. No dramatic or coloured lighting, no hard rim lights, no HDR, no glow. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated objects. No text, no logos, no brand labels, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic vertical 3:4 studio photograph of a woman in dark indigo flared jeans and a cream roll neck, in the same studio as Image 1.
+
+━━━━━━━━━━━━━━━━━━━━
+13 · Complete the look 3 (ref 05)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 13 — LOUNGEWEAR & NIGHTWEAR (STUDIO TILE 7 OF 8)
+FORMAT: EXACTLY ONE VERTICAL 3:4 STUDIO PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: CATEGORY TILE "LOUNGEWEAR & NIGHTWEAR" ON THE HOMEPAGE
+SERIES: ALL EIGHT CATEGORY PHOTOS OF THIS CAMPAIGN ARE SHOT IN THE SAME STUDIO
+REFERENCE: IMAGE 1 = PHOTOGRAPH 05 (ATTACHED)
+
+Image 1 is a reference for the studio only: the canvas backdrop, the floor, the softbox and the V-flat, the light and the colour grade. Match those exactly. Do not copy the person, the pose or the clothing from Image 1; the model below is a completely different woman.
+
+Create one exceptionally believable, premium studio fashion photograph for the Loungewear & Nightwear category of a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial studio shoot by an experienced British fashion photographer: polished and beautiful, but completely natural and human.
+
+THE STUDIO — IDENTICAL IN ALL EIGHT CATEGORY PHOTOS
+A real, professional daylight fashion studio. Behind the model hangs a large hand-painted canvas backdrop in a warm ivory-oat tone with a faint blush undertone, with a soft, mottled, painterly texture, faint brush marks and a few natural soft folds where it hangs; it is slightly darker toward the edges and corners. The canvas sweeps down and rolls onto a pale whitewashed oak herringbone parquet floor with fine grain, a few faint scuffs and a little dust. At the far left edge of the frame, part of a large white octagonal softbox on a black light stand is visible; at the far right edge, part of a tall white foam-board V-flat. The only prop is a low dark-walnut wooden stool with a slightly worn seat.
+
+THE LIGHT
+One large octagonal softbox at camera-left, high and slightly in front of the model, as the only key light: soft, wrapping, window-like light with a gentle gradient across the face and body, a soft natural shadow on the backdrop to the right, and a subtle fill from the white V-flat on the right so the shadow side keeps detail. Neutral white balance around 5500K, true-to-life colours, no warm or yellow cast. Luminous, clean and flattering; never flat, never harsh, no hard rim lights, no coloured gels.
+
+CAMERA
+Full-frame camera with a 70mm prime lens at f/5.6, ISO 100, 1/160 s, on a tripod at waist height. Focus on her eyes; face and knit tack-sharp.
+
+THE MODEL — AGE 48
+A white British woman, about 48, with fair skin, light-blue eyes with fine smile lines and long light-brown hair worn loose and slightly tousled. Little makeup, a medium build and realistic adult proportions.
+
+WARDROBE
+A soft knitted lounge set in heather oatmeal: a relaxed crew-neck knit top with dropped shoulders and matching wide-leg knitted drawstring trousers; thick cream knitted bed socks.
+
+POSE
+She sits relaxed on a low dark-walnut wooden stool, one leg tucked under her, holding a plain white ceramic mug with both hands at chest height, smiling softly at the camera. Cosy, natural and unforced.
+
+COMPOSITION
+Vertical 3:4. Framed full length from head to socks, with comfortable headroom, so the soft knit and the relaxed fit of the set are clearly visible. The edge of the softbox on the left and of the V-flat on the right are just visible at the edges of the frame.
+
+COLOUR AND FINISH
+Palette: heather oatmeal, cream, white, dark walnut, warm ivory-oat and pale oak. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional studio shoot, only lightly colour-graded: not CGI, not a 3D render, not a composite, not a cutout pasted onto a background.
+A real adult with character, not a flawless model: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, one soft octagonal catchlight from the softbox on the left; no glassy or over-sharpened eyes.
+Hair behaves like real hair: individual strands and a few flyaways catching the light; no helmet hair, no synthetic shine.
+The knit has photorealistic fibre fidelity: a soft fine-gauge knit with a gentle halo in the side light, natural folds at the elbows, the waist and the knees, drawstrings hanging slightly unevenly; the bed socks show a chunky knit; the ceramic mug has a believable glaze.
+Hands are anatomically correct with five fingers, natural nails and knuckles.
+Physics: the stool stands firmly on the herringbone floor with real contact shadows; the soft shadow falls on the canvas to the right; the canvas shows real texture and a few soft folds.
+Lens: true optical rendering, very slight natural vignetting, mild real-camera noise in the shadows.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model face. No perfectly symmetrical face, no bright-white veneer teeth, no stiff mannequin pose. No plain white or seamless paper background, no cutout look, no figure floating without a floor shadow. No dramatic or coloured lighting, no hard rim lights, no HDR, no glow. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated objects. No text, no logos, no brand labels, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic vertical 3:4 studio photograph of a seated woman in an oatmeal knitted lounge set holding a mug, in the same studio as Image 1.
+
+━━━━━━━━━━━━━━━━━━━━
+14 · Complete the look 4 (ref 05)
+━━━━━━━━━━━━━━━━━━━━
+
+PHOTOGRAPH 14 — BAGS (STUDIO TILE 8 OF 8)
+FORMAT: EXACTLY ONE VERTICAL 3:4 STUDIO PHOTOGRAPH
+QUALITY: HIGH RESOLUTION, PREMIUM E-COMMERCE CAMPAIGN PHOTOGRAPH
+USE CASE: CATEGORY TILE "BAGS" ON THE HOMEPAGE
+SERIES: ALL EIGHT CATEGORY PHOTOS OF THIS CAMPAIGN ARE SHOT IN THE SAME STUDIO
+REFERENCE: IMAGE 1 = PHOTOGRAPH 05 (ATTACHED)
+
+Image 1 is a reference for the studio only: the canvas backdrop, the floor, the softbox and the V-flat, the light and the colour grade. Match those exactly. Do not copy the person, the pose or the clothing from Image 1; the model below is a completely different woman.
+
+Create one exceptionally believable, premium studio fashion photograph for the Bags category of a British womenswear boutique for stylish women aged approximately 40–55. It must look like a real frame from a high-end commercial studio shoot by an experienced British fashion photographer: polished and beautiful, but completely natural and human.
+
+THE STUDIO — IDENTICAL IN ALL EIGHT CATEGORY PHOTOS
+A real, professional daylight fashion studio. Behind the model hangs a large hand-painted canvas backdrop in a warm ivory-oat tone with a faint blush undertone, with a soft, mottled, painterly texture, faint brush marks and a few natural soft folds where it hangs; it is slightly darker toward the edges and corners. The canvas sweeps down and rolls onto a pale whitewashed oak herringbone parquet floor with fine grain, a few faint scuffs and a little dust. At the far left edge of the frame, part of a large white octagonal softbox on a black light stand is visible; at the far right edge, part of a tall white foam-board V-flat. Nothing else in the studio: no furniture, no plants, no clutter.
+
+THE LIGHT
+One large octagonal softbox at camera-left, high and slightly in front of the model, as the only key light: soft, wrapping, window-like light with a gentle gradient across the face and body, a soft natural shadow on the backdrop to the right, and a subtle fill from the white V-flat on the right so the shadow side keeps detail. Neutral white balance around 5500K, true-to-life colours, no warm or yellow cast. Luminous, clean and flattering; never flat, never harsh, no hard rim lights, no coloured gels.
+
+CAMERA
+Full-frame camera with an 85mm prime lens at f/5.6, ISO 100, 1/160 s, on a tripod at chest height. Focus on her eyes and the bag; both tack-sharp.
+
+THE MODEL — AGE 44
+A British-Pakistani woman, about 44, with light-brown skin, dark-brown eyes with faint smile lines and long dark-brown wavy hair worn loose, small gold hoop earrings. Natural makeup, a medium build and realistic adult proportions.
+
+WARDROBE
+A soft cognac smooth-leather hobo shoulder bag with a single wide strap and a zip top, carried on her shoulder; an ivory ribbed crew-neck jumper; chocolate-brown wide-leg trousers.
+
+POSE
+She stands in the centre of the frame, turned slightly to the left, one hand resting on the strap of the bag and the other relaxed, with a warm smile toward the camera. Natural and unforced.
+
+COMPOSITION
+Vertical 3:4. Framed from head to just above the knees so the bag, its shape and the leather are large, clearly visible and sharp, with comfortable headroom. The edge of the softbox on the left and of the V-flat on the right are just visible at the edges of the frame.
+
+COLOUR AND FINISH
+Palette: cognac, ivory, chocolate brown, gold, warm ivory-oat and pale oak. Natural skin tones. Slightly desaturated premium editorial grade, low-to-medium contrast with soft matte blacks and a gentle highlight roll-off, the look of Kodak Portra 400 film with fine natural grain.
+
+REALISM REQUIREMENTS — HIGHEST PRIORITY
+This must be indistinguishable from an unretouched frame from a real professional studio shoot, only lightly colour-graded: not CGI, not a 3D render, not a composite, not a cutout pasted onto a background.
+A real adult with character, not a flawless model: authentic skin pores, fine lines around the eyes and mouth, faint under-eye shadows, slightly uneven skin tone, fine peach fuzz in the side light, natural lip texture, real eyebrows with individual hairs, real eyelashes, natural off-white teeth.
+Natural eye anatomy: textured irises, eyes very slightly different from each other, one soft octagonal catchlight from the softbox on the left; no glassy or over-sharpened eyes.
+Hair behaves like real hair: individual strands and a few flyaways catching the light; no helmet hair, no synthetic shine.
+The leather has photorealistic material fidelity: smooth cognac leather with visible pores, soft natural slouch and creases, real stitching and a metal zip with true reflections; the jumper shows its ribs; the trousers drape softly.
+Hands are anatomically correct with five fingers, natural nails and knuckles.
+Physics: a natural stance with relaxed shoulders; the soft shadow falls on the canvas to the right; the canvas shows real texture and a few soft folds.
+Lens: true optical rendering, very slight natural vignetting, mild real-camera noise in the shadows.
+
+ABSOLUTE EXCLUSIONS
+No CGI or AI look. No plastic, waxy or airbrushed skin, no beauty filter, no heavy retouching, no glamorization, no stock-photo model face. No perfectly symmetrical face, no bright-white veneer teeth, no stiff mannequin pose. No plain white or seamless paper background, no cutout look, no figure floating without a floor shadow. No dramatic or coloured lighting, no hard rim lights, no HDR, no glow. No yellow, orange or sepia cast, no oversaturated colours. No warped limbs, no extra or missing fingers, no odd hands, no duplicated objects. No text, no logos, no brand labels, no watermark.
+
+FINAL OUTPUT
+Exactly one realistic vertical 3:4 studio photograph of a woman with a cognac leather hobo bag, in the same studio as Image 1.
