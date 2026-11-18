@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { checkMcpKey, getStores, findStore } from "@/lib/claude-link";
 import { storeGraphql, getShopInfo } from "@/lib/shopify";
+import { agentNext, agentDone, agentDoneMany, agentFail, agentSource } from "@/lib/photo-queue";
 
 /* CLAUDE-KOPPELING · MCP-server (13-11-2026).
    Eigen connector voor claude.ai (Instellingen → Connectors → Custom connector)
    met de link van de pagina /claude. Eén koppeling, ALLE stores — Claude hoeft
    niet meer per store te herkoppelen. Streamable HTTP, JSON-antwoorden.
    Beveiliging: ?key=… moet gelijk zijn aan de sleutel in Redis. */
-export const maxDuration = 60;
+export const maxDuration = 300; // photo_queue done: foto uploaden + fitnote + omschrijving per product
 export const dynamic = "force-dynamic";
 
 const PROTOCOL = "2025-06-18";
@@ -37,11 +38,73 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    /* 18-11-2026: de AI-foto-wachtrij (importer tab 4 / Pythago, motor "Higgsfield via Claude") via deze koppeling,
+       zodat Justin geen aparte wachtrij-sleutel meer hoeft te plakken. Zelfde functies als /api/photo-queue/agent. */
+    name: "photo_queue",
+    description:
+      "AI-modelfoto-wachtrij van Attoh Tools (motor 'Higgsfield via Claude'). action=next: openstaande opdrachten met kant-en-klare prompt, bronfoto-URL, model en de kostenregel. action=sources: bronfoto's van max 8 opdrachten als plaatjes (ids als 'org:id'). action=done: gemaakte foto's (https-URL) op het product zetten, vooraan in de galerij, als variantfoto van de kleur, met fitnote en foto in de omschrijving; geef één opdracht (org, id, imageUrl) of een lijst items (max 8). action=fail: opdracht afkeuren met reden (begin met 'Overgeslagen' als het geen afkeur is). Kosten: altijd gpt_image_2, 1k, medium, 1:1 = 1 credit per foto; nooit gpt_image_2_6, high of 2k.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        action: { type: "string", enum: ["next", "sources", "done", "fail"] },
+        store: { type: "string", description: "next: alleen opdrachten van deze store (naam of domein)" },
+        limit: { type: "number", description: "next: aantal opdrachten, 1 tot 12 (standaard 8)" },
+        ids: { type: "array", items: { type: "string" }, description: "sources: max 8 opdrachten als 'org:id'" },
+        width: { type: "number", description: "sources: breedte in px, 200 tot 700 (standaard 360)" },
+        org: { type: "string", description: "done/fail: org van de opdracht (staat bij next)" },
+        id: { type: "string", description: "done/fail: id van de opdracht" },
+        imageUrl: { type: "string", description: "done: https-URL van de gemaakte foto" },
+        items: {
+          type: "array",
+          description: "done: meerdere opdrachten tegelijk (max 8); kleuren van hetzelfde product worden na elkaar geplaatst",
+          items: { type: "object", properties: { org: { type: "string" }, id: { type: "string" }, imageUrl: { type: "string" } }, required: ["org", "id", "imageUrl"] },
+        },
+        reason: { type: "string", description: "fail: reden" },
+      },
+      required: ["action"],
+      additionalProperties: false,
+    },
+  },
 ];
+
+const escRe = (s) => String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+async function photoQueueTool(a) {
+  const act = String(a.action || "");
+  if (act === "next") {
+    const out = await agentNext({ limit: Math.max(1, Math.min(12, Number(a.limit) || 8)), store: a.store ? escRe(a.store) : "" });
+    return text({ pending: out.pending, settings: out.brain.settings, costRule: out.brain.costRule, items: out.items });
+  }
+  if (act === "sources") {
+    const list = (Array.isArray(a.ids) ? a.ids : []).slice(0, 8);
+    if (!list.length) return text("Geef ids als 'org:id'", true);
+    const width = Math.max(200, Math.min(700, Number(a.width) || 360));
+    const content = [];
+    for (const raw of list) {
+      const [org, id] = String(raw).includes(":") ? String(raw).split(":") : ["attoh", String(raw)];
+      try {
+        const img = await agentSource({ org, id, width });
+        content.push({ type: "text", text: `${org}:${id}` });
+        content.push({ type: "image", data: img.buf.toString("base64"), mimeType: String(img.type || "image/jpeg").split(";")[0] });
+      } catch (e) {
+        content.push({ type: "text", text: `${org}:${id} mislukt: ${String((e && e.message) || e)}` });
+      }
+    }
+    return { content, isError: false };
+  }
+  if (act === "done") {
+    if (Array.isArray(a.items) && a.items.length) return text(await agentDoneMany(a.items.slice(0, 8)));
+    return text(await agentDone({ org: a.org, id: a.id, imageUrl: a.imageUrl }));
+  }
+  if (act === "fail") return text(await agentFail({ org: a.org, id: a.id, reason: a.reason }));
+  return text(`Onbekende actie: ${act}`, true);
+}
 
 const text = (obj, isError = false) => ({ content: [{ type: "text", text: typeof obj === "string" ? obj : JSON.stringify(obj) }], isError });
 
 async function callTool(name, args) {
+  if (name === "photo_queue") return photoQueueTool(args || {});
   const stores = await getStores();
   if (name === "list_stores") {
     if (!stores.length) return text("Nog geen stores klaargezet. Open Attoh Tools → /claude en klik op 'Stores klaarzetten'.", true);
@@ -79,7 +142,7 @@ async function handle(msg) {
       protocolVersion: (params && params.protocolVersion) || PROTOCOL,
       capabilities: { tools: { listChanged: false } },
       serverInfo: { name: "attoh-tools-stores", version: "1.0.0" },
-      instructions: "Toegang tot alle Shopify-stores van Justin (Attoh Tools). Begin met list_stores. Gebruik shopify_graphql met store = naam/afkorting/domein.",
+      instructions: "Toegang tot alle Shopify-stores van Justin (Attoh Tools). Begin met list_stores. Gebruik shopify_graphql met store = naam/afkorting/domein. AI-modelfoto's uit de wachtrij van de importer: photo_queue (next, sources, done, fail); maak ze met Higgsfield gpt_image_2, 1k, medium, 1:1 (1 credit per foto).",
     });
   }
   if (method === "ping") return rpc(id, {});
