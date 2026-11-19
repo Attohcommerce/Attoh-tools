@@ -1796,7 +1796,7 @@ export default function ImporterPage() {
                 </div>
                 <div className="hint" style={{ margin: "6px 0 10px" }}>
                   {photoEngine === "claude"
-                    ? "Higgsfield via Claude: GPT Image 2 op je Higgsfield-credits. Claude maakt, controleert en plaatst de foto's zodra hij de wachtrij oppakt."
+                    ? "Higgsfield via Claude: GPT Image 2 op 1k, 1 credit per foto. Claude maakt, controleert en plaatst de foto's zodra hij de wachtrij oppakt."
                     : `OpenAI API: de tool maakt de foto's zelf en gaat door, ook als je deze pagina sluit (${pqSet ? `${pqSet.model} · ${pqSet.quality} · ${pqSet.size}` : "gpt-image-2"}). Elke foto wordt door vision tegen het origineel gecontroleerd; bij afkeur één nieuwe poging.`}
                   {!pqOpenai && " OpenAI API gaat aan zodra de sleutel OPENAI_API_KEY in Vercel staat."}
                 </div>
@@ -1805,7 +1805,7 @@ export default function ImporterPage() {
                   <div>
                     <b>{photoProducts}</b> producten gekozen{photoProducts ? (() => {
                       const n = Math.max(1, Math.round(photoProducts * (photoMode === "all" ? 3 : 1.5) * photoPer));
-                      return ` · hoogstens ±${n} foto's · ${photoEngine === "openai" ? `±$${(n * 0.07).toFixed(2)}` : `±${n * 2} credits`}${photoMode === "ai" ? " (AI kiest: meestal minder)" : ""}`;
+                      return ` · hoogstens ±${n} foto's · ${photoEngine === "openai" ? `±$${(n * 0.07).toFixed(2)}` : `±${n} credits`}${photoMode === "ai" ? " (AI kiest: meestal minder)" : ""}`;
                     })() : ""}
                     <div className="hint" style={{ margin: "2px 0 0" }}>Elke foto wordt tegen het origineel gecheckt voordat hij op het product komt. De AI-foto komt vooraan en in de omschrijving; de bestaande foto's blijven staan.</div>
                   </div>
