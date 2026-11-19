@@ -9,6 +9,20 @@ import { useOrg } from "./components/OrgProvider";
 
 const MODULES = [
   {
+    href: "/chaim-general-stores",
+    name: "Chaim General Stores",
+    tagline: "Main unit · werkproces",
+    orgs: ["sacollective"],
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3.5 9.5 5 4.5h14l1.5 5" />
+        <path d="M3.5 9.5a2.8 2.8 0 0 0 5.6 0 2.9 2.9 0 0 0 5.8 0 2.8 2.8 0 0 0 5.6 0" />
+        <path d="M5 12v7.5h14V12" />
+        <path d="M10 19.5v-4h4v4" />
+      </svg>
+    ),
+  },
+  {
     href: "/dashboard",
     name: "Dashboard",
     tagline: "Omzet · Ads · ROAS",
