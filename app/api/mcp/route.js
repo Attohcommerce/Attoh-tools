@@ -43,13 +43,13 @@ const TOOLS = [
        zodat Justin geen aparte wachtrij-sleutel meer hoeft te plakken. Zelfde functies als /api/photo-queue/agent. */
     name: "photo_queue",
     description:
-      "AI-modelfoto-wachtrij van Attoh Tools (motor 'Higgsfield via Claude'). action=next: openstaande opdrachten met kant-en-klare prompt, bronfoto-URL, model en de kostenregel. action=sources: bronfoto's van max 8 opdrachten als plaatjes (ids als 'org:id'). action=done: gemaakte foto's (https-URL) op het product zetten, vooraan in de galerij, als variantfoto van de kleur, met fitnote en foto in de omschrijving; geef één opdracht (org, id, imageUrl) of een lijst items (max 8). action=fail: opdracht afkeuren met reden (begin met 'Overgeslagen' als het geen afkeur is). Kosten: altijd gpt_image_2, 1k, medium, 1:1 = 1 credit per foto; nooit gpt_image_2_6, high of 2k.",
+      "AI-modelfoto-wachtrij van Attoh Tools (motor 'Higgsfield via Claude'). action=next: openstaande opdrachten met kant-en-klare prompt, bronfoto-URL, model en de kostenregel (limit 1 tot 12); limit 13 tot 200 geeft een compact overzicht zonder prompts. action=sources: bronfoto's van max 8 opdrachten als plaatjes (ids als 'org:id'). action=done: gemaakte foto's (https-URL) op het product zetten, vooraan in de galerij, als variantfoto van de kleur, met fitnote en foto in de omschrijving; geef één opdracht (org, id, imageUrl) of een lijst items (max 8). action=fail: opdracht afkeuren met reden (begin met 'Overgeslagen' als het geen afkeur is). Kosten: altijd gpt_image_2, 1k, medium, 1:1 = 1 credit per foto; nooit gpt_image_2_6, high of 2k.",
     inputSchema: {
       type: "object",
       properties: {
         action: { type: "string", enum: ["next", "sources", "done", "fail"] },
         store: { type: "string", description: "next: alleen opdrachten van deze store (naam of domein)" },
-        limit: { type: "number", description: "next: aantal opdrachten, 1 tot 12 (standaard 8)" },
+        limit: { type: "number", description: "next: aantal opdrachten, 1 tot 12 met prompt (standaard 8); 13 tot 200 = compact overzicht zonder prompts" },
         ids: { type: "array", items: { type: "string" }, description: "sources: max 8 opdrachten als 'org:id'" },
         width: { type: "number", description: "sources: breedte in px, 200 tot 700 (standaard 360)" },
         org: { type: "string", description: "done/fail: org van de opdracht (staat bij next)" },
@@ -73,7 +73,20 @@ const escRe = (s) => String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 async function photoQueueTool(a) {
   const act = String(a.action || "");
   if (act === "next") {
-    const out = await agentNext({ limit: Math.max(1, Math.min(12, Number(a.limit) || 8)), store: a.store ? escRe(a.store) : "" });
+    const want = Number(a.limit) || 8;
+    const store = a.store ? escRe(a.store) : "";
+    if (want > 12) {
+      // overzicht: compacte lijst zonder prompts (prompt = buildPrompt uit lib/photo-brain.js, of haal hem op met limit <= 12)
+      const out = await agentNext({ limit: Math.min(200, want), store, cap: 200 });
+      const profiles = {};
+      const items = out.items.map((it) => {
+        const p = it.profile || {};
+        if (p.id && !profiles[p.id]) profiles[p.id] = { age: p.age, look: p.look, height: p.height, size: p.size };
+        return { org: it.org, id: it.id, store: it.store, title: it.title, type: it.type, color: it.color, gender: it.gender, sourceImage: it.sourceImage, profile: p.id, shot: it.shot, shotType: it.shotType, mode: it.mode };
+      });
+      return text({ pending: out.pending, compact: true, settings: out.brain.settings, costRule: out.brain.costRule, profiles, items });
+    }
+    const out = await agentNext({ limit: Math.max(1, want), store });
     return text({ pending: out.pending, settings: out.brain.settings, costRule: out.brain.costRule, items: out.items });
   }
   if (act === "sources") {
