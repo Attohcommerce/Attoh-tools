@@ -17,6 +17,7 @@ import { useOrgDef } from "./OrgProvider";
 import { MARKETS } from "@/lib/sizes";
 import { CUR_MARKET, MARKET_CURRENCY, AI_LABEL, aiEstimate, postJSON, scanStore, fixAllStore } from "@/lib/doctor-engine";
 import RunDashboard, { useRun, ScoreRing } from "./RunDashboard";
+import AllStoresPricePlans from "./AllStoresPricePlans";
 
 const LS_BACKUP = "sa_doctor_backup";
 const LS_SCOPE = "sa_doctor_scope";
@@ -500,6 +501,19 @@ export default function AllStoresDoctor({ stores, onOpenStore }) {
           </label>
         </div>
       </details>
+
+      <AllStoresPricePlans
+        stores={stores}
+        included={included}
+        bodyOf={bodyOf}
+        backupSheet={backupSheet}
+        busy={busy}
+        setBusy={setBusy}
+        runApi={runApi}
+        stopRef={stopRef}
+        setPausing={setPausing}
+        onSaveBackup={(v) => ls.set(LS_BACKUP, v)}
+      />
 
       {totals.scanned > 0 && (
         <div className="sd-card sd-overview">

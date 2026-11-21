@@ -1,0 +1,113 @@
+{
+ "store": "Soul Society Boutique",
+ "domain": "0d6n10-zj.myshopify.com",
+ "date": "2026-11-21",
+ "note": "Uitschieters omlaag · 15 producten · gem. USD 78.95 → 66.62",
+ "items": [
+  {
+   "id": 10353431249225,
+   "title": "Women's Chelsea Boots | Platform Sole Elastic Side Panels Leather",
+   "from": 104.95,
+   "price": 74.95,
+   "compareAt": 144.95
+  },
+  {
+   "id": 10506361307465,
+   "title": "Women's Ballet Flats | Pointed Toe Satin Buckle Low Heel",
+   "from": 89.95,
+   "price": 64.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 10353436131657,
+   "title": "Men's Sweater | Zip-Up Knit Relaxed Fit Set",
+   "from": 84.95,
+   "price": 59.95,
+   "compareAt": 124.95
+  },
+  {
+   "id": 10353428857161,
+   "title": "Men's Trench Coat | Hooded Long Padded Waterproof",
+   "from": 89.95,
+   "price": 69.95,
+   "compareAt": 144.95
+  },
+  {
+   "id": 10353426465097,
+   "title": "Women's T-Bar Shoe | Platform Heel T-Strap Buckle Closed Toe",
+   "from": 74.95,
+   "price": 59.95,
+   "compareAt": 124.95
+  },
+  {
+   "id": 10464679428425,
+   "title": "Women's Ballet Flats | Open Toe H Strap Leather Flat",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 124.95
+  },
+  {
+   "id": 10493756145993,
+   "title": "Men's Wool Sweater | Crew Neck Gradient Stripe Knit",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 10506375397705,
+   "title": "Women's Sweater Vest | V-Neck Sleeveless Knit Pullover",
+   "from": 69.95,
+   "price": 59.95,
+   "compareAt": 124.95
+  },
+  {
+   "id": 10525305504073,
+   "title": "Women's Puffer Jacket | Quilted Zip Closure Long Sleeve",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  },
+  {
+   "id": 10353437245769,
+   "title": "Men's Shoe | Two-Tone Leather Lace-Up Court Sole",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 134.95
+  },
+  {
+   "id": 10506377101641,
+   "title": "Women's Leather Trench Coat | Double Breasted Notched Collar Belted",
+   "from": 84.95,
+   "price": 79.95,
+   "compareAt": 159.95
+  },
+  {
+   "id": 10506377363785,
+   "title": "Women's Knit Set | Cropped Sweater Wide Leg Pants Button Shirt",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 94.95
+  },
+  {
+   "id": 10512608035145,
+   "title": "Women's Matching Work Out Set | Ribbed Knit High Neck Long Sleeve",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 10512608461129,
+   "title": "Women's Two Piece Set | Tailored Lapel Button Closure Straight Leg",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 114.95
+  },
+  {
+   "id": 10512616227145,
+   "title": "Women's Cowboy Boots | Embossed Shaft Studded Harness Slip-On",
+   "from": 74.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  }
+ ]
+}

@@ -1,0 +1,64 @@
+{
+ "store": "Shapes Wardrobe",
+ "domain": "6snnji-kr.myshopify.com",
+ "date": "2026-11-21",
+ "note": "Uitschieters omlaag · 8 producten · gem. AUD 109.95 → 98.70",
+ "items": [
+  {
+   "id": 15864152818012,
+   "title": "Women's Sandals | Open Toe Block Heel Ankle Strap Metallic",
+   "from": 109.95,
+   "price": 94.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 15864161337692,
+   "title": "Women's Ballet Flats | Round Toe Adjustable Strap Slip On",
+   "from": 109.95,
+   "price": 94.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 15864161403228,
+   "title": "Women's Ballet Flats | Elastic Crossover Strap Rounded Toe",
+   "from": 109.95,
+   "price": 94.95,
+   "compareAt": 204.95
+  },
+  {
+   "id": 15864161730908,
+   "title": "Women's Ballet Flats | Open Toe Dual Strap Slingback Mesh",
+   "from": 109.95,
+   "price": 94.95,
+   "compareAt": 204.95
+  },
+  {
+   "id": 15942481871196,
+   "title": "Women's Skort | Midi Length Leather Belt Pockets",
+   "from": 109.95,
+   "price": 94.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 15864150360412,
+   "title": "Women's Maxi Dress | High Neckline Puff Sleeve Tie Waist",
+   "from": 109.95,
+   "price": 104.95,
+   "compareAt": 214.95
+  },
+  {
+   "id": 15864161108316,
+   "title": "Women's Ballet Flats | Mary Jane Buckle Strap Leather",
+   "from": 109.95,
+   "price": 104.95,
+   "compareAt": 224.95
+  },
+  {
+   "id": 15864161239388,
+   "title": "Women's Ballet Flats | Leather Round Toe Mary Jane Strap",
+   "from": 109.95,
+   "price": 104.95,
+   "compareAt": 204.95
+  }
+ ]
+}

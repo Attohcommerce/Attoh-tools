@@ -1,0 +1,526 @@
+{
+ "store": "Code of Clothes",
+ "domain": "vqqph1-1b.myshopify.com",
+ "date": "2026-11-21",
+ "note": "Uitschieters omlaag · 74 producten · gem. CAD 119.88 → 103.26",
+ "items": [
+  {
+   "id": 11388059451735,
+   "title": "Women's Winter Coat | Quilted Hood Long Sleeve Zip",
+   "from": 144.95,
+   "price": 104.95,
+   "compareAt": 174.95
+  },
+  {
+   "id": 11388092055895,
+   "title": "Women's Trench Coat | Notched Lapels Double Breasted Belted",
+   "from": 144.95,
+   "price": 104.95,
+   "compareAt": 194.95
+  },
+  {
+   "id": 11388122267991,
+   "title": "Men's Trench Coat | Hooded Long Button Closure Waterproof",
+   "from": 144.95,
+   "price": 104.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388076720471,
+   "title": "Men's Winter Coat | Quilted Lining Button Closure Weather-Resistant",
+   "from": 139.95,
+   "price": 99.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 11388092416343,
+   "title": "Women's Trench Coat | Double-Breasted Notch Collar Belted Long",
+   "from": 139.95,
+   "price": 99.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 11388076196183,
+   "title": "Men's Winter Coat | Stand Collar Tailored Button-Front",
+   "from": 134.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388076130647,
+   "title": "Men's Winter Coat | Single-Breasted Stand Collar Wool Blend",
+   "from": 144.95,
+   "price": 114.95,
+   "compareAt": 229.95
+  },
+  {
+   "id": 11388077670743,
+   "title": "Men's Winter Coat | Wool Button Closure Pockets",
+   "from": 144.95,
+   "price": 114.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388094185815,
+   "title": "Women's Puffer Jacket | Belted Waist Quilted High Collar Full Zip",
+   "from": 129.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388095267159,
+   "title": "Men's Puffer Jacket | Quilted Insulated Regular Fit Zip Closure",
+   "from": 129.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388095627607,
+   "title": "Men's Puffer Jacket | Stand Collar Quilted Full Zip Relaxed Fit",
+   "from": 129.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388100051287,
+   "title": "Women's Wool Coat | Double Breasted Notched Lapel Tailored",
+   "from": 144.95,
+   "price": 114.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388100280663,
+   "title": "Women's Wool Coat | Double-Breasted Relaxed Shoulders A-Line",
+   "from": 144.95,
+   "price": 114.95,
+   "compareAt": 194.95
+  },
+  {
+   "id": 11388110012759,
+   "title": "Women's Long Puffer Jacket | Hood Quilted Full-Length Zip",
+   "from": 129.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388095037783,
+   "title": "Women's Puffer Jacket | Hooded Quilted Longline Button Closure",
+   "from": 124.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388119187799,
+   "title": "Men's Puffer Jacket | Hooded Quilted Padded Winter",
+   "from": 124.95,
+   "price": 99.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 11388101886295,
+   "title": "Women's Long Coat | Double-Breasted Wide Lapels Tailored Fit",
+   "from": 119.95,
+   "price": 99.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 11388119122263,
+   "title": "Men's Puffer Jacket | Hooded Long Quilted Zip Closure",
+   "from": 119.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388123382103,
+   "title": "Men's Trench Coat | Double Breasted Notch Lapel Long",
+   "from": 119.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388126003543,
+   "title": "Men's Wool Coat | Collared Button Closure Zip Pocket",
+   "from": 134.95,
+   "price": 114.95,
+   "compareAt": 194.95
+  },
+  {
+   "id": 11388054962519,
+   "title": "Women's Winter Jacket | Oversized Fur Collar Lapel Zip Closure",
+   "from": 129.95,
+   "price": 114.95,
+   "compareAt": 229.95
+  },
+  {
+   "id": 11388055159127,
+   "title": "Women's Winter Jacket | Hooded Puffer Faux Fur Lined",
+   "from": 129.95,
+   "price": 114.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388059058519,
+   "title": "Women's Winter Coat | Oversized Teddy Notched Collar Button-Front",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 11388059189591,
+   "title": "Women's Winter Coat | Wide Collar Oversized Relaxed Fit",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388059550039,
+   "title": "Women's Winter Coat | Hooded Quilted Maxi Puffer Oversized",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388067512663,
+   "title": "Women's Chelsea Boots | Waterproof Cushioned Elastic Gore",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388077080919,
+   "title": "Men's Winter Jacket | Hooded Zip Closure Fleece Lined",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388077244759,
+   "title": "Men's Winter Coat | Notch Collar Button Closure Tailored Fit",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388077375831,
+   "title": "Men's Winter Coat | Full-Length Straight Cut Notch Collar",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 11388091564375,
+   "title": "Women's Trench Coat | Lightweight Waterproof Stand Collar",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388091597143,
+   "title": "Women's Trench Coat | Double Breasted Belted Long",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388091826519,
+   "title": "Women's Trench Coat | Cropped Silhouette Plaid Lined Button Closure",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388092219735,
+   "title": "Women's Trench Coat | Double-Breasted Notched Collar Knee-Length",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 11388092481879,
+   "title": "Women's Trench Coat | Notch Collar Button Closure Long Sleeves",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388100968791,
+   "title": "Women's Long Coat | Double Breasted Notched Lapels Belted Waist",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388101296471,
+   "title": "Women's Long Coat | Double-Breasted Notched Lapel Relaxed Fit",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 11388101787991,
+   "title": "Women's Long Coat | Quilted Hooded Full Zip Relaxed Fit",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388116140375,
+   "title": "Men's Winter Dress Boots | Chelsea Slip-On Elastic Panels",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388116238679,
+   "title": "Men's Winter Dress Boots | Chelsea Slip-On Elastic Closure",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388116500823,
+   "title": "Men's Winter Dress Boots | Brogue Chelsea Slip-On",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 11388117877079,
+   "title": "Men's Winter Dress Boots | Patent Lace-Up Pointed Toe Block Heel",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388118466903,
+   "title": "Men's Boots | Pointed Toe Western Stitching Elastic",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388118565207,
+   "title": "Men's Puffer Jacket | Stand Collar Corduroy Quilted Zip",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388119318871,
+   "title": "Men's Puffer Jacket | Hooded Quilted Zip Closure",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 11388122136919,
+   "title": "Men's Suit | Tailored Fit Single Breasted Button Closure",
+   "from": 144.95,
+   "price": 129.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 11388123087191,
+   "title": "Men's Suit | Single-Breasted Notch Lapel Tailored",
+   "from": 144.95,
+   "price": 129.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 11388124397911,
+   "title": "Men's Trench Coat | Double-Breasted Belted Notch Collar",
+   "from": 114.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388068462935,
+   "title": "Women's Ankle Boots | Pointed Toe Embroidered Pull-On Leather",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 194.95
+  },
+  {
+   "id": 11388090581335,
+   "title": "Women's Winter Boots | Knee High Zipper Plush Lining",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388093170007,
+   "title": "Women's Snow Boots | Faux Fur Cuff Mid-Calf Quilted Nylon",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388093563223,
+   "title": "Women's Snow Boots | Mid-Calf Quilted Side Zip Waterproof",
+   "from": 109.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388098249047,
+   "title": "Women's Knee High Boots | Buckle Strap Suede Tall Orthopedic",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388098543959,
+   "title": "Women's Knee High Boots | Pointed Toe Block Heel Zip Closure",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 194.95
+  },
+  {
+   "id": 11388098871639,
+   "title": "Women's Knee High Boots | Tall Shaft Buckle Strap Leather",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388099821911,
+   "title": "Women's Knee High Boots | Buckle Strap Side Zip Block Heel Leather",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 194.95
+  },
+  {
+   "id": 11388104409431,
+   "title": "Women's Black Boots | Chunky Heel Platform Toe Leather Zip",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388115353943,
+   "title": "Men's Winter Boots | Lace-Up Leather Cushioned Sole",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388115779927,
+   "title": "Men's Winter Dress Boots | Pointed-Toe Chelsea Leather Slip-On",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 174.95
+  },
+  {
+   "id": 11388117025111,
+   "title": "Men's Winter Dress Boots | Cap-Toe Lace-Up Leather",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 194.95
+  },
+  {
+   "id": 11388117221719,
+   "title": "Men's Boots | Pointed Toe Western Biker Leather",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388117418327,
+   "title": "Men's Winter Dress Boots | Suede Chelsea Slip-On Flat Sole",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 194.95
+  },
+  {
+   "id": 11388120990039,
+   "title": "Men's Chelsea Boots | Suede Wingtip Brogue Slip-On",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388121252183,
+   "title": "Men's Chelsea Boots | Cap Toe Leather Side Zip",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 174.95
+  },
+  {
+   "id": 11388128100695,
+   "title": "Men's Snow Boots | Lace-Up Faux Fur Lining Non-Slip Sole",
+   "from": 114.95,
+   "price": 104.95,
+   "compareAt": 174.95
+  },
+  {
+   "id": 11388057682263,
+   "title": "Women's Sweater Dress | Midi Length Tie-Waist Knit Round Neck",
+   "from": 99.95,
+   "price": 94.95,
+   "compareAt": 159.95
+  },
+  {
+   "id": 11388058501463,
+   "title": "Women's Cocktail Dress | Midi Length Lace High Neck Scalloped",
+   "from": 99.95,
+   "price": 94.95,
+   "compareAt": 159.95
+  },
+  {
+   "id": 11388072034647,
+   "title": "Women's Long Sleeve Dress | Midi Pleated High Neckline Tie Waist",
+   "from": 99.95,
+   "price": 94.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 11388073181527,
+   "title": "Women's Holiday Dress | Midi Length V-Neck Floral Puff Sleeve",
+   "from": 99.95,
+   "price": 94.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 11388073541975,
+   "title": "Women's Semi Formal Dress | Midi Length Draped Neckline Sleeveless",
+   "from": 99.95,
+   "price": 94.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 11388078555479,
+   "title": "Men's Winter Jacket | Suede Collar Zip Closure Ribbed Cuffs",
+   "from": 119.95,
+   "price": 114.95,
+   "compareAt": 209.95
+  },
+  {
+   "id": 11388090286423,
+   "title": "Women's Winter Boots | Fur-Lined Ankle Buckle Non-Slip Sole",
+   "from": 104.95,
+   "price": 99.95,
+   "compareAt": 169.95
+  },
+  {
+   "id": 11388091367767,
+   "title": "Women's Winter Boots | Lace-Up Quilted Shaft Knit Cuff",
+   "from": 104.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388093301079,
+   "title": "Women's Snow Boots | Fur-Trimmed Shaft Cushioned Sole Textured Grip",
+   "from": 104.95,
+   "price": 99.95,
+   "compareAt": 184.95
+  },
+  {
+   "id": 11388127379799,
+   "title": "Men's Sneakers | Suede Lace-Up Gum Sole",
+   "from": 99.95,
+   "price": 94.95,
+   "compareAt": 189.95
+  }
+ ]
+}

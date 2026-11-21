@@ -1,0 +1,162 @@
+{
+ "store": "Pierre the Label",
+ "domain": "y8ctb2-11.myshopify.com",
+ "date": "2026-11-21",
+ "note": "Uitschieters omlaag · 22 producten · gem. EUR 82.22 → 71.31",
+ "items": [
+  {
+   "id": 15982431633748,
+   "title": "Men's Duffle Coat | Double-Breasted Long Tailored",
+   "from": 89.95,
+   "price": 64.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 15982431732052,
+   "title": "Men's Trench Coat | Hooded Waterproof Long Button",
+   "from": 89.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 15982432813396,
+   "title": "Men's Parka | Wool Construction Button Closure Tailored",
+   "from": 89.95,
+   "price": 69.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 15982412857684,
+   "title": "Men's Coat | Stand Collar Button-Front Tailored Wool",
+   "from": 84.95,
+   "price": 69.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 15982429831508,
+   "title": "Men's Pea Coat | Button Closure Collared Long",
+   "from": 79.95,
+   "price": 64.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 15982406992212,
+   "title": "Men's Suit | Tailored Fit Button Closure Jacket Trousers",
+   "from": 89.95,
+   "price": 79.95,
+   "compareAt": 134.95
+  },
+  {
+   "id": 15982407713108,
+   "title": "Men's Three-Piece Suit | Slim Fit Blazer Waistcoat Trousers",
+   "from": 89.95,
+   "price": 79.95,
+   "compareAt": 149.95
+  },
+  {
+   "id": 15982408728916,
+   "title": "Men's Tweed Suit | Three-Piece Structured Pocket Watch Chain",
+   "from": 89.95,
+   "price": 79.95,
+   "compareAt": 159.95
+  },
+  {
+   "id": 15982420197716,
+   "title": "Men's Winter Jacket | Sherpa Lined Button Closure",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 15982428094804,
+   "title": "Men's Puffer Jacket | Stand Collar Corduroy Quilted",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 15982429274452,
+   "title": "Men's Puffer Jacket | Hooded Quilted Sherpa Lining",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 139.95
+  },
+  {
+   "id": 15982429307220,
+   "title": "Men's Puffer Jacket | Hooded Long Length Quilted",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 109.95
+  },
+  {
+   "id": 15982431109460,
+   "title": "Men's Wedding Suit | Tailored Fit Single Breasted Button Closure",
+   "from": 89.95,
+   "price": 79.95,
+   "compareAt": 134.95
+  },
+  {
+   "id": 15982431273300,
+   "title": "Men's Wedding Suit | Three-Piece Slim Notch Lapel Tailored",
+   "from": 89.95,
+   "price": 79.95,
+   "compareAt": 159.95
+  },
+  {
+   "id": 15982431961428,
+   "title": "Men's Three Piece Suit | Tailored Notch Lapel Buttoned Woven Blend",
+   "from": 89.95,
+   "price": 79.95,
+   "compareAt": 159.95
+  },
+  {
+   "id": 15982434025812,
+   "title": "Men's Green Suit | Three-Piece Tailored Woven Fitted",
+   "from": 89.95,
+   "price": 79.95,
+   "compareAt": 159.95
+  },
+  {
+   "id": 15982412824916,
+   "title": "Men's Coat | Notched Collar Long Sleeve Button Closure Wool",
+   "from": 74.95,
+   "price": 69.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 15982418723156,
+   "title": "Men's Rain Jacket | Waterproof Hood Insulated Lining",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 15982418886996,
+   "title": "Men's Rain Jacket | Hooded Fleece Lined Water Resistant",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 15982420066644,
+   "title": "Men's Overcoat | Single-Breasted Tailored Wool Blend Long",
+   "from": 74.95,
+   "price": 69.95,
+   "compareAt": 119.95
+  },
+  {
+   "id": 15982420525396,
+   "title": "Men's Winter Coat | Wool Slim Fit Long Length",
+   "from": 74.95,
+   "price": 69.95,
+   "compareAt": 129.95
+  },
+  {
+   "id": 15982429995348,
+   "title": "Men's Harrington Jacket | Front Zip Striped Ribbed Trim",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 129.95
+  }
+ ]
+}

@@ -1,0 +1,386 @@
+{
+ "store": "Lady Glam Boutique / Season of Style",
+ "domain": "hu9f6r-ee.myshopify.com",
+ "date": "2026-11-21",
+ "note": "Uitschieters omlaag · 54 producten · gem. USD 82.82 → 71.71",
+ "items": [
+  {
+   "id": 9715481772289,
+   "title": "Women's Winter Coat | Oversized Hood Quilted Zip Front",
+   "from": 99.95,
+   "price": 74.95,
+   "compareAt": 254.95
+  },
+  {
+   "id": 9715490193665,
+   "title": "Women's Mules | Pointed Toe Sculpted Wedge Heel Metallic",
+   "from": 89.95,
+   "price": 64.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 9715489145089,
+   "title": "Women's Matching Set | Notched Lapel Blazer Long Sleeve Button Closure Wide Leg",
+   "from": 89.95,
+   "price": 64.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 9715492815105,
+   "title": "Women's Wool Coat | Double Breasted Notched Lapel A-Line Midi",
+   "from": 104.95,
+   "price": 79.95,
+   "compareAt": 269.95
+  },
+  {
+   "id": 9715481641217,
+   "title": "Women's Overcoat | Notched Lapel Double-Breasted Button Closure Midi",
+   "from": 89.95,
+   "price": 69.95,
+   "compareAt": 204.95
+  },
+  {
+   "id": 9715481706753,
+   "title": "Women's Winter Coat | Sherpa Lined Hooded Water Resistant",
+   "from": 99.95,
+   "price": 79.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 9715490160897,
+   "title": "Women's Faux Fur Coat | Velvet Double-Breasted Long Lapel",
+   "from": 99.95,
+   "price": 79.95,
+   "compareAt": 234.95
+  },
+  {
+   "id": 9715493208321,
+   "title": "Women's Leather Coat | Long Faux Fur Collar Zip Closure",
+   "from": 99.95,
+   "price": 79.95,
+   "compareAt": 199.95
+  },
+  {
+   "id": 9715495534849,
+   "title": "Women's Long Coat | Notch Lapel Button Front Plaid Wool",
+   "from": 99.95,
+   "price": 79.95,
+   "compareAt": 269.95
+  },
+  {
+   "id": 9715495731457,
+   "title": "Women's Denim Jacket | Collar Lapel Button Front Relaxed Fit",
+   "from": 89.95,
+   "price": 69.95,
+   "compareAt": 234.95
+  },
+  {
+   "id": 9715496157441,
+   "title": "Women's Denim Jacket | Pointed Collar Contrast Trim Button Closure",
+   "from": 89.95,
+   "price": 69.95,
+   "compareAt": 204.95
+  },
+  {
+   "id": 9715497861377,
+   "title": "Women's Quilted Coat | Oversized Fur Collar Zip Front Padded",
+   "from": 99.95,
+   "price": 79.95,
+   "compareAt": 269.95
+  },
+  {
+   "id": 9715505299713,
+   "title": "Women's Shearling Coat | Belted Waist Zip Closure Long",
+   "from": 99.95,
+   "price": 79.95,
+   "compareAt": 269.95
+  },
+  {
+   "id": 9748462010625,
+   "title": "Women's Snow Jacket | Hooded Puffer Button Closure",
+   "from": 89.95,
+   "price": 69.95,
+   "compareAt": 234.95
+  },
+  {
+   "id": 9748462829825,
+   "title": "Women's Puffer Jacket | Diamond-Quilted Relaxed Fit Button Closure",
+   "from": 89.95,
+   "price": 69.95,
+   "compareAt": 174.95
+  },
+  {
+   "id": 9748463157505,
+   "title": "Women's Moto Jacket | Slim Fit Zip Front Collared",
+   "from": 89.95,
+   "price": 69.95,
+   "compareAt": 234.95
+  },
+  {
+   "id": 9715472597249,
+   "title": "Women's Trench Coat | Double-Breasted Wide Lapels Tailored",
+   "from": 84.95,
+   "price": 69.95,
+   "compareAt": 234.95
+  },
+  {
+   "id": 9748463190273,
+   "title": "Women's Walking Boots | Knee-High Leather Buckle Strap",
+   "from": 89.95,
+   "price": 74.95,
+   "compareAt": 249.95
+  },
+  {
+   "id": 9715472466177,
+   "title": "Women's Trench Coat | Double-Layer Hood Button Closure",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 204.95
+  },
+  {
+   "id": 9715472826625,
+   "title": "Women's Trench Coat | Lightweight Waterproof Stand Collar",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 174.95
+  },
+  {
+   "id": 9715473121537,
+   "title": "Women's Trench Coat | Double-Breasted Belt Buckle Cuffs",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 204.95
+  },
+  {
+   "id": 9715489374465,
+   "title": "Women's Matching Set | Double-Breasted Blazer Notched Lapel Metal Buttons",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 9715497206017,
+   "title": "Women's Long Winter Coat | Lapel Collar Button Front Midi Length",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 239.95
+  },
+  {
+   "id": 9732960747777,
+   "title": "Women's Matching Set | V-Neck Midi Tie Waist",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 9732960944385,
+   "title": "Women's Matching Set | Satin Cami Shorts Robe Lace",
+   "from": 74.95,
+   "price": 64.95,
+   "compareAt": 164.95
+  },
+  {
+   "id": 9744688120065,
+   "title": "Women's Snow Boots | Quilted Waterproof Ankle Side Zip",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 174.95
+  },
+  {
+   "id": 9744689266945,
+   "title": "Women's Trench Coat | Classic Collar Button Front Long Sleeve",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 174.95
+  },
+  {
+   "id": 9744692052225,
+   "title": "Women's Gogo Boots | Round Toe Flat Heel Side Zip Gathered Shaft",
+   "from": 79.95,
+   "price": 69.95,
+   "compareAt": 174.95
+  },
+  {
+   "id": 9715472072961,
+   "title": "Women's Snow Boots | Quilted Lace-Up Knit Cuff",
+   "from": 74.95,
+   "price": 69.95,
+   "compareAt": 204.95
+  },
+  {
+   "id": 9715477250305,
+   "title": "Women's Bridesmaid Dress | Midi Length Sweetheart Neckline Pleated Tulle",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 9715480461569,
+   "title": "Women's Fur Boots | Lace-Up Rounded Toe Flat Heel Leather",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 254.95
+  },
+  {
+   "id": 9715487965441,
+   "title": "Women's Two Piece Set | Cold Shoulder Square Neckline Layered",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 164.95
+  },
+  {
+   "id": 9715490062593,
+   "title": "Women's Faux Fur Coat | Striped Hooded Oversized Sherpa",
+   "from": 84.95,
+   "price": 79.95,
+   "compareAt": 204.95
+  },
+  {
+   "id": 9715491864833,
+   "title": "Women's Cowgirl Boots | Round Toe Stacked Heel Leather",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 9715492847873,
+   "title": "Women's Leather Coat | Midi Length Double Breasted Collar",
+   "from": 84.95,
+   "price": 79.95,
+   "compareAt": 204.95
+  },
+  {
+   "id": 9715496976641,
+   "title": "Women's Christmas Party Dress | One-Shoulder Maxi Satin High Slit",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 9715498778881,
+   "title": "Women's Bodycon Dress | V-Neckline Maxi Sheer Sleeves Floral Print",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 9715500810497,
+   "title": "Women's Bodycon Dress | One Shoulder Maxi Draped Satin",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 164.95
+  },
+  {
+   "id": 9715503497473,
+   "title": "Women's Rain Boots | Knee-High Buckle Block Heel",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 9715504382209,
+   "title": "Women's Duck Boots | Mid Calf Lace Up Faux Fur Cuff",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 9715505070337,
+   "title": "Women's Wide Calf Boots | Fringe Ankle Studded Buckle Suede",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 254.95
+  },
+  {
+   "id": 9715505398017,
+   "title": "Women's Wide Calf Boots | Fringe Suede Block Heel Zipper",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 9715505791233,
+   "title": "Women's Long Sleeve Maxi Dress | Collared Button Front Pleated",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 164.95
+  },
+  {
+   "id": 9715507298561,
+   "title": "Women's Slouch Boots | Knee-High Block Heel Suede",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 9715507986689,
+   "title": "Women's Slouch Boots | Knee-High Suede Buckle Strap",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 9715510444289,
+   "title": "Women's Empire Waist Dress | Midi Sleeveless Lace Cutout",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 9715510608129,
+   "title": "Women's Wrap Dress | Midi Length V Neck Three Button Linen",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 164.95
+  },
+  {
+   "id": 9744689725697,
+   "title": "Women's Fur Boots | Ankle Height Side Zip Faux Leather",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 9744690381057,
+   "title": "Women's Faux Fur Coat | Cropped Silhouette Long Sleeves Oversized",
+   "from": 84.95,
+   "price": 79.95,
+   "compareAt": 204.95
+  },
+  {
+   "id": 9744690872577,
+   "title": "Women's Birthday Dress | Mini Cowl Neck Chain Strap Sequin",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 219.95
+  },
+  {
+   "id": 9744691134721,
+   "title": "Women's Square Toe Boots | Suede Block Heel Square Toe",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 254.95
+  },
+  {
+   "id": 9748461682945,
+   "title": "Women's Bridesmaid Dress | Maxi Strapless Ruched Side Slit",
+   "from": 69.95,
+   "price": 64.95,
+   "compareAt": 164.95
+  },
+  {
+   "id": 9748462895361,
+   "title": "Women's Chelsea Boots | Elastic Side Suede Upper Mesh Lined",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 189.95
+  },
+  {
+   "id": 9748463026433,
+   "title": "Women's Fur Boots | Suede Ankle Lug Sole Side Zipper",
+   "from": 79.95,
+   "price": 74.95,
+   "compareAt": 254.95
+  }
+ ]
+}
