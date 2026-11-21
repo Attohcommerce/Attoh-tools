@@ -4028,3 +4028,101 @@ details.sd-card[open] > summary::before { transform: rotate(90deg); }
 .imp-photo-card.failed { border-color: rgba(229,72,77,.5); }
 .imp-photo-card em { color: #e5484d; font-style: normal; }
 .imp-photo-x { display: grid; place-items: center; aspect-ratio: 1; font-size: 28px; color: #e5484d; background: rgba(229,72,77,.08); border-radius: 6px; }
+
+
+/* ---------- Chaim General Stores (19-11-2026) — main unit in Sa Collective, rood accent ---------- */
+.cgs {
+  --accent: #d5333f;
+  --accent-hi: #f26a73;
+  --accent-dim: rgba(213, 51, 63, 0.14);
+  --accent-glow: rgba(213, 51, 63, 0.32);
+}
+body[data-org="sacollective"] .cgs .topbar .logo {
+  background: linear-gradient(145deg, #f26a73, #8a1620);
+  color: #fff5f5;
+  box-shadow: 0 3px 14px rgba(213, 51, 63, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+body[data-org="sacollective"] .cgs .topbar .navlink.active {
+  box-shadow: inset 0 0 0 1px rgba(213, 51, 63, 0.34), 0 0 20px -8px var(--accent-glow);
+}
+.cgs-wrap { max-width: 1180px; margin: 22px auto 60px; padding: 0 18px; display: grid; gap: 18px; }
+.cgs-hero { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; padding: 26px 28px; border-radius: 18px; border: 1px solid rgba(213, 51, 63, 0.3); background: radial-gradient(120% 160% at 0% 0%, rgba(213, 51, 63, 0.22), transparent 60%), var(--panel); }
+.cgs-eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-hi); font-weight: 600; }
+.cgs-hero h1 { margin: 6px 0 6px; font-size: 30px; letter-spacing: -0.02em; color: var(--ink); }
+.cgs-hero p { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 520px; }
+.cgs-progress { min-width: 240px; }
+.cgs-pct { font-size: 34px; font-weight: 700; color: var(--accent-hi); line-height: 1; }
+.cgs-bar { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); margin: 10px 0 8px; overflow: hidden; }
+.cgs-bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #8a1620, var(--accent), var(--accent-hi)); transition: width 0.4s var(--ease); }
+.cgs-sub { font-size: 12px; color: var(--muted); }
+.cgs-error { padding: 12px 14px; border-radius: 10px; background: var(--err-dim); color: var(--err); font-size: 13px; }
+.cgs-loading, .cgs-empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+.cgs-block { padding: 20px 22px; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); }
+.cgs-block h2 { margin: 0 0 14px; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.cgs-block h2 small { margin-left: 8px; font-size: 11.5px; letter-spacing: 0; text-transform: none; color: var(--muted); font-weight: 400; }
+.cgs-stores { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.cgs-store { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); display: grid; gap: 8px; align-content: start; }
+.cgs-store-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--ink); }
+.cgs-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+.cgs-chip { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--accent-dim); color: var(--accent-hi); font-weight: 600; }
+.cgs-chip.ghost { background: rgba(255, 255, 255, 0.06); color: var(--ink-2); }
+.cgs-store-dom { font-size: 12px; color: var(--muted); word-break: break-all; }
+.cgs-store-links { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12.5px; }
+.cgs-store-links a { color: var(--accent-hi); text-decoration: none; }
+.cgs-store-links a:hover { text-decoration: underline; }
+.cgs-store-links button { background: none; border: 0; padding: 0; color: var(--faint); font: inherit; cursor: pointer; }
+.cgs-store-links button:hover { color: var(--err); }
+.cgs-store.add { border-style: dashed; }
+.cgs-store.add input { margin: 0; }
+.cgs-btn { justify-self: start; padding: 9px 16px; border-radius: 10px; border: 1px solid rgba(213, 51, 63, 0.5); background: linear-gradient(140deg, var(--accent-hi), #a81f2a); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.cgs-btn:hover { filter: brightness(1.08); }
+.cgs-phases { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.cgs-phase { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); }
+.cgs-phase.complete { border-color: rgba(62, 207, 142, 0.4); }
+.cgs-phase-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; color: var(--ink); }
+.cgs-n { font-size: 11px; font-weight: 700; color: var(--accent-hi); letter-spacing: 0.08em; }
+.cgs-count { margin-left: auto; font-size: 12px; color: var(--muted); }
+.cgs-step { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; font-size: 13.5px; color: var(--ink-2); cursor: pointer; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+.cgs-step input { width: 16px; height: 16px; margin: 2px 0 0; flex: none; accent-color: var(--accent); }
+.cgs-step.on span { color: var(--faint); text-decoration: line-through; }
+.cgs-markets { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.cgs-market { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); color: var(--ink-2); font: inherit; cursor: pointer; }
+.cgs-market b { font-size: 16px; color: var(--ink); }
+.cgs-market span { font-size: 12.5px; }
+.cgs-market em { font-style: normal; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-top: 4px; }
+.cgs-market:hover { border-color: var(--line-hi); }
+.cgs-market.s-gepland em { color: var(--ink-2); }
+.cgs-market.s-research { border-color: rgba(224, 179, 65, 0.45); }
+.cgs-market.s-research em { color: var(--warn); }
+.cgs-market.s-focus { border-color: rgba(213, 51, 63, 0.6); background: var(--accent-dim); }
+.cgs-market.s-focus em { color: var(--accent-hi); }
+.cgs-market.s-live { border-color: rgba(62, 207, 142, 0.5); background: var(--ok-dim); }
+.cgs-market.s-live em { color: var(--ok); }
+.cgs-hint { margin: 12px 0 0; font-size: 12px; color: var(--muted); }
+.cgs-two { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 26px; }
+.cgs-note { display: grid; gap: 10px; margin-bottom: 14px; }
+.cgs-note textarea { margin: 0; }
+.cgs-log { display: grid; gap: 8px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
+.cgs-log-item { position: relative; padding: 10px 34px 10px 12px; border-radius: 10px; border-left: 2px solid var(--accent); background: rgba(255, 255, 255, 0.03); }
+.cgs-log-item time { font-size: 11px; color: var(--muted); }
+.cgs-log-item p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-2); white-space: pre-wrap; }
+.cgs-log-item button { position: absolute; top: 6px; right: 8px; background: none; border: 0; color: var(--faint); font-size: 18px; line-height: 1; cursor: pointer; }
+.cgs-log-item button:hover { color: var(--err); }
+.cgs-links { display: grid; gap: 8px; }
+.cgs-link { display: flex; align-items: center; gap: 6px; border-radius: 10px; border: 1px solid var(--line); }
+.cgs-link a { flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 10px; padding: 11px 14px; color: var(--ink-2); text-decoration: none; font-size: 13.5px; overflow-wrap: anywhere; }
+.cgs-link a:hover { color: var(--ink); }
+.cgs-link a span { color: var(--accent-hi); flex: none; }
+.cgs-link button { background: none; border: 0; color: var(--faint); font-size: 18px; line-height: 1; padding: 0 12px 0 0; cursor: pointer; }
+.cgs-link button:hover { color: var(--err); }
+.cgs-link-add { display: grid; gap: 8px; margin-top: 4px; }
+.cgs-link-add input { margin: 0; }
+.cgs-block h2.cgs-h2-gap { margin-top: 26px; }
+.cgs-tools { display: grid; gap: 8px; }
+.cgs-tools a { display: flex; justify-content: space-between; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--line); color: var(--ink-2); text-decoration: none; font-size: 13.5px; }
+.cgs-tools a:hover { border-color: rgba(213, 51, 63, 0.5); color: var(--ink); }
+.cgs-tools a span { color: var(--accent-hi); }
+@media (max-width: 820px) {
+  .cgs-two { grid-template-columns: 1fr; }
+  .cgs-hero h1 { font-size: 24px; }
+}
