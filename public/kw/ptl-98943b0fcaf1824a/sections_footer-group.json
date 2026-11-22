@@ -1,0 +1,111 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "type": "footer",
+  "name": "Footer group",
+  "sections": {
+    "usp": {
+      "type": "usp-bar",
+      "blocks": {
+        "u1": {
+          "type": "item",
+          "settings": {
+            "icon": "shipping",
+            "title": "Free UK delivery",
+            "text": "Royal Mail tracked, on every order"
+          }
+        },
+        "u2": {
+          "type": "item",
+          "settings": {
+            "icon": "dispatch",
+            "title": "Dispatched in 1 business day",
+            "text": "Monday to Friday"
+          }
+        },
+        "u3": {
+          "type": "item",
+          "settings": {
+            "icon": "returns",
+            "title": "30-day returns",
+            "text": "From the day it arrives"
+          }
+        },
+        "u4": {
+          "type": "item",
+          "settings": {
+            "icon": "lock",
+            "title": "Secure checkout",
+            "text": "Visa, Mastercard, Amex, Apple Pay and Google Pay"
+          }
+        }
+      },
+      "block_order": [
+        "u1",
+        "u2",
+        "u3",
+        "u4"
+      ],
+      "settings": {}
+    },
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "m1": {
+          "type": "menu",
+          "settings": {
+            "heading": "Shop",
+            "menu": "shop"
+          }
+        },
+        "m2": {
+          "type": "menu",
+          "settings": {
+            "heading": "Help",
+            "menu": "footer-help"
+          }
+        },
+        "m3": {
+          "type": "menu",
+          "settings": {
+            "heading": "Policies",
+            "menu": "store-policies"
+          }
+        }
+      },
+      "block_order": [
+        "m1",
+        "m2",
+        "m3"
+      ],
+      "settings": {
+        "logo_width": 260,
+        "tagline": "Menswear for the British winter: coats, knitwear and tailoring picked for fit, fabric and how often you will wear them.",
+        "instagram_url": "",
+        "instagram_label": "Follow us on Instagram",
+        "support_heading": "Customer support",
+        "business_info": "<p>Store name: Pierre the Label<br/>Company name: ATTOH COMMERCE LTD<br/>Company number: 17242162 (registered in England and Wales)<br/>Registered office: 71–75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom<br/>Returns: email us first; we send you the return address and instructions when we confirm your return<br/>Email: info@pierrethelabel.com<br/>Phone: +44 7426 499075</p>",
+        "email": "info@pierrethelabel.com",
+        "phone": "+44 7426 499075",
+        "hours": "<p>Monday to Friday: 9:00 AM to 6:00 PM (UK time)<br/>Saturday and Sunday: Closed<br/>We answer every message within 1 hour on business days.</p>",
+        "news_heading": "First to know",
+        "news_text": "New arrivals, restocks and the occasional offer. A couple of emails a month, never more.",
+        "news_button": "Sign up",
+        "news_privacy": "<p>By subscribing you agree to our <a href=\"/pages/privacy-policy\" title=\"Privacy policy\">Privacy policy</a></p>",
+        "copyright_suffix": "All rights reserved.",
+        "show_payment_icons": true
+      }
+    }
+  },
+  "order": [
+    "usp",
+    "footer"
+  ]
+}

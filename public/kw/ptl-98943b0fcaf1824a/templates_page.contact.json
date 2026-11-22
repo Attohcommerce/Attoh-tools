@@ -1,0 +1,92 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "contact-page",
+      "settings": {
+        "title": "Get in touch",
+        "intro": "Sizing, an order, a return: send it through the form, email us or give us a call. A real person replies within 1 hour on business days, Monday to Friday.",
+        "support_heading": "Customer support",
+        "support_text": "How to reach us directly, and when we are available.",
+        "email": "info@pierrethelabel.com",
+        "phone": "+44 7426 499075",
+        "hours_label": "Customer service hours",
+        "hours": "<p>Monday to Friday: 9:00 AM to 6:00 PM (UK time)<br/>Saturday and Sunday: Closed<br/>We answer every message within 1 hour on business days.</p>",
+        "address_label": "Address",
+        "address": "<p>ATTOH COMMERCE LTD<br/>Company number 17242162, registered in England and Wales<br/>71–75 Shelton Street, Covent Garden<br/>London, WC2H 9JQ, United Kingdom</p><p>Returning an item? Email us first; we send you the return address and instructions when we confirm your return.</p>",
+        "form_heading": "Send us a message",
+        "form_text": "We reply within 1 hour on business days.",
+        "ph_name": "Your name",
+        "ph_email": "you@example.com",
+        "ph_message": "How can we help?",
+        "button": "Send message",
+        "success": "Thank you. We received your message and will reply within 1 hour on business days."
+      }
+    },
+    "faq": {
+      "type": "faq-accordion",
+      "blocks": {
+        "q1": {
+          "type": "question",
+          "settings": {
+            "question": "How quickly will you reply to my message?",
+            "answer": "<p>Within 1 hour on business days, Monday to Friday (UK time). Messages sent at the weekend are answered on Monday.</p>"
+          }
+        },
+        "q2": {
+          "type": "question",
+          "settings": {
+            "question": "Can I change or cancel my order?",
+            "answer": "<p>Email us within 30 minutes of ordering and we can change or cancel it before it is packed. After that you can still cancel: under UK law you have until 14 days after delivery, and you can simply return the order once it arrives.</p>"
+          }
+        },
+        "q3": {
+          "type": "question",
+          "settings": {
+            "question": "Where is my order?",
+            "answer": "<p>We dispatch within 1 business day and most orders arrive within 5 to 10 business days. Your tracking link is in your shipping confirmation email.</p>"
+          }
+        },
+        "q4": {
+          "type": "question",
+          "settings": {
+            "question": "How do I return or exchange an item?",
+            "answer": "<p>Email us within 30 days of delivery with your order number and the item you want to return. We send you the steps; please wait for them before posting anything. For a different size, return the item and place a new order.</p>"
+          }
+        },
+        "q5": {
+          "type": "question",
+          "settings": {
+            "question": "Do you deliver outside the UK?",
+            "answer": "<p>Not at the moment. We deliver to addresses in the United Kingdom only, with free Royal Mail tracked delivery on every order.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5"
+      ],
+      "settings": {
+        "eyebrow": "FAQs",
+        "title": "Frequently asked questions",
+        "subtitle": "Quick answers to the questions we are asked most.",
+        "open_first": true
+      }
+    }
+  },
+  "order": [
+    "main",
+    "faq"
+  ]
+}
