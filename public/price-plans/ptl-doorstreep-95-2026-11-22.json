@@ -1,0 +1,736 @@
+{
+ "store": "Pierre the Label",
+ "domain": "y8ctb2-11.myshopify.com",
+ "date": "2026-11-22",
+ "note": "Doorstreepprijzen afgerond op ,95 · 104 producten · verkoopprijs blijft gelijk · korting 40–45%",
+ "items": [
+  {
+   "id": 15982407024980,
+   "title": "Men's Hoodie | V-Neck Cashmere Knit Drawstring",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982407123284,
+   "title": "Men's Pullover Hoodie | Relaxed Fit Hood Drawstring Pouch Pocket Knit",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 15982407188820,
+   "title": "Men's Suit | Single Breasted Two Button Three Piece",
+   "from": 69.95,
+   "price": 69.95,
+   "compareAt": 126.95
+  },
+  {
+   "id": 15982407221588,
+   "title": "Men's Hoodie | Full Zip Hood Knit Multiple Pockets",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982407483732,
+   "title": "Men's Suit | Slim Fit Three-Piece Blazer Waistcoat Trousers",
+   "from": 79.95,
+   "price": 79.95,
+   "compareAt": 144.95
+  },
+  {
+   "id": 15982410891604,
+   "title": "Men's Shirt | Collared Button Front Linen Blend Short Sleeve",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982410957140,
+   "title": "Men's Jeans | Straight Leg Relaxed Fit Denim",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982411415892,
+   "title": "Men's Jeans | Wide Leg Relaxed Fit Washed Denim",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982412300628,
+   "title": "Men's Jumper | Fisherman Rib Knit Raglan Sleeve",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 90.95
+  },
+  {
+   "id": 15982412333396,
+   "title": "Men's Shirt | Relaxed Fit Button-Up Linen",
+   "from": 34.95,
+   "price": 34.95,
+   "compareAt": 57.95
+  },
+  {
+   "id": 15982412366164,
+   "title": "Men's Shirt | Lightweight Button-Front Relaxed Fit",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 15982412398932,
+   "title": "Men's Jumper | Polo Collar Knit Long Sleeve Button Placket",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 82.95
+  },
+  {
+   "id": 15982412497236,
+   "title": "Men's Ribbed Jumper | Quarter-Zip Knit Stand Collar",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 82.95
+  },
+  {
+   "id": 15982412693844,
+   "title": "Men's Jumper | Crew Neck Fine Knit Long Sleeve",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 82.95
+  },
+  {
+   "id": 15982412759380,
+   "title": "Men's Jumper | Ribbed Knit Stand Collar Full Zip",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982412923220,
+   "title": "Men's Wool-Blend Coat | Long Length Notch Collar Button Closure",
+   "from": 69.95,
+   "price": 69.95,
+   "compareAt": 126.95
+  },
+  {
+   "id": 15982413021524,
+   "title": "Men's Cargo Trousers | Relaxed Fit Stretch Denim Cargo Pockets",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982413054292,
+   "title": "Men's Cargo Trousers | Relaxed Fit Utility Flap Pockets",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982413087060,
+   "title": "Men's Cargo Trousers | Relaxed Fit Multiple Pockets",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 72.95
+  },
+  {
+   "id": 15982413218132,
+   "title": "Men's T Shirt | Crew Neck Short Sleeve Knit",
+   "from": 29.95,
+   "price": 29.95,
+   "compareAt": 53.95
+  },
+  {
+   "id": 15982413414740,
+   "title": "Men's T Shirt | Crew Neck Short Sleeve Lightweight Knit",
+   "from": 29.95,
+   "price": 29.95,
+   "compareAt": 53.95
+  },
+  {
+   "id": 15982414004564,
+   "title": "Men's T Shirt | Crew Neck Short Sleeve Oversized",
+   "from": 29.95,
+   "price": 29.95,
+   "compareAt": 53.95
+  },
+  {
+   "id": 15982414463316,
+   "title": "Men's Swim Shorts | Quick-Dry Tropical Print Drawstring",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 72.95
+  },
+  {
+   "id": 15982414758228,
+   "title": "Men's Swim Shorts | Drawstring Waist Quick Dry Polyester",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 72.95
+  },
+  {
+   "id": 15982415577428,
+   "title": "Unisex Sunglass | Square Frame Double Bridge UV Protection",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 72.95
+  },
+  {
+   "id": 15982415675732,
+   "title": "Unisex Sunglass | Aviator Double Bridge Gradient Lens Metal Arms",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982416036180,
+   "title": "Men's Joggers | Linen Drawstring Relaxed Fit",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982416068948,
+   "title": "Men's Polo Shirt | Textured Knit Short Sleeve Collar",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 72.95
+  },
+  {
+   "id": 15982416822612,
+   "title": "Men's Polo Shirt | Short Sleeve Zip Collar Diamond Print",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982417051988,
+   "title": "Men's Joggers | Relaxed Fit Knit Drawstring Pockets",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982417674580,
+   "title": "Men's Overshirt | Corduroy Collar Button-Up Chest Pockets",
+   "from": 59.95,
+   "price": 59.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 15982417969492,
+   "title": "Men's Cardigan | Zip Closure Merino Knit Warm",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982418067796,
+   "title": "Men's Cardigan | Ribbed Knit Button-Front Shawl Collar",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982418166100,
+   "title": "Men's Wool Cardigan | V-Neck Button-Front Sleeveless Knit",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 15982418297172,
+   "title": "Men's Overshirt | Collared Button-Up Relaxed Fit",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 15982418428244,
+   "title": "Men's Bracelet | Herringbone Weave Adjustable Copper",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 72.95
+  },
+  {
+   "id": 15982418854228,
+   "title": "Men's Bracelet | Hand-Cut Leaf Openings Adjustable Copper",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 72.95
+  },
+  {
+   "id": 15982418919764,
+   "title": "Men's Man Bag | Leather Shoulder Adjustable Strap Multiple Compartments",
+   "from": 34.95,
+   "price": 34.95,
+   "compareAt": 63.95
+  },
+  {
+   "id": 15982419411284,
+   "title": "Men's Leather Jacket | Oversized Relaxed Fit Zip Closure",
+   "from": 64.95,
+   "price": 64.95,
+   "compareAt": 107.95
+  },
+  {
+   "id": 15982419575124,
+   "title": "Men's Chino | Cropped Tapered Relaxed Fit",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982419640660,
+   "title": "Men's Sweatshirt | Script Print Relaxed Fit Long Sleeves Kangaroo Pocket",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 82.95
+  },
+  {
+   "id": 15982419673428,
+   "title": "Men's Sweatshirt | Colour Block Polo Relaxed Fit",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982419804500,
+   "title": "Men's Flannel Shirt | Short Sleeve Button Up Collar Tailored Fit Cotton",
+   "from": 34.95,
+   "price": 34.95,
+   "compareAt": 57.95
+  },
+  {
+   "id": 15982419870036,
+   "title": "Men's Knitted Jumper | Crew Neck Ribbed Knit Relaxed Fit",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 15982419902804,
+   "title": "Men's Knitted Jumper | Crew Neck Raglan Sleeve Geometric Knit",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 90.95
+  },
+  {
+   "id": 15982419968340,
+   "title": "Men's Quarter Zip Jumper | Lapel Collar Knit Slim Fit Long Sleeve",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 90.95
+  },
+  {
+   "id": 15982420001108,
+   "title": "Men's Fleece Jacket | Full Zip Closure Stand Collar Pockets",
+   "from": 64.95,
+   "price": 64.95,
+   "compareAt": 107.95
+  },
+  {
+   "id": 15982420296020,
+   "title": "Men's Quarter Zip Jumper | Long Sleeve Stand Collar Knit",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 90.95
+  },
+  {
+   "id": 15982420328788,
+   "title": "Men's Knit Blazer | Notch Lapel Tailored Fit",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982420394324,
+   "title": "Men's Wax Jacket | Zip Closure Collared Long Sleeve Cotton",
+   "from": 64.95,
+   "price": 64.95,
+   "compareAt": 117.95
+  },
+  {
+   "id": 15982420459860,
+   "title": "Men's Linen Trousers | Relaxed Fit Drawstring Breathable",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982421213524,
+   "title": "Men's Short Sleeve Shirt | Slim Fit Button Closure Collar",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982421377364,
+   "title": "Men's Sports Jacket | Linen Blend Unstructured Single Breasted",
+   "from": 64.95,
+   "price": 64.95,
+   "compareAt": 107.95
+  },
+  {
+   "id": 15982422131028,
+   "title": "Men's Roll Neck Jumper | Turtleneck Thermal Knit Long Sleeve",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982422229332,
+   "title": "Men's Casual Trousers | Relaxed Fit Linen Drawstring Straight Leg",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982422262100,
+   "title": "Men's Oxford Shirt | Striped Button-Down Collar Relaxed Fit",
+   "from": 29.95,
+   "price": 29.95,
+   "compareAt": 53.95
+  },
+  {
+   "id": 15982422327636,
+   "title": "Men's Cashmere Jumper | Crew Neck Knit Pullover",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 15982422425940,
+   "title": "Men's Linen Shirt | Short Sleeve Button Front Chest Pocket",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982423736660,
+   "title": "Men's Casual Shirt | Button-Front Collar Long Sleeve Linen",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 15982423769428,
+   "title": "Men's Pleated Trousers | Double Button Waist Straight Leg Relaxed Fit",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 15982424195412,
+   "title": "Men's Suit Trousers | Herringbone Wool Tailored Fit",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 15982424555860,
+   "title": "Men's Watch | Leather Strap Military Dial",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 72.95
+  },
+  {
+   "id": 15982425538900,
+   "title": "Men's Watch | Chronograph Subdials Stainless Steel Metal Band",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982425866580,
+   "title": "Men's Cable Knit Jumper | Crew Neck Relaxed Fit Textured Knit",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 15982426194260,
+   "title": "Men's Tracksuit | Hooded Zip Jacket Camo Sleeve Knit",
+   "from": 59.95,
+   "price": 59.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 15982426259796,
+   "title": "Men's Watch | Chronograph Quartz Stainless Steel Dual Time",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982426358100,
+   "title": "Men's Gilet | Stand Collar Duck Down Insulated Lightweight",
+   "from": 59.95,
+   "price": 59.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 15982426456404,
+   "title": "Men's Tracksuit | Zip Closure Side Stripe Knit",
+   "from": 59.95,
+   "price": 59.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 15982427046228,
+   "title": "Men's Wallet | Leather Stitched Compact Bifold",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982428258644,
+   "title": "Men's Dressing Gown | Hooded Plush Fleece Ankle Length Wrap",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 15982428422484,
+   "title": "Men's Wallet | Full-Grain Leather Zip Snap Closure",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982429372756,
+   "title": "Men's Tie | Collar Button Closure Wrinkle-Free Satin",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982429503828,
+   "title": "Men's Tie | Long Sleeve Stretch Button Closure",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982429733204,
+   "title": "Men's Ring | Geometric Brushed Inlay Polished Band",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982430159188,
+   "title": "Men's Pea Coat | Double-Breasted Notched Lapels Wool Blend",
+   "from": 69.95,
+   "price": 69.95,
+   "compareAt": 126.95
+  },
+  {
+   "id": 15982430224724,
+   "title": "Men's Tuxedo | Two-Button Single-Breasted Three-Piece Tailored",
+   "from": 59.95,
+   "price": 59.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 15982430650708,
+   "title": "Men's Rucksack | Flap Closure Leather Adjustable Straps",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 15982430716244,
+   "title": "Men's Flat Cap | Newsboy Style Knit Structured Retro",
+   "from": 29.95,
+   "price": 29.95,
+   "compareAt": 53.95
+  },
+  {
+   "id": 15982430749012,
+   "title": "Men's Tracksuit Bottom | Tapered Fit Knit Drawstring Jogger",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982430781780,
+   "title": "Men's Tracksuit Bottom | Ribbed Knit Drawstring Jogger Cuffs",
+   "from": 59.95,
+   "price": 59.95,
+   "compareAt": 99.95
+  },
+  {
+   "id": 15982431076692,
+   "title": "Men's Black Suit | Cotton Tailored Button Closure Relaxed Fit",
+   "from": 69.95,
+   "price": 69.95,
+   "compareAt": 126.95
+  },
+  {
+   "id": 15982431142228,
+   "title": "Men's Crossbody Bag | Adjustable Strap Multiple Pockets Water-Resistant",
+   "from": 34.95,
+   "price": 34.95,
+   "compareAt": 63.95
+  },
+  {
+   "id": 15982431207764,
+   "title": "Men's Crossbody Bag | Leather Adjustable Strap Multiple Pockets",
+   "from": 34.95,
+   "price": 34.95,
+   "compareAt": 63.95
+  },
+  {
+   "id": 15982431371604,
+   "title": "Men's Card Holder | Slim Leather RFID Blocking Minimalist",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982431404372,
+   "title": "Men's Rugby Shirt | Collared Short Sleeve Polo Denim",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982431502676,
+   "title": "Men's Zip Up Hoodie | Graphic Colorblock Hood Full-Zip",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 90.95
+  },
+  {
+   "id": 15982431600980,
+   "title": "Men's Pocket Watch | Roman Numerals Ornate Case Chain Included",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 90.95
+  },
+  {
+   "id": 15982432158036,
+   "title": "Gold Bracelet | Curb Chain Lobster Clasp Polished",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982432190804,
+   "title": "Men's Beanie Hat | Rib-Knit Cuff Cashmere Lightweight",
+   "from": 29.95,
+   "price": 29.95,
+   "compareAt": 53.95
+  },
+  {
+   "id": 15982432256340,
+   "title": "Men's Necklace | Cross Pendant Stainless Steel Chain",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982432452948,
+   "title": "Men's Wash Bag | Leather Hanging Hook Water-Repellent Compact",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 72.95
+  },
+  {
+   "id": 15982432616788,
+   "title": "Men's Slim Fit Jeans | Mid-Rise Stretch Five-Pocket Denim",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 15982432780628,
+   "title": "Men's Travel Bag | Leather Duffel Spacious Carry-On",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982432878932,
+   "title": "Men's Boxing Glove Pendant | Stainless Steel Lobster Clasp",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982432911700,
+   "title": "Men's Straight Leg Joggers | Drawstring Waist Side Stripe Relaxed Fit",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 74.95
+  },
+  {
+   "id": 15982432944468,
+   "title": "Men's Shacket | Plaid Fleece-Lined Button-Up Jacket",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 82.95
+  },
+  {
+   "id": 15982433010004,
+   "title": "Men's Leather Bracelet | Braided Leather Magnetic Clasp",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 66.95
+  },
+  {
+   "id": 15982433239380,
+   "title": "Men's Duffle Bag | Shoe Compartment Water-Repellent Shoulder Strap",
+   "from": 44.95,
+   "price": 44.95,
+   "compareAt": 81.95
+  },
+  {
+   "id": 15982433468756,
+   "title": "Men's Knit Scarf | Double Layer Knit Warm Versatile",
+   "from": 29.95,
+   "price": 29.95,
+   "compareAt": 49.95
+  },
+  {
+   "id": 15982433534292,
+   "title": "Men's Long Sleeve Polo Shirt | Collared Knit Button Closure",
+   "from": 39.95,
+   "price": 39.95,
+   "compareAt": 72.95
+  },
+  {
+   "id": 15982433567060,
+   "title": "Men's Leather Wallet | Bifold Snap Coin Pouch Card Slots",
+   "from": 54.95,
+   "price": 54.95,
+   "compareAt": 91.95
+  },
+  {
+   "id": 15982433698132,
+   "title": "Men's Leather Belt | Full-Grain Metal Buckle Edge Stitched",
+   "from": 29.95,
+   "price": 29.95,
+   "compareAt": 49.95
+  },
+  {
+   "id": 15982433829204,
+   "title": "Men's Long Sleeve T Shirt | Henley Ribbed Knit Button Closure",
+   "from": 29.95,
+   "price": 29.95,
+   "compareAt": 53.95
+  },
+  {
+   "id": 15982433861972,
+   "title": "Men's Half Zip Jumper | Half-Zip Neckline Knit Long Sleeve",
+   "from": 49.95,
+   "price": 49.95,
+   "compareAt": 90.95
+  }
+ ]
+}
