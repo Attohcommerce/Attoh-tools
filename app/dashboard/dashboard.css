@@ -225,6 +225,7 @@
 .dd-cf-pill.transit { color: #3987e5; border-color: rgba(57,135,229,.4); background: rgba(57,135,229,.12); }
 .dd-cf-pill.paid { color: var(--ok); border-color: rgba(62,207,142,.4); background: var(--ok-dim); }
 .dd-cf-pill.failed { color: var(--err); border-color: rgba(255,107,107,.4); background: var(--err-dim); }
+.dd-cf-pill.pending { color: var(--ink-2); border-style: dashed; border-color: var(--line-hi); }
 .dd-cf-toggle { appearance: none; background: none; border: 0; color: var(--muted); font-size: 12.5px; cursor: pointer; padding: 10px 2px 0; font-family: inherit; }
 .dd-cf-toggle:hover { color: var(--ink); }
 @media (max-width: 900px) { .dd-cf-days { grid-template-columns: repeat(5, minmax(0, 1fr)); } }

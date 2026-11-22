@@ -92,7 +92,7 @@ function cfLongDate(ymd) {
   const [y, m, d] = ymd.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
 }
-const CF_STATUS = { SCHEDULED: ["Gepland", "sched"], IN_TRANSIT: ["Onderweg", "transit"], PAID: ["Betaald", "paid"], FAILED: ["Mislukt", "failed"], CANCELED: ["Geannuleerd", "failed"] };
+const CF_STATUS = { PENDING: ["Verwacht", "pending"], SCHEDULED: ["Gepland", "sched"], IN_TRANSIT: ["Onderweg", "transit"], PAID: ["Betaald", "paid"], FAILED: ["Mislukt", "failed"], CANCELED: ["Geannuleerd", "failed"] };
 const money = (n, cur) => (n == null ? "—" : new Intl.NumberFormat("nl-NL", { style: "currency", currency: cur || "GBP", maximumFractionDigits: 2 }).format(n));
 
 /** Uur-reeks → cumulatief; uren na "nu" (alleen vandaag) worden null. */
@@ -579,7 +579,7 @@ export default function DashboardPage() {
                         <div className="dd-eyebrow">Cashflow · Shopify Payments-uitbetalingen{cfBusy ? " · laden…" : ""}</div>
                         <div className="dd-mid">{t ? `${gbp(t.week.gbp)} nog te ontvangen deze week` : cf && cf.error ? "Cashflow niet geladen" : "—"}</div>
                         <div className="small muted">
-                          {t ? `t/m ${cfLongDate(t.week.to)} · ${t.week.count} uitbetaling${t.week.count === 1 ? "" : "en"} · volgende 7 dagen ${gbp(t.next7.gbp)}${t.later.count ? ` · daarna nog ${gbp(t.later.gbp)}` : ""}${t.overdue.count ? ` · ${t.overdue.count} gepland met verstreken datum (bij vandaag)` : ""}` : cf && cf.error ? cf.error : "Uitbetalingen worden geladen…"}
+                          {t ? `t/m ${cfLongDate(t.week.to)} · ${t.week.count} uitbetaling${t.week.count === 1 ? "" : "en"} · volgende 7 dagen ${gbp(t.next7.gbp)}${t.later.count ? ` · daarna nog ${gbp(t.later.gbp)}` : ""}${t.overdue.count ? ` · ${t.overdue.count} met verstreken datum (bij vandaag)` : ""}` : cf && cf.error ? cf.error : "Uitbetalingen worden geladen…"}
                         </div>
                       </div>
                       {t ? (
@@ -617,7 +617,7 @@ export default function DashboardPage() {
                                 <span className="dd-store-dot" style={{ background: color }} />
                                 <strong>{it.key}</strong>
                                 <span className="muted small">{it.store}</span>
-                                {it.late ? <span className="dd-cf-pill failed">gepland op {shortDate(it.late)}</span> : null}
+                                {it.late ? <span className="dd-cf-pill failed">{it.status === "PENDING" ? "verwacht op" : "gepland op"} {shortDate(it.late)}</span> : null}
                                 <span className="dd-flex" />
                                 <span className="dd-cf-local">{it.currency !== "GBP" ? money(it.net, it.currency) : ""}</span>
                                 <span className="dd-cf-gbp">{gbp(it.gbp)}</span>
@@ -628,7 +628,8 @@ export default function DashboardPage() {
                         </div>
                         <div className="small muted" style={{ marginTop: 8 }}>
                           Datum = de dag waarop Shopify uitbetaalt; op je rekening meestal 1–3 werkdagen later. Bedragen netto (na Shopify-fees en refunds), omgerekend naar £ met de koers van vandaag.
-                          {okStores.length ? ` Schema: ${okStores.map((s) => `${s.key || s.name} ${s.schedule ? String(s.schedule.interval || "").toLowerCase() + (s.schedule.weeklyAnchor ? " (" + String(s.schedule.weeklyAnchor).toLowerCase() + ")" : "") : "?"}`).join(" · ")}.` : ""}
+                          {okStores.some((s) => s.lag) ? ` Verwacht = nog niet door Shopify ingepland; datum = betaaldag + ${okStores.find((s) => s.lag).lag} werkdagen, zoals in je Shopify-scherm.` : ""}
+                          {okStores.some((s) => s.schedule) ? ` Schema: ${okStores.filter((s) => s.schedule).map((s) => `${s.key || s.name} ${String(s.schedule.interval || "").toLowerCase() + (s.schedule.weeklyAnchor ? " (" + String(s.schedule.weeklyAnchor).toLowerCase() + ")" : "")}`).join(" · ")}.` : ""}
                         </div>
                         <button className="dd-cf-toggle" onClick={() => setCfHist((v) => !v)}>{cfHist ? "▾" : "▸"} Laatste uitbetalingen (14 dagen)</button>
                         {cfHist && (
