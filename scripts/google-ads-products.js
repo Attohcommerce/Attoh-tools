@@ -27,16 +27,18 @@ function main() {
   var tz = acc.getTimeZone();
   var nu = new Date();
   var bijgewerkt = Utilities.formatDate(nu, tz, 'yyyy-MM-dd HH:mm');
-  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var ss = opnieuw(function () { return SpreadsheetApp.openById(SHEET_ID); }, 'sheet openen');
   var naam = 'Prod_' + STORE;
-  var tab = ss.getSheetByName(naam) || ss.insertSheet(naam);
+  var tab = opnieuw(function () { return ss.getSheetByName(naam) || ss.insertSheet(naam); }, 'tab ' + naam);
   var kop = ['date', 'item_id', 'title', 'impressions', 'clicks', 'cost', 'conversions', 'conv_value', 'updated_at'];
   var dagStr = function (d) { return Utilities.formatDate(d, tz, 'yyyy-MM-dd'); };
   var tot = dagStr(nu);
   var grens = dagStr(new Date(nu.getTime() - BEWAAR_DAGEN * 86400000));
 
   // bestaande rijen lezen; onthoud de laatste datum die al in de tab staat
-  var oud = tab.getLastRow() > 1 ? tab.getRange(2, 1, tab.getLastRow() - 1, kop.length).getValues() : [];
+  var oud = opnieuw(function () {
+    return tab.getLastRow() > 1 ? tab.getRange(2, 1, tab.getLastRow() - 1, kop.length).getValues() : [];
+  }, 'tab lezen');
   var laatste = '';
   for (var i0 = 0; i0 < oud.length; i0++) {
     var d0 = oud[i0][0];
@@ -134,36 +136,52 @@ function main() {
 
   // Veilig schrijven: eerst alles in een tijdelijke tab, dan omwisselen. Zo blijft
   // de oude tab heel als het schrijven halverwege misgaat (anders: halve data).
+  // Lege tab (eerste run): direct in de tab schrijven, dat zijn minder zware
+  // stappen voor Sheets (22-11: CAC liep vast op "Service Spreadsheets timed out").
+  var direct = !oud.length;
   var tmpNaam = naam + '_tmp';
-  var tmp = ss.getSheetByName(tmpNaam);
-  if (tmp) ss.deleteSheet(tmp);
-  tmp = ss.insertSheet(tmpNaam);
+  Logger.log(STORE + ': ' + nieuw.length + ' nieuwe rijen (' + van + ' t/m ' + tot + '), ' + alles.length + ' totaal, schrijven ' + (direct ? 'direct' : 'via ' + tmpNaam));
+  // restant van een eerder mislukte run opruimen
+  opnieuw(function () { var t0 = ss.getSheetByName(tmpNaam); if (t0) ss.deleteSheet(t0); }, 'oude ' + tmpNaam + ' opruimen');
+  var doel = direct ? tab : opnieuw(function () { return ss.getSheetByName(tmpNaam) || ss.insertSheet(tmpNaam); }, tmpNaam + ' maken');
+  var nodig = alles.length + 1;
   try {
-    if (tmp.getMaxColumns() > kop.length) tmp.deleteColumns(kop.length + 1, tmp.getMaxColumns() - kop.length);
-    var nodig = alles.length + 1;
-    if (tmp.getMaxRows() < nodig) tmp.insertRowsAfter(tmp.getMaxRows(), nodig - tmp.getMaxRows());
-    else if (tmp.getMaxRows() > nodig + 1) tmp.deleteRows(nodig + 1, tmp.getMaxRows() - nodig - 1);
-    tmp.getRange('A:B').setNumberFormat('@');
-    tmp.getRange('I:I').setNumberFormat('@');
-    tmp.getRange(1, 1, 1, kop.length).setValues([kop]);
+    opnieuw(function () {
+      if (doel.getMaxColumns() > kop.length) doel.deleteColumns(kop.length + 1, doel.getMaxColumns() - kop.length);
+      if (doel.getMaxRows() < nodig) doel.insertRowsAfter(doel.getMaxRows(), nodig - doel.getMaxRows());
+      else if (doel.getMaxRows() > nodig + 1) doel.deleteRows(nodig + 1, doel.getMaxRows() - nodig - 1);
+    }, 'tab op maat');
+    opnieuw(function () {
+      doel.getRange('A:B').setNumberFormat('@');
+      doel.getRange('I:I').setNumberFormat('@');
+      doel.getRange(1, 1, 1, kop.length).setValues([kop]);
+    }, 'kopregel');
     // kleinere blokken + opnieuw proberen: Sheets geeft bij grote writes soms
-    // een tijdelijke "systeemfout"
-    var blok = 4000;
+    // een tijdelijke "systeemfout" of time-out
+    var blok = 2000;
     for (var s = 0; s < alles.length; s += blok) {
       var deel = alles.slice(s, s + blok);
       opnieuw(function () {
-        tmp.getRange(2 + s, 1, deel.length, kop.length).setValues(deel);
+        doel.getRange(2 + s, 1, deel.length, kop.length).setValues(deel);
         SpreadsheetApp.flush();
-      });
+      }, 'rijen ' + (s + 1) + '–' + (s + deel.length) + ' schrijven');
     }
-    if (tmp.getLastRow() !== nodig) throw new Error('Niet alles geschreven: ' + (tmp.getLastRow() - 1) + ' van ' + alles.length + ' rijen');
+    var geschreven = opnieuw(function () { return doel.getLastRow(); }, 'controle');
+    if (alles.length && geschreven !== nodig) throw new Error('Niet alles geschreven: ' + (geschreven - 1) + ' van ' + alles.length + ' rijen');
   } catch (e) {
-    // mislukt → tijdelijke tab weg, oude tab blijft onaangeroerd
-    ss.deleteSheet(tmp);
+    if (direct) {
+      // halve eerste run weghalen, anders denkt de volgende run dat die dagen er al zijn
+      try { if (doel.getLastRow() > 1) doel.getRange(2, 1, doel.getLastRow() - 1, kop.length).clearContent(); } catch (e3) { Logger.log('Tab niet leeggemaakt: ' + e3.message); }
+    } else {
+      // tijdelijke tab weg, oude tab blijft onaangeroerd
+      try { ss.deleteSheet(doel); } catch (e2) { Logger.log(tmpNaam + ' niet weg (volgende run ruimt hem op): ' + e2.message); }
+    }
     throw e;
   }
-  opnieuw(function () { ss.deleteSheet(tab); });
-  opnieuw(function () { tmp.setName(naam); });
+  if (!direct) {
+    opnieuw(function () { var t1 = ss.getSheetByName(naam); if (t1 && t1.getSheetId() !== doel.getSheetId()) ss.deleteSheet(t1); }, 'oude ' + naam + ' weg');
+    opnieuw(function () { if (doel.getName() !== naam) doel.setName(naam); }, tmpNaam + ' hernoemen');
+  }
   // opgehaalde dagen onthouden (alleen de laatste BEWAAR_DAGEN)
   for (var dg in dagen) opgehaald[dg] = 1;
   var schoon = {};
@@ -172,12 +190,15 @@ function main() {
   Logger.log(STORE + ' producten: ' + nieuw.length + ' rijen voor ' + van + ' t/m ' + tot + ' · totaal ' + alles.length + ' rijen in ' + naam);
 }
 
-// tot 3× opnieuw proberen bij een tijdelijke fout van Google (Sheets/Ads)
-function opnieuw(fn) {
+// tot 5× proberen bij een tijdelijke fout van Google (Sheets/Ads), met oplopende
+// pauze (5, 10, 20, 30 s). De foutmelding zegt welke stap misging.
+function opnieuw(fn, wat) {
+  var pauze = [5000, 10000, 20000, 30000];
   for (var p = 0; ; p++) {
     try { return fn(); } catch (e) {
-      if (p >= 2) throw e;
-      Utilities.sleep(3000 * (p + 1));
+      if (p >= pauze.length) throw new Error((wat ? wat + ': ' : '') + (e && e.message ? e.message : e));
+      Logger.log('Opnieuw ' + (p + 1) + '/' + pauze.length + (wat ? ' · ' + wat : '') + ' · ' + (e && e.message ? e.message : e));
+      Utilities.sleep(pauze[p]);
     }
   }
 }
