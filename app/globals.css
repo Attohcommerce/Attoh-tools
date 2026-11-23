@@ -311,6 +311,21 @@ a {
     display: none;
   }
 }
+/* 23-11: met "Big Competitors" erbij werd het menu breder dan een scherm van
+   1728 px. Onder 1800 px iets compacter — zo is de balk niet breder dan hij was. */
+@media (max-width: 1800px) {
+  .topbar {
+    gap: 10px;
+  }
+  .topbar .navlink {
+    padding: 7px 8px;
+    font-size: 12.5px;
+  }
+  .topbar .navlink::after {
+    left: 8px;
+    right: 8px;
+  }
+}
 .topbar .logout {
   font-size: 12.5px;
   color: var(--muted);

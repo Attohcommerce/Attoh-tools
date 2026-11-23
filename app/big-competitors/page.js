@@ -440,7 +440,7 @@ export default function BigCompetitorsPage() {
                     </div>
                   </div>
                 ))}
-                {!mk.stores.length && <div className="small muted">Nog geen store voor {mInfo.label} — voeg er hieronder één toe of zet de markt van de store goed in Keywords → Geheugen.</div>}
+                {!mk.stores.length && <div className="small muted" style={{ gridColumn: "1 / -1" }}>Nog geen store voor {mInfo.label} — voeg er hieronder één toe of zet de markt van de store goed in Keywords → Geheugen.</div>}
               </div>
               {mk.others.length > 0 && (
                 <div className="bc-row" style={{ marginTop: 8 }}>
