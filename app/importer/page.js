@@ -181,10 +181,11 @@ export default function ImporterPage() {
       if (bcSheet && /^[a-zA-Z0-9_-]{20,}$/.test(bcSheet)) {
         const list = visibleStores(load(LS.stores, []), "fashion");
         const want = String(q.get("bcStore") || "").toLowerCase();
-        const found = want && list.some((x) => x.domain === want);
-        bcRef.current = { sheet: bcSheet, tab: q.get("bcTab") || "", store: found ? want : "", cur: String(q.get("bcCur") || "").toUpperCase(), name: q.get("bcName") || "", missing: !!want && !found };
+        // store uit de link opzoeken in de koppelingen van deze browser (hoofdletters negeren)
+        const hit = want ? list.find((x) => String(x.domain || "").toLowerCase() === want) : null;
+        bcRef.current = { sheet: bcSheet, tab: q.get("bcTab") || "", store: hit ? hit.domain : "", cur: String(q.get("bcCur") || "").toUpperCase(), name: q.get("bcName") || "", missing: !!want && !hit };
         setTab("sheet");
-        if (found) setSelected(want);
+        if (hit) setSelected(hit.domain);
         setSheetId(`https://docs.google.com/spreadsheets/d/${bcSheet}/edit`);
         if (bcRef.current.tab) setSheetTab(bcRef.current.tab);
         setSheetMsg(
