@@ -218,13 +218,24 @@ export async function POST(req) {
   const storeCurrency = String(curGuess || "USD").toUpperCase();
   const { band, type: priceType, bandRate, usdBand } = bandFor(s.keyword, storeCurrency, fx && fx.usdRate);
   let clampedCount = 0;
+  /* VASTE SHEET-PRIJS (23-11, Big Competitors): de import-lijst geeft onze
+     prijs mee (bijv. $5 onder de concurrent). Dan geen omrekening en geen
+     prijsband: de goedkoopste variant krijgt precies die prijs, duurdere
+     varianten houden hun meerprijs t.o.v. de bron (op het rooster). */
+  const fixedPrice = Number(s.fixedPrice) > 0 ? Number(s.fixedPrice) : 0;
   const variants = tVariants.map((v) => {
-    // 1. Omrekenen  2. Op het rooster  3. Binnen de band van de productsoort
-    const raw = roundTo95(Number(v.price || 0) * rate);
-    let price = raw;
-    if (price < band[0]) price = band[0];
-    if (price > band[1]) price = band[1];
-    if (price !== raw) clampedCount++;
+    let price;
+    if (fixedPrice) {
+      const extra = srcPrice > 0 ? Math.max(0, Number(v.price || 0) - srcPrice) * rate : 0;
+      price = extra >= 2.5 ? roundTo95(fixedPrice + extra) : round2(fixedPrice);
+    } else {
+      // 1. Omrekenen  2. Op het rooster  3. Binnen de band van de productsoort
+      const raw = roundTo95(Number(v.price || 0) * rate);
+      price = raw;
+      if (price < band[0]) price = band[0];
+      if (price > band[1]) price = band[1];
+      if (price !== raw) clampedCount++;
+    }
     // 3. Doorstreepprijs berekend vanaf de AFGERONDE prijs → bij 50% exact het dubbele
     let compareAt = null;
     if (discountPct > 0 && price > 0) {
@@ -695,7 +706,9 @@ export async function POST(req) {
       sourcePrice: srcPrice ? srcPrice.toFixed(2) : "",
       rate: rate ? Number(rate).toFixed(4) : "1",
       finalPrice: variants.length ? variants[0].price : "",
-      band: `${priceType} ${storeCurrency} ${band[0]}–${band[1]}${usdBand ? ` (USD-band ${usdBand[0]}–${usdBand[1]} × ${bandRate.toFixed(2)})` : ""}`,
+      band: fixedPrice
+        ? `sheet-prijs ${storeCurrency} ${fixedPrice.toFixed(2)} (vast uit de import-lijst, geen band)`
+        : `${priceType} ${storeCurrency} ${band[0]}–${band[1]}${usdBand ? ` (USD-band ${usdBand[0]}–${usdBand[1]} × ${bandRate.toFixed(2)})` : ""}`,
       currency: storeCurrency,
       bandRate,
       clamped: clampedCount,
