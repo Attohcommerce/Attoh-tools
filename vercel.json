@@ -11,6 +11,14 @@
     {
       "path": "/api/competitor-finder/cron",
       "schedule": "20 5 * * 1"
+    },
+    {
+      "path": "/api/big-competitors/cron",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/big-competitors/cron/watch",
+      "schedule": "30 1 * * *"
     }
   ]
 }

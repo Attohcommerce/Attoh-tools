@@ -57,6 +57,18 @@ const MODULES = [
     ),
   },
   {
+    href: "/big-competitors",
+    name: "Big Competitors",
+    tagline: "Nachtscan · Import-sheet",
+    orgs: ["attoh"],
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
+        <path d="M15 4.5v3M13.5 6h3" />
+      </svg>
+    ),
+  },
+  {
     href: "/keywords",
     name: "Keywords",
     tagline: "Planner → sheet",

@@ -15,6 +15,7 @@ const NAV = [
   { href: "/importer", label: "Importer" },
   { href: "/scraper", label: "Product Scraper" },
   { href: "/competitor-finder", label: "Competitor finder" },
+  { href: "/big-competitors", label: "Big Competitors" },
   { href: "/keywords", label: "Keywords" },
   { href: "/niches", label: "Niche kiezen", hidden: true },
   { href: "/qa", label: "Store Doctor" },

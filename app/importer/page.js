@@ -6,7 +6,7 @@ import DoctorPanel from "../components/DoctorPanel";
 import { normSourceUrl, findExisting } from "@/lib/source-match";
 import { orgLS } from "@/lib/org-client";
 import { visibleStores, mergeStores } from "@/lib/store-scope";
-import { parseImportRows } from "@/lib/import-format";
+import { parseImportRows, undercutPrice, sheetDiscountFor } from "@/lib/import-format";
 
 const LS = {
   stores: "sa_stores",
@@ -160,6 +160,12 @@ export default function ImporterPage() {
      run-blad. */
   const [memStores, setMemStores] = useState([]);
   const [sheetAuto, setSheetAuto] = useState(""); // melding: van welke store de import-lijst ingevuld staat
+  /* Big Competitors (23-11): de pagina Big Competitors linkt hierheen met
+     /importer?bcSheet=<sheet-id>&bcTab=<blad>&bcStore=<domein>&bcCur=USD — dan
+     staan sheet, blad en store al klaar. bcCur = valuta van de prijzen in het
+     blad; rekent de gekozen store in een andere valuta, dan wordt de prijs uit
+     de sheet niet gebruikt (anders zou $59,95 als A$59,95 in de store komen). */
+  const bcRef = useRef(null);
 
   useEffect(() => {
     setStores(visibleStores(load(LS.stores, []), "fashion"));
@@ -169,6 +175,26 @@ export default function ImporterPage() {
     const ls = load(LS.logSheet, "") || load("sa_sheet_work", "");
     setLogSheet(ls);
     setSheetTab(load("sa_run_tab", ""));
+    try {
+      const q = new URLSearchParams(window.location.search);
+      const bcSheet = q.get("bcSheet");
+      if (bcSheet && /^[a-zA-Z0-9_-]{20,}$/.test(bcSheet)) {
+        const list = visibleStores(load(LS.stores, []), "fashion");
+        const want = String(q.get("bcStore") || "").toLowerCase();
+        // store uit de link opzoeken in de koppelingen van deze browser (hoofdletters negeren)
+        const hit = want ? list.find((x) => String(x.domain || "").toLowerCase() === want) : null;
+        bcRef.current = { sheet: bcSheet, tab: q.get("bcTab") || "", store: hit ? hit.domain : "", cur: String(q.get("bcCur") || "").toUpperCase(), name: q.get("bcName") || "", missing: !!want && !hit };
+        setTab("sheet");
+        if (hit) setSelected(hit.domain);
+        setSheetId(`https://docs.google.com/spreadsheets/d/${bcSheet}/edit`);
+        if (bcRef.current.tab) setSheetTab(bcRef.current.tab);
+        setSheetMsg(
+          bcRef.current.missing
+            ? `Big Competitors: blad "${bcRef.current.tab}" staat klaar, maar ${bcRef.current.name || want} is in deze browser niet gekoppeld — kies zelf de juiste store en klik "Sheet laden".`
+            : `Big Competitors: blad "${bcRef.current.tab}" staat klaar — klik "Sheet laden".`
+        );
+      }
+    } catch {}
     fetch("/api/geheugen", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -181,6 +207,15 @@ export default function ImporterPage() {
 
   useEffect(() => {
     if (!selected) return;
+    const bc = bcRef.current;
+    if (bc && (!bc.store || bc.store === selected)) {
+      // Big Competitors-link: sheet + blad van de link laten staan (niet de import-lijst van de store)
+      setSheetId(`https://docs.google.com/spreadsheets/d/${bc.sheet}/edit`);
+      if (bc.tab) setSheetTab(bc.tab);
+      setSheetAuto("");
+      setSheetLinks(null);
+      return;
+    }
     const entry = memStores.find((x) => x && x.domain === selected);
     const byStore = load("sa_import_tab_by_store", {});
     const lastTab = (byStore && byStore[selected]) || "";
@@ -381,7 +416,7 @@ export default function ImporterPage() {
       const res = await fetch("/api/sheets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "read", sheetId, range: sheetTab.trim() ? `'${sheetTab.trim()}'!A:K` : "A:K" }),
+        body: JSON.stringify({ action: "read", sheetId, range: sheetTab.trim() ? `'${sheetTab.trim()}'!A:Z` : "A:Z" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || res.status);
@@ -407,11 +442,16 @@ export default function ImporterPage() {
           gender: p.gender, // Man/Vrouw (geslacht-check scraper)
           kwType: p.kwType, // Direct/Attribuut/Gelegenheid
           titleForm: p.titleForm, // hoe het keyword in de titel hoort
+          price: p.price, // Q PRIJS — vaste verkoopprijs uit de sheet
+          competitorPrice: p.competitorPrice, // R PRIJS CONCURRENT
+          discount: p.discount, // S KORTING % — doorstreepprijs
         });
       }
       setSheetLinks(links);
+      const withPrice = links.filter((l) => Number(l.price) > 0 || Number(l.competitorPrice) > 0).length;
       setSheetMsg(
         `${links.length} links geladen uit de sheet` +
+          (withPrice ? ` — ${withPrice} met prijs uit de sheet (vaste prijs + doorstreepprijs, geen prijsband)` : "") +
           (parsed.format === "chaim" ? " — Chaim-formaat herkend (Keyword · Competitor · … · URL), bij het lezen omgezet" : "") +
           (links.length
             ? withCol
@@ -635,6 +675,13 @@ export default function ImporterPage() {
       }
     }
     let skippedCount = 0;
+    /* Sheet-prijzen in een andere valuta dan de store (Big Competitors-blad
+       van een andere markt geopend)? Dan niet gebruiken. */
+    const bcCur = (bcRef.current && bcRef.current.cur) || "";
+    const sheetPriceOk = !bcCur || !selectedStore.currency || String(selectedStore.currency).toUpperCase() === bcCur;
+    if (!sheetPriceOk && urls.some((u) => typeof u === "object" && (Number(u.price) > 0 || Number(u.competitorPrice) > 0))) {
+      pushLog({ ok: false, text: `LET OP: de prijzen in dit blad zijn in ${bcCur}, maar ${selectedStore.name} rekent in ${selectedStore.currency} — de prijs uit de sheet wordt NIET gebruikt (gewone prijsband). Verkeerde store gekozen?` });
+    }
 
     // Wisselkoersen één keer ophalen
     let rates = null;
@@ -688,6 +735,17 @@ export default function ImporterPage() {
       const rowTitleForm = typeof entry === "object" ? entry.titleForm || "" : "";
       const rowKwType = typeof entry === "object" ? entry.kwType || "" : "";
       const rowGender = typeof entry === "object" ? entry.gender || "" : "";
+      /* Sheet-prijs (Big Competitors, 23-11): PRIJS wint; anders X onder de
+         concurrent; anders gewoon de prijsband zoals altijd. */
+      const rowPrice =
+        typeof entry === "object" && sheetPriceOk
+          ? Number(entry.price) > 0
+            ? Number(entry.price)
+            : Number(entry.competitorPrice) > 0
+              ? undercutPrice(entry.competitorPrice, selectedStore && selectedStore.currency)
+              : 0
+          : 0;
+      const rowSheetDiscount = typeof entry === "object" ? Number(entry.discount) || 0 : 0;
       const nr = `${i + 1}/${urls.length}`;
       try {
         // 0. Staat de bron-URL al in de store? Dan niet eens scrapen.
@@ -780,6 +838,10 @@ export default function ImporterPage() {
         if (mixMode) {
           rowDiscount = mixPctFor(url);
         }
+        // Sheet-prijs → doorstreepprijs uit de sheet, anders vast 50/60/70 per product.
+        if (rowPrice > 0) {
+          rowDiscount = rowSheetDiscount > 0 && rowSheetDiscount < 95 ? rowSheetDiscount : sheetDiscountFor(url);
+        }
 
         // 4. Upload
         setStep(`${nr} · Uploaden naar ${selectedStore.name} + foto's koppelen…`);
@@ -800,6 +862,7 @@ export default function ImporterPage() {
             settings: {
               sourceUrl: url,
               discountPct: rowDiscount,
+              fixedPrice: rowPrice > 0 ? rowPrice : null,
               status,
               tags,
               colorLabel,
