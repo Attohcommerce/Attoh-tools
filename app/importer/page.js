@@ -42,6 +42,9 @@ function parseUrls(text) {
     .map((s) => (s.startsWith("http") ? s : "https://" + s));
 }
 
+// Tag op elk product uit een Big Competitors-blad (24-11-2026)
+const BIG_COMP_TAG = "Big Competitor";
+
 export default function ImporterPage() {
   // Stores
   const [stores, setStores] = useState([]);
@@ -445,6 +448,7 @@ export default function ImporterPage() {
           price: p.price, // Q PRIJS — vaste verkoopprijs uit de sheet
           competitorPrice: p.competitorPrice, // R PRIJS CONCURRENT
           discount: p.discount, // S KORTING % — doorstreepprijs
+          bigComp: !!p.bigComp, // T COMPETITOR gevuld → Big Competitors-blad
         });
       }
       setSheetLinks(links);
@@ -746,6 +750,14 @@ export default function ImporterPage() {
               : 0
           : 0;
       const rowSheetDiscount = typeof entry === "object" ? Number(entry.discount) || 0 : 0;
+      /* Big Competitors (24-11, Justin): elk product uit een Big Competitors-blad
+         krijgt de tag "Big Competitor" — zo zie je in Shopify en Pythago altijd
+         of ze echt oppakken. Herkend aan de link vanaf Big Competitors of aan
+         kolom T "COMPETITOR" in het blad. */
+      const rowBigComp = typeof entry === "object" && (!!entry.bigComp || !!(bcRef.current && bcRef.current.sheet && String(sheetId || "").includes(bcRef.current.sheet)));
+      const rowTags = rowBigComp && !String(tags || "").split(",").some((x) => x.trim().toLowerCase() === BIG_COMP_TAG.toLowerCase())
+        ? [String(tags || "").trim(), BIG_COMP_TAG].filter(Boolean).join(", ")
+        : tags;
       const nr = `${i + 1}/${urls.length}`;
       try {
         // 0. Staat de bron-URL al in de store? Dan niet eens scrapen.
@@ -864,7 +876,7 @@ export default function ImporterPage() {
               discountPct: rowDiscount,
               fixedPrice: rowPrice > 0 ? rowPrice : null,
               status,
-              tags,
+              tags: rowTags,
               colorLabel,
               sizeLabel,
               themeTemplate,

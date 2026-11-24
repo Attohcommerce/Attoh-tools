@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
 import { BC_MARKETS, BC_DEFAULTS } from "@/lib/bc-markets";
+import { switchLabel } from "@/lib/market-switch";
 
 /* BIG COMPETITORS (23-11-2026, projectdoc 205) — Justin: "Stores met 200k+
    bezoek per maand importeren continu nieuwe producten. Scrape ze overnight,
@@ -58,6 +59,22 @@ function newCounts(daily, now) {
   let week = 0;
   for (let i = 0; i < 7; i++) week += d[dayIso(now - i * 86400000)] || 0;
   return { today: d[today] || 0, week };
+}
+
+/* Pythago-regel per store (24-11-2026): na een market switch (EMC AUS → USA)
+   tellen alleen cijfers uit de nieuwe markt; tot er een week nieuwe-markt-data
+   is, verdeelt de tool eerlijk. */
+function pythagoNote(s) {
+  const fmt = (n) => Number(n || 0).toLocaleString("nl-NL");
+  const swl = switchLabel(s);
+  const py = s.pythago;
+  if (!s.on) return swl ? ` · ${swl}` : "";
+  if (py && py.hasData) {
+    const since = py.window && py.window < 30 ? ` (gerekend op ${py.window} dagen sinds de ${swl || "market switch"})` : "";
+    return ` · Pythago: ${fmt(py.orders)} orders in 30 dagen${since}`;
+  }
+  if (swl) return ` · ${swl} · Pythago van vóór de switch telt niet mee (eerlijk verdeeld)`;
+  return " · nog geen Pythago-cijfers (eerlijk verdeeld)";
 }
 
 export default function BigCompetitorsPage() {
@@ -434,7 +451,7 @@ export default function BigCompetitorsPage() {
                       <b>{s.name}</b>
                       <div className="bc-sub">
                         {GENDER_LABEL[s.genders] || s.genders}
-                        {s.on ? (s.pythago && s.pythago.hasData ? ` · Pythago: ${fmtN(s.pythago.orders)} orders in 30 dagen` : " · nog geen Pythago-cijfers (eerlijk verdeeld)") : ""}
+                        {pythagoNote(s)}
                         {!s.native ? " · handmatig toegevoegd" : ""}
                       </div>
                     </div>
