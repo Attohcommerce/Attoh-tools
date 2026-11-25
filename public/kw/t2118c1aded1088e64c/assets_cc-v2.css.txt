@@ -94,17 +94,17 @@ html.cc-rv-on .cc-rv.is-in { opacity: 1; transform: none; transition: opacity 0.
 .ux-pagecontent--flush { padding-top: 40px; }
 
 /* ---------- sale panel in a narrow space (half a banner on a laptop) ---------- */
-.cc-sh__panel{container-type:inline-size}
+.cc-sh .cc-sh__panel{container-type:inline-size}
 @container (max-width:900px){
-  .cc-sh__list{grid-template-columns:1fr;gap:6px}
-  .cc-sh__tile-img{width:40px;height:48px}
-  .cc-sh__in{padding:18px 20px 20px}
-  .cc-sh__cols{gap:0 20px;margin-top:14px}
-  .cc-sh__col + .cc-sh__col{padding-left:20px}
+  .cc-sh .cc-sh__panel .cc-sh__list{grid-template-columns:1fr;gap:6px}
+  .cc-sh .cc-sh__panel .cc-sh__tile-img{width:40px;height:48px}
+  .cc-sh .cc-sh__panel .cc-sh__in{padding:18px 20px 20px}
+  .cc-sh .cc-sh__panel .cc-sh__cols{gap:0 20px;margin-top:14px}
+  .cc-sh .cc-sh__panel .cc-sh__col + .cc-sh__col{padding-left:20px}
 }
 @container (max-width:560px){
-  .cc-sh__tile-badge{display:none}
-  .cc-sh__tile.is-hot .cc-sh__tile-badge{display:inline-block}
+  .cc-sh .cc-sh__panel .cc-sh__tile-badge{display:none}
+  .cc-sh .cc-sh__panel .cc-sh__tile.is-hot .cc-sh__tile-badge{display:inline-block}
 }
 
 /* ---------- product page: brand line above the title ---------- */
