@@ -1,0 +1,103 @@
+{%- comment -%} Consistent Couture · FAQ with photo (25-11-2026): a photo next to a group of questions that fold open. {%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign img_alt = s.title
+  if s.image != blank and s.image.alt != blank
+    assign img_alt = s.image.alt
+  endif
+-%}
+<section class="cc-fq{% if s.reverse %} cc-fq--rev{% endif %}" style="--fq-pt:{{ s.pad_top }}px;--fq-pb:{{ s.pad_bottom }}px;--fq-bg:{{ s.background }}">
+  <div class="ux-page">
+    {%- if s.heading != blank -%}
+      <div class="cc-fq__head">
+        {%- if s.kicker != blank -%}<p class="cc-fq__kicker">{{ s.kicker | escape }}</p>{%- endif -%}
+        <h1 class="cc-fq__h1">{{ s.heading | escape }}</h1>
+        {%- if s.subheading != blank -%}<div class="cc-fq__sub">{{ s.subheading }}</div>{%- endif -%}
+      </div>
+    {%- endif -%}
+    <div class="cc-fq__in">
+      {%- if s.image != blank -%}
+        <div class="cc-fq__media">
+          {{ s.image | image_url: width: 1200 | image_tag: loading: 'lazy', widths: '480,720,960,1200', sizes: '(min-width: 900px) 40vw, 100vw', class: 'cc-fq__img', alt: img_alt }}
+          {%- if s.eyebrow != blank -%}<span class="cc-fq__num">{{ s.eyebrow | escape }}</span>{%- endif -%}
+        </div>
+      {%- endif -%}
+      <div class="cc-fq__body">
+        {%- if s.title != blank -%}<h2 class="cc-fq__title">{{ s.title | escape }}</h2>{%- endif -%}
+        {%- if s.text != blank -%}<p class="cc-fq__text">{{ s.text | escape }}</p>{%- endif -%}
+        <div class="cc-fq__list">
+          {%- for block in section.blocks -%}
+            <details class="cc-fq__q"{% if s.open_first and forloop.first %} open{% endif %} {{ block.shopify_attributes }}>
+              <summary class="cc-fq__sum"><span>{{ block.settings.question | escape }}</span><i aria-hidden="true"></i></summary>
+              <div class="cc-fq__a">{{ block.settings.answer }}</div>
+            </details>
+          {%- endfor -%}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<style>
+.cc-fq{padding:var(--fq-pt,40px) 0 var(--fq-pb,40px);background:var(--fq-bg,#fff);color:#111111}
+.cc-fq__head{max-width:760px;margin:0 0 44px}
+.cc-fq__kicker{margin:0 0 12px;font-size:11px;font-weight:500;letter-spacing:.34em;text-transform:uppercase}
+.cc-fq__h1{margin:0;font-size:clamp(30px,4vw,44px);font-weight:600;line-height:1.1;letter-spacing:.04em;text-transform:uppercase}
+.cc-fq__sub{margin-top:14px;font-size:15px;line-height:1.6;color:#6e6e6e}
+.cc-fq__sub p{margin:0}
+.cc-fq__sub a{color:#111111;text-decoration:underline;text-underline-offset:3px}
+.cc-fq__in{display:grid;grid-template-columns:1fr;gap:26px;align-items:start}
+.cc-fq__media{position:relative;overflow:hidden;background:#f4f2ef}
+.cc-fq__img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;transition:transform 6s cubic-bezier(.16,.6,.2,1)}
+.cc-fq__media:hover .cc-fq__img{transform:scale(1.08)}
+.cc-fq__num{position:absolute;left:0;bottom:0;background:#111111;color:#fff;font-size:10.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;padding:10px 16px 9px}
+.cc-fq__title{margin:0 0 8px;font-size:clamp(22px,2.4vw,28px);font-weight:600;line-height:1.2;letter-spacing:.04em;text-transform:uppercase}
+.cc-fq__text{margin:0 0 18px;font-size:15px;line-height:1.6;color:#6e6e6e}
+.cc-fq__list{border-top:1px solid #111111}
+.cc-fq__q{border-bottom:1px solid #e8e8e1}
+.cc-fq__sum{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 2px;font-size:15px;font-weight:600;line-height:1.35;letter-spacing:.03em}
+.cc-fq__sum::-webkit-details-marker{display:none}
+.cc-fq__sum i{flex:0 0 26px;width:26px;height:26px;border:1px solid #111111;position:relative;transition:background .25s}
+.cc-fq__sum i:before,.cc-fq__sum i:after{content:"";position:absolute;left:50%;top:50%;width:10px;height:1.5px;background:#111111;transform:translate(-50%,-50%);transition:transform .25s,background .25s}
+.cc-fq__sum i:after{transform:translate(-50%,-50%) rotate(90deg)}
+.cc-fq__q[open] .cc-fq__sum i{background:#111111}
+.cc-fq__q[open] .cc-fq__sum i:before,.cc-fq__q[open] .cc-fq__sum i:after{background:#fff}
+.cc-fq__q[open] .cc-fq__sum i:after{transform:translate(-50%,-50%) rotate(0deg)}
+.cc-fq__sum:hover span{text-decoration:underline;text-underline-offset:4px}
+.cc-fq__a{padding:0 44px 20px 2px;font-size:14.5px;line-height:1.65;color:#3c3d3d}
+.cc-fq__a p{margin:0 0 8px}
+.cc-fq__a a{color:#111111;text-decoration:underline;text-underline-offset:3px}
+@media (min-width:900px){
+.cc-fq__in{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:64px}
+.cc-fq--rev .cc-fq__in{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+.cc-fq--rev .cc-fq__media{order:2}
+.cc-fq__media{position:sticky;top:110px}
+}
+@media (max-width:899px){.cc-fq__head{margin-bottom:28px}.cc-fq__img{aspect-ratio:4/3}.cc-fq__a{padding-right:8px}}
+</style>
+{% schema %}
+{
+  "name": "CC · FAQ with photo",
+  "class": "ux-section-faqphoto",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "Small line above the page heading" },
+    { "type": "text", "id": "heading", "label": "Page heading (optional)" },
+    { "type": "richtext", "id": "subheading", "label": "Text under the page heading" },
+    { "type": "image_picker", "id": "image", "label": "Photo" },
+    { "type": "checkbox", "id": "reverse", "label": "Photo on the right", "default": false },
+    { "type": "text", "id": "eyebrow", "label": "Label on the photo" },
+    { "type": "text", "id": "title", "label": "Title" },
+    { "type": "text", "id": "text", "label": "Intro text" },
+    { "type": "checkbox", "id": "open_first", "label": "Open first question", "default": true },
+    { "type": "color", "id": "background", "label": "Background", "default": "#ffffff" },
+    { "type": "range", "id": "pad_top", "label": "Space above", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 48 },
+    { "type": "range", "id": "pad_bottom", "label": "Space below", "min": 0, "max": 100, "step": 4, "unit": "px", "default": 48 }
+  ],
+  "blocks": [
+    { "type": "qa", "name": "Question", "settings": [
+      { "type": "text", "id": "question", "label": "Question" },
+      { "type": "richtext", "id": "answer", "label": "Answer" }
+    ] }
+  ],
+  "presets": [{ "name": "CC · FAQ with photo" }]
+}
+{% endschema %}
