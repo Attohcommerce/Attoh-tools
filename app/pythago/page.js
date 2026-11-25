@@ -1099,7 +1099,7 @@ export default function PythagoPage() {
                 <button className="pyd-ibtn on" title="AI-modelfoto's maken voor de aangevinkte producten" onClick={() => (async () => {
                   let openai = false;
                   try { const d = await (await fetch("/api/photo-queue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "list" }) })).json(); openai = !!d.openai; } catch {}
-                  setModal({ kind: "aiphoto", ids: [...picked], mode: "ai", engine: "claude", per: 1, openai, busy: false, msg: "" });
+                  setModal({ kind: "aiphoto", photoKind: "model", ids: [...picked], mode: "ai", engine: "claude", per: 1, openai, busy: false, msg: "" });
                 })()}>✦ AI-foto's ({picked.size})</button>
               )}
               <div className="pyd-dd">
@@ -1396,15 +1396,21 @@ export default function PythagoPage() {
         <div className="pyd-modal" onClick={() => !modal.busy && setModal(null)}>
           <div className="pyd-box md" onClick={(e) => e.stopPropagation()}>
             <div className="pyd-box__head">
-              <div><h3>AI-modelfoto's voor {modal.ids.length} product(en)</h3><div className="sub">De nieuwe foto komt vooraan bij de juiste kleur en in de omschrijving; de bestaande foto's blijven staan ({store.name || sel}).</div></div>
+              <div><h3>{modal.photoKind === "infographic" ? "Infographics" : "AI-modelfoto's"} voor {modal.ids.length} product(en)</h3><div className="sub">{modal.photoKind === "infographic" ? "Eén staand beeld per product met model, detailfoto's en korte verkooptekst. Komt direct achter de eerste foto('s)" : "De nieuwe foto komt vooraan bij de juiste kleur en in de omschrijving"}; de bestaande foto's blijven staan ({store.name || sel}).</div></div>
               <button className="x" onClick={() => !modal.busy && setModal(null)}>×</button>
             </div>
             <div style={{ padding: "4px 18px 0" }}>
-              <div className="sub" style={{ margin: "8px 0 6px" }}>Waarmee maken</div>
+              <div className="sub" style={{ margin: "8px 0 6px" }}>Soort foto</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button className={`pyd-ibtn ${modal.photoKind !== "infographic" ? "on" : ""}`} onClick={() => setModal({ ...modal, photoKind: "model" })}>AI-modelfoto's</button>
+                <button className={`pyd-ibtn ${modal.photoKind === "infographic" ? "on" : ""}`} onClick={() => setModal({ ...modal, photoKind: "infographic" })}>Infographic AI-foto's</button>
+              </div>
+              <div className="sub" style={{ margin: "12px 0 6px" }}>Waarmee maken</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button className={`pyd-ibtn ${modal.engine === "claude" ? "on" : ""}`} onClick={() => setModal({ ...modal, engine: "claude" })}>Claude · Higgsfield MCP</button>
                 <button className={`pyd-ibtn ${modal.engine === "openai" ? "on" : ""}`} disabled={!modal.openai} style={modal.openai ? undefined : { opacity: 0.55, cursor: "not-allowed" }} onClick={() => modal.openai && setModal({ ...modal, engine: "openai" })}>OpenAI API{modal.openai ? "" : " · coming soon"}</button>
               </div>
+              {modal.photoKind !== "infographic" && (<>
               <div className="sub" style={{ margin: "12px 0 6px" }}>Welke kleuren</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button className={`pyd-ibtn ${modal.mode === "ai" ? "on" : ""}`} onClick={() => setModal({ ...modal, mode: "ai" })}>AI kiest (mooie sets overslaan)</button>
@@ -1415,6 +1421,7 @@ export default function PythagoPage() {
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {[1, 2, 3, 4].map((n) => <button key={n} className={`pyd-ibtn ${modal.per === n ? "on" : ""}`} onClick={() => setModal({ ...modal, per: n })}>{n}</button>)}
               </div>
+              </>)}
             </div>
             <div className="pyd-list">
               {modal.ids.map((id) => {
@@ -1427,9 +1434,9 @@ export default function PythagoPage() {
               <button className="btn-ghost" disabled={modal.busy} onClick={() => setModal(null)}>{modal.done ? "Sluiten" : "Annuleren"}</button>
               {!modal.done && (
                 <button className="btn" disabled={modal.busy} onClick={async () => {
-                  setModal({ ...modal, busy: true, msg: modal.mode === "ai" ? "Foto's beoordelen en klaarzetten…" : "Klaarzetten…" });
+                  setModal({ ...modal, busy: true, msg: modal.photoKind !== "infographic" && modal.mode === "ai" ? "Foto's beoordelen en klaarzetten…" : "Klaarzetten…" });
                   try {
-                    const res = await fetch("/api/photo-queue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "enqueue", store, productIds: modal.ids, mode: modal.mode, per: modal.per, engine: modal.engine }) });
+                    const res = await fetch("/api/photo-queue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "enqueue", store, productIds: modal.ids, mode: modal.mode, per: modal.per, engine: modal.engine, kind: modal.photoKind === "infographic" ? "infographic" : "model" }) });
                     const d = await res.json();
                     if (!res.ok || d.error) throw new Error(d.error || "Klaarzetten mislukt");
                     const sk = (d.skipped || []).length;

@@ -67,6 +67,7 @@ export default function ImporterPage() {
   const [photoTypes, setPhotoTypes] = useState({}); // AI-foto's (coming soon): productsoort → aan/uit
   const [photoMode, setPhotoMode] = useState("5050"); // all | 5050 | ai
   const [photoPer, setPhotoPer] = useState(1);
+  const [photoKind, setPhotoKind] = useState("model"); // model | infographic (25-11: één beeld per product met tekst erop)
   const [pq, setPq] = useState(null); // foto-wachtrij: { batches, items }
   const [pqKey, setPqKey] = useState("");
   const [pqBusy, setPqBusy] = useState(false);
@@ -1831,6 +1832,18 @@ export default function ImporterPage() {
                   </div>
                 )}
 
+                <div className="field-label">Soort foto</div>
+                <div className="seg">
+                  <button type="button" className={photoKind === "model" ? "on" : ""} onClick={() => setPhotoKind("model")}>AI-modelfoto's</button>
+                  <button type="button" className={photoKind === "infographic" ? "on" : ""} onClick={() => setPhotoKind("infographic")}>Infographic AI-foto's</button>
+                </div>
+                <div className="hint">
+                  {photoKind === "model"
+                    ? "Modelfoto: het product op een nieuw model, studiofoto. Komt vooraan in de galerij en wordt de variantfoto."
+                    : "Infographic: één staand beeld (4:5) per product met een nieuw model, het exacte product, twee detailfoto's en korte verkooptekst op het beeld. De stijl en de tekst hangen af van de productsoort (schoenen, badmode, shorts, broeken, truien, jassen, jurken, tassen…) en van de omschrijving. Kan ook bij schoenen en tassen. Komt direct achter de eerste foto('s), nooit op plek 1."}
+                </div>
+
+                {photoKind === "model" && (<>
                 <div className="field-label">2 · Welke producten en kleuren</div>
                 <div className="seg">
                   <button type="button" className={photoMode === "5050" ? "on" : ""} onClick={() => setPhotoMode("5050")}>50-50</button>
@@ -1856,6 +1869,7 @@ export default function ImporterPage() {
                   {photoPer === 4 && "4 foto's: vooraanzicht + schuin van opzij + detail + product plat gelegd."}
                   {" "}Geen achteraanzicht: de achterkant staat niet op de bronfoto en zou verzonnen zijn.
                 </div>
+                </>)}
 
                 <div className="field-label">4 · Waarmee maken</div>
                 <div className="seg">
@@ -1879,10 +1893,10 @@ export default function ImporterPage() {
                 <div className="imp-photo-sum">
                   <div>
                     <b>{photoProducts}</b> producten gekozen{photoProducts ? (() => {
-                      const n = Math.max(1, Math.round(photoProducts * (photoMode === "all" ? 3 : 1.5) * photoPer));
-                      return ` · hoogstens ±${n} foto's · ${photoEngine === "openai" ? `±$${(n * 0.07).toFixed(2)}` : `±${n} credits`}${photoMode === "ai" ? " (AI kiest: meestal minder)" : ""}`;
+                      const n = photoKind === "infographic" ? photoProducts : Math.max(1, Math.round(photoProducts * (photoMode === "all" ? 3 : 1.5) * photoPer));
+                      return ` · hoogstens ±${n} ${photoKind === "infographic" ? "infographics" : "foto's"} · ${photoEngine === "openai" ? `±$${(n * 0.07).toFixed(2)}` : `±${n} credits`}${photoKind === "model" && photoMode === "ai" ? " (AI kiest: meestal minder)" : ""}`;
                     })() : ""}
-                    <div className="hint" style={{ margin: "2px 0 0" }}>Elke foto wordt tegen het origineel gecheckt voordat hij op het product komt. De AI-foto komt vooraan en in de omschrijving; de bestaande foto's blijven staan.</div>
+                    <div className="hint" style={{ margin: "2px 0 0" }}>{photoKind === "infographic" ? "Eén infographic per product. Product en tekst worden gecontroleerd voordat het beeld op het product komt; de bestaande foto's blijven staan. Producten die al een infographic hebben worden overgeslagen." : "Elke foto wordt tegen het origineel gecheckt voordat hij op het product komt. De AI-foto komt vooraan en in de omschrijving; de bestaande foto's blijven staan."}</div>
                   </div>
                   <button
                     type="button" className="btn" disabled={!photoProducts || !selectedStore || pqBusy}
@@ -1896,7 +1910,7 @@ export default function ImporterPage() {
                         let batch = "";
                         for (let i = 0; i < ids.length; i += 250) {
                           if (ids.length > 250) setPqMsg(`Bezig: ${Math.min(i + 250, ids.length)} van ${ids.length} producten…`);
-                          const part = await pqCall({ action: "enqueue", store: selectedStore, productIds: ids.slice(i, i + 250), mode: photoMode, per: photoPer, engine: photoEngine, batch });
+                          const part = await pqCall({ action: "enqueue", store: selectedStore, productIds: ids.slice(i, i + 250), mode: photoMode, per: photoPer, engine: photoEngine, batch, kind: photoKind });
                           batch = batch || part.batch || "";
                           d.added += part.added || 0;
                           d.judged += part.judged || 0;
@@ -1905,7 +1919,7 @@ export default function ImporterPage() {
                         }
                         setPqSkipped(d.skipped || []);
                         setPqPicked(d.picked || []);
-                        setPqMsg(`${d.added} foto-opdracht(en) klaargezet${d.skipped && d.skipped.length ? ` · ${d.skipped.length} overgeslagen` : ""}${d.judged ? ` · ${d.judged} producten een fotocijfer gegeven` : ""}. ${photoEngine === "openai" ? "De tool is begonnen; je kunt deze pagina sluiten." : "Claude pakt ze op zodra hij de wachtrij draait."}`);
+                        setPqMsg(`${d.added} ${photoKind === "infographic" ? "infographic-opdracht(en)" : "foto-opdracht(en)"} klaargezet${d.skipped && d.skipped.length ? ` · ${d.skipped.length} overgeslagen` : ""}${d.judged ? ` · ${d.judged} producten een fotocijfer gegeven` : ""}. ${photoEngine === "openai" ? "De tool is begonnen; je kunt deze pagina sluiten." : "Claude pakt ze op zodra hij de wachtrij draait."}`);
                       } catch (e) {
                         setPqMsg("Mislukt: " + String(e.message || e));
                       } finally {
@@ -1913,7 +1927,7 @@ export default function ImporterPage() {
                       }
                     }}
                   >
-                    {pqBusy ? (photoMode === "ai" ? "Foto's beoordelen…" : "Bezig…") : photoEngine === "openai" ? `✦ Maak foto's (${photoProducts})` : `✦ Zet klaar voor Claude (${photoProducts})`}
+                    {pqBusy ? (photoKind === "model" && photoMode === "ai" ? "Foto's beoordelen…" : "Bezig…") : photoEngine === "openai" ? `✦ Maak ${photoKind === "infographic" ? "infographics" : "foto's"} (${photoProducts})` : `✦ Zet klaar voor Claude (${photoProducts})`}
                   </button>
                 </div>
                 {pqMsg && <div className="hint" style={{ color: "var(--accent-hi)" }}>{pqMsg}</div>}

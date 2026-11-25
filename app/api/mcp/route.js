@@ -43,7 +43,7 @@ const TOOLS = [
        zodat Justin geen aparte wachtrij-sleutel meer hoeft te plakken. Zelfde functies als /api/photo-queue/agent. */
     name: "photo_queue",
     description:
-      "AI-modelfoto-wachtrij van Attoh Tools (motor 'Higgsfield via Claude'). action=next: openstaande opdrachten met kant-en-klare prompt, bronfoto-URL, model en de kostenregel (limit 1 tot 12); limit 13 tot 200 geeft een compact overzicht zonder prompts. action=sources: bronfoto's van max 8 opdrachten als plaatjes (ids als 'org:id'). action=done: gemaakte foto's (https-URL) op het product zetten, vooraan in de galerij, als variantfoto van de kleur, met fitnote en foto in de omschrijving; geef één opdracht (org, id, imageUrl) of een lijst items (max 8). action=fail: opdracht afkeuren met reden (begin met 'Overgeslagen' als het geen afkeur is). Kosten: altijd gpt_image_2, 1k, medium, 1:1 = 1 credit per foto; nooit gpt_image_2_6, high of 2k.",
+      "AI-modelfoto-wachtrij van Attoh Tools (motor 'Higgsfield via Claude'). action=next: openstaande opdrachten met kant-en-klare prompt, bronfoto-URL, model en de kostenregel (limit 1 tot 12); limit 13 tot 200 geeft een compact overzicht zonder prompts. action=sources: bronfoto's van max 8 opdrachten als plaatjes (ids als 'org:id'). action=done: gemaakte foto's (https-URL) op het product zetten, vooraan in de galerij, als variantfoto van de kleur, met fitnote en foto in de omschrijving; geef één opdracht (org, id, imageUrl) of een lijst items (max 8). action=fail: opdracht afkeuren met reden (begin met 'Overgeslagen' als het geen afkeur is). Kosten: altijd gpt_image_2, 1k, medium, 1:1 = 1 credit per foto; nooit gpt_image_2_6, high of 2k. Opdrachten met kind='infographic' (één beeld per product met tekst erop): zelfde model en kwaliteit maar aspect_ratio 4:5 (staat per opdracht in settings); bronfoto als referentie meegeven; vóór done controleren dat het product klopt en de tekst op het beeld foutloos is. Bij done komt een infographic achter de modelfoto's in de galerij, zonder variantkoppeling of fitnote.",
     inputSchema: {
       type: "object",
       properties: {
@@ -82,12 +82,12 @@ async function photoQueueTool(a) {
       const items = out.items.map((it) => {
         const p = it.profile || {};
         if (p.id && !profiles[p.id]) profiles[p.id] = { age: p.age, look: p.look, height: p.height, size: p.size };
-        return { org: it.org, id: it.id, store: it.store, title: it.title, type: it.type, color: it.color, gender: it.gender, sourceImage: it.sourceImage, profile: p.id, shot: it.shot, shotType: it.shotType, mode: it.mode };
+        return { org: it.org, id: it.id, store: it.store, title: it.title, type: it.type, color: it.color, gender: it.gender, sourceImage: it.sourceImage, profile: p.id, shot: it.shot, shotType: it.shotType, mode: it.mode, kind: it.kind };
       });
       return text({ pending: out.pending, compact: true, settings: out.brain.settings, costRule: out.brain.costRule, profiles, items });
     }
     const out = await agentNext({ limit: Math.max(1, want), store });
-    return text({ pending: out.pending, settings: out.brain.settings, costRule: out.brain.costRule, items: out.items });
+    return text({ pending: out.pending, settings: out.brain.settings, infographicSettings: out.brain.infographicSettings, infographicRule: out.brain.infographicRule, costRule: out.brain.costRule, items: out.items });
   }
   if (act === "sources") {
     const list = (Array.isArray(a.ids) ? a.ids : []).slice(0, 8);
@@ -155,7 +155,7 @@ async function handle(msg) {
       protocolVersion: (params && params.protocolVersion) || PROTOCOL,
       capabilities: { tools: { listChanged: false } },
       serverInfo: { name: "attoh-tools-stores", version: "1.0.0" },
-      instructions: "Toegang tot alle Shopify-stores van Justin (Attoh Tools). Begin met list_stores. Gebruik shopify_graphql met store = naam/afkorting/domein. AI-modelfoto's uit de wachtrij van de importer: photo_queue (next, sources, done, fail); maak ze met Higgsfield gpt_image_2, 1k, medium, 1:1 (1 credit per foto).",
+      instructions: "Toegang tot alle Shopify-stores van Justin (Attoh Tools). Begin met list_stores. Gebruik shopify_graphql met store = naam/afkorting/domein. AI-modelfoto's uit de wachtrij van de importer: photo_queue (next, sources, done, fail); maak ze met Higgsfield gpt_image_2, 1k, medium, 1:1 (1 credit per foto); opdrachten met kind=infographic op 4:5.",
     });
   }
   if (method === "ping") return rpc(id, {});
