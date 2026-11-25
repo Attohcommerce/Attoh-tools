@@ -1,0 +1,197 @@
+{%- liquid
+  assign menu = section.settings.menu
+  assign left_count = section.settings.left_links
+  assign logo_alt = section.settings.logo.alt | default: shop.name
+-%}
+{%- style -%}
+  #shopify-section-{{ section.id }} {
+    --header-bg: {{ section.settings.color_background }};
+    --header-fg: {{ section.settings.color_text }};
+    --logo-w: {{ section.settings.logo_width }}px;
+    --logo-w-m: {{ section.settings.logo_width_mobile }}px;
+  }
+{%- endstyle -%}
+
+<ux-header class="ux-header{% if section.settings.sticky %} ux-header--sticky{% endif %}">
+  <header class="ux-header__bar">
+    <div class="ux-page ux-header__row">
+      <div class="ux-header__zone ux-header__zone--left">
+        <button type="button" class="ux-header__icon ux-header__burger" aria-controls="UxNavDrawer" aria-expanded="false" data-drawer-open>
+          {% render 'ux-icon', icon: 'menu' %}<span class="visually-hidden">{{ 'sections.header.menu' | t | default: 'Menu' }}</span>
+        </button>
+        <nav class="ux-nav" aria-label="{{ 'sections.header.menu' | t | default: 'Menu' }}">
+          <ul class="ux-nav__list" role="list">
+            {%- for link in menu.links limit: left_count -%}
+              {% render 'ux-nav-item', link: link, section: section, index: forloop.index %}
+              {%- if forloop.index == section.settings.sale_position and section.settings.sale_label != blank -%}
+                <li class="ux-nav__item ux-nav__item--sale"><a class="ux-nav__link" href="{{ section.settings.sale_link | default: routes.all_products_collection_url }}"><span>{{ section.settings.sale_label | escape }}</span></a></li>
+              {%- endif -%}
+            {%- endfor -%}
+          </ul>
+        </nav>
+      </div>
+
+      <div class="ux-header__logo">
+        {%- if request.page_type == 'index' -%}<h1 class="ux-header__logo-h">{%- endif -%}
+        <a href="{{ routes.root_url }}" class="ux-header__logo-link">
+          {%- if section.settings.logo != blank -%}
+            {{ section.settings.logo | image_url: width: 800 | image_tag: class: 'ux-header__logo-img', widths: '200, 300, 400, 600, 800', sizes: '(min-width: 769px) var(--logo-w), var(--logo-w-m)', alt: logo_alt, loading: 'eager' }}
+          {%- else -%}
+            <img class="ux-header__logo-img" src="{{ 'logo-wordmark.png' | asset_url }}" alt="{{ shop.name | escape }}" width="1200" height="188">
+          {%- endif -%}
+        </a>
+        {%- if request.page_type == 'index' -%}</h1>{%- endif -%}
+      </div>
+
+      <div class="ux-header__zone ux-header__zone--right">
+        <nav class="ux-nav" aria-label="{{ 'sections.header.menu' | t | default: 'Menu' }}">
+          <ul class="ux-nav__list" role="list">
+            {%- for link in menu.links offset: left_count -%}
+              {%- assign idx = forloop.index | plus: left_count -%}
+              {% render 'ux-nav-item', link: link, section: section, index: idx %}
+            {%- endfor -%}
+          </ul>
+        </nav>
+        <div class="ux-header__icons">
+          {%- if section.settings.show_search -%}
+            <button type="button" class="ux-header__icon" data-search-open aria-controls="UxSearch" aria-expanded="false">
+              {% render 'ux-icon', icon: 'search' %}<span class="visually-hidden">{{ 'general.search.search' | t | default: 'Search' }}</span>
+            </button>
+          {%- endif -%}
+          <a href="{{ routes.cart_url }}" class="ux-header__icon ux-header__cart" id="cart-icon-bubble">
+            {% render 'ux-icon', icon: 'bag' %}<span class="visually-hidden">{{ 'templates.cart.cart' | t | default: 'Cart' }}</span>
+            <span class="ux-header__count{% if cart.item_count == 0 %} is-empty{% endif %}" data-cart-count>{{ cart.item_count }}</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {%- if section.settings.show_search -%}
+    <div class="ux-search" id="UxSearch" hidden>
+      <div class="ux-page">
+        <form action="{{ routes.search_url }}" method="get" role="search" class="ux-search__form">
+          <input type="hidden" name="options[prefix]" value="last">
+          {% render 'ux-icon', icon: 'search', class: 'ux-search__icon' %}
+          <input class="ux-search__input" type="search" name="q" value="{{ search.terms | escape }}" placeholder="{{ section.settings.search_placeholder | escape }}" aria-label="{{ 'general.search.search' | t | default: 'Search' }}">
+          <button type="button" class="ux-search__close" data-search-close>{% render 'ux-icon', icon: 'close' %}<span class="visually-hidden">{{ 'accessibility.close' | t | default: 'Close' }}</span></button>
+        </form>
+      </div>
+    </div>
+  {%- endif -%}
+</ux-header>
+
+<ux-drawer class="ux-drawer" id="UxNavDrawer" aria-hidden="true">
+  <div class="ux-drawer__overlay" data-drawer-close></div>
+  <div class="ux-drawer__panel" role="dialog" aria-modal="true" aria-label="{{ 'sections.header.menu' | t | default: 'Menu' }}" tabindex="-1">
+    <div class="ux-drawer__head">
+      <button type="button" class="ux-drawer__close" data-drawer-close>{% render 'ux-icon', icon: 'close' %}<span class="visually-hidden">{{ 'accessibility.close' | t | default: 'Close' }}</span></button>
+    </div>
+    <div class="ux-drawer__scroll">
+      <ul class="ux-mnav" role="list">
+        {%- for link in menu.links -%}
+          <li class="ux-mnav__item">
+            {%- if link.links != blank -%}
+              <details class="ux-mnav__details">
+                <summary class="ux-mnav__row">
+                  <a class="ux-mnav__link" href="{{ link.url }}">{{ link.title }}</a>
+                  <span class="ux-mnav__toggle" aria-hidden="true">{% render 'ux-icon', icon: 'chevron-down' %}</span>
+                </summary>
+                <ul class="ux-mnav__sub" role="list">
+                  <li><a class="ux-mnav__sublink ux-mnav__subrow ux-mnav__all" href="{{ link.url }}">{{ section.settings.shop_all_label | default: 'Shop all' | escape }} {{ link.title }}</a></li>
+                  {%- for child in link.links -%}
+                    <li>
+                      {%- if child.links != blank -%}
+                        <details class="ux-mnav__details ux-mnav__details--sub" open>
+                          <summary class="ux-mnav__subrow">
+                            <a class="ux-mnav__sublink" href="{{ child.url }}">{{ child.title }}</a>
+                            <span class="ux-mnav__subtoggle" aria-hidden="true">{% render 'ux-icon', icon: 'chevron-down' %}</span>
+                          </summary>
+                          <ul class="ux-mnav__sub ux-mnav__sub--deep" role="list">
+                            {%- for grandchild in child.links -%}
+                              <li><a class="ux-mnav__sublink" href="{{ grandchild.url }}">{{ grandchild.title }}</a></li>
+                            {%- endfor -%}
+                          </ul>
+                        </details>
+                      {%- else -%}
+                        <a class="ux-mnav__sublink ux-mnav__subrow" href="{{ child.url }}">{{ child.title }}</a>
+                      {%- endif -%}
+                    </li>
+                  {%- endfor -%}
+                </ul>
+              </details>
+            {%- else -%}
+              <a class="ux-mnav__link ux-mnav__row" href="{{ link.url }}">{{ link.title }}</a>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+      {%- liquid
+        assign has_social = false
+        if settings.social_instagram_link != blank or settings.social_pinterest_link != blank or settings.social_facebook_link != blank or settings.social_tiktok_link != blank
+          assign has_social = true
+        endif
+      -%}
+      {%- if has_social -%}
+        <ul class="ux-drawer__social" role="list">
+          {%- if settings.social_instagram_link != blank -%}<li><a href="{{ settings.social_instagram_link }}" target="_blank" rel="noopener">{% render 'ux-icon', icon: 'instagram' %}<span class="visually-hidden">Instagram</span></a></li>{%- endif -%}
+          {%- if settings.social_pinterest_link != blank -%}<li><a href="{{ settings.social_pinterest_link }}" target="_blank" rel="noopener">{% render 'ux-icon', icon: 'pinterest' %}<span class="visually-hidden">Pinterest</span></a></li>{%- endif -%}
+          {%- if settings.social_facebook_link != blank -%}<li><a href="{{ settings.social_facebook_link }}" target="_blank" rel="noopener">{% render 'ux-icon', icon: 'facebook' %}<span class="visually-hidden">Facebook</span></a></li>{%- endif -%}
+          {%- if settings.social_tiktok_link != blank -%}<li><a href="{{ settings.social_tiktok_link }}" target="_blank" rel="noopener">{% render 'ux-icon', icon: 'tiktok' %}<span class="visually-hidden">TikTok</span></a></li>{%- endif -%}
+        </ul>
+      {%- endif -%}
+    </div>
+  </div>
+</ux-drawer>
+
+{% schema %}
+{
+  "name": "Header",
+  "class": "ux-section-header",
+  "max_blocks": 20,
+  "settings": [
+    { "type": "image_picker", "id": "logo", "label": "Logo" },
+    { "type": "range", "id": "logo_width", "label": "Logo width (desktop)", "min": 80, "max": 420, "step": 10, "unit": "px", "default": 220 },
+    { "type": "range", "id": "logo_width_mobile", "label": "Logo width (mobile)", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 150 },
+    { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" },
+    { "type": "range", "id": "left_links", "label": "Menu items left of the logo", "min": 1, "max": 6, "step": 1, "default": 4, "info": "The rest of the menu sits right of the logo." },
+    { "type": "checkbox", "id": "show_counts", "label": "Show product counts in the mega menu", "default": true },
+    { "type": "text", "id": "shop_all_label", "label": "Shop all label", "default": "Shop all" },
+    { "type": "text", "id": "styles_label", "label": "Count word in the mega menu", "default": "styles" },
+    { "type": "header", "content": "Red sale link" },
+    { "type": "text", "id": "sale_label", "label": "Text", "default": "Sale", "info": "Opens the sale panel. Leave empty to hide the link." },
+    { "type": "url", "id": "sale_link", "label": "Link (used when the panel is off)" },
+    { "type": "range", "id": "sale_position", "label": "Show after menu item number", "min": 1, "max": 6, "step": 1, "default": 3 },
+    { "type": "text", "id": "hot_word", "label": "Mega menu: mark links with this word in red", "default": "Bestsellers" },
+    { "type": "text", "id": "hot_tag", "label": "Mega menu: red tag behind those links", "default": "Sale" },
+    { "type": "checkbox", "id": "sticky", "label": "Sticky header", "default": true },
+    { "type": "checkbox", "id": "show_search", "label": "Show search", "default": true },
+    { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search for coats, knitwear, boots…" },
+    { "type": "color", "id": "color_background", "label": "Background", "default": "#ffffff" },
+    { "type": "color", "id": "color_text", "label": "Text", "default": "#1c1d1d" }
+  ],
+  "blocks": [
+    {
+      "type": "mega_feature",
+      "name": "Mega menu image",
+      "settings": [
+        { "type": "text", "id": "menu_title", "label": "Menu item", "info": "Exact title of the top-level menu item, for example Women's" },
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "eyebrow", "label": "Small heading", "default": "New season" },
+        { "type": "text", "id": "heading", "label": "Heading", "default": "The collection" },
+        { "type": "text", "id": "button_label", "label": "Button label", "default": "Shop now" },
+        { "type": "url", "id": "link", "label": "Button link" }
+      ]
+    },
+    {
+      "type": "group_photo",
+      "name": "Mega menu group photo",
+      "settings": [
+        { "type": "text", "id": "menu_title", "label": "Menu item", "info": "Exact title of the top-level menu item, for example Women's" },
+        { "type": "text", "id": "group_title", "label": "Group", "info": "Exact title of the group in that menu, for example Clothing" },
+        { "type": "image_picker", "id": "image", "label": "Photo" }
+      ]
+    }
+  ]
+}
+{% endschema %}

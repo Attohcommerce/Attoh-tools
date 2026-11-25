@@ -1,0 +1,45 @@
+{%- style -%}
+  #shopify-section-{{ section.id }} .ux-banner { --banner-h: {{ section.settings.height }}px; --banner-h-m: {{ section.settings.height_mobile }}px; }
+{%- endstyle -%}
+{%- assign s = section.settings -%}
+<section class="ux-banner">
+  <div class="ux-page">
+    <div class="ux-banner__card"{% if s.open_sheet %} data-sheet-host{% endif %}>
+      <div class="ux-banner__media">
+        {%- if s.image != blank -%}
+          {{ s.image | image_url: width: 2600 | image_tag: class: 'ux-banner__img', widths: '800, 1200, 1600, 2000, 2600', sizes: '(min-width: 1500px) 1400px, 100vw', loading: 'lazy', alt: s.title }}
+        {%- else -%}
+          {{ 'lifestyle-1' | placeholder_svg_tag: 'ux-banner__img ux-placeholder' }}
+        {%- endif -%}
+      </div>
+      <a class="ux-banner__link" href="{{ s.link | default: '#' }}" aria-label="{{ s.title | escape }}"{% if s.open_sheet %} data-sheet-open{% endif %}></a>
+      <div class="ux-banner__copy">
+        {%- if s.flag != blank -%}<span class="cc-flag cc-flag--inline">{{ s.flag | escape }}</span>{%- endif -%}
+        {%- if s.eyebrow != blank -%}<p class="ux-banner__eyebrow">{{ s.eyebrow | escape }}</p>{%- endif -%}
+        {%- if s.title != blank -%}<h2 class="ux-banner__title">{{ s.title | escape }}</h2>{%- endif -%}
+        {%- if s.text != blank -%}<p class="ux-banner__body">{{ s.text | escape }}</p>{%- endif -%}
+        {%- if s.button_label != blank -%}<span class="ux-btn ux-btn--white ux-btn--lg">{{ s.button_label | escape }}{% render 'ux-icon', icon: 'arrow', class: 'ux-btn__arrow' %}</span>{%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Promo banner",
+  "class": "ux-section-banner",
+  "settings": [
+    { "type": "image_picker", "id": "image", "label": "Image" },
+    { "type": "range", "id": "height", "label": "Height (desktop)", "min": 240, "max": 700, "step": 10, "unit": "px", "default": 400 },
+    { "type": "range", "id": "height_mobile", "label": "Height (mobile)", "min": 180, "max": 600, "step": 10, "unit": "px", "default": 250 },
+    { "type": "text", "id": "eyebrow", "label": "Small heading", "default": "Most loved" },
+    { "type": "text", "id": "title", "label": "Heading", "default": "Dressed for cooler days." },
+    { "type": "text", "id": "text", "label": "Text", "default": "Coats, knitwear and boots, chosen to last the season." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Shop now" },
+    { "type": "url", "id": "link", "label": "Link" },
+    { "type": "text", "id": "flag", "label": "Red label", "info": "Leave empty for no label" },
+    { "type": "checkbox", "id": "open_sheet", "label": "A click opens the sale panel inside the banner", "default": false }
+  ],
+  "presets": [{ "name": "Promo banner" }]
+}
+{% endschema %}

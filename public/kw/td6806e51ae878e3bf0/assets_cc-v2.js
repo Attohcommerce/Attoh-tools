@@ -1,0 +1,26 @@
+/* Clove & Cloth v2 (25-11-2026): scroll reveal. One light observer, nothing measured on load. Without JS nothing is hidden. */
+(function () {
+  if (!('IntersectionObserver' in window)) { return; }
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
+  var sel = '.ux-tile,.ux-shopcards__card,.ux-card,.cc-st__media,.cc-st__copy,.cc-fq__media,.cc-fq__q';
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.06 });
+  function run() {
+    var els = document.querySelectorAll(sel);
+    if (!els.length) { return; }
+    document.documentElement.classList.add('cc-rv-on');
+    els.forEach(function (el) {
+      if (el.classList.contains('cc-rv')) { return; }
+      el.classList.add('cc-rv');
+      var i = 0, s = el;
+      while ((s = s.previousElementSibling)) { i++; }
+      el.style.setProperty('--rv-d', (Math.min(i, 5) * 70) + 'ms');
+      io.observe(el);
+    });
+    /* never leave anything invisible */
+    setTimeout(function () { document.querySelectorAll('.cc-rv:not(.is-in)').forEach(function (el) { var r = el.getBoundingClientRect(); if (r.top < window.innerHeight) { el.classList.add('is-in'); } }); }, 1800);
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', run); } else { run(); }
+  document.addEventListener('shopify:section:load', run);
+})();
