@@ -24,3 +24,17 @@
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', run); } else { run(); }
   document.addEventListener('shopify:section:load', run);
 })();
+
+/* brand line above the product title (text comes from the sale panel section setting) */
+(function () {
+  function run() {
+    var src = document.querySelector('[data-cc-sheet][data-brand]');
+    var h = document.querySelector('.ux-pdp__title');
+    if (!src || !h || document.querySelector('.cc-pdp__brand')) { return; }
+    var p = document.createElement('p');
+    p.className = 'cc-pdp__brand';
+    p.textContent = src.getAttribute('data-brand');
+    h.parentNode.insertBefore(p, h);
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', run); } else { run(); }
+})();

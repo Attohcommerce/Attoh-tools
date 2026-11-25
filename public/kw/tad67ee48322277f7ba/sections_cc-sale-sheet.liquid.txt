@@ -7,9 +7,6 @@
 {%- assign s = section.settings -%}
 {{ 'cc-v2.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'cc-v2.js' | asset_url }}" defer></script>
-{%- if s.pdp_brand != blank and template.name == 'product' -%}
-  <style>.ux-pdp__title::before{content:"{{ s.pdp_brand | replace: '\\', '' | replace: '"', '' | strip_newlines }}";display:block;margin:0 0 10px;font-size:11px;font-weight:500;line-height:16px;letter-spacing:.34em;text-transform:uppercase}</style>
-{%- endif -%}
 <style>
   .cc-sh{position:fixed;inset:0;z-index:2147483000}
   .cc-sh[hidden]{display:none}
@@ -52,19 +49,7 @@
   .cc-sh--split.is-open .cc-sh__panel{transform:none}
   .cc-sh--split .cc-sh__in{width:100%;max-height:100%;overflow-y:auto;padding:24px 28px}
   @media (min-width:990px){.is-split-open .ux-hero__media,.is-split-open .ux-banner__media{transform:translateX(-25%)}[data-sheet-host].is-split-open{height:var(--sh-h) !important}}
-  /* narrow panel (half a banner on a laptop): one tile per row, smaller photos, only the red label stays */
-  .cc-sh__panel{container-type:inline-size}
-  @container (max-width:900px){
-    .cc-sh__list{grid-template-columns:1fr;gap:6px}
-    .cc-sh__tile-img{width:40px;height:48px}
-    .cc-sh__in{padding:18px 20px 20px}
-    .cc-sh__cols{gap:0 20px;margin-top:14px}
-    .cc-sh__col + .cc-sh__col{padding-left:20px}
-  }
-  @container (max-width:560px){
-    .cc-sh__tile-badge{display:none}
-    .cc-sh__tile.is-hot .cc-sh__tile-badge{display:inline-block}
-  }
+  @media (max-width:1180px){.cc-sh--split .cc-sh__list{grid-template-columns:1fr}}
   @media (max-width:749px){
     .cc-sh__panel{left:0;top:auto;bottom:0;width:100%;max-height:86vh;border-top:0;transform:translateY(102%);opacity:1}
     .cc-sh.is-open .cc-sh__panel{transform:none}
@@ -82,7 +67,7 @@
   @media (prefers-reduced-motion:reduce){.cc-sh__panel,.cc-sh__backdrop,.ux-hero .ux-hero__media,[data-sheet-host],[data-sheet-host] .ux-banner__media,.cc-sh__tile,.cc-sh__tile-img img{transition:none}}
   html.cc-sh-lock{overflow:hidden}
 </style>
-<div class="cc-sh" data-cc-sheet hidden>
+<div class="cc-sh" data-cc-sheet{% if s.pdp_brand != blank and template.name == 'product' %} data-brand="{{ s.pdp_brand | escape }}"{% endif %} hidden>
   <div class="cc-sh__backdrop" data-sh-close></div>
   <div class="cc-sh__panel" role="dialog" aria-modal="true" aria-label="{{ s.eyebrow | escape }}" tabindex="-1">
     <div class="cc-sh__in">
