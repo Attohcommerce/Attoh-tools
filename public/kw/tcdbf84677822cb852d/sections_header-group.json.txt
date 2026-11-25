@@ -93,7 +93,9 @@
         "color_text": "#2a3743",
         "sale_label": "",
         "hot_word": "Bestsellers",
-        "hot_tag": "Sale"
+        "hot_tag": "Sale",
+        "help_label": "Help",
+        "help_menu": "footer-help"
       }
     },
     "ccm": {
@@ -113,7 +115,8 @@
         "card_2_image": "shopify://shop_images/Image_1079.png",
         "usp_1": "Shipped with UPS, tracked from our door to yours",
         "usp_2": "30 days to return",
-        "usp_3": "We aim to reply within 1 hour"
+        "usp_3": "We aim to reply within 1 hour",
+        "help_menu": "footer-help"
       }
     },
     "bf_catbar": {

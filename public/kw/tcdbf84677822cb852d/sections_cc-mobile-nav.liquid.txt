@@ -95,6 +95,11 @@
             <li><a class="ccm-row{% if t contains 'sale' %} ccm-row--sale{% endif %}" href="{{ link.url }}"><span>{{ link.title }}</span><span aria-hidden="true">&rarr;</span></a></li>
           {%- endif -%}
         {%- endfor -%}
+        {%- for hl in section.settings.help_menu.links -%}
+          {%- assign dup = false -%}
+          {%- for link in menu.links -%}{%- if link.url == hl.url -%}{%- assign dup = true -%}{%- endif -%}{%- endfor -%}
+          {%- unless dup -%}<li><a class="ccm-row" href="{{ hl.url }}"><span>{{ hl.title | escape }}</span><span aria-hidden="true">&rarr;</span></a></li>{%- endunless -%}
+        {%- endfor -%}
       </ul>
       {%- if section.settings.usp_1 != blank or section.settings.usp_2 != blank or section.settings.usp_3 != blank -%}
         <ul class="ccm-usps" role="list">
@@ -185,6 +190,7 @@
     { "type": "image_picker", "id": "card_1_image", "label": "Card 1 photo" },
     { "type": "text", "id": "card_2_title", "label": "Card 2 menu title", "default": "Men" },
     { "type": "image_picker", "id": "card_2_image", "label": "Card 2 photo" },
+    { "type": "link_list", "id": "help_menu", "label": "Extra links under the menu (Help)" },
     { "type": "text", "id": "usp_1", "label": "Line 1 under the menu" },
     { "type": "text", "id": "usp_2", "label": "Line 2 under the menu" },
     { "type": "text", "id": "usp_3", "label": "Line 3 under the menu" },

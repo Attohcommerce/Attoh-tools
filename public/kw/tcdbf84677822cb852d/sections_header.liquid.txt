@@ -50,6 +50,15 @@
               {%- assign idx = forloop.index | plus: left_count -%}
               {% render 'ux-nav-item', link: link, section: section, index: idx %}
             {%- endfor -%}
+            {%- assign help = section.settings.help_menu -%}
+            {%- if section.settings.help_label != blank and help.links.size > 0 -%}
+              <li class="ux-nav__item cc-help">
+                <span class="ux-nav__link cc-help__toggle" tabindex="0" role="button" aria-haspopup="true"><span>{{ section.settings.help_label | escape }}</span>{% render 'ux-icon', icon: 'chevron-down', class: 'cc-help__chev' %}</span>
+                <ul class="cc-help__list" role="list">
+                  {%- for hl in help.links -%}<li><a href="{{ hl.url }}">{{ hl.title | escape }}</a></li>{%- endfor -%}
+                </ul>
+              </li>
+            {%- endif -%}
           </ul>
         </nav>
         <div class="ux-header__icons">
@@ -151,6 +160,8 @@
   "max_blocks": 20,
   "settings": [
     { "type": "image_picker", "id": "logo", "label": "Logo" },
+    { "type": "text", "id": "help_label", "label": "Help dropdown label", "info": "Leave empty to hide the dropdown" },
+    { "type": "link_list", "id": "help_menu", "label": "Help dropdown menu" },
     { "type": "range", "id": "logo_width", "label": "Logo width (desktop)", "min": 80, "max": 420, "step": 10, "unit": "px", "default": 260 },
     { "type": "range", "id": "logo_width_mobile", "label": "Logo width (mobile)", "min": 60, "max": 260, "step": 5, "unit": "px", "default": 150 },
     { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" },
