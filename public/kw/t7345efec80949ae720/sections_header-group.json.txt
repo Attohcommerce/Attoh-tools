@@ -1,0 +1,411 @@
+{
+  "type": "header",
+  "name": "Header group",
+  "sections": {
+    "announcement": {
+      "type": "announcement-bar",
+      "blocks": {
+        "a1": {
+          "type": "announcement",
+          "settings": {
+            "text": "Free shipping on all orders across the USA",
+            "link": ""
+          }
+        },
+        "a2": {
+          "type": "announcement",
+          "settings": {
+            "text": "Hassle-free returns · 30-day return guarantee",
+            "link": "/pages/return-refund-policy"
+          }
+        },
+        "a3": {
+          "type": "announcement",
+          "settings": {
+            "text": "Real customer care · we reply within 1 hour",
+            "link": "/pages/contact"
+          }
+        }
+      },
+      "block_order": [
+        "a1",
+        "a2",
+        "a3"
+      ],
+      "settings": {
+        "color_background": "#2b2825",
+        "color_text": "#ffffff",
+        "interval": 4
+      }
+    },
+    "header": {
+      "type": "header",
+      "blocks": {
+        "mega_women": {
+          "type": "mega_feature",
+          "settings": {
+            "menu_title": "Women",
+            "image": "shopify://shop_images/Image_1080.png",
+            "eyebrow": "Black Friday Sale",
+            "heading": "Women's bestsellers",
+            "button_label": "Shop bestsellers",
+            "link": "/collections/womens-bestsellers"
+          }
+        },
+        "mega_men": {
+          "type": "mega_feature",
+          "settings": {
+            "menu_title": "Men",
+            "image": "shopify://shop_images/Image_1079.png",
+            "eyebrow": "Black Friday Sale",
+            "heading": "Men's bestsellers",
+            "button_label": "Shop bestsellers",
+            "link": "/collections/mens-bestsellers"
+          }
+        },
+        "gp1": {
+          "type": "group_photo",
+          "settings": {
+            "menu_title": "Men",
+            "group_title": "Tops",
+            "image": "shopify://shop_images/Relaxed_Studio_Portrait_in_Blue_and_Khaki.png"
+          }
+        }
+      },
+      "block_order": [
+        "mega_women",
+        "mega_men",
+        "gp1"
+      ],
+      "settings": {
+        "logo": "shopify://shop_images/Nora_Ivy.png",
+        "logo_width": 260,
+        "logo_width_mobile": 170,
+        "menu": "ssb-header",
+        "left_links": 3,
+        "show_counts": true,
+        "shop_all_label": "Shop all",
+        "styles_label": "styles",
+        "sticky": true,
+        "show_search": true,
+        "search_placeholder": "Search for dresses, sweaters, boots…",
+        "color_background": "#ffffff",
+        "color_text": "#2a3743",
+        "sale_label": "",
+        "hot_word": "Bestsellers",
+        "hot_tag": "Sale"
+      }
+    },
+    "ccm": {
+      "type": "cc-mobile-nav",
+      "settings": {
+        "menu": "ssb-header",
+        "logo": "shopify://shop_images/Nora_Ivy.png",
+        "promo_eyebrow": "Black Friday Sale",
+        "promo_heading": "Up to 50% off · shop the sale",
+        "promo_link": "/collections/all",
+        "open_first": false,
+        "breakpoint": 989,
+        "promo_image": "shopify://shop_images/ssb-bf-menu-banner.png",
+        "card_1_title": "Women",
+        "card_1_image": "shopify://shop_images/Image_1080.png",
+        "card_2_title": "Men",
+        "card_2_image": "shopify://shop_images/Image_1079.png",
+        "usp_1": "Shipped with UPS, tracked from our door to yours",
+        "usp_2": "30 days to return",
+        "usp_3": "We aim to reply within 1 hour"
+      }
+    },
+    "bf_catbar": {
+      "type": "bf-category-bar",
+      "settings": {
+        "show_on": "product",
+        "sale_label": "Black Friday Sale",
+        "women_sale_url": "/collections/womens-bestsellers",
+        "men_sale_url": "/collections/mens-bestsellers",
+        "menu": "ssb-header",
+        "women_title": "Women",
+        "men_title": "Men",
+        "default_gender": "women",
+        "max_links": 10,
+        "nav_label": "Shop by category",
+        "accent": "#c20000",
+        "nav_bg": "#ffffff",
+        "nav_text": "#2a3743",
+        "line": "#e3e3e0",
+        "level": "groups"
+      }
+    },
+    "promo": {
+      "type": "sw-promo-bar",
+      "settings": {
+        "pill": "Limited time",
+        "strong": "Black Friday Sale",
+        "text": "",
+        "cta_label": "",
+        "link": "",
+        "show_bundle": true,
+        "bundle_label": "Bundle & Save",
+        "qty_1": "Buy 2",
+        "off_1": "Extra 10% off",
+        "qty_2": "Buy 3",
+        "off_2": "Extra 15% off",
+        "qty_3": "Buy 4+",
+        "off_3": "Extra 20% off",
+        "bundle_link": "",
+        "show_divider": true,
+        "extra_text": "Code BLACKFRIDAY: extra 5% on top",
+        "extra_link": "",
+        "extra_on_pc": true,
+        "desktop_mode": "rotate",
+        "mobile_mode": "rotate",
+        "rotate_seconds": 3,
+        "show_pill_mobile": true,
+        "show_cta_mobile": false,
+        "font_size": 12,
+        "font_size_mobile": 11,
+        "letter_spacing": 8,
+        "uppercase": true,
+        "padding": 10,
+        "padding_mobile": 8,
+        "style": "dark",
+        "color_background": "#6E6862",
+        "color_text": "#FAF6F0",
+        "color_accent": "#c20000",
+        "color_tier": "#ffffff"
+      }
+    },
+    "sheet": {
+      "type": "cc-sale-sheet",
+      "blocks": {
+        "m1": {
+          "type": "tile",
+          "settings": {
+            "collection": "mens-bestsellers",
+            "audience": "men",
+            "label": "Men's Bestsellers",
+            "highlight": true,
+            "image": "shopify://shop_images/Image_1079.png"
+          }
+        },
+        "m2": {
+          "type": "tile",
+          "settings": {
+            "collection": "mens-shirts",
+            "audience": "men",
+            "label": "Shirts",
+            "highlight": false,
+            "image": "shopify://shop_images/Relaxed_Studio_Portrait_in_Blue_and_Khaki.png"
+          }
+        },
+        "m3": {
+          "type": "tile",
+          "settings": {
+            "collection": "mens-sweaters",
+            "audience": "men",
+            "label": "Sweaters",
+            "highlight": false
+          }
+        },
+        "m4": {
+          "type": "tile",
+          "settings": {
+            "collection": "mens-hoodies",
+            "audience": "men",
+            "label": "Hoodies",
+            "highlight": false
+          }
+        },
+        "m5": {
+          "type": "tile",
+          "settings": {
+            "collection": "mens-jackets-coats",
+            "audience": "men",
+            "label": "Jackets & Coats",
+            "highlight": false
+          }
+        },
+        "m6": {
+          "type": "tile",
+          "settings": {
+            "collection": "mens-leather-jackets",
+            "audience": "men",
+            "label": "Leather Jackets",
+            "highlight": false
+          }
+        },
+        "m7": {
+          "type": "tile",
+          "settings": {
+            "collection": "mens-pants",
+            "audience": "men",
+            "label": "Pants",
+            "highlight": false
+          }
+        },
+        "m8": {
+          "type": "tile",
+          "settings": {
+            "collection": "mens-shoes",
+            "audience": "men",
+            "label": "Shoes",
+            "highlight": false
+          }
+        },
+        "m9": {
+          "type": "tile",
+          "settings": {
+            "collection": "mens-loafers",
+            "audience": "men",
+            "label": "Loafers",
+            "highlight": false
+          }
+        },
+        "m10": {
+          "type": "tile",
+          "settings": {
+            "collection": "mens-boots",
+            "audience": "men",
+            "label": "Boots",
+            "highlight": false
+          }
+        },
+        "w1": {
+          "type": "tile",
+          "settings": {
+            "collection": "womens-bestsellers",
+            "audience": "women",
+            "label": "Women's Bestsellers",
+            "highlight": true,
+            "image": "shopify://shop_images/Image_1080.png"
+          }
+        },
+        "w2": {
+          "type": "tile",
+          "settings": {
+            "collection": "casual-dresses",
+            "audience": "women",
+            "label": "Casual Dresses",
+            "highlight": false
+          }
+        },
+        "w3": {
+          "type": "tile",
+          "settings": {
+            "collection": "formal-occasion-dresses",
+            "audience": "women",
+            "label": "Occasion Dresses",
+            "highlight": false
+          }
+        },
+        "w4": {
+          "type": "tile",
+          "settings": {
+            "collection": "sweaters",
+            "audience": "women",
+            "label": "Sweaters",
+            "highlight": false
+          }
+        },
+        "w5": {
+          "type": "tile",
+          "settings": {
+            "collection": "womens-cardigans",
+            "audience": "women",
+            "label": "Cardigans",
+            "highlight": false
+          }
+        },
+        "w6": {
+          "type": "tile",
+          "settings": {
+            "collection": "blouses",
+            "audience": "women",
+            "label": "Blouses",
+            "highlight": false
+          }
+        },
+        "w7": {
+          "type": "tile",
+          "settings": {
+            "collection": "jackets-coats",
+            "audience": "women",
+            "label": "Jackets & Coats",
+            "highlight": false
+          }
+        },
+        "w8": {
+          "type": "tile",
+          "settings": {
+            "collection": "jeans",
+            "audience": "women",
+            "label": "Jeans",
+            "highlight": false
+          }
+        },
+        "w9": {
+          "type": "tile",
+          "settings": {
+            "collection": "boots",
+            "audience": "women",
+            "label": "Boots",
+            "highlight": false
+          }
+        },
+        "w10": {
+          "type": "tile",
+          "settings": {
+            "collection": "womens-christmas",
+            "audience": "women",
+            "label": "Christmas Shop",
+            "highlight": false
+          }
+        }
+      },
+      "block_order": [
+        "m1",
+        "m2",
+        "m3",
+        "m4",
+        "m5",
+        "m6",
+        "m7",
+        "m8",
+        "m9",
+        "m10",
+        "w1",
+        "w2",
+        "w3",
+        "w4",
+        "w5",
+        "w6",
+        "w7",
+        "w8",
+        "w9",
+        "w10"
+      ],
+      "settings": {
+        "eyebrow": "Black Friday Sale",
+        "title": "Up to 50% off. Pick a category.",
+        "text": "Extra 10% to 20% off when you buy 2 or more pieces. Code BLACKFRIDAY: extra 5% on top.",
+        "badge": "Sale",
+        "hot_badge": "Top sale",
+        "men_title": "Men",
+        "men_link": "/collections/men",
+        "women_title": "Women",
+        "women_link": "/collections/women",
+        "all_label": "Shop all",
+        "close_label": "Close",
+        "pdp_brand": "Soul Society Boutique"
+      }
+    }
+  },
+  "order": [
+    "announcement",
+    "header",
+    "ccm",
+    "bf_catbar",
+    "promo",
+    "sheet"
+  ]
+}

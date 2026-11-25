@@ -1,0 +1,172 @@
+{
+  "sections": {
+    "orders": {
+      "type": "cc-faq-photo",
+      "blocks": {
+        "q1": {
+          "type": "qa",
+          "settings": {
+            "question": "Where do you ship?",
+            "answer": "<p>We currently ship only within the United States. Every order is sent with UPS.</p>"
+          }
+        },
+        "q2": {
+          "type": "qa",
+          "settings": {
+            "question": "How long does delivery take?",
+            "answer": "<p>Processing takes 1 to 2 business days and transit 4 to 8 business days, so your order arrives within 5 to 10 business days. The order cutoff time is 6:00 PM Central Time. Details are in our <a href=\"/pages/shipping-policy\">Shipping Policy</a>.</p>"
+          }
+        },
+        "q3": {
+          "type": "qa",
+          "settings": {
+            "question": "How can I track my order?",
+            "answer": "<p>You get a tracking link in your shipping confirmation email as soon as your order ships with UPS. You can also follow it any time on our <a href=\"/apps/parcelpanel\">Track Your Order</a> page.</p>"
+          }
+        },
+        "q4": {
+          "type": "qa",
+          "settings": {
+            "question": "How can I cancel my order?",
+            "answer": "<p>You can cancel free of charge within 30 minutes of placing your order. After that it is already being processed, but you are welcome to return it once it arrives.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "q1",
+        "q2",
+        "q3",
+        "q4"
+      ],
+      "settings": {
+        "image": "shopify://shop_images/ssb-faq-delivery.png",
+        "reverse": false,
+        "eyebrow": "01 · Delivery",
+        "title": "Orders and delivery",
+        "text": "Shipped with UPS and tracked from our door to yours.",
+        "open_first": true,
+        "background": "#ffffff",
+        "pad_top": 56,
+        "pad_bottom": 48,
+        "kicker": "Soul Society Boutique",
+        "heading": "Frequently asked questions",
+        "subheading": "<p>The questions we get asked most. Can't find yours? Email <a href=\"mailto:info@soulsocietyboutique.com\">info@soulsocietyboutique.com</a>, call <a href=\"tel:+16064883119\">+1 606 488 3119</a> or use our <a href=\"/pages/contact\">contact page</a>. We aim to respond within 1 hour.</p>"
+      }
+    },
+    "returns": {
+      "type": "cc-faq-photo",
+      "blocks": {
+        "q1": {
+          "type": "qa",
+          "settings": {
+            "question": "What is your return policy?",
+            "answer": "<p>You have 30 days after receiving your order to request a return. Return shipping is on you unless the item arrived damaged or incorrect. Once your return is received and approved, refunds are processed within 10 business days. Full details are in our <a href=\"/pages/return-refund-policy\">Return &amp; Refund Policy</a>.</p>"
+          }
+        },
+        "q2": {
+          "type": "qa",
+          "settings": {
+            "question": "What should I do if my order arrives damaged?",
+            "answer": "<p>Email us within 30 days of delivery at <a href=\"mailto:info@soulsocietyboutique.com\">info@soulsocietyboutique.com</a> with your order number, photos of the damage and a short description of the issue.</p>"
+          }
+        },
+        "q3": {
+          "type": "qa",
+          "settings": {
+            "question": "Do you provide size information?",
+            "answer": "<p>Yes, every product page has its own detailed size chart. Still not sure which size to pick? Reach out and we will help.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "q1",
+        "q2",
+        "q3"
+      ],
+      "settings": {
+        "image": "shopify://shop_images/ssb-faq-returns.png",
+        "reverse": true,
+        "eyebrow": "02 · Returns",
+        "title": "Returns and sizing",
+        "text": "Thirty days to decide, and a size chart on every product page.",
+        "open_first": true,
+        "background": "#f6f4f0",
+        "pad_top": 48,
+        "pad_bottom": 48
+      }
+    },
+    "pay": {
+      "type": "cc-faq-photo",
+      "blocks": {
+        "q1": {
+          "type": "qa",
+          "settings": {
+            "question": "What payment methods do you accept?",
+            "answer": "<p>We accept American Express, Visa and Mastercard, along with Apple Pay, Google Pay and Shop Pay.</p>"
+          }
+        },
+        "q2": {
+          "type": "qa",
+          "settings": {
+            "question": "Where do I enter my discount code?",
+            "answer": "<p>At checkout, look for the discount code box, enter your code and click Apply. Your total updates right away.</p>"
+          }
+        },
+        "q3": {
+          "type": "qa",
+          "settings": {
+            "question": "How does Bundle & Save work?",
+            "answer": "<p>Choose 2 pieces for an extra 10% off, 3 pieces for an extra 15% off, or 4 or more for an extra 20% off. It counts across all of our products, women's and men's, and is applied automatically at checkout.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "q1",
+        "q2",
+        "q3"
+      ],
+      "settings": {
+        "image": "shopify://shop_images/ssb-faq-ordering.png",
+        "reverse": false,
+        "eyebrow": "03 · Payment",
+        "title": "Payment and discounts",
+        "text": "Pay the way you like, and save more with every extra piece.",
+        "open_first": true,
+        "background": "#ffffff",
+        "pad_top": 48,
+        "pad_bottom": 48
+      }
+    },
+    "main": {
+      "type": "text-page",
+      "blocks": {
+        "h": {
+          "type": "heading",
+          "settings": {
+            "heading": "Contact details"
+          }
+        },
+        "t": {
+          "type": "text",
+          "settings": {
+            "text": "<p><strong>Store name:</strong> Soul Society Boutique<br/><strong>Company name:</strong> ATTOH COMMERCE LTD<br/><strong>Company number:</strong> 17242162<br/><strong>Company address:</strong> 71–75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom<br/><strong>Return address:</strong> Lane 1177, Jianlan Road, Meixu Street, Yinzhou District, Ningbo, China<br/><strong>Email:</strong> <a href=\"mailto:info@soulsocietyboutique.com\">info@soulsocietyboutique.com</a><br/><strong>Phone:</strong> <a href=\"tel:+16064883119\">+1 606 488 3119</a><br/><strong>Instagram:</strong> <a href=\"https://www.instagram.com/soul.societyboutique/\" target=\"_blank\">@soul.societyboutique</a></p><p>Monday to Friday: 9:00 AM – 5:00 PM (Central Time)<br/>Saturday and Sunday: 11:00 AM – 4:00 PM (Central Time)<br/>We aim to respond to your inquiries within 1 hour.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "h",
+        "t"
+      ],
+      "settings": {
+        "title": "FAQ",
+        "hide_title": true
+      }
+    }
+  },
+  "order": [
+    "orders",
+    "returns",
+    "pay",
+    "main"
+  ]
+}

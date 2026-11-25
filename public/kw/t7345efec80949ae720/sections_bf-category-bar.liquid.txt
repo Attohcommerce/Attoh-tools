@@ -1,0 +1,177 @@
+{%- comment -%} Black Friday category bar (21-11-2026): red sale link to the gender bestsellers + categories from the menu. PC: slider with arrows. {%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign show_bar = true
+  if s.show_on == 'product' and template.name != 'product'
+    assign show_bar = false
+  endif
+
+  assign page_aud = s.default_gender | default: 'women'
+  if template.name == 'product' and product
+    assign ptype = product.type | default: ''
+    assign ttl = product.title | default: ''
+    if template.suffix == 'men' or product.tags contains 'Men' or ptype contains "Men's" or ttl contains "Men's"
+      assign page_aud = 'men'
+    elsif template.suffix == 'women' or product.tags contains 'Women' or ptype contains "Women's" or ttl contains "Women's"
+      assign page_aud = 'women'
+    endif
+  elsif template.name == 'collection' and collection
+    assign ch5 = collection.handle | slice: 0, 5
+    assign ch7 = collection.handle | slice: 0, 7
+    if collection.handle == 'men' or ch5 == 'mens-'
+      assign page_aud = 'men'
+    elsif collection.handle == 'women' or ch7 == 'womens-'
+      assign page_aud = 'women'
+    endif
+  endif
+
+  if page_aud == 'men'
+    assign sale_url = s.men_sale_url | default: s.all_sale_url
+    assign find_title = s.men_title | strip | downcase
+    assign other_label = s.women_link_label
+    assign other_url = s.women_link_url
+  else
+    assign sale_url = s.women_sale_url | default: s.all_sale_url
+    assign find_title = s.women_title | strip | downcase
+    assign other_label = s.men_link_label
+    assign other_url = s.men_link_url
+  endif
+
+  assign menu = s.menu
+  assign group = nil
+  for l in menu.links
+    assign lt = l.title | strip | downcase
+    if lt == find_title
+      assign group = l
+      break
+    endif
+  endfor
+  assign max = s.max_links | default: 10
+-%}
+{%- if show_bar -%}
+{%- style -%}
+  #shopify-section-{{ section.id }} .bf-cb {
+    --cb-red: {{ s.accent }};
+    --cb-nav-bg: {{ s.nav_bg }};
+    --cb-nav-fg: {{ s.nav_text }};
+    --cb-line: {{ s.line }};
+  }
+{%- endstyle -%}
+<style>
+  .bf-cb{position:relative;grid-column:1 / -1;width:100%}
+  .bf-cb__nav{background:var(--cb-nav-bg);border-top:1px solid var(--cb-line);border-bottom:1px solid var(--cb-line);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .bf-cb__nav::-webkit-scrollbar{display:none}
+  .bf-cb__list{display:flex;width:max-content;margin:0 auto;padding:0 20px;gap:0 28px;list-style:none}
+  .bf-cb__item{flex:0 0 auto}
+  .bf-cb__link{display:block;padding:13px 0 11px;border-bottom:2px solid transparent;color:var(--cb-nav-fg);font-size:12.5px;line-height:16px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;white-space:nowrap}
+  .bf-cb__link:hover{border-bottom-color:currentColor}
+  .bf-cb__link.is-hot{color:var(--cb-red);border-bottom-color:var(--cb-red);font-weight:600}
+  .bf-cb__nav{scroll-behavior:smooth}
+  .bf-cb__arrow{display:none;position:absolute;top:1px;bottom:1px;z-index:2;width:44px;border:0;padding:0;cursor:pointer;color:var(--cb-nav-fg);font-size:20px;line-height:1}
+  .bf-cb__arrow--prev{left:0;background:linear-gradient(90deg,var(--cb-nav-bg) 60%,transparent)}
+  .bf-cb__arrow--next{right:0;background:linear-gradient(270deg,var(--cb-nav-bg) 60%,transparent)}
+  @media (min-width:750px){
+    .bf-cb.is-scroll .bf-cb__list{margin:0;padding:0 48px}
+    .bf-cb.is-scroll .bf-cb__arrow{display:block}
+    .bf-cb.at-start .bf-cb__arrow--prev,.bf-cb.at-end .bf-cb__arrow--next{display:none}
+  }
+  @media (max-width:749px){
+    .bf-cb__list{margin:0;padding:0 16px;gap:0 22px}
+    .bf-cb__link{padding:11px 0 9px;font-size:11.5px}
+  }
+</style>
+<div class="bf-cb" data-bf-cb>
+  <button type="button" class="bf-cb__arrow bf-cb__arrow--prev" aria-label="Previous" data-dir="-1">&#8249;</button>
+  <button type="button" class="bf-cb__arrow bf-cb__arrow--next" aria-label="Next" data-dir="1">&#8250;</button>
+  <nav class="bf-cb__nav" aria-label="{{ s.nav_label | escape }}">
+    <ul class="bf-cb__list" role="list">
+      {%- if s.sale_label != blank and sale_url != blank -%}
+        <li class="bf-cb__item"><a class="bf-cb__link is-hot" href="{{ sale_url }}">{{ s.sale_label | escape }}</a></li>
+      {%- endif -%}
+      {%- assign shown = 0 -%}
+      {%- if group -%}
+        {%- assign items = group.links -%}
+      {%- else -%}
+        {%- assign items = menu.links -%}
+      {%- endif -%}
+      {%- for l in items -%}
+        {%- if l.links != blank and s.level != 'categories' and group -%}
+          {%- if shown < max and l.type == 'collection_link' -%}
+            <li class="bf-cb__item"><a class="bf-cb__link" href="{{ l.url }}">{{ l.title | escape }}</a></li>
+            {%- assign shown = shown | plus: 1 -%}
+          {%- endif -%}
+        {%- elsif l.links != blank -%}
+          {%- for c in l.links -%}
+            {%- if shown < max and c.type == 'collection_link' -%}
+              <li class="bf-cb__item"><a class="bf-cb__link" href="{{ c.url }}">{{ c.title | escape }}</a></li>
+              {%- assign shown = shown | plus: 1 -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- elsif shown < max and l.type == 'collection_link' -%}
+          {%- unless group == nil and l.url == sale_url -%}
+            <li class="bf-cb__item"><a class="bf-cb__link" href="{{ l.url }}">{{ l.title | escape }}</a></li>
+            {%- assign shown = shown | plus: 1 -%}
+          {%- endunless -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if other_label != blank and other_url != blank -%}
+        <li class="bf-cb__item"><a class="bf-cb__link" href="{{ other_url }}">{{ other_label | escape }}</a></li>
+      {%- endif -%}
+    </ul>
+  </nav>
+</div>
+<script>
+  (function(){
+    document.querySelectorAll('[data-bf-cb]').forEach(function(bar){
+      if (bar.dataset.ready) return; bar.dataset.ready = '1';
+      var nav = bar.querySelector('.bf-cb__nav');
+      function upd(){
+        var over = nav.scrollWidth > nav.clientWidth + 4;
+        bar.classList.toggle('is-scroll', over);
+        bar.classList.toggle('at-start', nav.scrollLeft < 4);
+        bar.classList.toggle('at-end', nav.scrollLeft + nav.clientWidth > nav.scrollWidth - 4);
+      }
+      bar.querySelectorAll('.bf-cb__arrow').forEach(function(b){
+        b.addEventListener('click', function(){ nav.scrollBy({ left: Number(b.dataset.dir) * nav.clientWidth * 0.7, behavior: 'smooth' }); });
+      });
+      nav.addEventListener('scroll', upd, { passive: true });
+      window.addEventListener('resize', upd);
+      upd(); setTimeout(upd, 300);
+    });
+  })();
+</script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Black Friday category bar",
+  "class": "bf-section-catbar",
+  "settings": [
+    { "type": "paragraph", "content": "Row of links under the header: a red sale link to the bestsellers, then the categories from the menu. On a men's page the men's categories show, on a women's page the women's." },
+    { "type": "select", "id": "show_on", "label": "Show on", "default": "product", "options": [ { "value": "product", "label": "Product pages only" }, { "value": "all", "label": "All pages" } ] },
+    { "type": "header", "content": "Sale link" },
+    { "type": "text", "id": "sale_label", "label": "Text", "default": "Black Friday Sale" },
+    { "type": "url", "id": "women_sale_url", "label": "Sale link on women's pages" },
+    { "type": "url", "id": "men_sale_url", "label": "Sale link on men's pages" },
+    { "type": "url", "id": "all_sale_url", "label": "Sale link (everyone)", "info": "Used when the gender link above is empty. Single-gender store: only fill in this one." },
+    { "type": "header", "content": "Categories" },
+    { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" },
+    { "type": "text", "id": "women_title", "label": "Women's menu item", "default": "Women", "info": "Exact title of the top-level menu item. If it is not found, the top-level collections of the menu are used." },
+    { "type": "text", "id": "men_title", "label": "Men's menu item", "default": "Men" },
+    { "type": "select", "id": "default_gender", "label": "Pages without a gender count as", "default": "women", "options": [ { "value": "women", "label": "Women" }, { "value": "men", "label": "Men" } ] },
+    { "type": "range", "id": "max_links", "label": "Max categories", "min": 3, "max": 16, "step": 1, "default": 10 },
+    { "type": "select", "id": "level", "label": "Links in the bar", "default": "groups", "options": [ { "value": "groups", "label": "Groups (short bar)" }, { "value": "categories", "label": "Every category (long bar)" } ] },
+    { "type": "text", "id": "men_link_label", "label": "Link to men on women's pages" },
+    { "type": "url", "id": "men_link_url", "label": "Men link" },
+    { "type": "text", "id": "women_link_label", "label": "Link to women on men's pages" },
+    { "type": "url", "id": "women_link_url", "label": "Women link" },
+    { "type": "text", "id": "nav_label", "label": "Menu name (for screen readers)", "default": "Shop by category" },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "accent", "label": "Red (sale link)", "default": "#C20000" },
+    { "type": "color", "id": "nav_bg", "label": "Background", "default": "#ffffff" },
+    { "type": "color", "id": "nav_text", "label": "Text", "default": "#101010" },
+    { "type": "color", "id": "line", "label": "Lines", "default": "#e3e3e0" }
+  ],
+  "presets": [ { "name": "Black Friday category bar" } ]
+}
+{% endschema %}
