@@ -89,12 +89,6 @@
                 </div>
               {%- endfor -%}
             {%- else -%}
-                      <li>{% render 'cc-mega-chip', item: child, section: section %}</li>
-                    {%- endif -%}
-                  </ul>
-                </div>
-              {%- endfor -%}
-            {%- else -%}
               {%- liquid
                 assign cols = link.links.size
                 if cols > 6
