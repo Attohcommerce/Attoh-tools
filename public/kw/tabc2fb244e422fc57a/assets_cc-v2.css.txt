@@ -93,18 +93,22 @@ html.cc-rv-on .cc-rv.is-in { opacity: 1; transform: none; transition: opacity 0.
 /* ---------- text page under a photo section ---------- */
 .ux-pagecontent--flush { padding-top: 40px; }
 
-/* ---------- sale panel in a narrow space (half a banner on a laptop) ---------- */
-.cc-sh .cc-sh__panel{container-type:inline-size}
-@container (max-width:900px){
-  .cc-sh .cc-sh__panel .cc-sh__list{grid-template-columns:1fr;gap:6px}
-  .cc-sh .cc-sh__panel .cc-sh__tile-img{width:40px;height:48px}
-  .cc-sh .cc-sh__panel .cc-sh__in{padding:18px 20px 20px}
-  .cc-sh .cc-sh__panel .cc-sh__cols{gap:0 20px;margin-top:14px}
-  .cc-sh .cc-sh__panel .cc-sh__col + .cc-sh__col{padding-left:20px}
+/* ---------- sale panel inside a banner (half the width): one tile per row, smaller photos ---------- */
+[data-sheet-host] .cc-sh.cc-sh--split .cc-sh__list { grid-template-columns: 1fr; gap: 6px; }
+[data-sheet-host] .cc-sh.cc-sh--split .cc-sh__tile-img { width: 40px; height: 48px; }
+[data-sheet-host] .cc-sh.cc-sh--split .cc-sh__in { padding: 18px 20px 20px; }
+[data-sheet-host] .cc-sh.cc-sh--split .cc-sh__cols { gap: 0 20px; margin-top: 14px; }
+[data-sheet-host] .cc-sh.cc-sh--split .cc-sh__col + .cc-sh__col { padding-left: 20px; }
+@media (max-width: 1800px) {
+  .cc-sh.cc-sh--split .cc-sh__list { grid-template-columns: 1fr; gap: 6px; }
+  .cc-sh.cc-sh--split .cc-sh__tile-img { width: 40px; height: 48px; }
+  .cc-sh.cc-sh--split .cc-sh__in { padding: 18px 20px 20px; }
+  .cc-sh.cc-sh--split .cc-sh__cols { gap: 0 20px; margin-top: 14px; }
+  .cc-sh.cc-sh--split .cc-sh__col + .cc-sh__col { padding-left: 20px; }
 }
-@container (max-width:560px){
-  .cc-sh .cc-sh__panel .cc-sh__tile-badge{display:none}
-  .cc-sh .cc-sh__panel .cc-sh__tile.is-hot .cc-sh__tile-badge{display:inline-block}
+@media (max-width: 1240px) {
+  .cc-sh.cc-sh--split .cc-sh__tile-badge { display: none; }
+  .cc-sh.cc-sh--split .cc-sh__tile.is-hot .cc-sh__tile-badge { display: inline-block; }
 }
 
 /* ---------- product page: brand line above the title ---------- */
