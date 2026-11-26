@@ -95,6 +95,25 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    /* 26-11-2026: één mutation voor élk product dat aan een zoekopdracht voldoet, op de server.
+       Scheelt honderden losse aanroepen (bijv. alle producten even aanraken zodat de Google-feed opnieuw synct). */
+    name: "products_each",
+    description:
+      "Voer één GraphQL-mutation uit voor elk product dat aan product_query voldoet (Shopify-zoeksyntax, bijv. 'status:active'). De mutation krijgt per product de variabele $id (ID!) plus de meegegeven variables. dry_run=true telt alleen. Max 2000 producten per aanroep. Verandert de live store: alleen op verzoek van Justin.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        store: { type: "string", description: "Naam, afkorting of domein van de store" },
+        product_query: { type: "string", description: "Shopify-zoekopdracht voor producten, bijv. 'status:active'" },
+        mutation: { type: "string", description: "GraphQL-mutation met variabele $id: ID!" },
+        variables: { type: "object", description: "Extra variabelen (voor elk product gelijk)" },
+        dry_run: { type: "boolean", description: "Alleen tellen, niets wijzigen" },
+      },
+      required: ["store", "product_query", "mutation"],
+      additionalProperties: false,
+    },
+  },
 ];
 
 const escRe = (s) => String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -152,6 +171,42 @@ async function themeCopyTool(a, stores) {
   return text(r.ok ? r : r.message || r.error || "mislukt", !r.ok);
 }
 
+async function productsEachTool(a, store) {
+  const pq = String(a.product_query || "").trim();
+  const mutation = String(a.mutation || "");
+  if (!pq) return text("product_query ontbreekt", true);
+  if (!/^\s*mutation\b/.test(mutation) || !mutation.includes("$id")) return text("mutation moet met 'mutation' beginnen en $id gebruiken", true);
+  const ids = [];
+  let cursor = null;
+  for (let page = 0; page < 8; page++) {
+    const r = await storeGraphql(store, "query($q:String!,$c:String){ products(first:250, query:$q, after:$c){ nodes{ id } pageInfo{ hasNextPage endCursor } } }", { q: pq, c: cursor });
+    if (!r.ok) return text({ error: r.error }, true);
+    const p = r.data.products;
+    for (const n of p.nodes) ids.push(n.id);
+    if (!p.pageInfo.hasNextPage) break;
+    cursor = p.pageInfo.endCursor;
+  }
+  if (a.dry_run) return text({ store: store.name || store.domain, products: ids.length, dry_run: true });
+  const started = Date.now();
+  let ok = 0;
+  const errors = [];
+  let i = 0;
+  const worker = async () => {
+    while (i < ids.length && Date.now() - started < 270000) {
+      const id = ids[i++];
+      const r = await storeGraphql(store, mutation, { ...(a.variables || {}), id });
+      let ue = null;
+      if (r.ok) {
+        for (const v of Object.values(r.data || {})) if (v && Array.isArray(v.userErrors) && v.userErrors.length) ue = v.userErrors.map((e) => e.message).join("; ");
+      }
+      if (r.ok && !ue) ok++;
+      else if (errors.length < 10) errors.push({ id, error: ue || r.error });
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  return text({ store: store.name || store.domain, products: ids.length, done: ok, failed: ids.length - ok - Math.max(0, ids.length - i), not_reached: Math.max(0, ids.length - i), errors });
+}
+
 async function callTool(name, args) {
   if (name === "photo_queue") return photoQueueTool(args || {});
   const stores = await getStores();
@@ -166,6 +221,7 @@ async function callTool(name, args) {
     const r = await getShopInfo(store);
     return r.ok ? text(r.shop) : text(r.error || "mislukt", true);
   }
+  if (name === "products_each") return productsEachTool(args || {}, store);
   if (name === "shopify_graphql") {
     const q = String((args && args.query) || "");
     if (!q.trim()) return text("Lege query", true);
