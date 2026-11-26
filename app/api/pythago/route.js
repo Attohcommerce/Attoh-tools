@@ -6,6 +6,9 @@ import {
   presetsList, presetSave, presetDelete, notesGet, noteSet, setStatus, patchStatus, quarList, quarantine, quarForget,
 } from "@/lib/pythago-sync";
 import { getOrg } from "@/lib/org-server";
+import { getSession } from "@/lib/session";
+import { extList, extSave, extDelete, extResetToken, extSharesDomain, connSave, logList } from "@/lib/pythago-ext";
+import { cleanDomain } from "@/lib/shopify";
 
 /* PYTHAGO (03-11-2026: volledig dashboard, zie lib/pythago-sync.js)
    load:     opgeslagen dashboard-data + taken + auto-sync-stand + presets + notities
@@ -38,8 +41,36 @@ export async function POST(req) {
     if (action === "sync") {
       const { store, ordersStore, adsSheetId, key, settings } = body;
       const result = await syncStore({ org, store, ordersStore, adsSheetId, key, settings, source: body.source || "handmatig" });
+      // gedeeld met een externe gebruiker (/px)? dan de koppeling vers houden op de server
+      if (await extSharesDomain(store.domain).catch(() => false)) await connSave(org, store.domain, { store, ordersStore, adsSheetId, key, settings }).catch(() => {});
       const tasks = await listTasks(org, store.domain);
       return NextResponse.json({ ok: true, data: result, tasks });
+    }
+    if (action === "ext") {
+      // Pythago Extern beheren (alleen Justin, via de gewone login)
+      // op: list | save | delete | reset — conns = { domein: koppeling } uit Justins browser
+      const op = String(body.op || "list");
+      if (op === "save") {
+        const me = await getSession().catch(() => null);
+        const u = await extSave(body.user || {}, { org, by: (me && me.user && me.user.email) || "" });
+        const conns = body.conns && typeof body.conns === "object" ? body.conns : {};
+        const missing = [];
+        for (const d of u.stores) {
+          const c = conns[d] || Object.entries(conns).find(([k]) => cleanDomain(k) === d)?.[1];
+          const ok = c ? await connSave(org, d, c).catch(() => false) : false;
+          if (!ok) missing.push(d);
+        }
+        return NextResponse.json({ ok: true, user: u, missing, ...(await extOverview(org)) });
+      }
+      if (op === "delete") {
+        await extDelete(String(body.id || ""));
+        return NextResponse.json({ ok: true, ...(await extOverview(org)) });
+      }
+      if (op === "reset") {
+        await extResetToken(String(body.id || ""));
+        return NextResponse.json({ ok: true, ...(await extOverview(org)) });
+      }
+      return NextResponse.json({ ok: true, ...(await extOverview(org)) });
     }
     if (action === "tasks") {
       return NextResponse.json({ ok: true, tasks: await listTasks(org, String(body.domain || "")) });
@@ -108,4 +139,13 @@ export async function POST(req) {
     console.error("[pythago]", e && e.stack ? e.stack : e);
     return NextResponse.json({ error: String(e.message || e) }, { status: e.status || 500 });
   }
+}
+
+// Externe gebruikers + hun laatste activiteit (per gedeelde store)
+async function extOverview(org) {
+  const users = (await extList()).filter((u) => u.org === org);
+  const domains = [...new Set(users.flatMap((u) => u.stores || []))];
+  const logs = {};
+  for (const d of domains) logs[d] = await logList(org, d, 150).catch(() => []);
+  return { users, logs };
 }

@@ -18,6 +18,7 @@ import { visibleStores } from "@/lib/store-scope";
 import Header from "../components/Header";
 import { sfx } from "../components/sfx";
 import { orgLS } from "@/lib/org-client";
+import ExtModal from "./ExtModal";
 import "./pythago.css";
 
 const LS_STORES = "sa_stores";
@@ -130,7 +131,11 @@ function makeColumns(P) {
 }
 const ALL_COL_IDS = makeColumns(30).map((c) => c.id);
 
-export default function PythagoPage() {
+// ext = Pythago Extern (/px): { user: { name, email, canEdit }, stores: [{ name, domain, currency, key, settings }] }.
+// Dan komen stores + koppeling van de server, geen Attoh-header en alleen de Pythago-functies.
+export default function PythagoPage({ ext = null } = {}) {
+  const X = !!ext;
+  const canEdit = !X || (ext.user && ext.user.canEdit !== false);
   const [stores, setStores] = useState([]);
   const [sel, setSel] = useState("");
   const [settings, setSettings] = useState(DEFAULTS);
@@ -164,17 +169,18 @@ export default function PythagoPage() {
   const [hyOpen, setHyOpen] = useState(true);
   const [showTasks, setShowTasks] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showExt, setShowExt] = useState(false);
   const [syncMeta, setSyncMeta] = useState(null); // lokale taak zolang de server-taak nog niet gepolld is
   const [now, setNow] = useState(0);
   const pollRef = useRef(null);
 
   const store = stores.find((s) => s.domain === sel) || null;
   const ordersKeys = useMemo(() => {
-    if (!sel) return null;
+    if (!sel || X) return null;
     const k = load(LS_ORDERS_APP + sel, null);
     return k && k.clientId && k.clientSecret ? k : null;
   }, [sel]);
-  const creds = useCallback(() => (store ? { name: store.name, domain: store.domain, currency: store.currency, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret } : null), [store]);
+  const creds = useCallback(() => (store ? (X ? { name: store.name, domain: store.domain, currency: store.currency } : { name: store.name, domain: store.domain, currency: store.currency, token: store.token, clientId: store.clientId, clientSecret: store.clientSecret }) : null), [store, X]);
   const P = [7, 14, 30].includes(period) ? period : 30;
   const columns = useMemo(() => makeColumns(P), [P]);
   const adsCur = (data && data.adsCurrency) || settings.adsCurrency || "GBP";
@@ -194,6 +200,14 @@ export default function PythagoPage() {
 
   /* ---------- store kiezen + laden ---------- */
   useEffect(() => {
+    if (X) {
+      const list = (ext.stores || []).filter((s) => s && s.domain);
+      setStores(list);
+      const last = load(LS_STORE, "");
+      if (last && list.some((s) => s.domain === last)) pickStore(last, list);
+      else if (list[0]) pickStore(list[0].domain, list);
+      return;
+    }
     const list = visibleStores(load(LS_STORES, []), "fashion");
     setStores(list);
     setAdsSheet(load(LS_ADS_SHEET, "") || DEFAULT_ADS_SHEET);
@@ -216,9 +230,9 @@ export default function PythagoPage() {
     const s = all.find((x) => x.domain === domain);
     setSel(domain);
     save(LS_STORE, domain);
-    setSettings({ ...DEFAULTS, ...(load(LS_SETTINGS + domain, {}) || {}) });
+    setSettings({ ...DEFAULTS, ...((X ? s && s.settings : load(LS_SETTINGS + domain, {})) || {}) });
     const cfg = load(LS_DASH_CFG, {}) || {};
-    setKey(load(LS_KEY + domain, "") || (cfg[domain] && cfg[domain].key) || guessKey(s) || "");
+    setKey(X ? (s && s.key) || "" : load(LS_KEY + domain, "") || (cfg[domain] && cfg[domain].key) || guessKey(s) || "");
     const c = load(LS_COLS + domain, null);
     if (c && Array.isArray(c.order)) {
       const order = [...c.order.filter((id) => ALL_COL_IDS.includes(id)), ...ALL_COL_IDS.filter((id) => !c.order.includes(id))];
@@ -239,7 +253,11 @@ export default function PythagoPage() {
   }
 
   async function api(body) {
-    const res = await fetch("/api/pythago", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const res = await fetch(X ? "/api/px" : "/api/pythago", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (X && res.status === 401) {
+      window.location.href = "/px";
+      throw new Error("Niet meer ingelogd");
+    }
     const txt = await res.text();
     let d;
     try {
@@ -304,6 +322,10 @@ export default function PythagoPage() {
   async function sync(source = "handmatig") {
     if (!store || syncing) return;
     if (!key) {
+      if (X) {
+        setError("Deze store is nog niet klaar om te syncen — vraag Justin om de koppeling te vernieuwen.");
+        return;
+      }
       setShowSettings(true);
       setError("Vul eerst de store-sleutel (SSB / LGB / EMC / SW) in bij instellingen — die bepaalt het tabblad Prod_<sleutel> in de Ads-sheet.");
       return;
@@ -344,6 +366,21 @@ export default function PythagoPage() {
     } catch (e) {
       setError(String(e.message || e));
     }
+  }
+
+  // Volledige koppeling van een store uit deze browser (voor Pythago Extern: de server bewaart hem)
+  function cfgFor(domain) {
+    const s = stores.find((x) => x.domain === domain);
+    if (!s) return null;
+    const ok = load(LS_ORDERS_APP + domain, null);
+    const dash = load(LS_DASH_CFG, {}) || {};
+    return {
+      store: { name: s.name, domain: s.domain, currency: s.currency, token: s.token, clientId: s.clientId, clientSecret: s.clientSecret, publicDomain: s.publicDomain || "" },
+      ordersStore: ok && ok.clientId && ok.clientSecret ? ok : null,
+      adsSheetId: load(LS_ADS_SHEET, "") || DEFAULT_ADS_SHEET,
+      key: load(LS_KEY + domain, "") || (dash[domain] && dash[domain].key) || guessKey(s) || "",
+      settings: { ...DEFAULTS, ...(load(LS_SETTINGS + domain, {}) || {}) },
+    };
   }
 
   function saveSettings(next, nextKey, nextSheet) {
@@ -509,7 +546,7 @@ export default function PythagoPage() {
   }
   /* ---- hygiëne / quarantaine (RTM-regels, 10-11-2026) ---- */
   const HY_STORES = [/soulsociety/i]; // alleen SSB (RTM); uitbreiden per store
-  const hyStore = !!(store && HY_STORES.some((re) => re.test(store.domain || "") || re.test(store.name || "")));
+  const hyStore = !X && !!(store && HY_STORES.some((re) => re.test(store.domain || "") || re.test(store.name || "")));
   const hyLabel = Number(settings.quarLabel) >= 0 ? Number(settings.quarLabel) : 4;
   const fxRate = (data && data.fx && data.fx.rate) || 1;
   const hygiene = useMemo(() => {
@@ -760,7 +797,15 @@ export default function PythagoPage() {
   /* ====================================================================== */
   return (
     <div className={`page pyd ${full ? "is-full" : ""}`}>
-      {!full && <Header icon="Π" title="Pythago" subtitle="Productprestaties: Google Ads naast Shopify — 7 / 14 / 30 dagen, filters, draften" />}
+      {!full && !X && <Header icon="Π" title="Pythago" subtitle="Productprestaties: Google Ads naast Shopify — 7 / 14 / 30 dagen, filters, draften" />}
+      {!full && X && (
+        <div className="pyx-top">
+          <div className="pyx-brand"><span className="pyx-logo">π</span>Pythago</div>
+          <div className="grow" />
+          <span className="pyx-user">{ext.user.name}<span>{ext.user.email}</span></span>
+          <button className="pyd-ibtn" onClick={async () => { try { await fetch("/api/px/logout", { method: "POST" }); } catch {} window.location.href = "/px"; }}>Uitloggen</button>
+        </div>
+      )}
 
       {/* ---------- bovenbalk ---------- */}
       <div className="pyd-bar">
@@ -780,10 +825,13 @@ export default function PythagoPage() {
             {data.adsUpdated ? <span title="laatste run van het Google Ads-script">· Ads-script {String(data.adsUpdated).slice(5, 16)}</span> : null}
           </span>
         )}
-        <label className="pyd-toggle" title="Elke nacht automatisch syncen (cron) — de koppeling van deze store wordt daarvoor op de server bewaard">
-          <input type="checkbox" checked={!!(auto && auto.enabled)} onChange={(e) => toggleAuto(e.target.checked)} disabled={!store} /> automatisch syncen
-        </label>
-        <button className="pyd-ibtn" onClick={() => setShowSettings(true)} disabled={!store} title="Instellingen: COGS, fees, drempel, store-sleutel, Ads-sheet">⚙ Instellingen</button>
+        {!X && (
+          <label className="pyd-toggle" title="Elke nacht automatisch syncen (cron) — de koppeling van deze store wordt daarvoor op de server bewaard">
+            <input type="checkbox" checked={!!(auto && auto.enabled)} onChange={(e) => toggleAuto(e.target.checked)} disabled={!store} /> automatisch syncen
+          </label>
+        )}
+        {!X && <button className="pyd-ibtn" onClick={() => setShowExt(true)} title="Pythago delen met externe mensen (eigen link + e-mail) — en zien wat ze doen">👥 Extern</button>}
+        {!X && <button className="pyd-ibtn" onClick={() => setShowSettings(true)} disabled={!store} title="Instellingen: COGS, fees, drempel, store-sleutel, Ads-sheet">⚙ Instellingen</button>}
         <button className="pyd-ibtn" onClick={() => setShowTasks(true)} disabled={!store}>
           {running ? <span className="pyd-spinner" /> : "☰"} Taken{tasks.length ? ` (${tasks.length})` : ""}
         </button>
@@ -828,7 +876,13 @@ export default function PythagoPage() {
       {data && data.warnings && data.warnings.length > 0 && <div className="pyd-warn">{data.warnings.join(" · ")}</div>}
 
       {/* ---------- eerste keer: uitleg ---------- */}
-      {store && !data && !loading && !syncing && !running && (
+      {X && store && !data && !loading && !syncing && !running && (
+        <div className="card pyd-setup">
+          <h2>Nog geen data voor {store.name || sel}</h2>
+          <p style={{ color: "var(--muted)", fontSize: 13 }}>Klik op <b>Sync nu</b> om de cijfers op te halen. Daarna synct de pagina zelf bij openen als de data ouder is dan 6 uur.</p>
+        </div>
+      )}
+      {!X && store && !data && !loading && !syncing && !running && (
         <div className="card pyd-setup">
           <h2>Nog geen data voor {store.name || sel}</h2>
           <ol>
@@ -904,7 +958,7 @@ export default function PythagoPage() {
                       <button key={p.id} className="mi" onClick={() => applyPreset(p)}>
                         <span className="pyd-pdot" style={{ background: p.color || PRESET_COLORS[0] }} />
                         {p.name}
-                        <span className="cnt">{p.scope === "all" ? "alle stores" : ""}</span>
+                        <span className="cnt">{!X && p.by ? `van ${p.by.name}` : p.scope === "all" ? "alle stores" : ""}</span>
                       </button>
                     ))}
                     <div className="sep" />
@@ -1076,7 +1130,7 @@ export default function PythagoPage() {
             {counts.Draften ? (
               <button className="pyd-ibtn" onClick={selectAllDraften}>Selecteer alle Draften ({counts.Draften}){data.draftSpend ? ` · ${fmtMoney(data.draftSpend, adsCur, 0)} spend` : ""}</button>
             ) : null}
-            <button className="pyd-ibtn" onClick={openBooster} title="Conversion Booster + schrijf naar sheet (klassieke pagina) met dit resultaat">⚡ Conversion Booster →</button>
+            {!X && <button className="pyd-ibtn" onClick={openBooster} title="Conversion Booster + schrijf naar sheet (klassieke pagina) met dit resultaat">⚡ Conversion Booster →</button>}
           </div>
 
           {/* ---------- tabel ---------- */}
@@ -1087,7 +1141,7 @@ export default function PythagoPage() {
                 <div className="sub">{sorted.length} van {rows.length} producten{picked.size ? ` · ${picked.size} aangevinkt` : ""}</div>
               </div>
               <div className="grow" />
-              {picked.size > 0 && (
+              {picked.size > 0 && canEdit && (
                 <select value="" onChange={(e) => { const v = e.target.value; if (v) askStatus(v); }}>
                   <option value="">Acties ({picked.size})</option>
                   <option value="draft">Op draft zetten</option>
@@ -1095,7 +1149,7 @@ export default function PythagoPage() {
                   <option value="archived">Archiveren</option>
                 </select>
               )}
-              {picked.size > 0 && (
+              {picked.size > 0 && !X && (
                 <button className="pyd-ibtn on" title="AI-modelfoto's maken voor de aangevinkte producten" onClick={() => (async () => {
                   let openai = false;
                   try { const d = await (await fetch("/api/photo-queue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "list" }) })).json(); openai = !!d.openai; } catch {}
@@ -1174,7 +1228,7 @@ export default function PythagoPage() {
                                 )}
                                 {r.onStore && (
                                   <>
-                                    <button className={note ? "has" : ""} title={note ? `Notitie: ${note.text}` : "Notitie toevoegen"} onClick={() => setModal({ kind: "note", row: r, text: note ? note.text : "" })}>✎</button>
+                                    <button className={note ? "has" : ""} title={note ? `Notitie${note.by ? ` (${note.by.name})` : ""}: ${note.text}` : "Notitie toevoegen"} onClick={() => setModal({ kind: "note", row: r, text: note ? note.text : "" })}>✎</button>
                                     <a href={adminUrl(r)} target="_blank" rel="noreferrer" title="Open in Shopify-admin">↗</a>
                                     {storeUrl(r) && <a href={storeUrl(r)} target="_blank" rel="noreferrer" title="Bekijk op de store">🛍</a>}
                                   </>
@@ -1185,8 +1239,10 @@ export default function PythagoPage() {
                           </div>
                         </td>
                         <td className="c">
-                          {r.onStore ? (
+                          {r.onStore && canEdit ? (
                             <button className={`pyd-pill pyd-status ${r.status}`} onClick={() => setModal({ kind: "rowstatus", row: r })} title="Status wijzigen">{r.status}</button>
+                          ) : r.onStore ? (
+                            <span className={`pyd-pill pyd-status ${r.status}`}>{r.status}</span>
                           ) : (
                             <span className="dim">—</span>
                           )}
@@ -1380,7 +1436,9 @@ export default function PythagoPage() {
         </div>
       )}
 
-      {showSettings && store && (
+      {showExt && !X && <ExtModal stores={stores} sel={sel} cfgFor={cfgFor} onClose={() => setShowExt(false)} />}
+
+      {showSettings && store && !X && (
         <SettingsModal
           settings={settings} storeKey={key} adsSheet={adsSheet} ordersKeys={ordersKeys} store={store}
           onClose={() => setShowSettings(false)}
@@ -1536,7 +1594,7 @@ export default function PythagoPage() {
       )}
 
       {modal && modal.kind === "preset" && (
-        <PresetModal preset={modal.preset} onClose={() => setModal(null)} onSave={savePreset} />
+        <PresetModal preset={modal.preset} noScope={X} onClose={() => setModal(null)} onSave={savePreset} />
       )}
 
       {modal && modal.kind === "presets" && (
@@ -1551,7 +1609,7 @@ export default function PythagoPage() {
               {presets.map((p) => (
                 <div className="li" key={p.id}>
                   <span className="pyd-pdot" style={{ background: p.color }} />
-                  <span className="grow"><b>{p.name}</b> <span style={{ color: "var(--faint)" }}>· {p.scope === "all" ? "alle stores" : "deze store"} · {p.period || 30} d</span></span>
+                  <span className="grow"><b>{p.name}</b> <span style={{ color: "var(--faint)" }}>· {p.scope === "all" ? "alle stores" : "deze store"} · {p.period || 30} d{!X && p.by ? ` · van ${p.by.name}` : ""}</span></span>
                   <button className="pyd-ibtn" onClick={() => { applyPreset(p); setModal(null); }}>Toepassen</button>
                   <button className="pyd-ibtn" onClick={() => savePreset({ ...p, filters })} title="Vervang de opgeslagen filters door wat nu actief is">Overschrijven</button>
                   <button className="pyd-ibtn" onClick={() => deletePreset(p.id)} style={{ color: "var(--err)" }}>Verwijder</button>
@@ -1779,7 +1837,7 @@ function SettingsModal({ settings, storeKey, adsSheet, ordersKeys, store, onClos
 }
 
 /* ---------- filter opslaan ---------- */
-function PresetModal({ preset, onClose, onSave }) {
+function PresetModal({ preset, noScope = false, onClose, onSave }) {
   const [p, setP] = useState({ ...preset });
   return (
     <div className="pyd-modal" onClick={onClose}>
@@ -1790,12 +1848,14 @@ function PresetModal({ preset, onClose, onSave }) {
         </div>
         <div className="fgrid">
           <label style={{ gridColumn: "1 / -1" }}><div className="field-label">Naam</div><input type="text" value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} placeholder="bijv. Draften > £20 spend" autoFocus /></label>
-          <label><div className="field-label">Geldt voor</div>
-            <select value={p.scope || "store"} onChange={(e) => setP({ ...p, scope: e.target.value })}>
-              <option value="store">Alleen deze store</option>
-              <option value="all">Alle stores</option>
-            </select>
-          </label>
+          {!noScope && (
+            <label><div className="field-label">Geldt voor</div>
+              <select value={p.scope || "store"} onChange={(e) => setP({ ...p, scope: e.target.value })}>
+                <option value="store">Alleen deze store</option>
+                <option value="all">Alle stores</option>
+              </select>
+            </label>
+          )}
           <div><div className="field-label">Kleur</div>
             <div className="pyd-colors">
               {PRESET_COLORS.map((c) => <button key={c} className={p.color === c ? "on" : ""} style={{ background: c }} onClick={() => setP({ ...p, color: c })} />)}

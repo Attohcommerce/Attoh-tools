@@ -274,3 +274,20 @@
 .pyd-hy__table td.r, .pyd-hy__table th.r { text-align: right; }
 .pyd-hy__table .pyd-prod { display: flex; gap: 8px; align-items: center; white-space: normal; min-width: 260px; }
 .pyd-hy__table .pyd-prod b { display: block; font-weight: 600; }
+
+/* ---------- Pythago Extern — beheer (knop "Extern", 26-11-2026) ---------- */
+.pyx-admin .pyd-list { gap: 10px; }
+.pyx-user-row { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 8px; background: var(--panel); }
+.pyx-user-main { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pyx-user-main .grow { flex: 1; min-width: 220px; }
+.pyx-dim { color: var(--muted); font-size: 12px; }
+.pyx-link { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px !important; padding: 7px 10px !important; }
+.pyx-log { display: grid; gap: 4px; max-height: 280px; overflow: auto; border-top: 1px solid var(--line); padding-top: 8px; }
+.pyx-log .li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-2); }
+.pyx-log .li .grow { flex: 1; }
+.pyx-when { color: var(--faint); font-size: 11.5px; white-space: nowrap; min-width: 92px; }
+.pyx-form { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+.pyx-form h4 { margin: 0 0 4px; font-size: 13px; color: var(--ink); }
+.pyx-form .pyd-stores { margin-top: 2px; }
+.pyd-list .pyx-log .li { border: 0; padding: 3px 2px; border-radius: 0; }
+.pyd-list .pyx-log .li .grow { white-space: normal; overflow: visible; }
