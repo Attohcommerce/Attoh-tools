@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkMcpKey, getStores, findStore } from "@/lib/claude-link";
 import { storeGraphql, getShopInfo } from "@/lib/shopify";
 import { agentNext, agentDone, agentDoneMany, agentFail, agentSource } from "@/lib/photo-queue";
+import { copyThemeFiles } from "@/lib/theme-copy";
 
 /* CLAUDE-KOPPELING · MCP-server (13-11-2026).
    Eigen connector voor claude.ai (Instellingen → Connectors → Custom connector)
@@ -43,7 +44,7 @@ const TOOLS = [
        zodat Justin geen aparte wachtrij-sleutel meer hoeft te plakken. Zelfde functies als /api/photo-queue/agent. */
     name: "photo_queue",
     description:
-      "AI-modelfoto-wachtrij van Attoh Tools (motor 'Higgsfield via Claude'). action=next: openstaande opdrachten met kant-en-klare prompt, bronfoto-URL, model en de kostenregel (limit 1 tot 12); limit 13 tot 200 geeft een compact overzicht zonder prompts. action=sources: bronfoto's van max 8 opdrachten als plaatjes (ids als 'org:id'). action=done: gemaakte foto's (https-URL) op het product zetten, vooraan in de galerij, als variantfoto van de kleur, met fitnote en foto in de omschrijving; geef één opdracht (org, id, imageUrl) of een lijst items (max 8). action=fail: opdracht afkeuren met reden (begin met 'Overgeslagen' als het geen afkeur is). Kosten: altijd gpt_image_2, 1k, medium, 1:1 = 1 credit per foto; nooit gpt_image_2_6, high of 2k.",
+      "AI-modelfoto-wachtrij van Attoh Tools (motor 'Higgsfield via Claude'). action=next: openstaande opdrachten met kant-en-klare prompt, bronfoto-URL, model en de kostenregel (limit 1 tot 12); limit 13 tot 200 geeft een compact overzicht zonder prompts. action=sources: bronfoto's van max 8 opdrachten als plaatjes (ids als 'org:id'). action=done: gemaakte foto's (https-URL) op het product zetten, vooraan in de galerij, als variantfoto van de kleur, met fitnote en foto in de omschrijving; geef één opdracht (org, id, imageUrl) of een lijst items (max 8). action=fail: opdracht afkeuren met reden (begin met 'Overgeslagen' als het geen afkeur is). Kosten: altijd gpt_image_2, 1k, medium, 1:1 = 1 credit per foto; nooit gpt_image_2_6, high of 2k. Opdrachten met kind='infographic' (één beeld per product met tekst erop): zelfde model en kwaliteit maar aspect_ratio 4:5 (staat per opdracht in settings); bronfoto als referentie meegeven; vóór done controleren dat het product klopt en de tekst op het beeld foutloos is. Bij done komt een infographic achter de modelfoto's in de galerij, zonder variantkoppeling of fitnote.",
     inputSchema: {
       type: "object",
       properties: {
@@ -66,6 +67,53 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    /* 26-11-2026: themabestanden tussen stores kopiëren op de server (bijv. de BFCM-laag van
+       Code of Clothes naar Season of Style). De inhoud gaat niet door Claude heen. */
+    name: "theme_copy_files",
+    description:
+      "Kopieer themabestanden van het thema van de ene store naar een (niet-gepubliceerd) thema van een andere of dezelfde store, op de server. files = lijst paden (bijv. 'sections/header.liquid') of objecten {from, to}. replace = optionele lijst {find, replace} die op tekstbestanden wordt toegepast (alle voorkomens, in volgorde). Nooit naar een live (MAIN) thema. Geeft per bestand ok/fout en de nieuwe grootte terug.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        from_store: { type: "string", description: "Bron-store (naam, afkorting of domein)" },
+        from_theme: { type: "string", description: "Bron-thema-id (getal of gid://shopify/OnlineStoreTheme/…)" },
+        to_store: { type: "string", description: "Doel-store (naam, afkorting of domein)" },
+        to_theme: { type: "string", description: "Doel-thema-id (niet het live thema)" },
+        files: {
+          type: "array",
+          description: "Paden of {from, to} (max 60)",
+          items: { anyOf: [{ type: "string" }, { type: "object", properties: { from: { type: "string" }, to: { type: "string" } }, required: ["from"] }] },
+        },
+        replace: {
+          type: "array",
+          description: "Tekstvervangingen op tekstbestanden, in volgorde",
+          items: { type: "object", properties: { find: { type: "string" }, replace: { type: "string" } }, required: ["find", "replace"] },
+        },
+      },
+      required: ["from_store", "from_theme", "to_store", "to_theme", "files"],
+      additionalProperties: false,
+    },
+  },
+  {
+    /* 26-11-2026: één mutation voor élk product dat aan een zoekopdracht voldoet, op de server.
+       Scheelt honderden losse aanroepen (bijv. alle producten even aanraken zodat de Google-feed opnieuw synct). */
+    name: "products_each",
+    description:
+      "Voer één GraphQL-mutation uit voor elk product dat aan product_query voldoet (Shopify-zoeksyntax, bijv. 'status:active'). De mutation krijgt per product de variabele $id (ID!) plus de meegegeven variables. dry_run=true telt alleen. Max 2000 producten per aanroep. Verandert de live store: alleen op verzoek van Justin.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        store: { type: "string", description: "Naam, afkorting of domein van de store" },
+        product_query: { type: "string", description: "Shopify-zoekopdracht voor producten, bijv. 'status:active'" },
+        mutation: { type: "string", description: "GraphQL-mutation met variabele $id: ID!" },
+        variables: { type: "object", description: "Extra variabelen (voor elk product gelijk)" },
+        dry_run: { type: "boolean", description: "Alleen tellen, niets wijzigen" },
+      },
+      required: ["store", "product_query", "mutation"],
+      additionalProperties: false,
+    },
+  },
 ];
 
 const escRe = (s) => String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -82,12 +130,12 @@ async function photoQueueTool(a) {
       const items = out.items.map((it) => {
         const p = it.profile || {};
         if (p.id && !profiles[p.id]) profiles[p.id] = { age: p.age, look: p.look, height: p.height, size: p.size };
-        return { org: it.org, id: it.id, store: it.store, title: it.title, type: it.type, color: it.color, gender: it.gender, sourceImage: it.sourceImage, profile: p.id, shot: it.shot, shotType: it.shotType, mode: it.mode };
+        return { org: it.org, id: it.id, store: it.store, title: it.title, type: it.type, color: it.color, gender: it.gender, sourceImage: it.sourceImage, profile: p.id, shot: it.shot, shotType: it.shotType, mode: it.mode, kind: it.kind };
       });
       return text({ pending: out.pending, compact: true, settings: out.brain.settings, costRule: out.brain.costRule, profiles, items });
     }
     const out = await agentNext({ limit: Math.max(1, want), store });
-    return text({ pending: out.pending, settings: out.brain.settings, costRule: out.brain.costRule, items: out.items });
+    return text({ pending: out.pending, settings: out.brain.settings, infographicSettings: out.brain.infographicSettings, infographicRule: out.brain.infographicRule, costRule: out.brain.costRule, items: out.items });
   }
   if (act === "sources") {
     const list = (Array.isArray(a.ids) ? a.ids : []).slice(0, 8);
@@ -116,9 +164,53 @@ async function photoQueueTool(a) {
 
 const text = (obj, isError = false) => ({ content: [{ type: "text", text: typeof obj === "string" ? obj : JSON.stringify(obj) }], isError });
 
+
+/* ---------- theme_copy_files (26-11-2026) — logica in lib/theme-copy.js ---------- */
+async function themeCopyTool(a, stores) {
+  const r = await copyThemeFiles(a, stores);
+  return text(r.ok ? r : r.message || r.error || "mislukt", !r.ok);
+}
+
+async function productsEachTool(a, store) {
+  const pq = String(a.product_query || "").trim();
+  const mutation = String(a.mutation || "");
+  if (!pq) return text("product_query ontbreekt", true);
+  if (!/^\s*mutation\b/.test(mutation) || !mutation.includes("$id")) return text("mutation moet met 'mutation' beginnen en $id gebruiken", true);
+  const ids = [];
+  let cursor = null;
+  for (let page = 0; page < 8; page++) {
+    const r = await storeGraphql(store, "query($q:String!,$c:String){ products(first:250, query:$q, after:$c){ nodes{ id } pageInfo{ hasNextPage endCursor } } }", { q: pq, c: cursor });
+    if (!r.ok) return text({ error: r.error }, true);
+    const p = r.data.products;
+    for (const n of p.nodes) ids.push(n.id);
+    if (!p.pageInfo.hasNextPage) break;
+    cursor = p.pageInfo.endCursor;
+  }
+  if (a.dry_run) return text({ store: store.name || store.domain, products: ids.length, dry_run: true });
+  const started = Date.now();
+  let ok = 0;
+  const errors = [];
+  let i = 0;
+  const worker = async () => {
+    while (i < ids.length && Date.now() - started < 270000) {
+      const id = ids[i++];
+      const r = await storeGraphql(store, mutation, { ...(a.variables || {}), id });
+      let ue = null;
+      if (r.ok) {
+        for (const v of Object.values(r.data || {})) if (v && Array.isArray(v.userErrors) && v.userErrors.length) ue = v.userErrors.map((e) => e.message).join("; ");
+      }
+      if (r.ok && !ue) ok++;
+      else if (errors.length < 10) errors.push({ id, error: ue || r.error });
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  return text({ store: store.name || store.domain, products: ids.length, done: ok, failed: ids.length - ok - Math.max(0, ids.length - i), not_reached: Math.max(0, ids.length - i), errors });
+}
+
 async function callTool(name, args) {
   if (name === "photo_queue") return photoQueueTool(args || {});
   const stores = await getStores();
+  if (name === "theme_copy_files") return themeCopyTool(args || {}, stores);
   if (name === "list_stores") {
     if (!stores.length) return text("Nog geen stores klaargezet. Open Attoh Tools → /claude en klik op 'Stores klaarzetten'.", true);
     return text(stores.map((s) => ({ name: s.name, domain: s.domain, currency: s.currency || "" })));
@@ -129,6 +221,7 @@ async function callTool(name, args) {
     const r = await getShopInfo(store);
     return r.ok ? text(r.shop) : text(r.error || "mislukt", true);
   }
+  if (name === "products_each") return productsEachTool(args || {}, store);
   if (name === "shopify_graphql") {
     const q = String((args && args.query) || "");
     if (!q.trim()) return text("Lege query", true);
@@ -155,7 +248,7 @@ async function handle(msg) {
       protocolVersion: (params && params.protocolVersion) || PROTOCOL,
       capabilities: { tools: { listChanged: false } },
       serverInfo: { name: "attoh-tools-stores", version: "1.0.0" },
-      instructions: "Toegang tot alle Shopify-stores van Justin (Attoh Tools). Begin met list_stores. Gebruik shopify_graphql met store = naam/afkorting/domein. AI-modelfoto's uit de wachtrij van de importer: photo_queue (next, sources, done, fail); maak ze met Higgsfield gpt_image_2, 1k, medium, 1:1 (1 credit per foto).",
+      instructions: "Toegang tot alle Shopify-stores van Justin (Attoh Tools). Begin met list_stores. Gebruik shopify_graphql met store = naam/afkorting/domein. AI-modelfoto's uit de wachtrij van de importer: photo_queue (next, sources, done, fail); maak ze met Higgsfield gpt_image_2, 1k, medium, 1:1 (1 credit per foto); opdrachten met kind=infographic op 4:5. Themabestanden tussen stores kopiëren (server-side, met optionele tekstvervangingen): theme_copy_files.",
     });
   }
   if (method === "ping") return rpc(id, {});

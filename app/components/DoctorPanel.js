@@ -24,6 +24,7 @@ import { AI_EST, CUR_MARKET, aiEstimate, postJSON, scanStore, runFixLoop, runAiL
 import RunDashboard, { useRun, ScoreRing } from "./RunDashboard";
 import CollectionFill from "./CollectionFill";
 import FitNotes from "./FitNotes";
+import PythagoPhotos from "./PythagoPhotos";
 
 const LS_BACKUP = "sa_doctor_backup";
 const LS_SCOPE = "sa_doctor_scope"; // "all" | "latest"
@@ -1348,6 +1349,8 @@ export default function DoctorPanel({ store, since }) {
           Store Doctor (niet in de importer-controles van een import-run). */}
       {!since && <CollectionFill store={store} scanKey={repAt ? repAt.getTime() : 0} />}
       {!since && <FitNotes store={store} scanKey={repAt ? repAt.getTime() : 0} />}
+      {/* 5c. AI-FOTO'S OP PYTHAGO-CIJFERS (25-11): infographics voor producten met spend / sales / onder break-even */}
+      {!since && <PythagoPhotos store={store} />}
 
       {/* 6. LOGBOEK PER FIX */}
       {fixLog.length > 0 && (

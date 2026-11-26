@@ -17,7 +17,7 @@ export async function POST(req) {
   const org = getOrg();
   try {
     if (body.action === "enqueue") {
-      const r = await enqueue({ org, store: body.store, productIds: body.productIds, mode: body.mode, per: body.per, engine: body.engine, batch: body.batch });
+      const r = await enqueue({ org, store: body.store, productIds: body.productIds, mode: body.mode, per: body.per, engine: body.engine, batch: body.batch, kind: body.kind });
       // OpenAI-motor: meteen de werker starten — die loopt door, ook als de pagina dicht gaat.
       if (body.engine === "openai" && r.added) {
         const origin = new URL(req.url).origin;

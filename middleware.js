@@ -11,7 +11,13 @@ import { ORG_COOKIE, normOrg, toolAllowed } from "./lib/org";
 // /tp = lege verificatiepagina voor Travelpayouts (vluchtprijzen reisplanner)
 // /api/pythago/cron = dagelijkse Pythago-sync (Vercel Cron; eist zelf CRON_SECRET)
 // /api/competitor-finder/tick = cloud-run van de Competitor finder (zelfde opzet als de Size Guide-tick)
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/kw", "/api/size-guide/job/tick", "/api/competitor-finder/tick", "/api/competitor-finder/cron", "/tp", "/api/pythago/cron", "/api/photo-queue/agent", "/api/photo-queue/work", "/api/mcp"];
+// /api/big-competitors/tick + /cron = scan van Big Competitors (tick eist het job-geheim, cron eist CRON_SECRET)
+// /px + /api/px = Pythago Extern (26-11-2026): externe mensen (bijv. Cas) met
+// een eigen link + e-mail, EIGEN cookie (attoh_px_session). Die routes eisen
+// zelf hun sessie; de rest van Attoh Tools blijft achter sa_tools_session.
+// /m + /api/m = Dashboard Mobiel (26-11-2026): het omzet-dashboard op de telefoon
+// via een eigen link + e-mail, EIGEN cookie (attoh_dash_session), alleen kijken.
+const PUBLIC_PATHS = ["/login", "/api/auth/login", "/kw", "/api/size-guide/job/tick", "/api/competitor-finder/tick", "/api/competitor-finder/cron", "/api/big-competitors/tick", "/api/big-competitors/cron", "/tp", "/api/pythago/cron", "/api/photo-queue/agent", "/api/photo-queue/work", "/api/mcp", "/px", "/api/px", "/m", "/api/m"];
 
 // Reisplanner (27-10-2026): /reis + /api/reis hebben een EIGEN login
 // (cookie attoh_reis_session, gebruikers Justin + Quinty) en staan los van

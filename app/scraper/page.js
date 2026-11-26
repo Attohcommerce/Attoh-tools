@@ -1388,7 +1388,8 @@ export default function ScraperPage() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 items: part.map((r) => ({ kw: r.k.toLowerCase(), uitleg: r.uitleg || "", col: r.col || "" })),
-                market: "AUS",
+                // markt van de gekozen store (stond vast op "AUS"; EMC is sinds 24-11 USA)
+                market: ((memStores.find((s) => s.domain === memStore) || {}).market) || compMarket || "",
               }),
             });
             const data = await res.json();
