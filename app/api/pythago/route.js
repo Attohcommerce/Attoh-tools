@@ -7,7 +7,7 @@ import {
 } from "@/lib/pythago-sync";
 import { getOrg } from "@/lib/org-server";
 import { getSession } from "@/lib/session";
-import { extList, extSave, extDelete, extResetToken, extSharesDomain, connSave, logList } from "@/lib/pythago-ext";
+import { extList, extSave, extDelete, extResetToken, extSharesDomain, connSave, logList, knownStores } from "@/lib/pythago-ext";
 import { cleanDomain } from "@/lib/shopify";
 
 /* PYTHAGO (03-11-2026: volledig dashboard, zie lib/pythago-sync.js)
@@ -147,5 +147,5 @@ async function extOverview(org) {
   const domains = [...new Set(users.flatMap((u) => u.stores || []))];
   const logs = {};
   for (const d of domains) logs[d] = await logList(org, d, 150).catch(() => []);
-  return { users, logs };
+  return { users, logs, known: await knownStores() };
 }

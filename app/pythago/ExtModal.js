@@ -32,9 +32,12 @@ export default function ExtModal({ stores, sel, cfgFor, onClose }) {
   const [editId, setEditId] = useState("");
   const [copied, setCopied] = useState("");
   const [openLog, setOpenLog] = useState("");
+  const [known, setKnown] = useState([]);
 
+  // stores uit deze browser + stores die de server kent (ook vanaf je telefoon te kiezen)
+  const all = [...stores, ...known.filter((k) => !stores.some((s) => cd(s.domain) === cd(k.domain)))];
   const nameOf = (d) => {
-    const s = stores.find((x) => cd(x.domain) === cd(d));
+    const s = all.find((x) => cd(x.domain) === cd(d));
     return s ? s.name || s.domain : d;
   };
 
@@ -47,6 +50,7 @@ export default function ExtModal({ stores, sel, cfgFor, onClose }) {
       if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
       setUsers(d.users || []);
       setLogs(d.logs || {});
+      if (Array.isArray(d.known)) setKnown(d.known);
       return d;
     } catch (e) {
       setError(String(e.message || e));
@@ -73,8 +77,8 @@ export default function ExtModal({ stores, sel, cfgFor, onClose }) {
     setMsg("");
     const d = await call({ op: "save", user: u, conns: conns(u.stores || []) });
     if (!d) return false;
-    if (d.missing && d.missing.length) setError(`Let op: geen volledige koppeling gevonden voor ${d.missing.map(nameOf).join(", ")} in deze browser — de tool valt terug op de Claude-koppeling.`);
-    setMsg(u.id ? `${d.user.name} bijgewerkt — de koppeling staat klaar.` : `${d.user.name} toegevoegd — kopieer de link hieronder en stuur hem door.`);
+    if (d.missing && d.missing.length) setMsg(`Koppeling voor ${d.missing.map(nameOf).join(", ")} komt van de server (Claude-koppeling + instellingen van je laatste sync). Sync die store één keer zelf in Pythago op je pc, dan staat alles 1-op-1 gelijk.`);
+    if (!(d.missing && d.missing.length)) setMsg(u.id ? `${d.user.name} bijgewerkt — de koppeling staat klaar.` : `${d.user.name} toegevoegd — kopieer de link hieronder en stuur hem door.`);
     return true;
   }
   async function submit() {
@@ -175,7 +179,7 @@ export default function ExtModal({ stores, sel, cfgFor, onClose }) {
           </div>
           <div className="field-label">Welke store(s) mag hij zien</div>
           <div className="pyd-stores">
-            {stores.map((s) => {
+            {all.map((s) => {
               const d = cd(s.domain);
               return (
                 <button key={d} type="button" className={`pyd-chip ${form.stores.includes(d) ? "on" : ""}`} onClick={() => toggleStore(d)}>
