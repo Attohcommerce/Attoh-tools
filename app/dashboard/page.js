@@ -12,12 +12,18 @@
 //    zodat de payments-scopes maar op één app hoeven te staan (05-11-2026).
 //  - Google Ads via de sheet "Attoh Ads Live" (tab Ads_<KEY>), elk uur
 //    gevuld door het Google Ads-script in elk account.
+//
+// DASHBOARD MOBIEL (26-11-2026): dezelfde pagina draait op /m met prop `ext`
+// (telefoonlink + e-mail, eigen cookie). Dan komen de stores en sleutels van
+// de server (/api/m) en is de opmaak compact voor de telefoon. Deze pagina
+// bewaart daarvoor de koppelingen van de aangevinkte stores op de server.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { visibleStores } from "@/lib/store-scope";
 import Header from "../components/Header";
 import { orgLS } from "@/lib/org-client";
 import { LineChart, Sparkline } from "./charts";
 import MetricModal from "./MetricModal";
+import PhoneLink from "./PhoneLink";
 import {
   nf2, ok, gbp, gbpAxis, metrics, sumDays, upTo, TILES, METRIC, STORE_STATS, RATIO_IDS, ADS_IDS, Delta, HOURS, hhmm,
 } from "./metrics";
@@ -27,11 +33,13 @@ const LS_STORES = "sa_stores";
 const LS_ORDERS_APP = "sa_orders_app::";
 const LS_CFG = "attoh_dash_cfg"; // domein → { key, on }
 const LS_SHEET = "attoh_dash_ads_sheet";
+const LS_CFG_M = "attoh_dash_m_cfg"; // telefoon: domein → { on }
+const LS_SYNC = "attoh_dash_m_sync"; // laatste keer dat de koppelingen naar de server gingen
 const DEFAULT_ADS_SHEET = "1xac7M4--kCb2DKShQy7s2A13sgfl4NxW8CXbLGW4H8o"; // Attoh Ads Live
 const REFRESH_MS = 2 * 60 * 1000;
 
 // Vaste kleur per store (volgt de store, nooit de positie)
-const STORE_COLOR = { SSB: "#3987e5", LGB: "#d95926", EMC: "#199e70", SW: "#c98500" };
+const STORE_COLOR = { SSB: "#3987e5", LGB: "#d95926", EMC: "#199e70", SW: "#c98500", CAC: "#9085e9", CCOU: "#d55181", COC: "#2bb3c0", PTL: "#e66767", SBK: "#b06fd8" };
 const EXTRA_COLORS = ["#9085e9", "#d55181", "#008300", "#e66767"];
 const PREV_COLOR = "#6b6b78";
 
@@ -105,7 +113,8 @@ function cumulative(arr, cutAfter) {
   });
 }
 
-export default function DashboardPage() {
+export default function DashboardPage({ ext }) {
+  const isExt = Boolean(ext && ext.user);
   const [stores, setStores] = useState([]);
   const [cfg, setCfg] = useState({});
   const [sheet, setSheet] = useState(DEFAULT_ADS_SHEET);
@@ -129,6 +138,16 @@ export default function DashboardPage() {
   const cfReq = useRef(0);
 
   useEffect(() => {
+    if (isExt) {
+      // telefoon: stores (zonder sleutels) komen van de server; alleen aan/uit onthouden we hier
+      const list = ext.stores || [];
+      setStores(list);
+      const saved = load(LS_CFG_M, {});
+      const next = {};
+      for (const s of list) next[s.domain] = { key: s.key || "", on: saved[s.domain] && saved[s.domain].on != null ? saved[s.domain].on : Boolean(s.on) };
+      setCfg(next);
+      return;
+    }
     const list = visibleStores(load(LS_STORES, []), "fashion");
     setStores(list);
     const saved = load(LS_CFG, {});
@@ -145,7 +164,7 @@ export default function DashboardPage() {
   function patchCfg(domain, patch) {
     setCfg((prev) => {
       const nextCfg = { ...prev, [domain]: { ...(prev[domain] || {}), ...patch } };
-      save(LS_CFG, nextCfg);
+      save(isExt ? LS_CFG_M : LS_CFG, nextCfg);
       return nextCfg;
     });
   }
@@ -170,7 +189,8 @@ export default function DashboardPage() {
         : period === "custom"
         ? { from: custom.from <= custom.to ? custom.from : custom.to, to: custom.to > today ? today : custom.to }
         : null;
-    const body = {
+    const domains = active.map((s) => s.domain);
+    const body = isExt ? { action: "dashboard", date, range: range || undefined, domains } : {
       date,
       range: range || undefined,
       adsSheetId: sheet,
@@ -191,7 +211,7 @@ export default function DashboardPage() {
     // Cashflow (Shopify Payments) loopt los van de omzetdata: zelfde stores, eigen call,
     // maar ALTIJD met de gewone store-koppeling (Attoh Tools-app, zelfde als de
     // Importer) — nooit de Orders-app. Zo staan de payments-scopes op één app.
-    const cfStores = active.map((s) => ({
+    const cfStores = isExt ? [] : active.map((s) => ({
       key: (cfg[s.domain] && cfg[s.domain].key) || "",
       name: s.name,
       domain: s.domain,
@@ -202,7 +222,7 @@ export default function DashboardPage() {
     }));
     const cfId = ++cfReq.current;
     setCfBusy(true);
-    fetch("/api/cashflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stores: cfStores }), cache: "no-store" })
+    fetch(isExt ? "/api/m" : "/api/cashflow", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(isExt ? { action: "cashflow", domains } : { stores: cfStores }), cache: "no-store" })
       .then((r) => r.json().then((j) => ({ okHttp: r.ok, j })))
       .then(({ okHttp, j }) => {
         if (cfId !== cfReq.current) return;
@@ -215,23 +235,36 @@ export default function DashboardPage() {
       .catch((e) => cfId === cfReq.current && setCf({ error: String(e.message || e) }))
       .finally(() => cfId === cfReq.current && setCfBusy(false));
     try {
-      const res = await fetch("/api/dashboard", {
+      const res = await fetch(isExt ? "/api/m" : "/api/dashboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
         cache: "no-store",
       });
       const json = await res.json().catch(() => ({}));
+      if (isExt && res.status === 401) return window.location.reload(); // link vernieuwd of verlopen → inlogscherm
       if (id !== reqId.current) return;
       if (!res.ok || !json.ok) throw new Error(json.error || `HTTP ${res.status}`);
       setData(json);
       if (json.today) setToday(json.today);
+      // pc → server: koppelingen van de aangevinkte stores bewaren voor Dashboard Mobiel (/m)
+      if (!isExt) {
+        try {
+          const sig = JSON.stringify([sheet, body.stores.map((x) => [x.domain, x.key])]);
+          const last = load(LS_SYNC, null);
+          if (!last || last.sig !== sig || Date.now() - (last.at || 0) > 6 * 3600 * 1000) {
+            fetch("/api/dashboard/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "sync", stores: body.stores, cfStores, adsSheetId: sheet }) })
+              .then((r) => r.ok && save(LS_SYNC, { sig, at: Date.now() }))
+              .catch(() => {});
+          }
+        } catch {}
+      }
     } catch (e) {
       if (id === reqId.current) setError(String(e.message || e));
     } finally {
       if (id === reqId.current) setBusy(false);
     }
-  }, [active, cfg, date, sheet, period, custom, today]);
+  }, [active, cfg, date, sheet, period, custom, today, isExt]);
 
   useEffect(() => {
     refresh();
@@ -391,8 +424,26 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Header icon="£" title="Dashboard" subtitle="Omzet · Ads · ROAS" />
-      <div className="page dd">
+      {isExt ? (
+        <div className="ddm-top">
+          <span className="ddm-logo">£</span>
+          <div className="ddm-title">
+            <strong>Attoh Dashboard</strong>
+            <span>{data ? (isRange ? periodLabel : dayLabel(data.date, data.today)) : "Omzet · Ads · ROAS"}</span>
+          </div>
+          {data && ok(sel.orders) ? <span className="ddm-orders"><b>{Math.round(sel.orders)}</b> {Math.round(sel.orders) === 1 ? "sale" : "sales"}</span> : null}
+          <button
+            className="ddm-out"
+            title="Uitloggen"
+            onClick={() => fetch("/api/m", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) }).finally(() => window.location.reload())}
+          >
+            ⎋
+          </button>
+        </div>
+      ) : (
+        <Header icon="£" title="Dashboard" subtitle="Omzet · Ads · ROAS" />
+      )}
+      <div className={"page dd" + (isExt ? " dd-m" : "")}>
         {/* Dagkeuze */}
         <div className="dd-bar">
           <div className="dd-days">
@@ -444,7 +495,7 @@ export default function DashboardPage() {
               ⚠ {issues.length} {issues.length === 1 ? "melding" : "meldingen"}
             </button>
           )}
-          <button className="dd-chip dd-gear" onClick={() => setShowSettings((v) => !v)} title="Instellingen">⚙</button>
+          {!isExt && <button className="dd-chip dd-gear" onClick={() => setShowSettings((v) => !v)} title="Instellingen en telefoonlink">⚙</button>}
         </div>
 
         {showIssues && issues.length > 0 && (
@@ -458,9 +509,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {showSettings && (
+        {showSettings && !isExt && (
           <div className="card">
-            <h2>Instellingen</h2>
+            <h2>Dashboard op je telefoon</h2>
+            <PhoneLink />
+            <h2 style={{ marginTop: 18 }}>Instellingen</h2>
             <div className="field-label">Google Ads-sheet ("Attoh Ads Live") <span className="opt">link of ID</span></div>
             <input
               type="text"
@@ -519,7 +572,7 @@ export default function DashboardPage() {
               </div>
               {daily && (
                 <LineChart
-                  height={280}
+                  height={isExt ? 190 : 280}
                   labels={dates.map(dayShort)}
                   xEvery={dates.length > 14 ? Math.ceil(dates.length / 10) : 1}
                   fmt={(v, axis) => (axis ? gbpAxis(v) : gbp(v))}
@@ -532,7 +585,7 @@ export default function DashboardPage() {
               )}
               {hourly && (
                 <LineChart
-                  height={280}
+                  height={isExt ? 190 : 280}
                   labels={HOURS}
                   xEvery={3}
                   fmt={(v, axis) => (axis ? gbpAxis(v) : gbp(v))}
@@ -544,6 +597,37 @@ export default function DashboardPage() {
                 />
               )}
             </section>
+
+            {/* Telefoon: alle stores naast elkaar in één tabel */}
+            {isExt && rows.length > 0 && (
+              <section className="dd-card ddm-table">
+                <div className="ddm-row ddm-head">
+                  <span>Store</span><span>Omzet</span><span>Sales</span><span>Spend</span><span>ROAS</span>
+                </div>
+                {rows.map((r, i) => {
+                  const m = isRange ? sumPeriod([r], dates) : metrics(r.days && r.days[data.date]);
+                  const pm = isRange ? sumPeriod([r], prevDates) : lflPrev([r]);
+                  return (
+                    <button key={r.domain} className="ddm-row" onClick={() => !isRange && setModal({ id: "revenue", scope: r.domain })}>
+                      <span className="ddm-store"><i style={{ background: colorOf(r.key, i) }} />{r.key || r.name}</span>
+                      <span className="ddm-rev">{gbp(m.revenue)}<Delta cur={m.revenue} prev={pm.revenue} /></span>
+                      <span><b>{ok(m.orders) ? Math.round(m.orders) : "—"}</b></span>
+                      <span>{gbp(m.cost)}</span>
+                      <span className={ok(m.roasReal) ? (m.roasReal >= 2 ? "ddm-good" : m.roasReal < 1.6 ? "ddm-bad" : "") : ""}>{METRIC.roasReal.fmt(m.roasReal)}</span>
+                    </button>
+                  );
+                })}
+                {rows.length > 1 && (
+                  <div className="ddm-row ddm-total">
+                    <span className="ddm-store">Totaal</span>
+                    <span className="ddm-rev">{gbp(sel.revenue)}</span>
+                    <span><b>{ok(sel.orders) ? Math.round(sel.orders) : "—"}</b></span>
+                    <span>{gbp(sel.cost)}</span>
+                    <span>{METRIC.roasReal.fmt(sel.roasReal)}</span>
+                  </div>
+                )}
+              </section>
+            )}
 
             {/* KPI-tegels */}
             <div className="dd-tiles">
@@ -677,7 +761,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <LineChart
-                height={240}
+                height={isExt ? 170 : 240}
                 labels={dates.map(shortDate)}
                 xEvery={dates.length > 16 ? Math.ceil(dates.length / 8) : 2}
                 fmt={(v, axis) => (axis ? gbpAxis(v) : gbp(v))}
@@ -716,7 +800,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="dd-store-chart">
                         <LineChart
-                          height={96}
+                          height={isExt ? 76 : 96}
                           compact
                           labels={isRange ? dates.map(dayShort) : HOURS}
                           xEvery={isRange ? Math.max(1, Math.ceil(dates.length / 4)) : 6}
@@ -763,7 +847,7 @@ export default function DashboardPage() {
         {!busy && !error && active.length === 0 && stores.length > 0 && (
           <div className="center-note">Zet hierboven minstens één store aan.</div>
         )}
-        {stores.length === 0 && <div className="center-note">Koppel eerst je stores in de Importer.</div>}
+        {stores.length === 0 && <div className="center-note">{isExt ? "Nog geen stores bekend op de server. Open het dashboard één keer op je pc." : "Koppel eerst je stores in de Importer."}</div>}
       </div>
     </>
   );
