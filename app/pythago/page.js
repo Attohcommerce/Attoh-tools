@@ -802,6 +802,19 @@ export default function PythagoPage({ ext = null } = {}) {
         <div className="pyx-top">
           <div className="pyx-brand"><span className="pyx-logo">π</span>Pythago</div>
           <div className="grow" />
+          <button
+            className="pyd-ibtn pyx-theme"
+            title="Wissel tussen licht en donker"
+            onClick={() => {
+              const el = document.documentElement;
+              const dark = !el.classList.contains("pyx-dark");
+              el.classList.toggle("pyx-dark", dark);
+              el.classList.toggle("pyx-light", !dark);
+              try { localStorage.setItem("pyx-theme", dark ? "dark" : "light"); } catch {}
+            }}
+          >
+            <span className="pyx-theme__d">🌙 Donker</span><span className="pyx-theme__l">☀️ Licht</span>
+          </button>
           <span className="pyx-user">{ext.user.name}<span>{ext.user.email}</span></span>
           <button className="pyd-ibtn" onClick={async () => { try { await fetch("/api/px/logout", { method: "POST" }); } catch {} window.location.href = "/px"; }}>Uitloggen</button>
         </div>
@@ -1107,7 +1120,7 @@ export default function PythagoPage({ ext = null } = {}) {
             <button className={`pyd-chip ${!filters.advies.length ? "on" : ""}`} onClick={() => setF({ advies: [] })}>Alles {rows.length}</button>
             {ADVIES.filter((a) => counts[a]).map((a) => (
               <button key={a} className={`pyd-chip ${filters.advies.length === 1 && filters.advies[0] === a ? "on" : ""}`} onClick={() => setF({ advies: filters.advies.length === 1 && filters.advies[0] === a ? [] : [a] })}>
-                <span className="dot" style={{ background: TONE[a] }} />
+                <span className="dot" data-adv={a} style={{ background: TONE[a] }} />
                 {a} {counts[a]}
               </button>
             ))}
@@ -1220,7 +1233,7 @@ export default function PythagoPage({ ext = null } = {}) {
                               </div>
                               <div className="pyd-id">ID: {r.productId || "—"}{r.type ? ` · ${r.type}` : ""}</div>
                               <div className="pyd-icons">
-                                <span className="pyd-pill" style={{ color: TONE[r.advies] }}>{r.advies}</span>
+                                <span className="pyd-pill" data-adv={r.advies} style={{ color: TONE[r.advies] }}>{r.advies}</span>
                                 {r.boost && (
                                   <span className="pyd-pill" style={{ color: r.boost.effect === "geen effect" ? "#f0b35a" : r.boost.effect ? "var(--ok)" : "#4cc9f0" }} title={r.boost.tab}>
                                     {r.boost.active ? `Boost · dag ${r.boost.day}/${r.boost.windowDays}` : r.boost.effect ? `Boost: ${r.boost.effect}` : "Boost"}

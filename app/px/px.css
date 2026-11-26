@@ -6,21 +6,21 @@ html.pyx-light {
   --bg-2: #ffffff;
   --panel: #ffffff;
   --panel-hi: #f8f9fb;
-  --line: #e4e7ec;
-  --line-hi: #cfd4dc;
+  --line: #d9dee6;
+  --line-hi: #b9c0cc;
   --ink: #101828;
-  --ink-2: #344054;
-  --muted: #667085;
-  --faint: #98a2b3;
+  --ink-2: #1d2939;
+  --muted: #475467;
+  --faint: #667085;
   --accent: #4f46e5;
   --accent-hi: #4338ca;
   --accent-dim: rgba(79, 70, 229, 0.08);
   --accent-glow: rgba(79, 70, 229, 0.22);
-  --ok: #079455;
+  --ok: #05a660;
   --ok-dim: rgba(7, 148, 85, 0.09);
   --warn: #b54708;
   --warn-dim: rgba(247, 144, 9, 0.11);
-  --err: #d92d20;
+  --err: #e5241a;
   --err-dim: rgba(217, 45, 32, 0.07);
   color-scheme: light;
   background: var(--bg);
@@ -120,3 +120,126 @@ html.pyx-light .pyd-setup code { background: #f2f4f7; }
 html.pyx-light .pyd-warn { border-color: rgba(247, 144, 9, 0.35); }
 html.pyx-light .pyd-err { border-color: rgba(217, 45, 32, 0.3); }
 html.pyx-light .pyd-ok { border-color: rgba(7, 148, 85, 0.3); }
+
+/* ====================================================================
+   LEESBAARHEID + DONKERE MODUS (26-11-2026, feedback Justin)
+   Alles onder .pyx-root, dus alleen op /px.
+   ==================================================================== */
+
+/* ---------- donkere modus ---------- */
+html.pyx-dark {
+  --bg: #0d1117;
+  --bg-2: #131a24;
+  --panel: #161e2a;
+  --panel-hi: #1d2736;
+  --line: #2a3546;
+  --line-hi: #3b4a60;
+  --ink: #f5f7fa;
+  --ink-2: #dde3ec;
+  --muted: #a9b4c4;
+  --faint: #8491a5;
+  --accent: #7c8cff;
+  --accent-hi: #a5b0ff;
+  --accent-dim: rgba(124, 140, 255, 0.16);
+  --accent-glow: rgba(124, 140, 255, 0.3);
+  --ok: #2ee58f;
+  --ok-dim: rgba(46, 229, 143, 0.14);
+  --warn: #ffb020;
+  --warn-dim: rgba(255, 176, 32, 0.14);
+  --err: #ff5c5c;
+  --err-dim: rgba(255, 92, 92, 0.14);
+  color-scheme: dark;
+  background: var(--bg);
+}
+html.pyx-dark body { background: var(--bg); color: var(--ink); }
+html.pyx-dark body::before,
+html.pyx-dark body::after { display: none; }
+html.pyx-dark .card { background: var(--panel); border-color: var(--line); backdrop-filter: none; -webkit-backdrop-filter: none; }
+html.pyx-dark .card h2::before { background: var(--accent); box-shadow: none; }
+html.pyx-dark .btn { background: var(--accent); border: 1px solid var(--accent); color: #0d1117; }
+html.pyx-dark .btn::after { display: none; }
+html.pyx-dark .btn-ghost,
+html.pyx-dark .pyd-ibtn { background: var(--panel); border-color: var(--line-hi); color: var(--ink-2); }
+html.pyx-dark .pyd-ibtn.on,
+html.pyx-dark .pyd-chip.on { background: var(--accent-dim); border-color: var(--accent); color: var(--ink); }
+html.pyx-dark .pyd-chip { border-color: var(--line-hi); color: var(--ink-2); }
+html.pyx-dark .pyd-table th,
+html.pyx-dark .pyd-table th.sticky,
+html.pyx-dark .pyd-table th.sticky2 { background: #1a2331; }
+html.pyx-dark .pyd-table td.sticky,
+html.pyx-dark .pyd-table td.sticky2 { background: var(--bg-2); }
+html.pyx-dark .pyd-table tbody tr:nth-child(even) td,
+html.pyx-dark .pyd-table tbody tr:nth-child(even) td.sticky,
+html.pyx-dark .pyd-table tbody tr:nth-child(even) td.sticky2 { background: #18212e; }
+html.pyx-dark .pyd-table tbody tr:hover td,
+html.pyx-dark .pyd-table tbody tr:hover td.sticky,
+html.pyx-dark .pyd-table tbody tr:hover td.sticky2 { background: #223046; }
+html.pyx-dark .pyd-menu,
+html.pyx-dark .pyd-cols,
+html.pyx-dark .pyd-box { background: var(--panel); border-color: var(--line-hi); }
+html.pyx-dark .pyx-login__card { background: var(--panel); }
+html.pyx-dark .pyx-logo { color: #0d1117; }
+html.pyx-dark .pyd-roas.r1 { color: #1a1300; background: #ffb020; }
+
+/* knop licht / donker */
+.pyx-theme__l { display: none; }
+html.pyx-dark .pyx-theme__d { display: none; }
+html.pyx-dark .pyx-theme__l { display: inline; }
+
+/* ---------- tabel: groter, donkerder, rustiger ---------- */
+.pyx-root .pyd-wrap { border-color: var(--line-hi); }
+.pyx-root .pyd-table { font-size: 13.5px; }
+.pyx-root .pyd-table th { font-size: 11px; font-weight: 700; color: var(--ink-2); padding: 11px 12px; border-bottom: 2px solid var(--line-hi); }
+.pyx-root .pyd-table th.sort.on { color: var(--accent); }
+.pyx-root .pyd-table td { padding: 11px 12px; color: var(--ink); font-weight: 500; border-top: 1px solid var(--line); }
+.pyx-root .pyd-table td.dim { color: var(--muted); font-weight: 400; }
+.pyx-root .pyd-table th.gl,
+.pyx-root .pyd-table td.gl { border-left: 2px solid var(--line-hi); }
+.pyx-root .pyd-title { font-weight: 600; font-size: 13.5px; }
+.pyx-root .pyd-id { color: var(--muted); }
+.pyx-root .pyd-sub { color: var(--muted); }
+.pyx-root .pyd-neg { color: var(--err); font-weight: 700; }
+.pyx-root .pyd-tile .k { color: var(--muted); font-weight: 600; }
+.pyx-root .pyd-tile .v { font-weight: 700; }
+html.pyx-light .pyd-table tbody tr:nth-child(even) td,
+html.pyx-light .pyd-table tbody tr:nth-child(even) td.sticky,
+html.pyx-light .pyd-table tbody tr:nth-child(even) td.sticky2 { background: #f7f9fc; }
+html.pyx-light .pyd-table tbody tr:hover td,
+html.pyx-light .pyd-table tbody tr:hover td.sticky,
+html.pyx-light .pyd-table tbody tr:hover td.sticky2 { background: #eaf0ff; }
+html.pyx-light .pyd-table th,
+html.pyx-light .pyd-table th.sticky,
+html.pyx-light .pyd-table th.sticky2 { background: #eef1f6; }
+.pyx-root .pyd-table th.g7 { box-shadow: inset 0 3px 0 #f5b301; }
+.pyx-root .pyd-table th.g14 { box-shadow: inset 0 3px 0 #ff7a1a; }
+.pyx-root .pyd-table th.g30 { box-shadow: inset 0 3px 0 #2f80ff; }
+
+/* ---------- felle, gevulde labels ---------- */
+.pyx-root .pyd-roas { min-width: 52px; padding: 4px 8px; font-weight: 800; }
+.pyx-root .pyd-roas.r0 { color: #fff; background: #e5241a; }
+.pyx-root .pyd-roas.r1 { color: #2b1a00; background: #ffb020; }
+.pyx-root .pyd-roas.r2 { color: #fff; background: #0aa85f; }
+.pyx-root .pyd-roas.rn { color: var(--muted); background: transparent; font-weight: 500; }
+.pyx-root .pyd-pill { font-size: 11px; padding: 3px 9px; }
+.pyx-root .pyd-status.active { color: #fff; background: #0aa85f; }
+.pyx-root .pyd-status.draft { color: #2b1a00; background: #ffb020; }
+.pyx-root .pyd-status.archived { color: #fff; background: #64748b; }
+.pyx-root .pyd-pill[data-adv] { border-color: transparent; color: #fff !important; }
+.pyx-root .pyd-pill[data-adv="Draften"] { background: #e5241a; }
+.pyx-root .pyd-pill[data-adv="Onder break-even"] { background: #ffb020; color: #2b1a00 !important; }
+.pyx-root .pyd-pill[data-adv="Winstgevend"] { background: #0aa85f; }
+.pyx-root .pyd-pill[data-adv="Verkoopt"] { background: #0e9be8; }
+.pyx-root .pyd-pill[data-adv="Nieuw"] { background: #8b5cf6; }
+.pyx-root .pyd-pill[data-adv="Te weinig spend"] { background: #64748b; }
+.pyx-root .pyd-pill[data-adv="Niet op store"],
+.pyx-root .pyd-pill[data-adv="Al draft"] { background: #94a3b8; color: #111827 !important; }
+.pyx-root .pyd-chip { font-size: 13px; padding: 7px 13px; color: var(--ink-2); }
+.pyx-root .pyd-chip .dot { width: 10px; height: 10px; }
+.pyx-root .dot[data-adv="Draften"] { background: #e5241a !important; }
+.pyx-root .dot[data-adv="Onder break-even"] { background: #ffb020 !important; }
+.pyx-root .dot[data-adv="Winstgevend"] { background: #0aa85f !important; }
+.pyx-root .dot[data-adv="Verkoopt"] { background: #0e9be8 !important; }
+.pyx-root .dot[data-adv="Nieuw"] { background: #8b5cf6 !important; }
+.pyx-root .dot[data-adv="Te weinig spend"] { background: #64748b !important; }
+.pyx-root .dot[data-adv="Niet op store"],
+.pyx-root .dot[data-adv="Al draft"] { background: #94a3b8 !important; }
