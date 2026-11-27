@@ -396,6 +396,20 @@ export default function ImporterPage() {
     }
   }
 
+  /* 27-11-2026: store hernoemen (bv. Lady Glam Boutique → Season of Style). Alleen de naam verandert;
+     domein, koppeling en Ads-sleutel (per domein) blijven. De Claude-koppeling krijgt de nieuwe naam meteen mee. */
+  function renameStore(domain) {
+    const cur = stores.find((s) => s.domain === domain);
+    if (!cur) return;
+    const name = (window.prompt("Nieuwe naam voor deze store", cur.name || "") || "").trim();
+    if (!name || name === cur.name) return;
+    const next = stores.map((s) => (s.domain === domain ? { ...s, name } : s));
+    setStores(next);
+    saveStores(next);
+    const all = load(LS.stores, []);
+    fetch("/api/claude-link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "save", stores: all }) }).catch(() => {});
+  }
+
   function removeStore(domain) {
     const next = stores.filter((s) => s.domain !== domain);
     setStores(next);
@@ -1291,6 +1305,15 @@ export default function ImporterPage() {
                   </div>
                   <div className="dom">{s.domain}</div>
                   <div className="row-actions">
+                    <button
+                      className="linklike"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        renameStore(s.domain);
+                      }}
+                    >
+                      Naam wijzigen
+                    </button>{" "}
                     <button
                       className="linklike"
                       onClick={(e) => {
