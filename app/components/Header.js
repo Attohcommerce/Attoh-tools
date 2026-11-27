@@ -14,6 +14,7 @@ const NAV = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/importer", label: "Importer" },
   { href: "/scraper", label: "Product Scraper" },
+  { href: "/trend-scraper", label: "Trend Scraper" },
   { href: "/competitor-finder", label: "Competitor finder" },
   { href: "/big-competitors", label: "Big Competitors" },
   { href: "/keywords", label: "Keywords" },

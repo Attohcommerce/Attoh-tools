@@ -38,12 +38,21 @@ function parseUrls(text) {
   return String(text || "")
     .split(/[\n,]+/)
     .map((s) => s.trim())
-    .filter((s) => /https?:\/\/[^\s]+\/products\/[^\s]+/i.test(s) || /^[^\s]+\.[a-z]{2,}\/products\/[^\s]+/i.test(s))
+    .filter(
+      (s) =>
+        /https?:\/\/[^\s]+\/products\/[^\s]+/i.test(s) ||
+        /^[^\s]+\.[a-z]{2,}\/products\/[^\s]+/i.test(s) ||
+        // Trend-import (27-11-2026): AliExpress- en Temu-productlinks
+        /aliexpress\.[a-z.]+\/item\/\d+/i.test(s) ||
+        /temu\.com\/[^\s]*(goods_id=\d+|-g-\d+\.html)/i.test(s)
+    )
     .map((s) => (s.startsWith("http") ? s : "https://" + s));
 }
 
 // Tag op elk product uit een Big Competitors-blad (24-11-2026)
 const BIG_COMP_TAG = "Big Competitor";
+// Tag op elk product uit de Trend Scraper (AliExpress/Temu, 27-11-2026)
+const TREND_TAG = "Trend Import";
 
 export default function ImporterPage() {
   // Stores
@@ -62,7 +71,11 @@ export default function ImporterPage() {
   const [addErr, setAddErr] = useState("");
 
   // Input
-  const [tab, setTab] = useState("urls"); // urls | sheet
+  const [tab, setTab] = useState("urls"); // urls | sheet | trending
+  // Trending (27-11-2026): wachtrij uit de Trend Scraper (AliExpress/Temu)
+  const [trendQueue, setTrendQueue] = useState(null);
+  const [trendPick, setTrendPick] = useState({});
+  const [trendMsg, setTrendMsg] = useState("");
   const [pane, setPane] = useState("urls"); // urls | settings | run | photos | checks | queue — één scherm, tabs i.p.v. scrollen
   const [photoTypes, setPhotoTypes] = useState({}); // AI-foto's (coming soon): productsoort → aan/uit
   const [photoMode, setPhotoMode] = useState("5050"); // all | 5050 | ai
@@ -285,8 +298,38 @@ export default function ImporterPage() {
         return true;
       });
     if (tab === "sheet") return dedupe(sheetLinks || []);
+    if (tab === "trending")
+      return dedupe(
+        (trendQueue || [])
+          .filter((q) => trendPick[q.url] !== false)
+          .map((q) => ({ url: q.url, keyword: q.keyword, gender: q.gender === "M" ? "Man" : q.gender === "V" ? "Vrouw" : "", collection: "", trend: true }))
+      );
     return dedupe(parseUrls(urlsText));
-  }, [tab, urlsText, sheetLinks]);
+  }, [tab, urlsText, sheetLinks, trendQueue, trendPick]);
+
+  async function loadTrendQueue() {
+    setTrendMsg("Laden…");
+    try {
+      const r = await fetch("/api/trend-scraper", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "queue" }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "laden mislukt");
+      setTrendQueue(d.queue || []);
+      setTrendPick({});
+      setTrendMsg(`${(d.queue || []).length} producten uit de Trend Scraper`);
+    } catch (e) {
+      setTrendMsg(String(e.message || e));
+    }
+  }
+  // ?bron=trending (link vanaf de Trend Scraper) → meteen de Trending-tab
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get("bron") === "trending") {
+        setTab("trending");
+        loadTrendQueue();
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const selectedStore = stores.find((s) => s.domain === selected) || null;
   useEffect(() => {
@@ -770,9 +813,13 @@ export default function ImporterPage() {
          of ze echt oppakken. Herkend aan de link vanaf Big Competitors of aan
          kolom T "COMPETITOR" in het blad. */
       const rowBigComp = typeof entry === "object" && (!!entry.bigComp || !!(bcRef.current && bcRef.current.sheet && String(sheetId || "").includes(bcRef.current.sheet)));
-      const rowTags = rowBigComp && !String(tags || "").split(",").some((x) => x.trim().toLowerCase() === BIG_COMP_TAG.toLowerCase())
+      let rowTags = rowBigComp && !String(tags || "").split(",").some((x) => x.trim().toLowerCase() === BIG_COMP_TAG.toLowerCase())
         ? [String(tags || "").trim(), BIG_COMP_TAG].filter(Boolean).join(", ")
         : tags;
+      // Trend-import (27-11): tag "Trend Import" — zo zie je in Shopify/Pythago of AliExpress/Temu-trends echt oppakken
+      if (typeof entry === "object" && entry.trend && !String(rowTags || "").toLowerCase().includes(TREND_TAG.toLowerCase())) {
+        rowTags = [String(rowTags || "").trim(), TREND_TAG].filter(Boolean).join(", ");
+      }
       const nr = `${i + 1}/${urls.length}`;
       try {
         // 0. Staat de bron-URL al in de store? Dan niet eens scrapen.
@@ -791,6 +838,14 @@ export default function ImporterPage() {
         const sData = await sRes.json();
         if (!sRes.ok) throw new Error(sData.error || "scrape mislukt");
         const product = sData.product;
+        if (sData.photo && !sData.photo.error) {
+          const ph = sData.photo;
+          const why = Object.entries(ph.reasons || {}).map(([k, v]) => `${v}× ${k}`).join(", ");
+          pushLog({
+            muted: !ph.needsAiPhotos,
+            text: `${nr} · foto's: ${ph.kept} goed, ${ph.dropped} eruit${why ? ` (${why})` : ""} · fotocijfer ${ph.score}${ph.needsAiPhotos ? " → zet dit product daarna in tab AI-foto's (\"AI kiest\")" : ""}`,
+          });
+        }
 
         // 1b. Oudere import zonder bron-URL: herkennen op foto-namen / SKU's
         if (existing) {
@@ -1364,7 +1419,43 @@ export default function ImporterPage() {
                 <button className={tab === "sheet" ? "on" : ""} onClick={() => setTab("sheet")}>
                   Sheet plakken
                 </button>
+                <button
+                  className={tab === "trending" ? "on" : ""}
+                  onClick={() => {
+                    setTab("trending");
+                    if (!trendQueue) loadTrendQueue();
+                  }}
+                >
+                  🔥 Trending (AliExpress/Temu)
+                </button>
               </div>
+
+              {tab === "trending" && (
+                <>
+                  <div className="field-label">
+                    Wachtrij uit de <a className="linklike" href="/trend-scraper">Trend Scraper</a>
+                    <span className="opt"> · foto's met Chinese tekst, maattabellen en collages gaan er automatisch uit; slechte foto's → AI-foto's</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                    <button type="button" className="btn-ghost btn-small" onClick={loadTrendQueue}>↻ Wachtrij laden</button>
+                    <span className="small muted">{trendMsg}</span>
+                  </div>
+                  {trendQueue && trendQueue.length ? (
+                    <div style={{ maxHeight: 260, overflow: "auto", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 6 }}>
+                      {trendQueue.map((q) => (
+                        <label key={q.url} className="small" style={{ display: "flex", gap: 6, alignItems: "center", opacity: trendPick[q.url] === false ? 0.4 : 1 }}>
+                          <input type="checkbox" checked={trendPick[q.url] !== false} onChange={(e) => setTrendPick({ ...trendPick, [q.url]: e.target.checked })} />
+                          {q.image ? <img src={q.image} alt="" style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 4 }} /> : null}
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {q.source === "temu" ? "Temu" : "Ali"} · {q.keyword || q.title}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="hint">{urls.length > 0 ? `${urls.length} trending producten klaar om te importeren` : "Wachtrij is leeg — vul hem in de Trend Scraper"}</div>
+                </>
+              )}
 
               {tab === "urls" && (
                 <>
