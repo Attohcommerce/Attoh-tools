@@ -53,6 +53,8 @@ function parseUrls(text) {
 const BIG_COMP_TAG = "Big Competitor";
 // Tag op elk product uit de Trend Scraper (AliExpress/Temu, 27-11-2026)
 const TREND_TAG = "Trend Import";
+// Trend Scraper tijdelijk uit (28-11-2026, Justin): tab verborgen, code blijft staan
+const SHOW_TRENDING = false;
 
 export default function ImporterPage() {
   // Stores
@@ -1419,7 +1421,7 @@ export default function ImporterPage() {
                 <button className={tab === "sheet" ? "on" : ""} onClick={() => setTab("sheet")}>
                   Sheet plakken
                 </button>
-                <button
+                {SHOW_TRENDING && <button
                   className={tab === "trending" ? "on" : ""}
                   onClick={() => {
                     setTab("trending");
@@ -1427,7 +1429,7 @@ export default function ImporterPage() {
                   }}
                 >
                   🔥 Trending (AliExpress/Temu)
-                </button>
+                </button>}
               </div>
 
               {tab === "trending" && (

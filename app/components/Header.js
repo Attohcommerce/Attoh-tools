@@ -14,7 +14,7 @@ const NAV = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/importer", label: "Importer" },
   { href: "/scraper", label: "Product Scraper" },
-  { href: "/trend-scraper", label: "Trend Scraper" },
+  // { href: "/trend-scraper", label: "Trend Scraper" }, // tijdelijk uit het menu (28-11-2026, Justin) — code staat er nog
   { href: "/competitor-finder", label: "Competitor finder" },
   { href: "/big-competitors", label: "Big Competitors" },
   { href: "/keywords", label: "Keywords" },
