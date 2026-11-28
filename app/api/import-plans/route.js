@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listPlans, getPlan, deletePlan, applyPlan, putPlan, keywordsLookup, storeMemoryOverview } from "@/lib/import-plans";
+import { listPlans, getPlan, deletePlan, applyPlan, putPlan, keywordsLookup, storeMemoryOverview, weekrunInfo, getWeekrunCfg, setWeekrunCfg } from "@/lib/import-plans";
 
 export const maxDuration = 120;
 
@@ -16,6 +16,10 @@ export async function POST(req) {
     if (a === "keywords") return NextResponse.json(await keywordsLookup(body));
     if (a === "stores") return NextResponse.json({ stores: await storeMemoryOverview() });
     if (a === "put") return NextResponse.json(await putPlan(body.plan));
+    // Weekrun: één workflow voor alle stores (scraper + importer lezen dit)
+    if (a === "weekrun") return NextResponse.json(await weekrunInfo(body.id));
+    if (a === "cfgGet") return NextResponse.json({ cfg: await getWeekrunCfg() });
+    if (a === "cfgSet") return NextResponse.json({ cfg: await setWeekrunCfg({ tpk: body.tpk, importSheet: body.importSheet }) });
     if (a === "delete") return NextResponse.json(await deletePlan(body.id));
     return NextResponse.json({ error: `onbekende actie ${a}` }, { status: 400 });
   } catch (e) {

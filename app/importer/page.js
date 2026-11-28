@@ -380,6 +380,106 @@ export default function ImporterPage() {
     setLogs((l) => [...l, line]);
   }
 
+  /* ---------- WEEKRUN — alle stores achter elkaar importeren (28-11-2026) ----------
+     /importer?weekrun=<plan-id>. Per store: store kiezen (alle store-kennis
+     zoals altijd: valuta, markt, product types, collecties, geheugen) → het
+     import-blad van die store laden (weekrun-import-sheet "<blad> · <store>"
+     of de eigen import-sheet) → importeren met de instellingen hieronder →
+     volgende store. Elke stap in een verse render. */
+  const [wr, setWr] = useState(null);
+  const [wrStep, setWrStep] = useState(null); // {i, phase: select|sheet|load|run}
+  const [wrLog, setWrLog] = useState([]);
+  const wrListRef = useRef([]);
+  const wrStopRef = useRef(false);
+  useEffect(() => {
+    let id = "";
+    try {
+      id = new URLSearchParams(window.location.search).get("weekrun") || "";
+    } catch {}
+    if (!id) return;
+    setTab("sheet");
+    fetch("/api/import-plans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "weekrun", id }) })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.error) throw new Error(d.error);
+        const sel = {};
+        for (const st of d.stores) if (st.ok) sel[st.domain] = true;
+        setWr({ ...d, sel, status: load(`sa_wr_import_${id}`, {}) });
+      })
+      .catch((e) => setWr({ error: e.message }));
+  }, []);
+  function wrSetStatus(domain, st) {
+    setWr((w) => {
+      if (!w) return w;
+      const status = { ...w.status, [domain]: st };
+      save(`sa_wr_import_${w.id}`, status);
+      return { ...w, status };
+    });
+  }
+  const wrNote = (t) => setWrLog((l) => [...l, `${new Date().toTimeString().slice(0, 5)} ${t}`]);
+  function wrStart() {
+    if (!wr || !wr.stores || running || wrStep) return;
+    const list = wr.stores.filter((st) => st.ok && wr.sel[st.domain] && wr.status[st.domain] !== "klaar");
+    const missing = list.filter((st) => !stores.some((x) => x.domain === st.domain));
+    if (missing.length) {
+      alert(`Deze stores zijn in deze browser niet gekoppeld in de Importer: ${missing.map((x) => x.name).join(", ")}. Koppel ze eerst (Store toevoegen) of vink ze uit.`);
+      return;
+    }
+    if (!list.length) return alert("Geen stores meer om te importeren (alles klaar of niets aangevinkt).");
+    wrStopRef.current = false;
+    wrListRef.current = list;
+    setWrLog([]);
+    setWrStep({ i: 0, phase: "select" });
+  }
+  useEffect(() => {
+    if (!wrStep) return;
+    const list = wrListRef.current;
+    const st = list[wrStep.i];
+    if (!st || wrStopRef.current) {
+      wrNote(wrStopRef.current ? "Weekrun gestopt." : `Weekrun importeren klaar: ${list.length} stores. Volgende stap: Store Doctor → Scan alle stores.`);
+      setWrStep(null);
+      return;
+    }
+    const nextStore = () => setWrStep({ i: wrStep.i + 1, phase: "select" });
+    (async () => {
+      try {
+        if (wrStep.phase === "select") {
+          wrSetStatus(st.domain, "bezig");
+          wrNote(`${st.name}: store gekozen (${st.market || "?"})`);
+          selectStore(st.domain);
+          setWrStep({ i: wrStep.i, phase: "sheet" });
+        } else if (wrStep.phase === "sheet") {
+          // na het store-effect (dat zet de eigen import-sheet) — weekrun-blad erover
+          setTab("sheet");
+          setSheetId(st.import.url);
+          setSheetTab(st.import.tab);
+          setSheetLinks(null);
+          setWrStep({ i: wrStep.i, phase: "load" });
+        } else if (wrStep.phase === "load") {
+          const n = await loadSheet();
+          if (n > 0) {
+            wrNote(`${st.name}: ${n} links geladen uit "${st.import.tab}"`);
+            setWrStep({ i: wrStep.i, phase: "run" });
+          } else {
+            wrNote(`${st.name}: ${n === 0 ? "geen links in" : "kon niet lezen:"} "${st.import.tab}" — overgeslagen (eerst scrapen?)`);
+            wrSetStatus(st.domain, "fout");
+            nextStore();
+          }
+        } else if (wrStep.phase === "run") {
+          await runImport();
+          wrNote(`${st.name}: import klaar`);
+          wrSetStatus(st.domain, "klaar");
+          nextStore();
+        }
+      } catch (e) {
+        wrNote(`${st.name}: fout — ${e.message || e}`);
+        wrSetStatus(st.domain, "fout");
+        nextStore();
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wrStep]);
+
   // ---------- Stores ----------
   async function addStore() {
     setAddErr("");
@@ -523,8 +623,10 @@ export default function ImporterPage() {
               : " — geen COLLECTIE-kolom (I) gevonden; collectie wordt uit het keyword afgeleid"
             : "")
       );
+      return links.length;
     } catch (e) {
       setSheetMsg("Fout: " + e.message);
+      return -1;
     } finally {
       setSheetBusy(false);
     }
@@ -1259,6 +1361,51 @@ export default function ImporterPage() {
         subtitle="Scrape · AI Generate · Upload"
       />
       <div className="page">
+        {wr ? (
+          <div className="card" style={{ marginBottom: 14, borderColor: "rgba(212,175,55,.45)" }}>
+            <h2>
+              ⚡ Weekrun — alle stores importeren
+              <span className="opt">{wr.error ? "" : `${wr.week ? wr.week + " · " : ""}${wr.name} · instellingen hieronder gelden voor elke store`}</span>
+            </h2>
+            {wr.error ? (
+              <div className="hint err">{wr.error}</div>
+            ) : (
+              <>
+                <div style={{ display: "grid", gap: 4, marginBottom: 10 }}>
+                  {wr.stores.map((st) => {
+                    const stt = (wr.status || {})[st.domain] || "";
+                    const linked = stores.some((x) => x.domain === st.domain);
+                    const now = wrStep && wrListRef.current[wrStep.i] && wrListRef.current[wrStep.i].domain === st.domain;
+                    return (
+                      <label key={st.domain || st.store} className="small" style={{ display: "flex", gap: 8, alignItems: "center", opacity: st.ok && linked ? 1 : 0.6 }}>
+                        <input type="checkbox" disabled={!st.ok || !!wrStep} checked={!!(st.ok && wr.sel[st.domain])} onChange={(e) => setWr((w) => ({ ...w, sel: { ...w.sel, [st.domain]: e.target.checked } }))} />
+                        <b style={{ minWidth: 170 }}>{st.name || st.store}</b>
+                        <span className="muted">{!st.ok ? st.error : !linked ? "niet gekoppeld in deze browser" : `${st.market} · blad "${st.import.tab}"`}</span>
+                        <span style={{ flex: 1 }} />
+                        {now ? <span className="badge badge-green">bezig…</span> : stt === "klaar" ? <span className="badge badge-green">✓ klaar</span> : stt === "fout" ? <span className="badge bc-badge-err">✗ overgeslagen</span> : stt === "bezig" ? <span className="badge">onderbroken</span> : null}
+                      </label>
+                    );
+                  })}
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <button className="btn" disabled={!!wrStep || running} onClick={wrStart}>
+                    {wrStep ? `Bezig: store ${wrStep.i + 1}/${wrListRef.current.length}…` : "▶ Importeer alle aangevinkte stores"}
+                  </button>
+                  {wrStep ? (
+                    <button className="btn-ghost btn-small" onClick={() => (wrStopRef.current = true)}>
+                      Stop na deze store
+                    </button>
+                  ) : null}
+                  <button className="btn-ghost btn-small" disabled={!!wrStep} onClick={() => setWr((w) => { save(`sa_wr_import_${w.id}`, {}); return { ...w, status: {} }; })}>
+                    Status wissen
+                  </button>
+                  <span className="small muted">Status (draft/active), korting en foto-instellingen hieronder gelden voor alle stores. Valuta, markt, product types en collecties gaan per store vanzelf.</span>
+                </div>
+                {wrLog.length ? <div className="small muted" style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>{wrLog.join("\n")}</div> : null}
+              </>
+            )}
+          </div>
+        ) : null}
         <div className="layout-2col">
           {/* -------- Sidebar: Stores -------- */}
           <div>

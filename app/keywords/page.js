@@ -1874,6 +1874,15 @@ export default function KeywordsPage() {
                   </div>
                 </div>
 
+                {/* ---- Weekrun-sheets (28-11): één TPK + één import-sheet voor alle stores ---- */}
+                <div className="card">
+                  <h2>
+                    ⚡ Weekrun-sheets <span className="opt">één TPK-sheet en één import-sheet voor alle stores</span>
+                  </h2>
+                  <div className="small muted">
+                    Instellen en gebruiken op de pagina <a href="/importplannen">Weekrun</a>: plan → alle stores scrapen → alle stores importeren → Store Doctor → foto&apos;s. Het geheugen tegen dubbel scrapen blijft per store (hieronder).
+                  </div>
+                </div>
                 {/* ---- 2 · Store-geheugen ---- */}
                 <div className="card">
                   <h2>

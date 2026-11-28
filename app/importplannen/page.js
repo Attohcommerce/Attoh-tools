@@ -27,6 +27,9 @@ export default function ImportplannenPage() {
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
   const [results, setResults] = useState(null);
+  const [cfg, setCfg] = useState(null); // weekrun-sheets (geheugen): één TPK + één import-sheet voor alle stores
+  const [cfgEdit, setCfgEdit] = useState({ tpk: "", importSheet: "" });
+  const [cfgBusy, setCfgBusy] = useState(false);
 
   async function load() {
     const d = await api({ action: "list" });
@@ -46,6 +49,12 @@ export default function ImportplannenPage() {
     }
   }
   useEffect(() => {
+    api({ action: "cfgGet" })
+      .then((d) => {
+        setCfg(d.cfg);
+        setCfgEdit({ tpk: d.cfg.tpkUrl, importSheet: d.cfg.importUrl });
+      })
+      .catch(() => {});
     load().catch((e) => setErr(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -68,6 +77,20 @@ export default function ImportplannenPage() {
     }
   }
 
+  async function saveCfg() {
+    setCfgBusy(true);
+    setErr("");
+    try {
+      const d = await api({ action: "cfgSet", tpk: cfgEdit.tpk.trim(), importSheet: cfgEdit.importSheet.trim() });
+      setCfg(d.cfg);
+      setCfgEdit({ tpk: d.cfg.tpkUrl, importSheet: d.cfg.importUrl });
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setCfgBusy(false);
+    }
+  }
+
   const totals = useMemo(() => {
     if (!plan) return null;
     let kw = 0;
@@ -82,7 +105,7 @@ export default function ImportplannenPage() {
 
   return (
     <>
-      <Header icon="A" title="Attoh Tools" subtitle="Importplannen" />
+      <Header icon="A" title="Attoh Tools" subtitle="Importplannen · Weekrun" />
       <div className="page">
         {err ? <div className="hint err" style={{ marginBottom: 10 }}>{err}</div> : null}
 
@@ -124,6 +147,29 @@ export default function ImportplannenPage() {
               <span className="small muted">Bestaat het blad al, dan wordt het overschreven. Er wordt verder niets aan de sheets of stores veranderd.</span>
             </div>
 
+            <div className="wr-steps" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 8, margin: "4px 0 14px" }}>
+              {[
+                { n: 1, t: "Plan → sheets", s: plan.appliedAt ? `✓ ${String(plan.appliedAt).slice(0, 10)}` : "knop hierboven", href: null },
+                { n: 2, t: "Scrapen — alle stores", s: "1 run voor alle stores", href: `/scraper?weekrun=${encodeURIComponent(plan.id)}` },
+                { n: 3, t: "Importeren — alle stores", s: "1 run voor alle stores", href: `/importer?weekrun=${encodeURIComponent(plan.id)}` },
+                { n: 4, t: "Store Doctor", s: "⚡ Scan alle stores", href: "/qa" },
+                { n: 5, t: "Foto's", s: "AI-foto-wachtrij (alle stores)", href: "/importer" },
+              ].map((x) =>
+                x.href ? (
+                  <a key={x.n} href={x.href} className="card" style={{ padding: "10px 12px", margin: 0, textDecoration: "none", color: "inherit" }}>
+                    <div className="small muted">Stap {x.n}</div>
+                    <b>{x.t}</b>
+                    <div className="small muted">{x.s}</div>
+                  </a>
+                ) : (
+                  <div key={x.n} className="card" style={{ padding: "10px 12px", margin: 0 }}>
+                    <div className="small muted">Stap {x.n}</div>
+                    <b>{x.t}</b>
+                    <div className="small muted">{x.s}</div>
+                  </div>
+                )
+              )}
+            </div>
             {plan.stores.map((s) => {
               const n = s.rows.reduce((a, r) => a + r.count, 0);
               const r = resOf(s.store);
@@ -199,6 +245,36 @@ export default function ImportplannenPage() {
             </div>
           </div>
         ) : null}
+
+        <div className="card">
+          <h2>
+            🧠 Weekrun-sheets
+            <span className="opt">geheugen · één TPK-sheet en één import-sheet voor alle stores · per store een eigen blad "&lt;plan&gt; · &lt;store&gt;"</span>
+          </h2>
+          <div className="small muted" style={{ marginBottom: 8 }}>
+            Leeg = elke store gebruikt zijn eigen TPK- en import-sheet uit Keywords → Geheugen. Het geheugen tegen dubbel scrapen blijft altijd per store. Deel beide sheets als Bewerker met attoh-sheets@attoh-tools.iam.gserviceaccount.com.
+          </div>
+          <div style={{ display: "grid", gap: 8, maxWidth: 760 }}>
+            <label className="small">
+              TPK-sheet (alle stores)
+              <input type="text" value={cfgEdit.tpk} onChange={(e) => setCfgEdit((c) => ({ ...c, tpk: e.target.value }))} placeholder="https://docs.google.com/spreadsheets/d/…" />
+            </label>
+            <label className="small">
+              Import-sheet (alle stores)
+              <input type="text" value={cfgEdit.importSheet} onChange={(e) => setCfgEdit((c) => ({ ...c, importSheet: e.target.value }))} placeholder="https://docs.google.com/spreadsheets/d/…" />
+            </label>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <button className="btn btn-small" disabled={cfgBusy} onClick={saveCfg}>
+                {cfgBusy ? "Opslaan…" : "Opslaan in geheugen"}
+              </button>
+              {cfg && (cfg.tpkUrl || cfg.importUrl) ? (
+                <span className="small muted">
+                  {cfg.tpkUrl ? <a href={cfg.tpkUrl} target="_blank" rel="noreferrer">TPK openen</a> : "geen TPK"} · {cfg.importUrl ? <a href={cfg.importUrl} target="_blank" rel="noreferrer">import openen</a> : "geen import"}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );

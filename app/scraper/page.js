@@ -406,6 +406,101 @@ export default function ScraperPage() {
       .catch(() => {});
   }, []);
 
+  /* ---------- WEEKRUN — alle stores achter elkaar (28-11-2026) ----------
+     Justin: "per week 1 workflow in plaats van 8". /scraper?weekrun=<plan-id>
+     haalt per store op waar de verdeling staat (weekrun-TPK of eigen TPK) en
+     waar de import-lijst heen moet (weekrun-import of eigen import-sheet).
+     Per store: store-geheugen kiezen (eigen geheugen-sheet tegen dubbel
+     scrapen blijft per store) → verdeling inladen → scrape-run (incl.
+     aanvulronde + eindcontroles) → volgende store. Elke stap draait in een
+     verse render, zodat de bestaande functies de juiste store zien. */
+  const [wr, setWr] = useState(null); // {id, name, week, cfg, stores, sel, status} | {error}
+  const [wrStep, setWrStep] = useState(null); // {i, phase: pick|load|run}
+  const wrListRef = useRef([]);
+  const wrStopRef = useRef(false);
+  useEffect(() => {
+    let id = "";
+    try {
+      id = new URLSearchParams(window.location.search).get("weekrun") || "";
+    } catch {}
+    if (!id) return;
+    fetch("/api/import-plans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "weekrun", id }) })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.error) throw new Error(d.error);
+        const sel = {};
+        for (const st of d.stores) if (st.ok) sel[st.domain] = true;
+        setWr({ ...d, sel, status: load(`sa_wr_scrape_${id}`, {}) });
+      })
+      .catch((e) => setWr({ error: e.message }));
+  }, []);
+  function wrSetStatus(domain, st) {
+    setWr((w) => {
+      if (!w) return w;
+      const status = { ...w.status, [domain]: st };
+      save(`sa_wr_scrape_${w.id}`, status);
+      return { ...w, status };
+    });
+  }
+  function wrStart() {
+    if (!wr || !wr.stores || running || wrStep) return;
+    const list = wr.stores.filter((st) => st.ok && wr.sel[st.domain] && wr.status[st.domain] !== "klaar");
+    if (!list.length) return alert2("Geen stores meer om te scrapen (alles staat op klaar, of niets aangevinkt).");
+    if (!storeList.length) return alert2("Voeg eerst competitor stores toe (stap 1).");
+    const markets = [...new Set(list.map((st) => st.market).filter(Boolean))];
+    if (markets.length > 1 || (markets[0] && compMarket && markets[0] !== compMarket)) {
+      if (!window.confirm(`Deze weekrun bevat markt(en) ${markets.join(", ")}, de competitor-lijst staat op ${compMarket}. Toch alle stores met deze competitor-lijst scrapen?`)) return;
+    }
+    wrStopRef.current = false;
+    wrListRef.current = list;
+    setWrStep({ i: 0, phase: "pick" });
+  }
+  useEffect(() => {
+    if (!wrStep) return;
+    const list = wrListRef.current;
+    const st = list[wrStep.i];
+    if (!st || wrStopRef.current) {
+      pushLog({ strong: true, text: wrStopRef.current ? "══ Weekrun gestopt ══" : `══ Weekrun scrapen klaar: ${list.length} stores ══ — volgende stap: Importer → Weekrun.` });
+      setWrStep(null);
+      if (!wrStopRef.current) window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+      return;
+    }
+    const nextStore = () => setWrStep({ i: wrStep.i + 1, phase: "pick" });
+    (async () => {
+      try {
+        if (wrStep.phase === "pick") {
+          wrSetStatus(st.domain, "bezig");
+          const known = memStores.find((x) => x.domain === st.domain);
+          const entry = known || { domain: st.domain, name: st.name, market: st.market, genders: st.genders, memSheetId: st.memSheetId, tpkSheetId: st.tpk.shared ? "" : st.tpk.sheetId, importSheetId: st.import.shared ? "" : st.import.sheetId };
+          await pickMemStore(entry, known ? undefined : [entry, ...memStores], true, "tpk");
+          setOrgSource("tpk");
+          setOrgSheet(st.tpk.url);
+          setOrgTab(st.tpk.tab);
+          setOrgFilter("alles");
+          setWorkSheet(st.import.url);
+          setNewTabName(st.import.tab);
+          setWrStep({ i: wrStep.i, phase: "load" });
+        } else if (wrStep.phase === "load") {
+          pushLog({ strong: true, text: `══ Weekrun ${wrStep.i + 1}/${list.length}: ${st.name} (${st.market || "?"}) — verdeling uit "${st.tpk.tab}" ══` });
+          const ok = await loadVerdeling();
+          if (!ok) {
+            wrSetStatus(st.domain, "fout");
+            nextStore();
+          } else setWrStep({ i: wrStep.i, phase: "run" });
+        } else if (wrStep.phase === "run") {
+          await start();
+          wrSetStatus(st.domain, "klaar");
+          nextStore();
+        }
+      } catch (e) {
+        pushLog({ err: true, text: `Weekrun ${st.name}: ${e.message || e}` });
+        wrSetStatus(st.domain, "fout");
+        nextStore();
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wrStep]);
+
   function pushLog(line) {
     setLogs((l) => [...l, line]);
   }
@@ -1120,9 +1215,11 @@ export default function ScraperPage() {
         text: `Verdeling geladen — Vrouw: ${vrouw.length} keywords (${sum(vrouw)} producten) · Man: ${man.length} keywords (${sum(man)} producten). De lijst staat nu in het Keywords-blok.`,
       });
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "success" }));
+      return true;
     } catch (e) {
       pushLog({ err: true, text: "Verdeling laden mislukt: " + e.message });
       window.dispatchEvent(new CustomEvent("attoh-sfx", { detail: "error" }));
+      return false;
     } finally {
       setOrgBusy(false);
     }
@@ -2674,6 +2771,50 @@ export default function ScraperPage() {
         subtitle="Competitor → Google Sheet"
       />
       <div className="page">
+        {wr ? (
+          <div className="card" style={{ marginBottom: 14, borderColor: "rgba(212,175,55,.45)" }}>
+            <h2>
+              ⚡ Weekrun — alle stores scrapen
+              <span className="opt">{wr.error ? "" : `${wr.week ? wr.week + " · " : ""}${wr.name} · ${wr.cfg && wr.cfg.importSheetId ? "één import-sheet voor alle stores" : "import-sheet per store"}`}</span>
+            </h2>
+            {wr.error ? (
+              <div className="hint err">{wr.error}</div>
+            ) : (
+              <>
+                {!wr.applied ? <div className="hint err" style={{ marginBottom: 8 }}>Dit plan staat nog niet in de TPK-sheets — klik eerst op Importplannen → "Zet in de TPK-sheets".</div> : null}
+                <div style={{ display: "grid", gap: 4, marginBottom: 10 }}>
+                  {wr.stores.map((st) => {
+                    const stt = (wr.status || {})[st.domain] || "";
+                    const now = wrStep && wrListRef.current[wrStep.i] && wrListRef.current[wrStep.i].domain === st.domain;
+                    return (
+                      <label key={st.domain || st.store} className="small" style={{ display: "flex", gap: 8, alignItems: "center", opacity: st.ok ? 1 : 0.6 }}>
+                        <input type="checkbox" disabled={!st.ok || !!wrStep} checked={!!(st.ok && wr.sel[st.domain])} onChange={(e) => setWr((w) => ({ ...w, sel: { ...w.sel, [st.domain]: e.target.checked } }))} />
+                        <b style={{ minWidth: 170 }}>{st.name || st.store}</b>
+                        <span className="muted">{st.ok ? `${st.market} · ${st.products} producten · ${st.keywords} keywords · blad "${st.import.tab}"` : st.error}</span>
+                        <span style={{ flex: 1 }} />
+                        {now ? <span className="badge badge-green">bezig…</span> : stt === "klaar" ? <span className="badge badge-green">✓ klaar</span> : stt === "fout" ? <span className="badge bc-badge-err">✗ fout — zie log</span> : stt === "bezig" ? <span className="badge">onderbroken</span> : null}
+                      </label>
+                    );
+                  })}
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <button className="btn" disabled={!!wrStep || running} onClick={wrStart}>
+                    {wrStep ? `Bezig: store ${wrStep.i + 1}/${wrListRef.current.length}…` : "▶ Scrape alle aangevinkte stores"}
+                  </button>
+                  {wrStep ? (
+                    <button className="btn-ghost btn-small" onClick={() => (wrStopRef.current = true)}>
+                      Stop na deze store
+                    </button>
+                  ) : null}
+                  <button className="btn-ghost btn-small" disabled={!!wrStep} onClick={() => setWr((w) => { save(`sa_wr_scrape_${w.id}`, {}); return { ...w, status: {} }; })}>
+                    Status wissen
+                  </button>
+                  <span className="small muted">Competitor-lijst: {storeList.length} stores ({compMarket}). Klaar-stores worden overgeslagen als je opnieuw start. Per store blijft het eigen geheugen tegen dubbel scrapen gelden.</span>
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
         {/* -------- Stappenstrook (zoals Keywords → Geheugen): klik = naar de kaart -------- */}
         <div className="gh-steps sc-steps">
           <div className={"gh-step" + (storeList.length ? " done" : "")} data-on={pane === "stores" ? "1" : undefined} onClick={() => jumpTo("stores")} role="button" tabIndex={0}>
