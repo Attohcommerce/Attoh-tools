@@ -15,6 +15,9 @@ import {
   removeFromTrendQueue,
   clearTrendQueue,
   trendingKeywords,
+  saveBestsellerExport,
+  getBestsellerExports,
+  loadBestsellerExport,
 } from "@/lib/trend";
 import { scrapeTrendProduct } from "@/lib/trend-product";
 
@@ -49,6 +52,9 @@ export async function POST(req) {
       const r = await getTrendResults();
       return NextResponse.json({ keywords: trendingKeywords(r ? r.items : [], { limit: Number(body.limit) || 60 }) });
     }
+    if (action === "importExport") return NextResponse.json({ results: await saveBestsellerExport(body) });
+    if (action === "exports") return NextResponse.json({ exports: await getBestsellerExports() });
+    if (action === "loadExport") return NextResponse.json({ results: await loadBestsellerExport(body.index) });
     if (action === "preview") {
       // Eén product testen: details + foto-opschoning, zonder te importeren
       if (!body.url) return NextResponse.json({ error: "url ontbreekt" }, { status: 400 });

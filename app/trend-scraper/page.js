@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "../components/Header";
+import { bestsellerBookmarkletSource } from "@/lib/bestseller-bookmarklet";
 
 /* TREND SCRAPER (27-11-2026) — Justin: "scraper voor AliExpress en Temu om
    producten te vinden die NU trending zijn. Wat op AliExpress en Temu
@@ -49,6 +50,45 @@ export default function TrendScraperPage() {
   const [keywords, setKeywords] = useState(null);
   const [preview, setPreview] = useState(null);
   const pollRef = useRef(null);
+  const bmRef = useRef(null);
+  const [exportsList, setExportsList] = useState([]);
+  const [pasteText, setPasteText] = useState("");
+
+  /* Bestseller-export (28-11): de bookmarklet opent deze pagina met
+     #export=<json> → meteen opslaan als resultaten. */
+  async function importExport(payload) {
+    setBusy("export");
+    setErr("");
+    try {
+      const d = await api({ action: "importExport", ...payload });
+      setResults(d.results);
+      setPicked({});
+      setMsg(`${d.results.total} bestsellers binnengehaald van ${payload.source === "aliexpress" ? "AliExpress" : "Temu"}${payload.period ? ` (laatste ${payload.period} dagen)` : ""}${payload.category ? ` · ${payload.category}` : ""}. Vink aan wat je wilt en zet ze in de import-wachtrij.`);
+      const e = await api({ action: "exports" });
+      setExportsList(e.exports || []);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusy("");
+    }
+  }
+  useEffect(() => {
+    if (bmRef.current) bmRef.current.setAttribute("href", bestsellerBookmarkletSource(window.location.origin));
+    try {
+      const h = window.location.hash || "";
+      if (h.startsWith("#export=")) {
+        const payload = JSON.parse(decodeURIComponent(h.slice(8)));
+        history.replaceState(null, "", window.location.pathname);
+        importExport(payload);
+      }
+    } catch (e) {
+      setErr("Export kon niet gelezen worden: " + e.message);
+    }
+    api({ action: "exports" })
+      .then((e) => setExportsList(e.exports || []))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function loadInfo() {
     const d = await api({ action: "info" });
@@ -184,6 +224,63 @@ export default function TrendScraperPage() {
         {err ? <div className="hint err" style={{ marginBottom: 10 }}>{err}</div> : null}
         {msg ? <div className="hint" style={{ marginBottom: 10 }}>{msg}</div> : null}
         {avail && !avail.apify ? <div className="hint err">APIFY_TOKEN ontbreekt in Vercel — zonder Apify kan de Trend Scraper niet zoeken.</div> : null}
+
+        <div className="card">
+          <h2>
+            ⭐ Bestsellers exporteren (Temu / AliExpress)
+            <span className="opt">voor pagina's met een puzzel-verificatie, zoals Temu Best-Selling Items 30/14/7 dagen</span>
+          </h2>
+          <ol className="small" style={{ margin: "0 0 10px 18px", lineHeight: 1.7 }}>
+            <li>
+              <b>Eenmalig:</b> sleep deze knop naar je bladwijzerbalk →{" "}
+              <a ref={bmRef} href="#" className="btn" onClick={(e) => { e.preventDefault(); alert("Sleep deze knop naar je bladwijzerbalk (niet klikken)."); }}>
+                ⭐ Exporteer naar Attoh
+              </a>
+            </li>
+            <li>Open Temu → Best-Selling Items, los de puzzel op, kies de categorie (bijv. Men&apos;s Clothing) en de periode (30 / 14 / 7 dagen).</li>
+            <li>Wil je meer dan de eerste 40? Klik zelf onderaan een paar keer op <b>See more</b> (automatisch klikken laat Temu meteen weer de puzzel zien).</li>
+            <li>Klik in je bladwijzerbalk op <b>⭐ Exporteer naar Attoh</b>, check categorie en periode, en deze pagina opent met de hele lijst.</li>
+            <li>Vink aan wat je wilt → <b>→ Import-wachtrij</b> → Importer, tab Trending.</li>
+          </ol>
+          {busy === "export" ? <div className="small muted">Export verwerken…</div> : null}
+          {exportsList.length ? (
+            <div className="small">
+              Eerdere exports:{" "}
+              {exportsList.map((x, i) => (
+                <button
+                  key={x.at}
+                  className="btn-ghost btn-small"
+                  style={{ marginRight: 6 }}
+                  onClick={() =>
+                    api({ action: "loadExport", index: i }).then((d) => {
+                      setResults(d.results);
+                      setPicked({});
+                    })
+                  }
+                >
+                  {x.source === "aliexpress" ? "Ali" : "Temu"} {x.period ? `${x.period}d` : ""} {x.category || ""} ({x.count}) · {new Date(x.at).toLocaleString("nl-NL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <details style={{ marginTop: 8 }}>
+            <summary className="small muted">Werkt de knop niet? Plak hier de export (JSON)</summary>
+            <textarea rows={3} value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder='{"source":"temu","period":"30","items":[...]}' />
+            <button
+              className="btn-ghost btn-small"
+              disabled={!pasteText.trim()}
+              onClick={() => {
+                try {
+                  importExport(JSON.parse(pasteText));
+                } catch (e) {
+                  setErr("Geen geldige export: " + e.message);
+                }
+              }}
+            >
+              Importeer
+            </button>
+          </details>
+        </div>
 
         <div className="card">
           <h2>
@@ -337,6 +434,7 @@ export default function TrendScraperPage() {
                       <td>{i.source === "aliexpress" ? "AliExpress" : "Temu"}</td>
                       <td>
                         <b>{i.score}</b>
+                        {i.rank ? <div className="muted">#{i.rank}</div> : null}
                       </td>
                       <td>{i.soldText || fmtN(i.sold)}</td>
                       <td>{i.rating ? `${i.rating}★` : "—"}</td>
