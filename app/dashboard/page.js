@@ -17,6 +17,7 @@
 // (telefoonlink + e-mail, eigen cookie). Dan komen de stores en sleutels van
 // de server (/api/m) en is de opmaak compact voor de telefoon. Deze pagina
 // bewaart daarvoor de koppelingen van de aangevinkte stores op de server.
+import SalesGlobe from "../m/SalesGlobe";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { visibleStores } from "@/lib/store-scope";
 import Header from "../components/Header";
@@ -627,6 +628,14 @@ export default function DashboardPage({ ext }) {
                   </div>
                 )}
               </section>
+            )}
+
+            {/* Telefoon: draaiende aardbol met live sales + laatste 10 sales */}
+            {isExt && !isRange && (
+              <SalesGlobe
+                domains={active.map((s) => s.domain)}
+                colors={Object.fromEntries(stores.map((s, i) => [s.key, colorOf(s.key, i)]))}
+              />
             )}
 
             {/* KPI-tegels */}

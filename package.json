@@ -10,6 +10,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.57.0",
     "@vercel/functions": "^2.2.13",
+    "cobe": "^2.0.1",
     "google-auth-library": "^9.15.0",
     "iron-session": "^8.0.4",
     "next": "^14.2.35",

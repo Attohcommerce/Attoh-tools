@@ -4,6 +4,7 @@ import { tokenMark, dashGet, dashTouch, serverStores, publicStore, pick } from "
 import { runDashboard } from "@/lib/dashboard-run";
 import { storePayouts, aggregate } from "@/lib/cashflow";
 import { londonDay } from "@/lib/dashboard";
+import { recentSales } from "@/lib/recent-sales";
 
 // DASHBOARD MOBIEL (/m) — alleen kijken. De telefoon stuurt alleen domeinen;
 // de sleutels komen hier van de server (lib/dash-ext.js serverStores).
@@ -55,6 +56,14 @@ export async function POST(req) {
       )
     );
     return NextResponse.json({ ok: true, today, stores: results, totals: aggregate(results, today), at: new Date().toISOString() });
+  }
+
+  // Live sales (28-11-2026): laatste orders over de aangevinkte stores, voor de aardbol + tijdlijn
+  if (action === "recent") {
+    const all = await serverStores();
+    const stores = pick(all.stores, body.domains, "orders");
+    if (!stores.length) return NextResponse.json({ ok: true, sales: [], errors: [] });
+    return NextResponse.json(await recentSales(stores, 15));
   }
 
   return NextResponse.json({ error: "Onbekende actie" }, { status: 400 });
