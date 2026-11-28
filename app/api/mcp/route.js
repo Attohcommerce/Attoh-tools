@@ -3,6 +3,7 @@ import { checkMcpKey, getStores, findStore } from "@/lib/claude-link";
 import { storeGraphql, getShopInfo } from "@/lib/shopify";
 import { agentNext, agentDone, agentDoneMany, agentFail, agentSource } from "@/lib/photo-queue";
 import { copyThemeFiles } from "@/lib/theme-copy";
+import { keywordsLookup, storeMemoryOverview, putPlan, listPlans, getPlan, deletePlan } from "@/lib/import-plans";
 
 /* CLAUDE-KOPPELING · MCP-server (13-11-2026).
    Eigen connector voor claude.ai (Instellingen → Connectors → Custom connector)
@@ -114,6 +115,47 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+  /* IMPORTPLANNEN (28-11-2026) — Claude maakt in de chat het weekplan
+     (keywords × aantallen per store), Justin voert het in de tool door
+     (pagina Importplannen → TPK-sheets). Logica in lib/import-plans.js. */
+  {
+    name: "keywords_lookup",
+    description:
+      "Zoekvolumes uit ALL KEYWORDS (Google Keyword Planner) per markt en geslacht: per keyword de 12 maanden, het venster (komende maanden, vorig jaar), jaargemiddelde en piekmaand. Gebruik terms voor exacte keywords of contains om te zoeken (alle woorden moeten erin zitten, gesorteerd op venstervolume).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        market: { type: "string", enum: ["USA", "UK", "AUS", "CAN"] },
+        gender: { type: "string", enum: ["V", "M"], description: "V = vrouw, M = man" },
+        terms: { type: "array", items: { type: "string" }, description: "Exacte keywords (max 200)" },
+        contains: { type: "string", description: "Woorden die in het keyword moeten zitten, bijv. 'puffer jacket'" },
+        limit: { type: "number", description: "Max resultaten bij contains (standaard 40, max 200)" },
+        ahead: { type: "number", description: "Venster in maanden vanaf nu (standaard 3)" },
+      },
+      required: ["market", "gender"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "store_memory",
+    description: "Alle stores uit Keywords → Geheugen: markt, geslacht (V/M/MV), TPK-sheet, organization-sheet, import-sheet en de laatste snapshot (aantal producten, collecties). Nodig om een importplan per store te maken.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "import_plan",
+    description:
+      "Importplannen: action=put zet een plan klaar (Justin voert het door op de pagina Importplannen → per store een blad in de TPK-sheet, scraper-formaat). action=list / get / delete. Plan: {id?, name, week:'W49', source, note, stores:[{store, tab:'Plan W49', note, rows:[{keyword, collection, gender:'V'|'M', count, type:'Direct'|'Attribuut'|'Gelegenheid', uitleg, vol, avg, peak}]}]}. Schrijft zelf niets in de sheets.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        action: { type: "string", enum: ["put", "list", "get", "delete"] },
+        id: { type: "string" },
+        plan: { type: "object" },
+      },
+      required: ["action"],
+      additionalProperties: false,
+    },
+  },
 ];
 
 const escRe = (s) => String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -207,8 +249,24 @@ async function productsEachTool(a, store) {
   return text({ store: store.name || store.domain, products: ids.length, done: ok, failed: ids.length - ok - Math.max(0, ids.length - i), not_reached: Math.max(0, ids.length - i), errors });
 }
 
+async function importPlanTool(name, a) {
+  try {
+    if (name === "keywords_lookup") return text(await keywordsLookup(a));
+    if (name === "store_memory") return text(await storeMemoryOverview());
+    const act = String(a.action || "");
+    if (act === "put") return text(await putPlan(a.plan));
+    if (act === "list") return text(await listPlans());
+    if (act === "get") return text(await getPlan(a.id));
+    if (act === "delete") return text(await deletePlan(a.id));
+    return text(`Onbekende actie: ${act}`, true);
+  } catch (e) {
+    return text(String((e && e.message) || e), true);
+  }
+}
+
 async function callTool(name, args) {
   if (name === "photo_queue") return photoQueueTool(args || {});
+  if (name === "keywords_lookup" || name === "store_memory" || name === "import_plan") return importPlanTool(name, args || {});
   const stores = await getStores();
   if (name === "theme_copy_files") return themeCopyTool(args || {}, stores);
   if (name === "list_stores") {
